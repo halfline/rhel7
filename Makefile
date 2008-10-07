@@ -769,6 +769,10 @@ vmlinux-deps := $(KBUILD_LDS) $(KBUILD_VMLINUX_INIT) $(KBUILD_VMLINUX_MAIN)
       cmd_link-vmlinux = $(CONFIG_SHELL) $< $(LD) $(LDFLAGS) $(LDFLAGS_vmlinux)
 quiet_cmd_link-vmlinux = LINK    $@
 
+ifdef AFTER_LINK
+      cmd_link-vmlinux += ; $(AFTER_LINK)
+endif
+
 # Include targets which we want to
 # execute if the rest of the kernel build went well.
 vmlinux: scripts/link-vmlinux.sh $(vmlinux-deps) FORCE
