@@ -1,0 +1,24 @@
+RPMBUILD := $(shell if [ -x "/usr/bin/rpmbuild" ]; then echo rpmbuild; \
+                   else echo rpm; fi)
+MACH :=  $(shell uname -m)
+KVERSION:=3.1
+GITID:= $(shell git log --max-count=1 --pretty=format:%H)
+RPMVERSION:=3.1.0
+# marker is git tag which we base off of for exporting patches
+MARKER:=v3.1
+BUILD:=0
+DIST:=.el7
+PKGRELEASE:=$(BUILD)$(DIST)
+SPECFILE:=kernel.spec
+REDHAT:=$(shell pwd)
+RPM:=$(REDHAT)/rpm
+SRPMS:=$(RPM)/SRPMS
+SOURCES:=$(RPM)/SOURCES
+TARFILE:=linux-$(GITID).tar.bz2
+TARBALL:=$(REDHAT)/$(TARFILE)
+TESTPATCH:=$(REDHAT)/linux-kernel-test.patch
+FILTERDIFF:=/usr/bin/filterdiff -x '*redhat/*' -x '*/.gitignore' -x '*/makefile'
+
+RELEASED_KERNEL := 1
+STAMP_VERSION := $(KVERSION)
+PREBUILD := ""
