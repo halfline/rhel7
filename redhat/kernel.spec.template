@@ -183,6 +183,7 @@ Summary: The Linux kernel
 %define make_target vmlinux
 %define kernel_image vmlinux
 %define kernel_image_elf 1
+%define with_tools 0
 %endif
 
 %ifarch s390x
