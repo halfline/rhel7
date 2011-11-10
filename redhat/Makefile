@@ -123,7 +123,7 @@ sources-rh: $(TARBALL)
 	@(if [ ! -f extrakeys.pub ]; then \
 		touch extrakeys.pub; \
 	fi)
-	@cp cpupower.* genkey Makefile.common kabi/{find-provides,kabitool,check-kabi} kabi/Module.kabi_{i686,ppc64,s390x,x86_64} configs/{config-*,merge.pl} extrakeys.pub  cvs/Makefile $(SOURCES)/
+	@cp cpupower.* genkey Makefile.common kabi/{find-provides,kabitool,check-kabi} kabi/Module.kabi_{ppc64,s390x,x86_64} configs/{config-*,merge.pl} extrakeys.pub  cvs/Makefile $(SOURCES)/
 
 rh-sources: setup-source sources-rh
 
