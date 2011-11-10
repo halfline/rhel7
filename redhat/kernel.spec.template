@@ -170,6 +170,11 @@ Summary: The Linux kernel
 %define kernel_image arch/x86/boot/bzImage
 %endif
 
+%ifarch ppc
+%define asmarch powerpc
+%define hdrarch powerpc
+%endif
+
 %ifarch ppc64
 %define asmarch powerpc
 %define hdrarch powerpc
