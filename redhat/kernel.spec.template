@@ -185,7 +185,6 @@ Summary: The Linux kernel
 %define make_target image
 %define kernel_image arch/s390/boot/image
 %define with_tools 0
-%define with_perf 0
 %define with_kdump 1
 %endif
 
@@ -1041,7 +1040,7 @@ BuildKernel %make_target %kernel_image kdump
 
 %if %{with_perf}
 # perf
-make %{?_smp_mflags} -C tools/perf -s V=1 HAVE_CPLUS_DEMANGLE=1 prefix=%{_prefix} all
+make %{?_smp_mflags} -C tools/perf -s V=1 EXTRA_CFLAGS="-Wno-error=array-bounds" HAVE_CPLUS_DEMANGLE=1 prefix=%{_prefix} all
 make %{?_smp_mflags} -C tools/perf -s V=1 prefix=%{_prefix} man || %{doc_build_fail}
 %endif
 
