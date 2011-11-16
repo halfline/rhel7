@@ -53,10 +53,10 @@ Summary: The Linux kernel
 %define with_tools     %{?_without_tools:     0} %{?!_without_tools:     1}
 # kernel-debuginfo
 %define with_debuginfo %{?_without_debuginfo: 0} %{?!_without_debuginfo: 1}
-# kernel-bootwrapper (for creating zImages from kernel + initrd)
-%define with_bootwrapper %{?_without_bootwrapper: 0} %{?!_without_bootwrapper: 1}
 # kernel-kdump (only for s390x)
-%define with_kdump %{?_without_kdump: 0} %{?!_without_kdump: 1}
+%define with_kdump     %{?_without_kdump:     0} %{?!_without_kdump:     0}
+# kernel-bootwrapper (for creating zImages from kernel + initrd)
+%define with_bootwrapper %{?_without_bootwrapper: 0} %{?!_without_bootwrapper: 0}
 
 # Build the kernel-doc package, but don't fail the build if it botches.
 # Here "true" means "continue" and "false" means "fail the build".
@@ -146,19 +146,9 @@ Summary: The Linux kernel
 %define all_arch_configs kernel-%{version}-*.config
 %endif
 
-# bootwrapper is only on ppc
-%ifnarch ppc ppc64
-%define with_bootwrapper 0
-%endif
-
 # sparse blows up on ppc64
 %ifarch ppc64 ppc
 %define with_sparse 0
-%endif
-
-# only s390x requires split out kdump kernels
-%ifnarch s390x
-%define with_kdump 0
 %endif
 
 # Per-arch tweaks
@@ -184,6 +174,7 @@ Summary: The Linux kernel
 %define kernel_image vmlinux
 %define kernel_image_elf 1
 %define with_tools 0
+%define with_bootwrapper 1
 %endif
 
 %ifarch s390x
@@ -194,6 +185,8 @@ Summary: The Linux kernel
 %define make_target image
 %define kernel_image arch/s390/boot/image
 %define with_tools 0
+%define with_perf 0
+%define with_kdump 1
 %endif
 
 # Should make listnewconfig fail if there's config options
