@@ -21,4 +21,4 @@ FILTERDIFF:=/usr/bin/filterdiff -x '*redhat/*' -x '*/.gitignore' -x '*/makefile'
 
 RELEASED_KERNEL := 1
 STAMP_VERSION := $(KVERSION)
-PREBUILD := ""
+PREBUILD := "0."
