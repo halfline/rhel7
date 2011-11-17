@@ -7,7 +7,7 @@ RPMVERSION:=3.1.0
 # marker is git tag which we base off of for exporting patches
 MARKER:=v3.1
 PREBUILD := "0."
-BUILD:=1
+BUILD:=0
 DIST:=.el7
 SPECFILE:=kernel.spec
 REDHAT:=$(shell pwd)
