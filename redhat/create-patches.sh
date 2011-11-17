@@ -4,10 +4,10 @@ MARKER=$1
 SOURCES=$2
 SPECFILE=$3
 BUILD=$4
-BUILDID=$5
-GITID=$6
-PKGRELEASE=$7
-RPMVERSION=$8
+GITID=$5
+PKGRELEASE=$6
+RPMVERSION=$7
+BUILDID=$8
 PATCHF="$SOURCES/Patch.include"
 patchf="$SOURCES/patch.include"
 SERIESF="$SOURCES/series"
@@ -20,8 +20,7 @@ HIDE_REDHAT=1;
 STRIP_REDHAT=1;
 # override LC_TIME to avoid date conflicts when building the srpm
 LC_TIME=
-SUBLEVEL="$(echo $MARKER | cut -f 3 -d '.' | cut -f 1 -d '-')";
-#SUBLEVEL="$(echo $MARKER | cut -f 3 -d '.')";
+SUBLEVEL="$(echo $MARKER | cut -f 2 -d '.' | cut -f 1 -d '-')";
 RCREV=$(echo $MARKER | cut -f 2 -d '-' -s | sed -e "s/rc//")
 GITREV=$(echo $MARKER | cut -f 3 -d '-' -s | sed -e "s/git//")
 LASTCOMMIT=$(cat lastcommit);
@@ -35,10 +34,11 @@ else
 	RCREV=0;
 	PREBUILD="";
 fi
+PREBUILD="0."
 if [ -z "$GITREV" ]; then
 	GITREV=0;
 fi
-RPM_VERSION="$STAMP-$PREBUILD$BUILD.el6$BUILDID";
+RPM_VERSION="$STAMP-$PREBUILD$BUILD.el7$BUILDID";
 
 touch $PATCHF $patchf
 echo >$clogf
