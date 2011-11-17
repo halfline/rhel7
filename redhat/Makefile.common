@@ -6,9 +6,9 @@ GITID:= $(shell git log --max-count=1 --pretty=format:%H)
 RPMVERSION:=3.1.0
 # marker is git tag which we base off of for exporting patches
 MARKER:=v3.1
+PREBUILD := "0."
 BUILD:=0
 DIST:=.el7
-PKGRELEASE:=$(BUILD)$(DIST)
 SPECFILE:=kernel.spec
 REDHAT:=$(shell pwd)
 RPM:=$(REDHAT)/rpm
@@ -21,4 +21,4 @@ FILTERDIFF:=/usr/bin/filterdiff -x '*redhat/*' -x '*/.gitignore' -x '*/makefile'
 
 RELEASED_KERNEL := 1
 STAMP_VERSION := $(KVERSION)
-PREBUILD := "0."
+PKGRELEASE:=$(PREBUILD)$(BUILD)$(DIST)
