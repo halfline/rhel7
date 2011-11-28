@@ -8,18 +8,6 @@ Summary: The Linux kernel
 # be 0.
 %global released_kernel %%RELEASED_KERNEL%%
 
-###################################################################
-# Polite request for people who spin their own kernel rpms:
-# please modify the "buildid" define in a way that identifies
-# that the kernel isn't the stock distribution kernel, for example,
-# by setting the define to ".local" or ".bz123456". This will be
-# appended to the full kernel version.
-#
-# (Uncomment the '#' and both spaces below to set the buildid.)
-#
-# % define buildid .local
-###################################################################
-
 %global rhel_build %%BUILD%%
 
 %define signmodules 0
@@ -28,7 +16,7 @@ Summary: The Linux kernel
 %define pkg_release %%PKGRELEASE%%
 
 # The kernel tarball/base version
-%define rhelgitid %%RHELGITID%%
+%define rheltarball %%RHELGITID%%
 
 # What parts do we want to build?  We must build at least one kernel.
 # These are the kernels that are built IF the architecture allows it.
@@ -83,7 +71,8 @@ Summary: The Linux kernel
 %define with_kabichk   %{?_without_kabichk:   0} %{?!_without_kabichk:   1}
 %define with_kabichk 0
 # Control whether we HMAC sign the kernel
-%define with_fips      %{?_without_fips:      0} %{?!_without_fips:      0}
+%define with_fips      %{?_without_fips:      0} %{?!_without_fips:      1}
+%define with_fips 0
 
 # should we do C=1 builds with sparse
 %define with_sparse    %{?_with_sparse:       1} %{?!_with_sparse:       0}
@@ -631,12 +620,12 @@ ApplyOptionalPatch()
   fi
 }
 
-if [ ! -d kernel-%{rhelgitid}/vanilla-%{rhelgitid}/ ]; then
+if [ ! -d kernel-%{rheltarball}/vanilla-%{rheltarball}/ ]; then
 	rm -f pax_global_header;
-%setup -q -n kernel-%{rhelgitid} -c
-	mv linux-%{rhelgitid} vanilla-%{rhelgitid};
+%setup -q -n kernel-%{rheltarball} -c
+	mv linux-%{rheltarball} vanilla-%{rheltarball};
 else
-	cd kernel-%{rhelgitid}/;
+	cd kernel-%{rheltarball}/;
 fi
 
 if [ -d linux-%{KVERREL} ]; then
@@ -647,7 +636,7 @@ if [ -d linux-%{KVERREL} ]; then
 	rm -rf deleteme.%{_target_cpu} &
 fi
 
-cp -rl vanilla-%{rhelgitid} linux-%{KVERREL}
+cp -rl vanilla-%{rheltarball} linux-%{KVERREL}
 cd linux-%{KVERREL}
 
 # Drop some necessary files from the source dir into the buildroot

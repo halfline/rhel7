@@ -1,5 +1,6 @@
 RPMBUILD := $(shell if [ -x "/usr/bin/rpmbuild" ]; then echo rpmbuild; \
                    else echo rpm; fi)
+REDHAT:=$(shell pwd)
 MACH :=  $(shell uname -m)
 KVERSION:=3.1
 GITID:= $(shell git log --max-count=1 --pretty=format:%H)
@@ -10,7 +11,6 @@ PREBUILD := "0."
 BUILD:=0
 DIST:=.el7
 SPECFILE:=kernel.spec
-REDHAT:=$(shell pwd)
 RPM:=$(REDHAT)/rpm
 SRPMS:=$(RPM)/SRPMS
 SOURCES:=$(RPM)/SOURCES
@@ -21,4 +21,14 @@ FILTERDIFF:=/usr/bin/filterdiff -x '*redhat/*' -x '*/.gitignore' -x '*/makefile'
 
 RELEASED_KERNEL := 1
 STAMP_VERSION := $(KVERSION)
-PKGRELEASE:=$(PREBUILD)$(BUILD)$(DIST)
+
+LOCVERFILE:=../localversion
+# create an empty localversion file if you don't want a local buildid
+ifneq ($(wildcard $(LOCVERFILE)),)
+  BUILDID:=$(shell cat $(LOCVERFILE))
+else
+  BUILDID:=.test
+endif
+$(info BUILDID is "$(BUILDID)". Update '$(shell dirname $(REDHAT))/localversion' to change.)
+
+PKGRELEASE:=$(PREBUILD)$(BUILD)$(DIST)$(BUILDID)

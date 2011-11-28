@@ -1,7 +1,6 @@
 include Makefile.common
 include Makefile.test
 
-LOCVERFILE:=../localversion
 LANG=C
 BUILD_DEFAULT_TARGET = RHEL-6-test
 BUILD_SCRATCH_TARGET = RHEL-6-test
@@ -11,14 +10,6 @@ BUILD_TARGET ?= --scratch $(BUILD_SCRATCH_TARGET)
 #else
 #BUILD_TARGET ?= $(BUILD_DEFAULT_TARGET)
 #endif
-
-# create an empty localversion file if you don't want a local buildid
-ifneq ($(wildcard $(LOCVERFILE)),)
-BUILDID:=$(shell cat $(LOCVERFILE))
-else
-BUILDID:=.test
-endif
-$(info BUILDID is "$(BUILDID)". Update '$(shell dirname $(REDHAT))/localversion' to change.)
 
 RHGITURL:=$(shell git config remote.origin.url)
 RHGITCOMMIT=$(shell git log -1 --pretty=format:%H)
