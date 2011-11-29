@@ -13,7 +13,7 @@ patchf="$SOURCES/patch.include"
 SERIESF="$SOURCES/series"
 clogf="$SOURCES/changelog"
 # hide [redhat] entries from changelog
-HIDE_REDHAT=1;
+HIDE_REDHAT=0;
 # strips all redhat/ and .gitignore patches
 # This was requested in order to avoid the contents of the redhat/ directory
 # to be included on the packages (arozansk, orders of lwang)
