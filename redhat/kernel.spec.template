@@ -341,8 +341,6 @@ Source30: Makefile.config
 Source2000: cpupower.service
 Source2001: cpupower.config
 
-%%PATCH_LIST%%
-
 # empty final patch to facilitate testing of kernel patches
 Patch999999: linux-kernel-test.patch
 
@@ -645,8 +643,6 @@ cp %{SOURCE15} .
 
 # Dynamically generate kernel .config files from config-* files
 make -f %{SOURCE30} VERSION=%{version} configs
-
-###%#%PATCH_APPLICATION%%
 
 ApplyOptionalPatch linux-kernel-test.patch
 
@@ -1401,106 +1397,8 @@ fi
 
 %changelog
 %%CHANGELOG%%
-* Thu Nov 03 2011 Kyle McMartin <kmcmartin@redhat.com>
-- [s390] Pull in <asm/crash.h> from RHEL-6 kernel tree to fix FTBFS.
-- [s390] Add s390 kdump config files to the list built.
-- [redhat] Ensure /lib/modules/$ver/kernel is created so that the
-  kernel-kdump variant on s390x doesn't fail to find files (since we
-  don't do modules_install on kdump.)
-- [s390] Add BuildRequires on glibc-static for zfcpdump.
-- [redhat] Copy kabichk from RHEL-6, disabled for now.
-- [redhat] Copy signmodules from RHEL-6, disabled for now.
-- [redhat] fedora: Remove config-local processing.
-
-* Wed Nov 02 2011 Kyle McMartin <kmcmartin@redhat.com>
-- [drm] Disable a bunch of unsupported drivers. (#740583)
-- [fb] Ditto. (#740583)
-
-* Wed Nov 02 2011 Kyle McMartin <kmcmartin@redhat.com>
-- [v4l] Sync kconfig options for v4l/dvb/radio/video (#749581)
-
-* Wed Nov 02 2011 Kyle McMartin <kmcmartin@redhat.com>
-- s390x: add zfcpdump tool used by kernel-kdump.
-
-* Tue Nov 01 2011 Kyle McMartin <kmcmartin@redhat.com>
-- Restore s390x kernel-kdump variant.
-
-* Tue Nov 01 2011 Kyle McMartin <kmcmartin@redhat.com>
-- RHEL-7 config changes:
- - Update to use new NFS code paths: 
-  - CONFIG_NFS_USE_LEGACY_DNS=n
-  - CONFIG_NFS_USE_NEW_IDMAPPER=y
- - Switch to using Fedora default SLUB allocator instead
-   of forcing SLAB as in RHEL-6 for performance testing in the
-   early RHEL-7 phases.
- - Disable a few detritus drivers turned on as a result of the
-   RHEL-6 overrides.
-
-* Tue Nov 01 2011 Kyle McMartin <kmcmartin@redhat.com>
-- Restore RHEL-6 config-*-rhel for relevant configs. These files
-  will be massaged as necessary for RHEL-7 as opposed to altering
-  the Fedora config files.
-
-* Mon Oct 31 2011 Kyle McMartin <kmcmartin@redhat.com>
-- Add in Makefile.config logic to build merged -rhel configs.
-
-* Mon Oct 31 2011 Kyle McMartin <kmcmartin@redhat.com>
-- Add python-perf sub-package to the kernel.
-
-* Mon Oct 31 2011 Kyle McMartin <kmcmartin@redhat.com>
-- Restore perf sub-package for RHEL-7, kernel-tools will continue
-  to contain the rest of the utilities from tools/ in the kernel
-  source tree.
-
-* Mon Oct 31 2011 Kyle McMartin <kmcmartin@redhat.com>
-- Drop %with_vanilla and %nopatches from RHEL-7 for obvious
-  reasons.
-- Add back %with_fips HMAC signing of the kernel from RHEL-6.
-- Drop %with_vdso_install, since we want the vdso installed on all
-  RHEL-7 architectures.
-- Drop BuildConflicts: rhbuildsys since koji/brew do not implement it.
-
-* Mon Oct 31 2011 Kyle McMartin <kmcmartin@redhat.com>
-- Drop i686, ppc32, s390, arm, sparc64 cruft from kernel.spec
-- Rename %with_up to the more sensible %with_default since it was SMP for all
-  by default already.
-- Drop redundant variants as well.
-- Clean up spec file some more.
-- Delete some scripts which had bit-rotted.
-
-* Thu Oct 27 2011 Josh Boyer <jwboyer@redhat.com>
-- Drop ia64
-- Drop alpha
-
-* Wed Oct 26 2011 Kyle McMartin <kmcmartin@redhat.com>
-- Make some config changes caught during a review:
- - CONFIG_SOC_CAMERA: disable, it's only for some ARM boards
- - CONFIG_MEDIA_ALTERA_CI=m: needed for some DVB boards
- - CONFIG_DEBUG_BLK_CGROUP: stop setting it twice...
-
-* Wed Oct 26 2011 Kyle McMartin <kmcmartin@redhat.com>
-- Drop kernel-firmware subpackage. We've had linux-firmware around for
-  enough releases now.
-- ppc64/ppc vdso patches have been upstream for ages.
-- Install vdso on s390/s390x.
-- Fedora 8 was a very long time ago... fancy_debuginfo turns into
-  with_debuginfo in the glorious future.
-- Disable CONFIG_CC_OPTIMIZE_FOR_SIZE, upstream consensus is -O2 has
-  generated better code than -Os for a while
-  (https://lkml.org/lkml/2009/11/26/57)
-- Drop vanilla-% targets, and other Makefile cruft which has been bit
-  rotting for years.
-- Dump %rhel config bits which are not used in Fedora.
-- Drop dead Source0 hacks from the 2.6->3.0 transition.
-
-* Mon Oct 24 2011 Josh Boyer <jwboyer@redhat.com>
-- Backport 3 fixed from linux-next to fix dib0700 playback (rhbz 733827)
-
-* Mon Oct 24 2011 Chuck Ebbert <cebbert@redhat.com> 3.1.0-1
-- Linux 3.1
-
 * Mon Oct 24 2011 Kyle McMartin <kyle@redhat.com>
-- Trimmed changelog, see fedpkg git for earlier history.
+- Trimmed changelog for rhel7.git, see rhpkg git for earlier history.
 
 ###
 # The following Emacs magic makes C-c C-e use UTC dates.
