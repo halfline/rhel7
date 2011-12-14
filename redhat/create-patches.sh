@@ -280,11 +280,13 @@ tac $clogf | sed "1{/^$/d; /^- /i\
 * $cdate $cname $cversion
 	}" > $clogf.rev
 
+grep -v "updating lastcommit for" $clogf.rev > $clogf.rev.stripped
+
 test -n "$SPECFILE" &&
         sed -i -e "
 	/%%CONFIGS%%/r $CONFIGS2
 	/%%CONFIGS%%/d
-	/%%CHANGELOG%%/r $clogf.rev
+	/%%CHANGELOG%%/r $clogf.rev.stripped
 	/%%CHANGELOG%%/d
 	s/%%BUILD%%/$BUILD/
 	s/%%RPMVERSION%%/$RPMVERSION/
@@ -295,5 +297,5 @@ if [ -n "$BUILDID" ]; then
 	sed -i -e "s/# % define buildid .local/%define buildid $BUILDID/" $SPECFILE;
 fi
 
-rm $PATCHF $patchf $clogf $clogf.rev $CONFIGS $CONFIGS2;
+rm $PATCHF $patchf $clogf $clogf.rev{,.stripped} $CONFIGS $CONFIGS2;
 
