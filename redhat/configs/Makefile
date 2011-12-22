@@ -23,11 +23,11 @@ TEMPFILES	= $(addprefix temp-, $(addsuffix -generic, $(PLATFORMS)))
 
 configs: $($(ARCHCONFIG)CONFIGFILES)
 	@rm -f kernel-*-config
-	@rm -f temp-* $(TEMPFILES)
+	@rm -f temp-* $(TEMPFILES) *-merged
 
 # Augment the clean target to clean up our own cruft
 clean ::
-	@rm -fv $(CONFIGFILES) $(TEMPFILES) temp-generic kernel-$(VERSION)*config
+	@rm -fv $(CONFIGFILES) $(TEMPFILES) temp-generic kernel-$(VERSION)*config *-merged
 
 configs-prep: clean configs
 	@mkdir -p $(CFG_DIR)
