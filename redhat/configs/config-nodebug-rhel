@@ -28,6 +28,7 @@
 # CONFIG_LOCK_STAT is not set
 # CONFIG_SLUB_DEBUG_ON is not set
 # CONFIG_SLUB_DEBUG is not set
+# CONFIG_DEBUG_SLAB is not set
 # CONFIG_FAULT_INJECTION is not set
 # CONFIG_FAILSLAB is not set
 # CONFIG_DEBUG_STACK_USAGE is not set
