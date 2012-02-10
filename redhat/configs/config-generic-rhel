@@ -648,6 +648,10 @@ CONFIG_HWMON=y
 # CONFIG_ACERHDF is not set
 # CONFIG_CIFS_NFSD_EXPORT is not set
 
+# CONFIG_CEPH_LIB is not set
+# CONFIG_CEPH_FS is not set
+# CONFIG_BLK_DEV_RBD is not set
+
 # CONFIG_CXT1E1 is not set
 # CONFIG_SBE_2T3E3 is not set
 
