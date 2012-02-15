@@ -76,10 +76,10 @@ temp-powerpc-debug-generic: config-powerpc-generic-merged temp-debug-generic
 temp-s390-generic: config-s390x-merged temp-generic
 	perl merge.pl $^ > $@
 
-kernel-$(VERSION)-x86_64.config: /dev/null temp-x86_64-generic
+kernel-$(VERSION)-x86_64.config: config-x86_64-nodebug-merged temp-x86_64-generic
 	perl merge.pl $^ x86_64 > $@
 
-kernel-$(VERSION)-x86_64-debug.config: /dev/null temp-x86_64-debug-generic
+kernel-$(VERSION)-x86_64-debug.config: config-x86_64-debug-merged temp-x86_64-debug-generic
 	perl merge.pl $^ x86_64 > $@
 
 kernel-$(VERSION)-ppc64.config: config-powerpc64-merged temp-powerpc-generic
