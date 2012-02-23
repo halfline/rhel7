@@ -2,8 +2,8 @@ include Makefile.common
 include Makefile.test
 
 LANG=C
-BUILD_DEFAULT_TARGET = RHEL-6-test
-BUILD_SCRATCH_TARGET = RHEL-6-test
+BUILD_DEFAULT_TARGET = rhel-7.0-candidate
+BUILD_SCRATCH_TARGET = rhel-7.0-candidate
 
 #ifeq ($(shell git diff --quiet HEAD && git describe --exact-match 2>/dev/null && echo ok),)
 BUILD_TARGET ?= --scratch $(BUILD_SCRATCH_TARGET)
@@ -159,7 +159,7 @@ rhg-brew: BUILD_FLAGS ?= $(BREW_FLAGS) $(TEST_FLAGS)
 rhg-koji: BUILD_FLAGS ?= $(KOJI_FLAGS) $(TEST_FLAGS)
 
 rh-brew rh-koji: rh-%: rh-srpm
-	$* build $(BUILD_FLAGS) $(BUILD_TARGET) $(SRPMS)/kernel-$(KVERSION)-$(BUILD)$(DIST)$(BUILDID).src.rpm $(OUTPUT_FILE)
+	$* build $(BUILD_FLAGS) $(BUILD_TARGET) $(SRPMS)/kernel-$(KVERSION)-$(PREBUILD)$(BUILD)$(DIST)$(BUILDID).src.rpm $(OUTPUT_FILE)
 
 rhg-brew rhg-koji: rhg-%:
 	$* build $(BUILD_FLAGS) $(BUILD_TARGET) "$(RHGITURL)?redhat/koji#$(RHGITCOMMIT)"
