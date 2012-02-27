@@ -116,11 +116,6 @@ Summary: The Linux kernel
 
 # Overrides for generic default options
 
-# don't do debug builds on anything but x86_64
-%ifnarch x86_64
-%define with_debug 0
-%endif
-
 # only package docs noarch
 %ifnarch noarch
 %define with_doc 0
