@@ -11,7 +11,8 @@ CFG		= kernel-$(VERSION)
 CFG_DIR		= $(OUTPUT)/configs
 
 X86_64CONFIGFILES	=	$(CFG)-x86_64.config $(CFG)-x86_64-debug.config
-S390CONFIGFILES	=	$(CFG)-s390x.config $(CFG)-s390x-kdump.config
+S390CONFIGFILES	=	$(CFG)-s390x.config $(CFG)-s390x-debug.config \
+			$(CFG)-s390x-kdump.config
 PPCCONFIGFILES	=	$(CFG)-ppc64.config $(CFG)-ppc64-debug.config
 
 CONFIGFILES	= $(X86_64CONFIGFILES) $(S390CONFIGFILES) $(PPCCONFIGFILES)
@@ -76,6 +77,9 @@ temp-powerpc-debug-generic: config-powerpc-generic-merged temp-debug-generic
 temp-s390-generic: config-s390x-merged temp-generic
 	perl merge.pl $^ > $@
 
+temp-s390-debug-generic: config-s390x-merged temp-debug-generic
+	perl merge.pl $^ > $@
+
 kernel-$(VERSION)-x86_64.config: config-x86_64-nodebug-merged temp-x86_64-generic
 	perl merge.pl $^ x86_64 > $@
 
@@ -89,6 +93,9 @@ kernel-$(VERSION)-ppc64-debug.config: config-powerpc64-merged temp-powerpc-debug
 	perl merge.pl $^ powerpc > $@
 
 kernel-$(VERSION)-s390x.config: config-s390x-merged temp-s390-generic
+	perl merge.pl $^ s390 > $@
+
+kernel-$(VERSION)-s390x-debug.config: config-s390x-merged temp-s390-debug-generic
 	perl merge.pl $^ s390 > $@
 
 kernel-$(VERSION)-s390x-kdump.config: config-s390x-kdump-merged kernel-$(VERSION)-s390x.config

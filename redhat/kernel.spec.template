@@ -116,6 +116,11 @@ Summary: The Linux kernel
 
 # Overrides for generic default options
 
+# only build kernel-debug on x86_64, s390x, ppc64
+%ifnarch x86_64 s390x ppc64
+%define with_debug 0
+%endif
+
 # only package docs noarch
 %ifnarch noarch
 %define with_doc 0
