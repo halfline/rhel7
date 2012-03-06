@@ -1400,6 +1400,73 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Mar 01 2012 Kyle McMartin <kmcmarti@redhat.com> [3.2.1-0.8.el7]
+- [redhat] Kconfig: disable ECRYPT_FS (Kyle McMartin) [799054]
+
+* Thu Mar 01 2012 Kyle McMartin <kmcmarti@redhat.com> [3.2.1-0.7.el7]
+- [kernel] backport uprobes from linux-next (Kyle McMartin)
+
+* Tue Feb 28 2012 Kyle McMartin <kmcmarti@redhat.com> [3.2.1-0.6.el7]
+- [redhat] Fix "kernel.spec: build kernel-debug on s390x and ppc64" (Kyle McMartin) [797895]
+
+* Mon Feb 27 2012 Kyle McMartin <kmcmarti@redhat.com> [3.2.1-0.5.el7]
+- [redhat] kernel.spec: build kernel-debug on s390x and ppc64 (Kyle McMartin) [797895]
+- [redhat] kernel.spec, ppc64: make sure crtsavres.o gets installed (Kyle McMartin) [797106]
+
+* Fri Feb 24 2012 Kyle McMartin <kmcmarti@redhat.com> [3.2.1-0.4.el7]
+- [redhat] Kconfig: DRBD not supported by Red Hat (Kyle McMartin) [795845]
+- [redhat] Kconfig: disable CEPH filesystem (Kyle McMartin) [789106]
+- [redhat] Kconfig: virtio console should be modular, not builtin (Kyle McMartin) [786321]
+- [redhat] xen Kconfig: rhel specific changes (Andrew Jones) [740511]
+- [redhat] Makefile: fix rh-brew target (Mauro Carvalho Chehab)
+- [redhat] configs/Makefile: Fix config-x86_64 rhel specific debug overrides (Kyle McMartin)
+
+* Tue Feb 14 2012 Kyle McMartin <kmcmarti@redhat.com> [3.2.1-0.3.el7]
+- [redhat] Kconfig: drop dead TUX options (Kyle McMartin)
+- [redhat] Kconfig: disable various input modules (Kyle McMartin) [749578]
+- [redhat] Kconfig: disable DRM_PSB (Kyle McMartin)
+- [redhat] Kconfig: build configfs in (Kyle McMartin) [768098]
+- [redhat] build: rhel configs: cleanup *-merge files (Andrew Jones)
+- [redhat] Kconfig: Discontinued storage drivers for RHEL-7 (Kyle McMartin) [768524]
+- [redhat] Update to v3.2.1 (Kyle McMartin)
+- [redhat] tagging 3.1.4-0.2.el7 (Kyle McMartin)
+- [redhat] Strip "updating lastcommit" messages from clog (Kyle McMartin)
+- [redhat] Kconfig: disable input _FF options as per RHEL-6 (Kyle McMartin) [749578]
+- [redhat] kconfig: turn CONFIG_NFS_USE_NEW_IDMAPPER off for alpha1 (Kyle McMartin) [750621]
+- [redhat] Kconfig: drop DEBUG_NMI_TIMEOUT option (Kyle McMartin)
+- [redhat] Kconfig: xen updates for RHEL-7 (Kyle McMartin) [740511]
+- [redhat] tagging 3.1.4-0.1.el7 (Kyle McMartin)
+- [redhat] Rebased to stable v3.1.4, cheat and bump RELEASE, lastcommit (Kyle McMartin)
+- [redhat] Rename redhat/cvs to redhat/rhpkg (Kyle McMartin)
+- [redhat] s390x: kernel.spec: disable kdump flavour (Kyle McMartin)
+- [redhat] kernel.spec: trim changelog and drop PATCH subsitutions (Kyle McMartin)
+- [redhat] Update cvs/Makefile from rhpkg (Kyle McMartin)
+- [redhat] Drop *.patch from create-patches.sh (Kyle McMartin)
+- [redhat] cpufreq: default to ondemand governor (Kyle McMartin)
+- [redhat] Empty Module.kabi_* for RHEL-7 (Kyle McMartin)
+- [redhat] Unhide redhat changes from changelog generation (Kyle McMartin)
+- [redhat] Fix up localversion to result in buildid being set (Kyle McMartin)
+- [redhat] Set lastcommit to be the first post-3.1 patch (Kyle McMartin)
+- [redhat] Set BUILD back to 0 so our first build will be 0.1 (Kyle McMartin)
+- [redhat] Add top level Makefile to the $FILTERDIFF ignored files list (Kyle McMartin)
+- [redhat] Ensure $(PREBUILD) makes it into rpmversion (Kyle McMartin)
+- [redhat] Swap arguments to create-patches.sh (Kyle McMartin)
+- [redhat] Set PREBUILD and BUILD to "0.0" (Kyle McMartin)
+- [kernel] Add RHEL_{MAJOR,MINOR,RELEASE} to top level Makefile (Kyle McMartin)
+- [redhat] Switch to using $DIST instead of hardcoding .el6 (Kyle McMartin)
+- [ppc64] disable INFINIBAND_EHCA temporarily, it ftbfs (Kyle McMartin)
+- [redhat] Copy {perf_make} from Fedora, ensure $EXTRA_CFLAGS doesn't change (Kyle McMartin)
+- [redhat] Restore kernel-headers on i686 (Kyle McMartin)
+- [redhat] Kludge s390x perf into building by forcing EXTRA_CFLAGS (Kyle McMartin)
+- [redhat] kernel.spec: clean up and disable perf on s390x for now (Kyle McMartin)
+- [redhat] Disable with_fips temporarily (Kyle McMartin)
+- [redhat] drop more i686 references (Kyle McMartin)
+- [redhat] disable with_tools on ppc64, since it doesn't need cpupower (Kyle McMartin)
+- [redhat] ppc needs asmarch/hdrarch set in kernel.spec (Kyle McMartin)
+- [redhat] remove perf-archive, it's upstream now (Kyle McMartin)
+- [redhat] Delete 'perf' wrapper (Kyle McMartin)
+- [kernel] kbuild: AFTER_LINK (Roland McGrath)
+
 * Mon Oct 24 2011 Kyle McMartin <kyle@redhat.com>
 - Trimmed changelog for rhel7.git, see rhpkg git for earlier history.
 
