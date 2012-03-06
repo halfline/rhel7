@@ -14,8 +14,6 @@ SPECFILE:=kernel.spec
 RPM:=$(REDHAT)/rpm
 SRPMS:=$(RPM)/SRPMS
 SOURCES:=$(RPM)/SOURCES
-TARFILE:=linux-$(GITID).tar.bz2
-TARBALL:=$(REDHAT)/$(TARFILE)
 TESTPATCH:=$(REDHAT)/linux-kernel-test.patch
 FILTERDIFF:=/usr/bin/filterdiff -x '*redhat/*' -x '*/.gitignore' -x '*/makefile' -x '*/Makefile'
 
@@ -32,3 +30,6 @@ endif
 $(info BUILDID is "$(BUILDID)". Update '$(shell dirname $(REDHAT))/localversion' to change.)
 
 PKGRELEASE:=$(PREBUILD)$(BUILD)$(DIST)$(BUILDID)
+
+TARFILE:=linux-$(KVERSION)-$(PKGRELEASE).tar.bz2
+TARBALL:=$(REDHAT)/$(TARFILE)

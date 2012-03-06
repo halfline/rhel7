@@ -281,16 +281,17 @@ tac $clogf | sed "1{/^$/d; /^- /i\
 	}" > $clogf.rev
 
 grep -v "updating lastcommit for" $clogf.rev > $clogf.rev.stripped
+grep -v "tagging $RPM_VERSION" $clogf.rev.stripped > $clogf.rev
 
 test -n "$SPECFILE" &&
         sed -i -e "
 	/%%CONFIGS%%/r $CONFIGS2
 	/%%CONFIGS%%/d
-	/%%CHANGELOG%%/r $clogf.rev.stripped
+	/%%CHANGELOG%%/r $clogf.rev
 	/%%CHANGELOG%%/d
 	s/%%BUILD%%/$BUILD/
 	s/%%RPMVERSION%%/$RPMVERSION/
-	s/%%RHELGITID%%/$GITID/
+	s/%%RHELGITID%%/$RPM_VERSION/
 	s/%%PKGRELEASE%%/$PKGRELEASE/
 	s/%%RELEASED_KERNEL%%/$RELEASED_KERNEL/" $SPECFILE
 if [ -n "$BUILDID" ]; then

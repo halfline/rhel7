@@ -85,7 +85,7 @@ rh-stub-key:
 $(TARBALL):
 	@echo "Creating archive $(TARBALL)"
 	(cd ../; \
-	git archive --prefix=linux-$(GITID)/ --format=tar $(GITID) | \
+	git archive --prefix=linux-$(KVERSION)-$(PKGRELEASE)/ --format=tar $(GITID) | \
 	bzip2 > $(TARBALL))
 
 setup-source: rh-clean-sources
@@ -106,7 +106,7 @@ sources-rh: $(TARBALL)
 	@diff $(TESTPATCH).tmp $(TESTPATCH) > /dev/null || \
 		echo "WARNING: There are uncommitted changes in your tree or the changes are not in sync with the kernel-test.patch.  Either commit the changes or run 'make rh-test-patch'"
 	@rm $(TESTPATCH).tmp
-	@$(REDHAT)/create-patches.sh $(MARKER) $(SOURCES) $(SOURCES)/$(SPECFILE) $(BUILD) $(GITID) $(PKGRELEASE) $(RPMVERSION) $(BUILDID)
+	@$(REDHAT)/create-patches.sh $(MARKER) $(SOURCES) $(SOURCES)/$(SPECFILE) $(BUILD) $(PKGRELEASE) $(PKGRELEASE) $(RPMVERSION) $(BUILDID)
 	@cp $(SOURCES)/$(SPECFILE) $(SOURCES)/../SPECS
 	@cp $(TESTPATCH) $(SOURCES)/linux-kernel-test.patch
 	@cp configs/Makefile $(SOURCES)/Makefile.config
@@ -147,10 +147,10 @@ rh-release: rh-clean-sources
 	@make rh-srpm
 	@$(REDHAT)/scripts/update_changelog.sh $(KVERSION) $(shell echo $$[$(BUILD) + 1]) $(REDHAT) "$(STAMP_VERSION)-$(PREBUILD)$(shell echo $$[$(BUILD) + 1])$(DIST)$(BUILDID)"
 rh-release-commit:
-	@git commit -s ../Makefile Makefile.common kernel.spec.template -m "[redhat] tagging $(STAMP_VERSION)-$(PREBUILD)$(BUILD)$(BUILDID)$(DIST)"
-	@git tag -a -m "kernel-$(STAMP_VERSION)-$(PREBUILD)$(BUILD)$(BUILDID)$(DIST)" kernel-$(STAMP_VERSION)-$(PREBUILD)$(BUILD)$(BUILDID)$(DIST)
+	@git commit -s ../Makefile Makefile.common kernel.spec.template -m "[redhat] tagging $(STAMP_VERSION)-$(PKGRELEASE)"
+	@git tag -a -m "kernel-$(STAMP_VERSION)-$(PKGRELEASE)" kernel-$(STAMP_VERSION)-$(PKGRELEASE)
 	@git log --max-count=1 --pretty=format:%H >$(REDHAT)/lastcommit;
-	@git commit -s lastcommit -m "[redhat] updating lastcommit for $(STAMP_VERSION)-$(PREBUILD)$(BUILD)$(BUILDID)"
+	@git commit -s lastcommit -m "[redhat] updating lastcommit for $(STAMP_VERSION)-$(PKGRELEASE)"
 
 .PHONY: rh-brew rh-koji
 rh-brew : BUILD_FLAGS ?= $(BREW_FLAGS) $(TEST_FLAGS)
@@ -159,7 +159,7 @@ rhg-brew: BUILD_FLAGS ?= $(BREW_FLAGS) $(TEST_FLAGS)
 rhg-koji: BUILD_FLAGS ?= $(KOJI_FLAGS) $(TEST_FLAGS)
 
 rh-brew rh-koji: rh-%: rh-srpm
-	$* build $(BUILD_FLAGS) $(BUILD_TARGET) $(SRPMS)/kernel-$(KVERSION)-$(PREBUILD)$(BUILD)$(DIST)$(BUILDID).src.rpm $(OUTPUT_FILE)
+	$* build $(BUILD_FLAGS) $(BUILD_TARGET) $(SRPMS)/kernel-$(KVERSION)-$(PKGRELEASE).src.rpm $(OUTPUT_FILE)
 
 rhg-brew rhg-koji: rhg-%:
 	$* build $(BUILD_FLAGS) $(BUILD_TARGET) "$(RHGITURL)?redhat/koji#$(RHGITCOMMIT)"
