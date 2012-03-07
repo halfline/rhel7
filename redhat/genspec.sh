@@ -11,10 +11,6 @@ BUILDID=$8
 clogf="$SOURCES/changelog"
 # hide [redhat] entries from changelog
 HIDE_REDHAT=0;
-# strips all redhat/ and .gitignore patches
-# This was requested in order to avoid the contents of the redhat/ directory
-# to be included on the packages (arozansk, orders of lwang)
-STRIP_REDHAT=0;
 # override LC_TIME to avoid date conflicts when building the srpm
 LC_TIME=
 SUBLEVEL="$(echo $MARKER | cut -f 2 -d '.' | cut -f 1 -d '-')";
@@ -35,7 +31,7 @@ PREBUILD="0."
 if [ -z "$GITREV" ]; then
 	GITREV=0;
 fi
-RPM_VERSION="$RPMVERSION-$PKGRELEASE"
+RPM_VERSION="$RPMVERSION-$PKGRELEASE";
 
 echo >$clogf
 
@@ -205,7 +201,7 @@ BEGIN{TYPE="PATCHJUNK"; count=1; dolog=0; }
 
 ' SOURCES=$SOURCES SPECFILE=$SPECFILE \
 	CLOGF=$clogf total=$total LASTCOMMIT=$LASTCOMMIT \
-	HIDE_REDHAT=$HIDE_REDHAT STRIP_REDHAT=$STRIP_REDHAT
+	HIDE_REDHAT=$HIDE_REDHAT
 
 CONFIGS=configs/config.include
 CONFIGS2=configs/config2.include
