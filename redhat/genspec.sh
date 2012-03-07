@@ -8,9 +8,6 @@ GITID=$5
 PKGRELEASE=$6
 RPMVERSION=$7
 BUILDID=$8
-PATCHF="$SOURCES/Patch.include"
-patchf="$SOURCES/patch.include"
-SERIESF="$SOURCES/series"
 clogf="$SOURCES/changelog"
 # hide [redhat] entries from changelog
 HIDE_REDHAT=0;
@@ -40,7 +37,6 @@ if [ -z "$GITREV" ]; then
 fi
 RPM_VERSION="$RPMVERSION-$PKGRELEASE"
 
-touch $PATCHF $patchf
 echo >$clogf
 
 total="$(git log --first-parent --pretty=oneline $MARKER.. |wc -l)"
@@ -72,15 +68,6 @@ BEGIN{TYPE="PATCHJUNK"; count=1; dolog=0; }
 		gsub(/--*/, "-", name);
                 gsub(/^[.-]*/, "", name);
                 gsub(/[.-]*$/, "", name);
-
-		#check for duplicate files and append a number to it
-		patchname=name;
-		num=2;
-		while (! system("test -f " SOURCES "/" patchname ".patch")) {
-			patchname=name "-" num;
-			num=num+1;
-        	}
-		patchname = patchname ".patch";
 	}
 
 	# add an entry to changelog
@@ -137,7 +124,6 @@ BEGIN{TYPE="PATCHJUNK"; count=1; dolog=0; }
 			COMMIT=substr($0, 6, 40);
 			TYPE="HEADER";
 			LASTHDR="NEW";
-			close(OUTF);
 			next;
 		} }
 
@@ -182,21 +168,13 @@ BEGIN{TYPE="PATCHJUNK"; count=1; dolog=0; }
 	    }
 	    if (TYPE=="HEADER") {
 		subj_to_name(SUBJECTLINE);
-		OUTF= SOURCES "/" patchname;
 
 		#output patch commands for specfile
-		print "Patch" pnum": " patchname >> PATCHF;
-		print "ApplyPatch " patchname >> patchf;
 		pnum=pnum+1;
-
-		if (SPECFILE == "") { print patchname >> SERIESF; }
 
 		printf "Creating kernel patches - (" count "/" total ")\r";
 		count=count+1;
 
-		print NAMELINE > OUTF;
-		print DATELINE >> OUTF;
-		print SUBJECTLINE >> OUTF;
 		TYPE="META"; next;
 	    }
 	}
@@ -217,7 +195,7 @@ BEGIN{TYPE="PATCHJUNK"; count=1; dolog=0; }
 			TYPE="PATCHSEP";
 		}
 	}
-	/^diff --git/ { if (TYPE=="PATCHSEP") {print "" >> OUTF; TYPE="PATCH"; } }
+	/^diff --git/ { if (TYPE=="PATCHSEP") { TYPE="PATCH"; } }
 	/^-- $/ { if (TYPE=="PATCH") { TYPE="PATCHJUNK"; } }
 
 	#filter out stuff we do not care about
@@ -225,35 +203,9 @@ BEGIN{TYPE="PATCHJUNK"; count=1; dolog=0; }
 	{ if (TYPE == "PATCHJUNK") { next; } }
 	{ if (TYPE == "HEADER") { next; } }
 
-	#print the rest
-	{ print $0 >> OUTF; }
-' SOURCES=$SOURCES PATCHF=$PATCHF patchf=$patchf SPECFILE=$SPECFILE \
-	SERIESF=$SERIESF CLOGF=$clogf total=$total LASTCOMMIT=$LASTCOMMIT \
+' SOURCES=$SOURCES SPECFILE=$SPECFILE \
+	CLOGF=$clogf total=$total LASTCOMMIT=$LASTCOMMIT \
 	HIDE_REDHAT=$HIDE_REDHAT STRIP_REDHAT=$STRIP_REDHAT
-
-# strip all redhat/ code
-if [ $STRIP_REDHAT = 1 ]; then
-	if [ ! -x /usr/bin/filterdiff -o ! -x /usr/bin/lsdiff ]
-	then
-		echo "patchutils is required" >&2;
-		exit 1;
-	fi
-	for patch in $(find $SOURCES/ -name \*.patch); do
-		/usr/bin/filterdiff -x '*redhat/*' -x '*/.gitignore' -x '*/makefile' $patch >$SOURCES/.tmp;
-		mv $SOURCES/.tmp $patch;
-		if [ -z "$(/usr/bin/lsdiff $patch)" ]; then
-			grep -v -e "^Patch.*: $(basename $patch)$" $PATCHF >$SOURCES/.tmp;
-			mv $SOURCES/.tmp $PATCHF;
-			grep -v -e "^ApplyPatch $(basename $patch)$" $patchf >$SOURCES/.tmp;
-			mv $SOURCES/.tmp $patchf;
-			rm -f $patch;
-		fi
-	done
-	if [ ! "$(cat $PATCHF | wc -l)" = "$(cat $patchf | wc -l)" ]; then
-		echo "Internal error: different number of patches between two lists" >&2;
-		exit 1;
-	fi
-fi
 
 CONFIGS=configs/config.include
 CONFIGS2=configs/config2.include
@@ -267,8 +219,6 @@ for i in $(cat $CONFIGS); do
 done
 
 printf "Creating kernel patches - Done.    \n"
-
-rm -f $SOURCES/*.patch
 
 #the changelog was created in reverse order
 #also remove the blank on top, if it exists
@@ -298,5 +248,5 @@ if [ -n "$BUILDID" ]; then
 	sed -i -e "s/# % define buildid .local/%define buildid $BUILDID/" $SPECFILE;
 fi
 
-rm $PATCHF $patchf $clogf $clogf.rev{,.stripped} $CONFIGS $CONFIGS2;
+rm $clogf $clogf.rev{,.stripped} $CONFIGS $CONFIGS2;
 
