@@ -3,11 +3,9 @@
 MARKER=$1
 SOURCES=$2
 SPECFILE=$3
-BUILD=$4
-GITID=$5
-PKGRELEASE=$6
-RPMVERSION=$7
-BUILDID=$8
+PKGRELEASE=$4
+RPMVERSION=$5
+BUILDID=$6
 clogf="$SOURCES/changelog"
 # hide [redhat] entries from changelog
 HIDE_REDHAT=0;
@@ -183,9 +181,7 @@ test -n "$SPECFILE" &&
 	/%%CONFIGS%%/d
 	/%%CHANGELOG%%/r $clogf.rev
 	/%%CHANGELOG%%/d
-	s/%%BUILD%%/$BUILD/
 	s/%%RPMVERSION%%/$RPMVERSION/
-	s/%%RHELTARBALL%%/$RPM_VERSION/
 	s/%%PKGRELEASE%%/$PKGRELEASE/
 	s/%%RELEASED_KERNEL%%/$RELEASED_KERNEL/" $SPECFILE
 if [ -n "$BUILDID" ]; then

@@ -8,15 +8,13 @@ Summary: The Linux kernel
 # be 0.
 %global released_kernel %%RELEASED_KERNEL%%
 
-%global rhel_build %%BUILD%%
-
 %define signmodules 0
 
 %define rpmversion %%RPMVERSION%%
 %define pkg_release %%PKGRELEASE%%
 
 # The kernel tarball/base version
-%define rheltarball %%RHELTARBALL%%
+%define rheltarball %%RPMVERSION%%-%%PKGRELEASE%%
 
 # What parts do we want to build?  We must build at least one kernel.
 # These are the kernels that are built IF the architecture allows it.
@@ -313,7 +311,7 @@ BuildRequires: gnupg
 BuildRequires: glibc-static
 %endif
 
-Source0: linux-%%RHELTARBALL%%.tar.bz2
+Source0: linux-%%RPMVERSION%%-%%PKGRELEASE%%.tar.bz2
 
 Source1: Makefile.common
 
