@@ -60,7 +60,7 @@ rh-clean: rh-clean-sources rh-clean-configs rh-clean-rpmdirs
 rh-pull-configs:
 	cd $(REDHAT)/configs; $(MAKE) VERSION=$(KVERSION) pull-configs
 
-rh-key:
+rh-FIXME-key:
 	echo "Creating a new module signing key...";
 	@cd $(_OUTPUT); \
 	/sbin/rngd -r /dev/urandom; \
@@ -73,6 +73,7 @@ rh-key:
 	gcc -o scripts/bin2c $(REDHAT)/../scripts/bin2c.c; \
 	scripts/bin2c ksign_def_public_key __initdata < extract.pub >crypto/signature/key.h;
 
+rh-key:
 rh-stub-key:
 	@echo "Copying pre-generated keys";
 	@echo "*** THIS IS NOT RECOMMENDED ***";
