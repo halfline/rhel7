@@ -498,6 +498,7 @@ CONFIG_HWMON=y
 # CONFIG_QNX4FS_FS is not set
 # CONFIG_SYSV_FS is not set
 # CONFIG_UFS_FS is not set
+# CONFIG_NET_9P is not set
 # CONFIG_9P_FS is not set
 # CONFIG_9P_FSCACHE is not set
 # CONFIG_OMFS_FS is not set
