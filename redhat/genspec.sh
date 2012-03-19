@@ -1,25 +1,24 @@
 #! /bin/sh
 
-MARKER=$1
-SOURCES=$2
-SPECFILE=$3
-PKGRELEASE=$4
-RPMVERSION=$5
-BUILDID=$6
+SOURCES=$1
+SPECFILE=$2
+PKGRELEASE=$3
+RPMVERSION=$4
+BUILDID=$5
 clogf="$SOURCES/changelog"
 # hide [redhat] entries from changelog
 HIDE_REDHAT=0;
 # override LC_TIME to avoid date conflicts when building the srpm
 LC_TIME=
-LASTCOMMIT=$(cat lastcommit);
+FIRSTCOMMIT=$(cat lastcommit);
 STAMP=$(echo $MARKER | cut -f 1 -d '-' | sed -e "s/v//");
 RELEASED_KERNEL="1";
 RPM_VERSION="$RPMVERSION-$PKGRELEASE";
 
 echo >$clogf
 
-git format-patch --first-parent --no-renames -k --stdout $MARKER..|awk '
-BEGIN{TYPE="PATCHJUNK"; dolog=0; }
+git format-patch --first-parent --no-renames -k --stdout $FIRSTCOMMIT..|awk '
+BEGIN{TYPE="PATCHJUNK"; }
 	# add an entry to changelog
 	function changelog(subjectline, nameline)
 	{
@@ -41,14 +40,8 @@ BEGIN{TYPE="PATCHJUNK"; dolog=0; }
 				meta = " {" cve "}";
 			}
 		}
-		if ( COMMIT == LASTCOMMIT ) {
-			dolog=1;
-		} else {
-			if (dolog == 1) {
-				clog = "- " subj " (" name ")" meta;
-				print clog >> CLOGF;
-			}
-		}
+
+		print "- " subj " (" name ")" meta >> CLOGF;
 	}
 
 	#special separator, close previous patch
@@ -127,8 +120,7 @@ BEGIN{TYPE="PATCHJUNK"; dolog=0; }
 	{ if (TYPE == "PATCHJUNK") { next; } }
 	{ if (TYPE == "HEADER") { next; } }
 
-' SOURCES=$SOURCES SPECFILE=$SPECFILE \
-	CLOGF=$clogf LASTCOMMIT=$LASTCOMMIT
+' SOURCES=$SOURCES SPECFILE=$SPECFILE CLOGF=$clogf
 
 CONFIGS=configs/config.include
 CONFIGS2=configs/config2.include
