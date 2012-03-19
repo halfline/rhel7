@@ -1400,6 +1400,76 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Jul 17 2012 Kyle McMartin <kmcmarti@redhat.com> [3.3.0-0.22.el7]
+- [block] fix infinite loop in __getblk_slow (Kyle McMartin) [803686]
+- [block] don't mark buffers beyond end of disk as mapped (Kyle McMartin) [803686]
+
+* Wed Jul 11 2012 Kyle McMartin <kmcmarti@redhat.com> [3.3.0-0.21.el7]
+- [kernel] tracing, sched, vfs: Fix 'old_pid' usage in trace_sched_process_exec() (Kyle McMartin) [826165]
+- [kernel] tracepoint, vfs, sched: Add exec() tracepoint (Kyle McMartin) [826165]
+
+* Mon Jul 09 2012 Kyle McMartin <kmcmarti@redhat.com> [3.3.0-0.20.el7]
+- [fs] gfs2: setquota returns Input/Output error (Abhijith Das) [833812]
+
+* Fri Jul 06 2012 Kyle McMartin <kmcmarti@redhat.com> [3.3.0-0.19.el7]
+- [redhat] Kconfig: ppc64: enable CONFIG_CRASH (Kyle McMartin) [837779]
+- [fs] ext4: fix endianness breakage in ext4_split_extent_at() (Eric Sandeen) [799128]
+
+* Fri Jul 06 2012 Kyle McMartin <kmcmarti@redhat.com> [3.3.0-0.18.el7]
+- [fs] ext4: give more helpful error message in ext4_ext_rm_leaf() (Eric Sandeen) [799627]
+- [fs] ext4: remove unused code from ext4_ext_map_blocks() (Eric Sandeen) [799627]
+- [fs] ext4: rewrite punch hole to use ext4_ext_remove_space() (Eric Sandeen) [799627]
+
+* Thu Jul 05 2012 Kyle McMartin <kmcmarti@redhat.com> [3.3.0-0.17.el7]
+- [edac] avoid mce decoding crash after edac driver unloaded (Mauro Carvalho Chehab) [798752]
+
+* Tue Jul 03 2012 Kyle McMartin <kmcmarti@redhat.com> [3.3.0-0.16.el7]
+- [redhat] Kconfig: s390x enable more kdump kernel options (Kyle McMartin) [821439]
+- [virt] vhost: fix release path lockdep checks (Vlad Yasevich) [800222]
+- [scsi] lpfc: port rhel6.3 lpfc to rhel7 alpha2 (Rob Evers) [823387]
+
+* Tue Jun 19 2012 Kyle McMartin <kmcmarti@redhat.com> [3.3.0-0.15.el7]
+- [s390x] zfcpdump: Add user space tool (Hendrik Brueckner) [825189]
+
+* Tue Jun 12 2012 Kyle McMartin <kmcmarti@redhat.com> [3.3.0-0.14.el7]
+- [perf] backport "perf uprobe" from linux-tip (Anton Arapov) [731483]
+- [kernel] backport "task_work_add" from linux-next (Anton Arapov) [826165]
+- [redhat] Kconfig: enable XFS on s390x and ppc64 (Kyle McMartin) [827091]
+- [fs] ext4: fix race between sync and completed io work (Eric Sandeen) [800457]
+- [fs] ext4: fix race between unwritten extent conversion and truncate (Eric Sandeen) [800457]
+
+* Tue May 15 2012 Kyle McMartin <kmcmarti@redhat.com> [3.3.0-0.13.el7]
+- [kdump] crashkernel=auto fixes and cleanup (Dave Young) [804077]
+- [redhat] Kconfig: s390x enable CONFIG_CRASH_DUMP (Kyle McMartin) [821439]
+
+* Mon May 07 2012 Kyle McMartin <kmcmarti@redhat.com> [3.3.0-0.12.el7]
+- [fedora] /dev/crash driver (Kyle McMartin) [808839]
+- [redhat] Kconfig: enable CONFIG_MEMORY_HOTREMOVE on x86_64 (Kyle McMartin) [816026]
+- [kdump] forward port crashkernel auto reservation code (Dave Young) [804077]
+- [block] Change scheduler to CFQ for ATA/SATA (Vivek Goyal) [811016]
+- [redhat] Kconfig: use deadline as the default IO scheduler (Vivek Goyal) [811016]
+- [kernel] Set panic_on_oops to 1 (Prarit Bhargava) [810201]
+- [kernel] backport uprobes from linux-tip (Anton Arapov)
+- [redhat] Kconfig: switch scsi back to builtin, make scsi_dh builtin too (Mike Snitzer) [810300]
+- [redhat] kernel.spec: Fix /lib/modules/`uname -r`/build symlink for usr-move (Kyle McMartin) [812321]
+- [redhat] Stub out gpg key generation for RHEL-7 Alpha (Kyle McMartin) [805962]
+- [redhat] kernel.spec: generate hmac files for kernel image again (Kyle McMartin) [805962]
+- [redhat] kernel.spec: use an XZ compressed kernel tarball (Kyle McMartin) [805962]
+
+* Tue Mar 20 2012 Kyle McMartin <kmcmarti@redhat.com> [3.3.0-0.11.el7]
+- [redhat] configs/priority: drop non-existant variants (Kyle McMartin)
+- [redhat] genspec.sh: only generate clog since lastcommit (Kyle McMartin)
+- [redhat] genspec.sh: don't generate an empty entry (Kyle McMartin)
+- [redhat] genspec.sh: Move HIDE_REDHAT logic out of the AWK mess (Kyle McMartin)
+- [redhat] genspec.sh: get rid of some unneeded arguments (Kyle McMartin)
+- [redhat] genspec.sh: More clean ups of unneeded code (Kyle McMartin)
+- [redhat] genspec.sh: remove HIDE_REDHAT (Kyle McMartin)
+- [redhat] Remove some cruft from genspec.sh (Kyle McMartin)
+- [redhat] Rename create-patches.sh to genspec.sh (Kyle McMartin)
+- [redhat] Rename RHELGITID to RHELTARBALL in kernel.spec (Kyle McMartin)
+- [redhat] Rename tarball from linux-$gitsha1 to linux-$rpmversion.el7 (Kyle McMartin)
+- [redhat] Update to 3.3.0 (Kyle McMartin)
+
 * Thu Mar 01 2012 Kyle McMartin <kmcmarti@redhat.com> [3.2.1-0.8.el7]
 - [redhat] Kconfig: disable ECRYPT_FS (Kyle McMartin) [799054]
 
