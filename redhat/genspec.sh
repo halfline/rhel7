@@ -28,24 +28,6 @@ BEGIN{TYPE="PATCHJUNK"; dolog=0; }
 		name = substr(nameline, 7);
 		pos=match(name, /</);
 		name=substr(name,1,pos-2);
-		if ( HIDE_REDHAT == 1 ) {
-			if ( subj ~ /^[\[]?redhat[:\]]/ ) {
-				if ( COMMIT == LASTCOMMIT ) {
-					dolog = 1;
-				}
-				return;
-			}
-			if ( subj ~ /^Revert/ ) {
-				if ( COMMIT == LASTCOMMIT ) {
-					dolog = 1;
-				}
-				return;
-			}
-			# keep Fedora on the patch name but not on the changelog
-			if ( subj ~ /^\[Fedora\]/ ) {
-				gsub(/\[Fedora\] /, "", subj)
-			}
-		}
 		bz=substr(BZ,11);
 		meta = "";
 		if (bz != "") {
@@ -146,8 +128,7 @@ BEGIN{TYPE="PATCHJUNK"; dolog=0; }
 	{ if (TYPE == "HEADER") { next; } }
 
 ' SOURCES=$SOURCES SPECFILE=$SPECFILE \
-	CLOGF=$clogf LASTCOMMIT=$LASTCOMMIT \
-	HIDE_REDHAT=$HIDE_REDHAT
+	CLOGF=$clogf LASTCOMMIT=$LASTCOMMIT
 
 CONFIGS=configs/config.include
 CONFIGS2=configs/config2.include
@@ -160,8 +141,6 @@ for i in $(cat $CONFIGS); do
 	count=$((count+1));
 done
 
-printf "Creating kernel patches - Done.    \n"
-
 #the changelog was created in reverse order
 #also remove the blank on top, if it exists
 #left by the 'print version\n' logic above
@@ -172,8 +151,16 @@ tac $clogf | sed "1{/^$/d; /^- /i\
 * $cdate $cname $cversion
 	}" > $clogf.rev
 
-grep -v "updating lastcommit for" $clogf.rev > $clogf.rev.stripped
-grep -v "tagging $RPM_VERSION" $clogf.rev.stripped > $clogf.rev
+cat $clogf.rev | grep -v "updating lastcommit for" |
+	grep -v "tagging $RPM_VERSION" > $clogf.rev.stripped
+cp $clogf.rev.stripped $clogf.rev
+
+if [ $HIDE_REDHAT = 1 ]; then
+	cat $clogf.rev | grep -v -e "^ \[redhat\]" |
+		grep -v "Revert" |
+		sed -e 's!\[Fedora\]!!g' > $clogf.rev.stripped
+	cp $clogf.rev.stripped $clogf.rev
+fi
 
 test -n "$SPECFILE" &&
         sed -i -e "
@@ -188,5 +175,5 @@ if [ -n "$BUILDID" ]; then
 	sed -i -e "s/# % define buildid .local/%define buildid $BUILDID/" $SPECFILE;
 fi
 
-rm $clogf $clogf.rev{,.stripped} $CONFIGS $CONFIGS2;
+rm -f $clogf $clogf.rev{,.stripped} $CONFIGS $CONFIGS2;
 
