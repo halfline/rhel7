@@ -141,6 +141,19 @@ for i in $(cat $CONFIGS); do
 	count=$((count+1));
 done
 
+cat $clogf | grep -v "updating lastcommit for" |
+	grep -v "tagging $RPM_VERSION" > $clogf.stripped
+cp $clogf.stripped $clogf
+
+if [ $HIDE_REDHAT = 1 ]; then
+	cat $clogf | grep -v -e "^ \[redhat\]" |
+		grep -v "Revert" |
+		sed -e 's!\[Fedora\]!!g' > $clogf.stripped
+	cp $clogf.stripped $clogf
+fi
+
+LENGTH=$(wc -l $clogf | awk '{print $1}')
+
 #the changelog was created in reverse order
 #also remove the blank on top, if it exists
 #left by the 'print version\n' logic above
@@ -151,15 +164,8 @@ tac $clogf | sed "1{/^$/d; /^- /i\
 * $cdate $cname $cversion
 	}" > $clogf.rev
 
-cat $clogf.rev | grep -v "updating lastcommit for" |
-	grep -v "tagging $RPM_VERSION" > $clogf.rev.stripped
-cp $clogf.rev.stripped $clogf.rev
-
-if [ $HIDE_REDHAT = 1 ]; then
-	cat $clogf.rev | grep -v -e "^ \[redhat\]" |
-		grep -v "Revert" |
-		sed -e 's!\[Fedora\]!!g' > $clogf.rev.stripped
-	cp $clogf.rev.stripped $clogf.rev
+if [ "$LENGTH" = 0 ]; then
+	rm -f $clogf.rev; touch $clogf.rev
 fi
 
 test -n "$SPECFILE" &&
@@ -175,5 +181,5 @@ if [ -n "$BUILDID" ]; then
 	sed -i -e "s/# % define buildid .local/%define buildid $BUILDID/" $SPECFILE;
 fi
 
-rm -f $clogf $clogf.rev{,.stripped} $CONFIGS $CONFIGS2;
+rm -f $clogf{,.rev,.stripped} $CONFIGS $CONFIGS2;
 
