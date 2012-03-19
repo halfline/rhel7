@@ -13,59 +13,15 @@ clogf="$SOURCES/changelog"
 HIDE_REDHAT=0;
 # override LC_TIME to avoid date conflicts when building the srpm
 LC_TIME=
-SUBLEVEL="$(echo $MARKER | cut -f 2 -d '.' | cut -f 1 -d '-')";
-RCREV=$(echo $MARKER | cut -f 2 -d '-' -s | sed -e "s/rc//")
-GITREV=$(echo $MARKER | cut -f 3 -d '-' -s | sed -e "s/git//")
 LASTCOMMIT=$(cat lastcommit);
 STAMP=$(echo $MARKER | cut -f 1 -d '-' | sed -e "s/v//");
-if [ -n "$RCREV" ]; then
-	RELEASED_KERNEL="0";
-	SUBLEVEL=$(($SUBLEVEL - 1));
-	PREBUILD="0.";
-else
-	RELEASED_KERNEL="1";
-	RCREV=0;
-	PREBUILD="";
-fi
-PREBUILD="0."
-if [ -z "$GITREV" ]; then
-	GITREV=0;
-fi
+RELEASED_KERNEL="1";
 RPM_VERSION="$RPMVERSION-$PKGRELEASE";
 
 echo >$clogf
 
-total="$(git log --first-parent --pretty=oneline $MARKER.. |wc -l)"
 git format-patch --first-parent --no-renames -k --stdout $MARKER..|awk '
-BEGIN{TYPE="PATCHJUNK"; count=1; dolog=0; }
-
-	#convert subject line to a useable filename
-	function subj_to_name(subject)
-	{
-		#strip off "Subject: "
-		subject = substr(subject, 10);
-
-		#need to get first word
-		split(subject, a);
-		pre = a[1];
-
-		#if word matches foo: or [foo], then the patch is
-		#good, otherwise stick a misc in front of it
-		if (! match(pre, /:$|^\[.*\]$/)) {
-			subject = "misc " subject;
-		}
-
-		name = subject;
-		#keep cvs name all lower case, I forgot why
-		if (SPECFILE == "") { name = tolower(name); }
-
-		#do the actual filename conversion
-		gsub(/[^a-zA-Z0-9_-]/,"-", name);
-		gsub(/--*/, "-", name);
-                gsub(/^[.-]*/, "", name);
-                gsub(/[.-]*$/, "", name);
-	}
-
+BEGIN{TYPE="PATCHJUNK"; dolog=0; }
 	# add an entry to changelog
 	function changelog(subjectline, nameline)
 	{
@@ -163,14 +119,6 @@ BEGIN{TYPE="PATCHJUNK"; count=1; dolog=0; }
 		TYPE="BODY";
 	    }
 	    if (TYPE=="HEADER") {
-		subj_to_name(SUBJECTLINE);
-
-		#output patch commands for specfile
-		pnum=pnum+1;
-
-		printf "Creating kernel patches - (" count "/" total ")\r";
-		count=count+1;
-
 		TYPE="META"; next;
 	    }
 	}
@@ -200,7 +148,7 @@ BEGIN{TYPE="PATCHJUNK"; count=1; dolog=0; }
 	{ if (TYPE == "HEADER") { next; } }
 
 ' SOURCES=$SOURCES SPECFILE=$SPECFILE \
-	CLOGF=$clogf total=$total LASTCOMMIT=$LASTCOMMIT \
+	CLOGF=$clogf LASTCOMMIT=$LASTCOMMIT \
 	HIDE_REDHAT=$HIDE_REDHAT
 
 CONFIGS=configs/config.include
