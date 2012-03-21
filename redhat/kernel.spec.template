@@ -68,9 +68,6 @@ Summary: The Linux kernel
 # Control whether we perform a compat. check against published ABI.
 %define with_kabichk   %{?_without_kabichk:   0} %{?!_without_kabichk:   1}
 %define with_kabichk 0
-# Control whether we HMAC sign the kernel
-%define with_fips      %{?_without_fips:      0} %{?!_without_fips:      1}
-%define with_fips 0
 
 # should we do C=1 builds with sparse
 %define with_sparse    %{?_with_sparse:       1} %{?!_with_sparse:       0}
@@ -286,6 +283,7 @@ BuildRequires: xz, findutils, gzip, m4, perl, make >= 3.78, diffutils, gawk
 BuildRequires: gcc >= 3.4.2, binutils >= 2.12, redhat-rpm-config
 BuildRequires: net-tools
 BuildRequires: xmlto, asciidoc
+BuildRequires: hmaccalc
 %if %{with_sparse}
 BuildRequires: sparse >= 0.4.1
 %endif
@@ -294,9 +292,6 @@ BuildRequires: elfutils-devel zlib-devel binutils-devel newt-devel python-devel 
 %endif
 %if %{with_tools}
 BuildRequires: pciutils-devel gettext
-%endif
-%if %{with_fips}
-BuildRequires: hmaccalc
 %endif
 %if %{with_debuginfo}
 # Fancy new debuginfo generation introduced in Fedora 8/RHEL 6.
@@ -832,12 +827,10 @@ BuildKernel() {
     		$RPM_BUILD_ROOT/%{image_install_path}/$InstallName-$KernelVer
     chmod 755 $RPM_BUILD_ROOT/%{image_install_path}/$InstallName-$KernelVer
 
-%if %{with_fips}
     # hmac sign the kernel for FIPS
     echo "Creating hmac file: $RPM_BUILD_ROOT/%{image_install_path}/.vmlinuz-$KernelVer.hmac"
     ls -l $RPM_BUILD_ROOT/%{image_install_path}/$InstallName-$KernelVer
     sha512hmac $RPM_BUILD_ROOT/%{image_install_path}/$InstallName-$KernelVer | sed -e "s,$RPM_BUILD_ROOT,," > $RPM_BUILD_ROOT/%{image_install_path}/.vmlinuz-$KernelVer.hmac;
-%endif
 
     mkdir -p $RPM_BUILD_ROOT/lib/modules/$KernelVer
     mkdir -p $RPM_BUILD_ROOT/lib/modules/$KernelVer/kernel
@@ -1363,9 +1356,7 @@ fi
 %{expand:%%files %{?2}}\
 %defattr(-,root,root)\
 /%{image_install_path}/%{?-k:%{-k*}}%{!?-k:vmlinuz}-%{KVERREL}%{?2:.%{2}}\
-%if %{with_fips} \
 /%{image_install_path}/.vmlinuz-%{KVERREL}%{?2:.%{2}}.hmac \
-%endif \
 %attr(600,root,root) /boot/System.map-%{KVERREL}%{?2:.%{2}}\
 /boot/config-%{KVERREL}%{?2:.%{2}}\
 %dir /lib/modules/%{KVERREL}%{?2:.%{2}}\
