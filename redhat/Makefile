@@ -84,9 +84,9 @@ rh-stub-key:
 
 $(TARBALL):
 	@echo "Creating archive $(TARBALL)"
-	(cd ../; \
-	git archive --prefix=linux-$(KVERSION)-$(PKGRELEASE)/ --format=tar $(GITID) | \
-	bzip2 > $(TARBALL))
+	( cd ../; \
+	git archive --prefix=linux-$(KVERSION)-$(PKGRELEASE)/ \
+		--format=tar $(GITID) | xz > $(TARBALL) )
 
 setup-source: rh-clean-sources
 	@cp $(REDHAT)/$(SPECFILE).template $(SOURCES)/$(SPECFILE)

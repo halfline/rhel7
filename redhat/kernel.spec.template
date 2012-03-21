@@ -282,7 +282,7 @@ ExclusiveOS: Linux
 # List the packages used during the kernel build
 #
 BuildRequires: module-init-tools, patch >= 2.5.4, bash >= 2.03, sh-utils, tar
-BuildRequires: bzip2, findutils, gzip, m4, perl, make >= 3.78, diffutils, gawk
+BuildRequires: xz, findutils, gzip, m4, perl, make >= 3.78, diffutils, gawk
 BuildRequires: gcc >= 3.4.2, binutils >= 2.12, redhat-rpm-config
 BuildRequires: net-tools
 BuildRequires: xmlto, asciidoc
@@ -311,7 +311,7 @@ BuildRequires: gnupg
 BuildRequires: glibc-static
 %endif
 
-Source0: linux-%%RPMVERSION%%-%%PKGRELEASE%%.tar.bz2
+Source0: linux-%%RPMVERSION%%-%%PKGRELEASE%%.tar.xz
 
 Source1: Makefile.common
 
