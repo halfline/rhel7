@@ -37,6 +37,7 @@
 #include <asm/uaccess.h>
 #include <asm/io.h>
 #include <asm/sections.h>
+#include <asm/setup.h>
 
 /* Per cpu memory for storing cpu states in case of system crash. */
 note_buf_t __percpu *crash_notes;
@@ -1366,6 +1367,42 @@ static __initdata char *suffix_tbl[] = {
 	[SUFFIX_NULL] = NULL,
 };
 
+#ifdef CONFIG_KEXEC_AUTO_RESERVE
+#ifndef arch_default_crash_size
+unsigned long long __init arch_default_crash_size(unsigned long long total_size)
+{
+	/*
+	 * BIOS usually will reserve some memory regions for it's own use.
+	 * so we will get less than actual memory in e820 usable areas.
+	 * We workaround this by round up the total size to 128M which is
+	 * enough for our current 2G kdump auto reserve threshold.
+	 */
+	if (roundup(total_size, 0x8000000) < KEXEC_AUTO_THRESHOLD)
+		return 0;
+	else {
+#ifdef CONFIG_64BIT
+		return KEXEC_AUTO_RESERVED_SIZE +
+			roundup((total_size - KEXEC_AUTO_RESERVED_SIZE)
+				/ (1ULL<<23), 1ULL<<20); /* 1:8192 */
+#else
+		return KEXEC_AUTO_RESERVED_SIZE;
+#endif
+	}
+}
+#define arch_default_crash_size arch_default_crash_size
+#endif
+
+#ifndef arch_default_crash_base
+unsigned long long __init arch_default_crash_base(void)
+{
+	/* 0 means find the base address automatically. */
+	return 0;
+}
+#define arch_default_crash_base arch_default_crash_base
+#endif
+
+#endif /*CONFIG_KEXEC_AUTO_RESERVE*/
+
 /*
  * That function parses "suffix"  crashkernel command lines like
  *
@@ -1465,6 +1502,39 @@ static int __init __parse_crashkernel(char *cmdline,
 	if (suffix)
 		return parse_crashkernel_suffix(ck_cmdline, crash_size,
 				crash_base, suffix);
+#ifdef CONFIG_KEXEC_AUTO_RESERVE
+	if (strncmp(ck_cmdline, "auto", 4) == 0) {
+		unsigned long long size;
+		int len;
+		char tmp[32];
+
+		size = arch_default_crash_size(system_ram);
+		if (size != 0) {
+			*crash_size = size;
+			*crash_base = arch_default_crash_base();
+			len = scnprintf(tmp, sizeof(tmp), "%luM@%luM",
+					(unsigned long)(*crash_size)>>20,
+					(unsigned long)(*crash_base)>>20);
+			/* 'len' can't be <= 4. */
+			if (likely((len - 4 + strlen(cmdline))
+					< COMMAND_LINE_SIZE - 1)) {
+				memmove(ck_cmdline + len, ck_cmdline + 4,
+					strlen(cmdline) - (ck_cmdline + 4 - cmdline) + 1);
+				memcpy(ck_cmdline, tmp, len);
+			}
+			return 0;
+		} else {
+			/*
+			 * We can't reserve memory auotmatcally,
+			 * remove "crashkernel=auto" from cmdline.
+			 */
+			ck_cmdline += 4; /* strlen("auto") */
+			memmove(ck_cmdline - 16, ck_cmdline,
+				strlen(cmdline) - (ck_cmdline - cmdline) + 1);
+			return -ENOMEM;
+		}
+	}
+#endif
 	/*
 	 * if the commandline contains a ':', then that's the extended
 	 * syntax -- if not, it must be the classic syntax
