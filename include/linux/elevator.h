@@ -210,6 +210,8 @@ enum {
 	INIT_LIST_HEAD(&(rq)->csd.list);	\
 	} while (0)
 
+extern char chosen_elevator[];
+
 #else /* CONFIG_BLOCK */
 
 static inline void load_default_elevator_module(void) { }

@@ -1159,6 +1159,10 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
 
 	blk_queue_flush_queueable(q, false);
 
+	/* Change IO scheduler to CFQ */
+	if (!(*chosen_elevator))
+		elevator_change(q, "cfq");
+
 	dev->sdev = sdev;
 	return 0;
 }

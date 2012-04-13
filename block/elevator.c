@@ -118,7 +118,8 @@ static struct elevator_type *elevator_get(const char *name, bool try_loading)
 	return e;
 }
 
-static char chosen_elevator[ELV_NAME_MAX];
+char chosen_elevator[ELV_NAME_MAX];
+EXPORT_SYMBOL(chosen_elevator);
 
 static int __init elevator_setup(char *str)
 {
