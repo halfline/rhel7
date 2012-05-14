@@ -290,7 +290,7 @@ Or you can use:
 
     crashkernel=auto
 
-if you have enough memory. The threshold is 2G on ia64 and x86, for powerpc
+if you have enough memory. The threshold is 2G on x86, for powerpc
 if PAGESIZE is 4k the threshold is 2G or the threshold is 8G, below which
 this won't work. For s390x, crashkernel=auto can be used for all
 memory sizes > 256M.

@@ -1380,13 +1380,14 @@ unsigned long long __init arch_default_crash_size(unsigned long long total_size)
 	if (roundup(total_size, 0x8000000) < KEXEC_AUTO_THRESHOLD)
 		return 0;
 	else {
-#ifdef CONFIG_64BIT
+		/*
+		 * Filtering logic in kdump initrd requires 2bits per 4K page.
+		 * Hence reserve 2bits per 4K of RAM (or 1byte per 16K of RAM)
+		 * on top of base of 128M (KEXEC_AUTO_RESERVED_SIZE).
+		 */
 		return KEXEC_AUTO_RESERVED_SIZE +
 			roundup((total_size - KEXEC_AUTO_RESERVED_SIZE)
-				/ (1ULL<<23), 1ULL<<20); /* 1:8192 */
-#else
-		return KEXEC_AUTO_RESERVED_SIZE;
-#endif
+				/ (1ULL<<14), 1ULL<<20);
 	}
 }
 #define arch_default_crash_size arch_default_crash_size
@@ -1505,34 +1506,14 @@ static int __init __parse_crashkernel(char *cmdline,
 #ifdef CONFIG_KEXEC_AUTO_RESERVE
 	if (strncmp(ck_cmdline, "auto", 4) == 0) {
 		unsigned long long size;
-		int len;
-		char tmp[32];
 
 		size = arch_default_crash_size(system_ram);
 		if (size != 0) {
 			*crash_size = size;
 			*crash_base = arch_default_crash_base();
-			len = scnprintf(tmp, sizeof(tmp), "%luM@%luM",
-					(unsigned long)(*crash_size)>>20,
-					(unsigned long)(*crash_base)>>20);
-			/* 'len' can't be <= 4. */
-			if (likely((len - 4 + strlen(cmdline))
-					< COMMAND_LINE_SIZE - 1)) {
-				memmove(ck_cmdline + len, ck_cmdline + 4,
-					strlen(cmdline) - (ck_cmdline + 4 - cmdline) + 1);
-				memcpy(ck_cmdline, tmp, len);
-			}
 			return 0;
-		} else {
-			/*
-			 * We can't reserve memory auotmatcally,
-			 * remove "crashkernel=auto" from cmdline.
-			 */
-			ck_cmdline += 4; /* strlen("auto") */
-			memmove(ck_cmdline - 16, ck_cmdline,
-				strlen(cmdline) - (ck_cmdline - cmdline) + 1);
+		} else
 			return -ENOMEM;
-		}
 	}
 #endif
 	/*

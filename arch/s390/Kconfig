@@ -520,8 +520,7 @@ config KEXEC_AUTO_RESERVE
 	  need to specify numbers for the "crashkernel=X@Y" boot option,
 	  instead you can use "crashkernel=auto".
 
-	  On x86_32 and s390x 128M is reserved, on x86_64 1/32 of your memory
-	  is reserved, but it will not exceed 4G.
+	  On s390x 128M is reserved.
 
 config CRASH_DUMP
 	bool "kernel crash dumps"
