@@ -174,7 +174,7 @@ Summary: The Linux kernel
 %define make_target image
 %define kernel_image arch/s390/boot/image
 %define with_tools 0
-%define with_kdump 0
+%define with_kdump 1
 %endif
 
 # Should make listnewconfig fail if there's config options
