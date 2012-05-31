@@ -36,6 +36,5 @@ CONFIG_CRYPTO_GHASH_S390=m
 # CONFIG_FTRACE_SYSCALLS is not set
 # CONFIG_KVM is not set
 # CONFIG_GFS2_FS is not set
-# CONFIG_XFS_FS is not set
 # CONFIG_SECCOMP is not set
 CONFIG_CRASH_DUMP=y
