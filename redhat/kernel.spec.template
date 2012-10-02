@@ -1389,6 +1389,16 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Nov 08 2012 Kyle McMartin <kmcmarti@redhat.com> [3.6.0-0.29.el7]
+- [redhat] .gitattributes: fix redhat/ export-ignore (Kyle McMartin)
+- [kdump] revert "x86: fix the size calculation of mapping tables" (Dave Young) [846531]
+
+* Thu Oct 04 2012 Kyle McMartin <kmcmarti@redhat.com> [3.6.0-0.28.el7]
+- [ppc64] fix unrecoverable VMX unavailable exception in memcpy (Kyle McMartin) [862774]
+
+* Tue Oct 02 2012 Kyle McMartin <kmcmarti@redhat.com> [3.6.0-0.27.el7]
+- [redhat] rebase to v3.6 (Kyle McMartin)
+
 * Thu Sep 20 2012 Kyle McMartin <kmcmarti@redhat.com> [3.5.0-0.26.el7]
 - [perf] fix build failure due to warn_unused_result (Kyle McMartin) [805962]
 
