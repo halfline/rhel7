@@ -806,7 +806,7 @@ config NR_CPUS
 	range 2 8 if SMP && X86_32 && !X86_BIGSMP
 	range 2 512 if SMP && !MAXSMP
 	default "1" if !SMP
-	default "4096" if MAXSMP
+	default "5120" if MAXSMP
 	default "32" if SMP && (X86_NUMAQ || X86_SUMMIT || X86_BIGSMP || X86_ES7000)
 	default "8" if SMP
 	---help---
