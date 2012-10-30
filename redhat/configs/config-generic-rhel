@@ -699,6 +699,7 @@ CONFIG_DRM_I2C_SIL164=y
 
 # CONFIG_UBIFS_FS is not set
 
+# CONFIG_B43 is not set
 # CONFIG_B43LEGACY is not set
 # CONFIG_AT76C50X_USB is not set
 # CONFIG_USB_NET_RNDIS_WLAN is not set
