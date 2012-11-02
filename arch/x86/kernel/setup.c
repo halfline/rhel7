@@ -826,6 +826,21 @@ static void __init trim_low_memory_range(void)
 	memblock_reserve(0, ALIGN(reserve_low, PAGE_SIZE));
 }
 	
+static void rh_check_supported(void)
+{
+	/* The RHEL7 kernel does not support this hardware.  The kernel will
+	 * attempt to boot, but no support is given for this hardware */
+
+	/* RHEL only supports Intel and AMD processors */
+	if ((boot_cpu_data.x86_vendor != X86_VENDOR_INTEL) &&
+	    (boot_cpu_data.x86_vendor != X86_VENDOR_AMD)) {
+		pr_crit("Detected processor %s %s\n",
+			boot_cpu_data.x86_vendor_id,
+			boot_cpu_data.x86_model_id);
+		mark_hardware_unsupported("Processor");
+	}
+}
+
 /*
  * Determine if we were loaded by an EFI loader.  If so, then we have also been
  * passed the efi memmap, systab, etc., so we should use these data structures
@@ -1229,6 +1244,8 @@ void __init setup_arch(char **cmdline_p)
 		efi_unmap_memmap();
 	}
 #endif
+
+	rh_check_supported();
 }
 
 #ifdef CONFIG_X86_32

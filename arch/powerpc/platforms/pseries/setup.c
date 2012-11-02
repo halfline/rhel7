@@ -432,6 +432,13 @@ static void pSeries_machine_kexec(struct kimage *image)
 
 static void __init pSeries_setup_arch(void)
 {
+	/* Power5 is unsupported in RHEL7 */
+	if (!strncmp(cur_cpu_spec->platform, "power5", 6))
+		mark_hardware_unsupported("Power5 Processor");
+	/* Power6 is unsupported in RHEL7 */
+	if (!strncmp(cur_cpu_spec->platform, "power6", 6))
+		mark_hardware_unsupported("Power6 Processor");
+
 	panic_timeout = 10;
 
 	/* Discover PIC type and setup ppc_md accordingly */
