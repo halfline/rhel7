@@ -1,2 +1,2 @@
-redhat/		export-ignore
+/redhat		export-ignore
 makefile	export-ignore
