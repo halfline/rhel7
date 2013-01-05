@@ -60,28 +60,13 @@ rh-clean: rh-clean-sources rh-clean-configs rh-clean-rpmdirs
 rh-pull-configs:
 	cd $(REDHAT)/configs; $(MAKE) VERSION=$(KVERSION) pull-configs
 
-rh-FIXME-key:
-	echo "Creating a new module signing key...";
-	@cd $(_OUTPUT); \
-	/sbin/rngd -r /dev/urandom; \
-	gpg --homedir . --batch --gen-key $(REDHAT)/genkey; \
-	if [ -s $(REDHAT)/extrakeys.pub ]; then \
-		gpg --homedir . --no-default-keyring --keyring kernel.pub --import $(REDHAT)/extrakeys.pub; \
-	fi; \
-	gpg --homedir . --export --keyring kernel.pub Red > extract.pub; \
-	mkdir -p crypto/signature/ scripts/; \
-	gcc -o scripts/bin2c $(REDHAT)/../scripts/bin2c.c; \
-	scripts/bin2c ksign_def_public_key __initdata < extract.pub >crypto/signature/key.h;
-
-rh-key:
 rh-stub-key:
 	@echo "Copying pre-generated keys";
 	@echo "*** THIS IS NOT RECOMMENDED ***";
 	@echo "To be safe, keys should be created once for every build";
 	@echo "Use this option only for development builds";
-	@cp keys/*.{pub,sec,gpg} $(_OUTPUT)/;
-	@mkdir -p $(_OUTPUT)/crypto/signature/;
-	@cp keys/key.h $(_OUTPUT)/crypto/signature/;
+	@cp keys/stub_key.x509 $(_OUTPUT)/;
+	@cp keys/stub_key.priv $(_OUTPUT)/;
 
 $(TARBALL):
 	@echo "Creating archive $(TARBALL)"
@@ -105,17 +90,17 @@ sources-rh: $(TARBALL)
 	@($(FILTERDIFF) $(TESTPATCH).tmp | egrep -v "^index|^diff" >$(TESTPATCH).tmp2; true)
 	@mv $(TESTPATCH).tmp2 $(TESTPATCH).tmp
 	@diff $(TESTPATCH).tmp $(TESTPATCH) > /dev/null || \
-		echo "WARNING: There are uncommitted changes in your tree or the changes are not in sync with the kernel-test.patch.  Either commit the changes or run 'make rh-test-patch'"
+		echo "WARNING: There are uncommitted changes in your tree or the changes are not in sync with linux-kernel-test.patch.  Either commit the changes or run 'make rh-test-patch'"
 	@rm $(TESTPATCH).tmp
 	@$(REDHAT)/genspec.sh $(SOURCES) $(SOURCES)/$(SPECFILE) $(PKGRELEASE) $(RPMVERSION) $(BUILDID)
 	@cp $(SOURCES)/$(SPECFILE) $(SOURCES)/../SPECS
 	@cp $(TESTPATCH) $(SOURCES)/linux-kernel-test.patch
 	@cp configs/Makefile $(SOURCES)/Makefile.config
-	@# if the extrakeys.pub doesn't exist, create a empty one
-	@(if [ ! -f extrakeys.pub ]; then \
-		touch extrakeys.pub; \
+	@# if the extra_certificates doesn't exist, create a empty one
+	@(if [ ! -f keys/extra_certificates ]; then \
+		touch keys/extra_certificates; \
 	fi)
-	@cp cpupower.* genkey Makefile.common kabi/{find-provides,kabitool,check-kabi} kabi/Module.kabi_{ppc64,s390x,x86_64} configs/{config-*,merge.pl} extrakeys.pub rhpkg/Makefile $(SOURCES)/
+	@cp cpupower.* x509.genkey keys/extra_certificates Makefile.common kabi/{find-provides,kabitool,check-kabi} kabi/Module.kabi_{ppc64,s390x,x86_64} configs/{config-*,merge.pl} rhpkg/Makefile $(SOURCES)/
 
 rh-sources: setup-source sources-rh
 
@@ -195,7 +180,6 @@ rh-help:
 	@echo  '  rh-test-patch - Create a diff against HEAD and put it in linux-kernel-test.patch.'
 	@echo  '                  Then linux-kernel-test.patch will be added to the kernel build'
 	@echo  '  rh-check-kabi - Run check-kabi script on a pre-compiled tree.'
-	@echo  '  rh-key	- Generate the required files for compiling with module signing enabled'
 	@echo  '  rh-stub-key	- Use pre generated keys to speed local test builds'
 	@echo  ''
 	@echo  'Configuration targets:'
