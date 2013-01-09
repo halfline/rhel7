@@ -1023,6 +1023,37 @@ chmod -R a=rX Documentation
 find Documentation -type d | xargs chmod u+w
 %endif
 
+# In the modsign case, we do 3 things.  1) We check the "flavour" and hard
+# code the value in the following invocations.  This is somewhat sub-optimal
+# but we're doing this inside of an RPM macro and it isn't as easy as it
+# could be because of that.  2) We restore the .tmp_versions/ directory from
+# the one we saved off in BuildKernel above.  This is to make sure we're
+# signing the modules we actually built/installed in that flavour.  3) We
+# grab the arch and invoke 'make modules_sign' and the mod-extra-sign.sh
+# commands to actually sign the modules.
+#
+# We have to do all of those things _after_ find-debuginfo runs, otherwise
+# that will strip the signature off of the modules.
+
+%define __modsign_install_post \
+  if [ "%{with_debug}" != "0" ]; then \
+    Arch=`head -1 configs/kernel-%{version}-%{_target_cpu}-debug.config | cut -b 3-` \
+    rm -rf .tmp_versions \
+    mv .tmp_versions.sign.debug .tmp_versions \
+    mv signing_key.priv.sign.debug signing_key.priv \
+    mv signing_key.x509.sign.debug signing_key.x509 \
+    make -s ARCH=$Arch V=1 INSTALL_MOD_PATH=$RPM_BUILD_ROOT modules_sign KERNELRELEASE=%{KVERREL}.debug \
+  fi \
+    if [ "%{with_default}" != "0" ]; then \
+    Arch=`head -1 configs/kernel-%{version}-%{_target_cpu}.config | cut -b 3-` \
+    rm -rf .tmp_versions \
+    mv .tmp_versions.sign .tmp_versions \
+    mv signing_key.priv.sign signing_key.priv \
+    mv signing_key.x509.sign signing_key.x509 \
+    make -s ARCH=$Arch V=1 INSTALL_MOD_PATH=$RPM_BUILD_ROOT modules_sign KERNELRELEASE=%{KVERREL} \
+  fi \
+%{nil}
+
 ###
 ### Special hacks for debuginfo subpackages.
 ###
@@ -1031,24 +1062,9 @@ find Documentation -type d | xargs chmod u+w
 %define debug_package %{nil}
 
 %if %{with_debuginfo}
+
 %define __debug_install_post \
   /usr/lib/rpm/find-debuginfo.sh %{debuginfo_args} %{_builddir}/%{?buildsubdir}\
-#  if [ "%{with_debug}" != "0" ]; then \
-#    Arch=`head -1 configs/kernel-%{version}-%{_target_cpu}-debug.config | cut -b 3-` \
-#    rm -rf .tmp_versions \
-#    mv .tmp_versions.sign.debug .tmp_versions \
-#    mv signing_key.priv.sign.debug signing_key.priv \
-#    mv signing_key.x509.sign.debug signing_key.x509 \
-#    make -s ARCH=$Arch V=1 INSTALL_MOD_PATH=$RPM_BUILD_ROOT modules_sign KERNELRELEASE=%{KVERREL}.debug \
-#  fi \
-#  if [ "%{with_default}" != "0" ]; then \
-#    Arch=`head -1 configs/kernel-%{version}-%{_target_cpu}.config | cut -b 3-` \
-#    rm -rf .tmp_versions \
-#    mv .tmp_versions.sign .tmp_versions \
-#    mv signing_key.priv.sign signing_key.priv \
-#    mv signing_key.x509.sign signing_key.x509 \
-#    make -s ARCH=$Arch V=1 INSTALL_MOD_PATH=$RPM_BUILD_ROOT modules_sign KERNELRELEASE=%{KVERREL} \
-#  fi \
 %{nil}
 
 %ifnarch noarch
@@ -1056,7 +1072,19 @@ find Documentation -type d | xargs chmod u+w
 %files -f debugfiles.list debuginfo-common-%{_target_cpu}
 %defattr(-,root,root)
 %endif
+
 %endif
+
+#
+# Disgusting hack alert! We need to ensure we sign modules *after* all
+# invocations of strip occur, which is in __debug_install_post if
+# find-debuginfo.sh runs, and __os_install_post if not.
+#
+%define __spec_install_post \
+  %{?__debug_package:%{__debug_install_post}}\
+  %{__arch_install_post}\
+  %{__os_install_post}\
+  %{__modsign_install_post}
 
 ###
 ### install
