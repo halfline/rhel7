@@ -747,14 +747,13 @@ BuildKernel() {
     %endif
     %endif
 
-    cp %{SOURCE11} .	# x509.genkey
-    cp %{SOURCE12} .	# extra_certificates
-
-    chmod +x scripts/sign-file
-
     # and now to start the build process
 
     make -s mrproper
+
+    cp %{SOURCE11} .	# x509.genkey
+    cp %{SOURCE12} .	# extra_certificates
+
     cp configs/$Config .config
 
     Arch=`head -1 .config | cut -b 3-`
