@@ -14,10 +14,3 @@ rh-%::
 rhg-%::
 	$(MAKE) -C redhat $(@) $(_EXTRA_ARGS)
 
-.PHONY: rhkey
-Makefile: rhkey
-rhkey:
-	@if [ ! -s $(_OUTPUT)/kernel.pub -o ! -s $(_OUTPUT)/kernel.sec -o ! -s $(_OUTPUT)/crypto/signature/key.h ]; then \
-		$(MAKE) -C redhat rh-key $(_EXTRA_ARGS); \
-	fi;
-
