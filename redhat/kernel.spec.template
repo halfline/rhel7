@@ -306,6 +306,8 @@ Source0: linux-%%RPMVERSION%%-%%PKGRELEASE%%.tar.xz
 
 Source1: Makefile.common
 
+Source10: sign-modules
+%define modsign_cmd %{SOURCE10}
 Source11: x509.genkey
 Source12: extra_certificates
 
@@ -1041,7 +1043,7 @@ find Documentation -type d | xargs chmod u+w
     mv .tmp_versions.sign.debug .tmp_versions \
     mv signing_key.priv.sign.debug signing_key.priv \
     mv signing_key.x509.sign.debug signing_key.x509 \
-    make -s ARCH=$Arch V=1 INSTALL_MOD_PATH=$RPM_BUILD_ROOT modules_sign KERNELRELEASE=%{KVERREL}.debug \
+    %{modsign_cmd} $RPM_BUILD_ROOT/lib/modules/%{KVERREL}.debug \
   fi \
     if [ "%{with_default}" != "0" ]; then \
     Arch=`head -1 configs/kernel-%{version}-%{_target_cpu}.config | cut -b 3-` \
@@ -1049,7 +1051,7 @@ find Documentation -type d | xargs chmod u+w
     mv .tmp_versions.sign .tmp_versions \
     mv signing_key.priv.sign signing_key.priv \
     mv signing_key.x509.sign signing_key.x509 \
-    make -s ARCH=$Arch V=1 INSTALL_MOD_PATH=$RPM_BUILD_ROOT modules_sign KERNELRELEASE=%{KVERREL} \
+    %{modsign_cmd} $RPM_BUILD_ROOT/lib/modules/%{KVERREL} \
   fi \
 %{nil}
 
