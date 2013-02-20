@@ -47,3 +47,6 @@ CONFIG_PROC_VMCORE=y
 # CONFIG_LIBFCOE is not set
 # CONFIG_FCOE is not set
 # CONFIG_FCOE_FNIC is not set
+# CONFIG_EEPROM_93CX6 is not set
+# CONFIG_MSPRO_BLOCK is not set
+# CONFIG_NEW_LEDS is not set
