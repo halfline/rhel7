@@ -697,3 +697,5 @@ CONFIG_DRM_I2C_SIL164=y
 # CONFIG_IMA_APPRAISE is not set
 
 # CONFIG_PD6729 is not set
+
+# CONFIG_UBIFS_FS is not set
