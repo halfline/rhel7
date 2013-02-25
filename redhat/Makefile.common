@@ -2,13 +2,13 @@ RPMBUILD := $(shell if [ -x "/usr/bin/rpmbuild" ]; then echo rpmbuild; \
                    else echo rpm; fi)
 REDHAT:=$(shell pwd)
 MACH :=  $(shell uname -m)
-KVERSION:=3.7.0
+KVERSION:=3.8.0
 GITID:= $(shell git log --max-count=1 --pretty=format:%H)
-RPMVERSION:=3.7.0
+RPMVERSION:=3.8.0
 # marker is git tag which we base off of for exporting patches
-MARKER:=v3.7
+MARKER:=v3.8
 PREBUILD := 0.
-BUILD:=29
+BUILD:=36
 DIST:=.el7
 SPECFILE:=kernel.spec
 RPM:=$(REDHAT)/rpm
