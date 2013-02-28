@@ -653,6 +653,8 @@ CONFIG_HWMON=y
 # CONFIG_ACERHDF is not set
 # CONFIG_CIFS_NFSD_EXPORT is not set
 
+# CONFIG_VMXNET3 is not set
+
 # CONFIG_CEPH_LIB is not set
 # CONFIG_CEPH_FS is not set
 # CONFIG_BLK_DEV_RBD is not set
