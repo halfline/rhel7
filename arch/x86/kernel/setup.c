@@ -830,7 +830,8 @@ static void __init trim_low_memory_range(void)
 static void rh_check_supported(void)
 {
 	/* RHEL7 supports single cpu on guests only */
-	if ((cpumask_weight(cpu_present_mask) == 1) && !x86_hyper) {
+	if ((cpumask_weight(cpu_present_mask) == 1) && !x86_hyper &&
+	    !is_kdump_kernel()) {
 		pr_crit("Detected single cpu native boot\n");
 		mark_hardware_unsupported("Single native CPU boot");
 	}
