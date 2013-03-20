@@ -68,11 +68,12 @@ rh-stub-key:
 	@cp keys/stub_key.x509 $(_OUTPUT)/;
 	@cp keys/stub_key.priv $(_OUTPUT)/;
 
+XZ_THREADS := $(shell rpm --eval %{_smp_mflags} | sed -e 's!^-j!--threads !')
 $(TARBALL):
 	@echo "Creating archive $(TARBALL)"
 	( cd ../; \
 	git archive --prefix=linux-$(KVERSION)-$(PKGRELEASE)/ \
-		--format=tar $(GITID) | xz > $(TARBALL) )
+		--format=tar $(GITID) | xz $(XZ_THREADS) > $(TARBALL) )
 
 setup-source: rh-clean-sources
 	@cp $(REDHAT)/$(SPECFILE).template $(SOURCES)/$(SPECFILE)
