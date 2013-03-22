@@ -23,6 +23,9 @@ endif
 
 ARCHCONFIG := $(shell uname -m | sed -e s/x86_64/X86_64/ \
 				     -e s/s390x/S390/ -e s/ppc.*/PPC/ )
+
+include Makefile.cross
+
 default: rh-help
 
 rh-check-kabi:
@@ -182,6 +185,15 @@ rh-help:
 	@echo  '                  Then linux-kernel-test.patch will be added to the kernel build'
 	@echo  '  rh-check-kabi - Run check-kabi script on a pre-compiled tree.'
 	@echo  '  rh-stub-key	- Use pre generated keys to speed local test builds'
+	@echo  '  rh-cross-all-builds - [x86_64 only] execute "rpmbuild -bc" for i686, s390x,'
+	@echo  '			ppc64, x86_64 using RHEL cross compiler'
+	@echo  '  rh-cross-[ARCH]-build - [x86_64 only] execute "rpmbuild -bc" for specified'
+	@echo  '			  ARCH using RHEL cross compiler'
+	@echo  '  rh-cross-all-rpms - [x86_64 only] execute rpm builds for i686, s390x,'
+	@echo  '		      ppc64, x86_64 using RHEL cross compiler'
+	@echo  '  rh-cross-[ARCH]-rpm - [x86_64 only] execute rpm builds for specified'
+	@echo  '			ARCH using RHEL cross compiler'
+
 	@echo  ''
 	@echo  'Configuration targets:'
 	@echo

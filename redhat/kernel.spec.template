@@ -70,6 +70,9 @@ Summary: The Linux kernel
 # should we do C=1 builds with sparse
 %define with_sparse    %{?_with_sparse:       1} %{?!_with_sparse:       0}
 
+# Cross compile requested?
+%define with_cross    %{?_with_cross:         1} %{?!_with_cross:        0}
+
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
@@ -303,6 +306,18 @@ BuildRequires: rpm-build >= 4.9.0-1, elfutils >= elfutils-0.153-1
 %ifarch s390x
 # required for zfcpdump
 BuildRequires: glibc-static
+%endif
+
+#cross compile make
+%if %{with_cross}
+
+%if "%{_target_cpu}" == "s390x"
+%define cross_opts CROSS_COMPILE=s390x-linux-gnu-
+%endif
+%if "%{_target_cpu}" == "ppc64"
+%define cross_opts CROSS_COMPILE=powerpc64-linux-gnu-
+%endif
+
 %endif
 
 Source0: linux-%%RPMVERSION%%-%%PKGRELEASE%%.tar.xz
@@ -684,7 +699,7 @@ for i in *.config
 do
   mv $i .config
   Arch=`head -1 .config | cut -b 3-`
-  make ARCH=$Arch listnewconfig | grep -E '^CONFIG_' >.newoptions || true
+  make %{?cross_opts} ARCH=$Arch listnewconfig | grep -E '^CONFIG_' >.newoptions || true
 %if %{listnewconfig_fail}
   if [ -s .newoptions ]; then
     cat .newoptions
@@ -692,7 +707,7 @@ do
   fi
 %endif
   rm -f .newoptions
-  make ARCH=$Arch oldnoconfig
+  make %{?cross_opts} ARCH=$Arch oldnoconfig
   echo "# $Arch" > configs/$i
   cat .config >> configs/$i
 done
@@ -771,7 +786,7 @@ BuildKernel() {
 
     # and now to start the build process
 
-    make -s mrproper
+    make %{?cross_opts} -s mrproper
 
     cp %{SOURCE11} .	# x509.genkey
     cp %{SOURCE12} .	# extra_certificates
@@ -789,11 +804,11 @@ BuildKernel() {
     fi
 %endif
 
-    make -s ARCH=$Arch oldnoconfig >/dev/null
-    make -s ARCH=$Arch V=1 %{?_smp_mflags} $MakeTarget %{?sparse_mflags}
+    make -s %{?cross_opts} ARCH=$Arch oldnoconfig >/dev/null
+    make -s %{?cross_opts} ARCH=$Arch V=1 %{?_smp_mflags} $MakeTarget %{?sparse_mflags}
 
     if [ "$Flavour" != "kdump" ]; then
-        make -s ARCH=$Arch V=1 %{?_smp_mflags} modules %{?sparse_mflags} || exit 1
+        make -s %{?cross_opts} ARCH=$Arch V=1 %{?_smp_mflags} modules %{?sparse_mflags} || exit 1
     fi
 
     # Start installing the results
@@ -826,10 +841,10 @@ BuildKernel() {
     if [ "$Flavour" != "kdump" ]; then
         # Override $(mod-fw) because we don't want it to install any firmware
         # we'll get it from the linux-firmware package and we don't want conflicts
-        make -s ARCH=$Arch INSTALL_MOD_PATH=$RPM_BUILD_ROOT modules_install KERNELRELEASE=$KernelVer mod-fw=
+        make -s %{?cross_opts} ARCH=$Arch INSTALL_MOD_PATH=$RPM_BUILD_ROOT modules_install KERNELRELEASE=$KernelVer mod-fw=
     fi
 %ifarch %{vdso_arches}
-    make -s ARCH=$Arch INSTALL_MOD_PATH=$RPM_BUILD_ROOT vdso_install KERNELRELEASE=$KernelVer
+    make -s %{?cross_opts} ARCH=$Arch INSTALL_MOD_PATH=$RPM_BUILD_ROOT vdso_install KERNELRELEASE=$KernelVer
     if [ ! -s ldconfig-kernel.conf ]; then
       echo > ldconfig-kernel.conf "\
 # Placeholder file, no vDSO hwcap entries used in this kernel."
@@ -1026,7 +1041,7 @@ BuildKernel %make_target %kernel_image kdump
 # cpupower
 # make sure version-gen.sh is executable.
 chmod +x tools/power/cpupower/utils/version-gen.sh
-make %{?_smp_mflags} -C tools/power/cpupower CPUFREQ_BENCH=false
+make %{?cross_opts} %{?_smp_mflags} -C tools/power/cpupower CPUFREQ_BENCH=false
 %ifarch x86_64
     pushd tools/power/cpupower/debug/x86_64
     make %{?_smp_mflags} centrino-decode powernow-k8-decode
@@ -1144,10 +1159,10 @@ ls $man9dir | grep -q '' || > $man9dir/BROKEN
 
 %if %{with_headers}
 # Install kernel headers
-make ARCH=%{hdrarch} INSTALL_HDR_PATH=$RPM_BUILD_ROOT/usr headers_install
+make %{?cross_opts} ARCH=%{hdrarch} INSTALL_HDR_PATH=$RPM_BUILD_ROOT/usr headers_install
 
 # Do headers_check but don't die if it fails.
-make ARCH=%{hdrarch} INSTALL_HDR_PATH=$RPM_BUILD_ROOT/usr headers_check \
+make %{?cross_opts} ARCH=%{hdrarch} INSTALL_HDR_PATH=$RPM_BUILD_ROOT/usr headers_check \
      > hdrwarnings.txt || :
 if grep -q exist hdrwarnings.txt; then
    sed s:^$RPM_BUILD_ROOT/usr/include/:: hdrwarnings.txt
@@ -1207,7 +1222,7 @@ install -m644 %{SOURCE2001} %{buildroot}%{_sysconfdir}/sysconfig/cpupower
 %endif
 
 %if %{with_bootwrapper}
-make DESTDIR=$RPM_BUILD_ROOT bootwrapper_install WRAPPER_OBJDIR=%{_libdir}/kernel-wrapper WRAPPER_DTSDIR=%{_libdir}/kernel-wrapper/dts
+make %{?cross_opts} DESTDIR=$RPM_BUILD_ROOT bootwrapper_install WRAPPER_OBJDIR=%{_libdir}/kernel-wrapper WRAPPER_DTSDIR=%{_libdir}/kernel-wrapper/dts
 %endif
 
 
