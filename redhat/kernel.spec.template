@@ -281,7 +281,7 @@ ExclusiveOS: Linux
 BuildRequires: module-init-tools, patch >= 2.5.4, bash >= 2.03, sh-utils, tar
 BuildRequires: xz, findutils, gzip, m4, perl, make >= 3.78, diffutils, gawk
 BuildRequires: gcc >= 3.4.2, binutils >= 2.12, redhat-rpm-config
-BuildRequires: hostname, net-tools
+BuildRequires: hostname, net-tools, bc
 BuildRequires: xmlto, asciidoc
 BuildRequires: openssl
 BuildRequires: hmaccalc
@@ -506,7 +506,7 @@ This package provides debug information for package kernel-tools.
 # symlinks because of the trailing nonmatching alternation and
 # the leading .*, because of find-debuginfo.sh's buggy handling
 # of matching the pattern against the symlinks file.
-%{expand:%%global debuginfo_args %{?debuginfo_args} -p '.*%%{_bindir}/centrino-decode(\.debug)?|.*%%{_bindir}/powernow-k8-decode(\.debug)?|.*%%{_bindir}/cpupower(\.debug)?|.*%%{_libdir}/libcpupower.*|XXX' -o kernel-tools-debuginfo.list}
+%{expand:%%global debuginfo_args %{?debuginfo_args} -p '.*%%{_bindir}/centrino-decode(\.debug)?|.*%%{_bindir}/powernow-k8-decode(\.debug)?|.*%%{_bindir}/cpupower(\.debug)?|.*%%{_libdir}/libcpupower.*|.*%%{_libdir}/libcpupower.*|.*%%{_bindir}/turbostat(\.debug)?|.*%%{_bindir}/x86_energy_perf_policy(\.debug)?|XXX' -o kernel-tools-debuginfo.list}
 
 %endif # with_tools
 
@@ -1029,7 +1029,7 @@ BuildKernel %make_target %kernel_image kdump
 %endif
 
 %global perf_make \
-  make %{?_smp_mflags} -C tools/perf -s V=1 HAVE_CPLUS_DEMANGLE=1 EXTRA_CFLAGS="-Wno-error=array-bounds" prefix=%{_prefix}
+  make %{?_smp_mflags} -C tools/perf -s V=1 WERROR=0 NO_LIBUNWIND=1 HAVE_CPLUS_DEMANGLE=1 NO_GTK2=1 NO_LIBNUMA=1 NO_STRLCPY=1 prefix=%{_prefix}
 %if %{with_perf}
 # perf
 %{perf_make} all
@@ -1199,10 +1199,10 @@ rm -f %{buildroot}%{_libdir}/*.{a,la}
 %find_lang cpupower
 mv cpupower.lang ../
 %ifarch x86_64
-    cd tools/power/cpupower/debug/x86_64
+    pushd tools/power/cpupower/debug/x86_64
     install -m755 centrino-decode %{buildroot}%{_bindir}/centrino-decode
     install -m755 powernow-k8-decode %{buildroot}%{_bindir}/powernow-k8-decode
-    cd -
+    popd
 %endif
 chmod 0755 %{buildroot}%{_libdir}/libcpupower.so*
 mkdir -p %{buildroot}%{_unitdir} %{buildroot}%{_sysconfdir}/sysconfig
@@ -1466,7 +1466,6 @@ fi
 
 %changelog
 %%CHANGELOG%%
-
 * Mon Oct 24 2011 Kyle McMartin <kyle@redhat.com>
 - Trimmed changelog for rhel7.git, see rhpkg git for earlier history.
 
