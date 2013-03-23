@@ -1078,6 +1078,9 @@ find Documentation -type d | xargs chmod u+w
 #
 # We have to do all of those things _after_ find-debuginfo runs, otherwise
 # that will strip the signature off of the modules.
+#
+# Finally, pick a module at random and check that it's signed and fail the build
+# if it isn't.
 
 %define __modsign_install_post \
   if [ "%{with_debug}" != "0" ]; then \
@@ -1086,7 +1089,7 @@ find Documentation -type d | xargs chmod u+w
     mv .tmp_versions.sign.debug .tmp_versions \
     mv signing_key.priv.sign.debug signing_key.priv \
     mv signing_key.x509.sign.debug signing_key.x509 \
-    %{modsign_cmd} $RPM_BUILD_ROOT/lib/modules/%{KVERREL}.debug \
+    %{modsign_cmd} $RPM_BUILD_ROOT/lib/modules/%{KVERREL}.debug || exit 1 \
   fi \
     if [ "%{with_default}" != "0" ]; then \
     Arch=`head -1 configs/kernel-%{version}-%{_target_cpu}.config | cut -b 3-` \
@@ -1094,7 +1097,7 @@ find Documentation -type d | xargs chmod u+w
     mv .tmp_versions.sign .tmp_versions \
     mv signing_key.priv.sign signing_key.priv \
     mv signing_key.x509.sign signing_key.x509 \
-    %{modsign_cmd} $RPM_BUILD_ROOT/lib/modules/%{KVERREL} \
+    %{modsign_cmd} $RPM_BUILD_ROOT/lib/modules/%{KVERREL} || exit 1 \
   fi \
 %{nil}
 
