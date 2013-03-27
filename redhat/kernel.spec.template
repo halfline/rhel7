@@ -1083,7 +1083,7 @@ find Documentation -type d | xargs chmod u+w
 # if it isn't.
 
 %define __modsign_install_post \
-  if [ "%{with_debug}" != "0" ]; then \
+  if [ "%{with_debug}" -ne "0" ]; then \
     Arch=`head -1 configs/kernel-%{version}-%{_target_cpu}-debug.config | cut -b 3-` \
     rm -rf .tmp_versions \
     mv .tmp_versions.sign.debug .tmp_versions \
@@ -1091,7 +1091,7 @@ find Documentation -type d | xargs chmod u+w
     mv signing_key.x509.sign.debug signing_key.x509 \
     %{modsign_cmd} $RPM_BUILD_ROOT/lib/modules/%{KVERREL}.debug || exit 1 \
   fi \
-    if [ "%{with_default}" != "0" ]; then \
+    if [ "%{with_default}" -ne "0" ]; then \
     Arch=`head -1 configs/kernel-%{version}-%{_target_cpu}.config | cut -b 3-` \
     rm -rf .tmp_versions \
     mv .tmp_versions.sign .tmp_versions \
