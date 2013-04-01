@@ -2,8 +2,8 @@ include Makefile.common
 include Makefile.test
 
 LANG=C
-BUILD_DEFAULT_TARGET = rhel-7.0-candidate
-BUILD_SCRATCH_TARGET = rhel-7.0-candidate
+BUILD_DEFAULT_TARGET = rhel-7.0-test
+BUILD_SCRATCH_TARGET = rhel-7.0-test
 
 #ifeq ($(shell git diff --quiet HEAD && git describe --exact-match 2>/dev/null && echo ok),)
 BUILD_TARGET ?= --scratch $(BUILD_SCRATCH_TARGET)
