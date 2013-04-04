@@ -71,12 +71,10 @@ rh-stub-key:
 	@cp keys/stub_key.x509 $(_OUTPUT)/;
 	@cp keys/stub_key.priv $(_OUTPUT)/;
 
-XZ_THREADS := $(shell rpm --eval %{_smp_mflags} | sed -e 's!^-j!--threads !')
+# force tarball to be regenerated if HEAD changes
+.PHONY:	$(TARBALL)
 $(TARBALL):
-	@echo "Creating archive $(TARBALL)"
-	( cd ../; \
-	git archive --prefix=linux-$(KVERSION)-$(PKGRELEASE)/ \
-		--format=tar $(GITID) | xz $(XZ_THREADS) > $(TARBALL) )
+	@scripts/create-tarball.sh $(GITID) $(TARBALL) linux-$(KVERSION)-$(PKGRELEASE)
 
 setup-source: rh-clean-sources
 	@cp $(REDHAT)/$(SPECFILE).template $(SOURCES)/$(SPECFILE)
