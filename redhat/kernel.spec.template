@@ -1469,7 +1469,7 @@ fi
 
 %changelog
 %%CHANGELOG%%
-* Mon Oct 24 2011 Kyle McMartin <kyle@redhat.com>
+* Mon Apr 08 2013 Kyle McMartin <kyle@redhat.com>
 - Trimmed changelog for rhel7.git, see rhpkg git for earlier history.
 
 ###
