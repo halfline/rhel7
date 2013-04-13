@@ -53,10 +53,10 @@ config-%-merged:
 		cp $$(basename $@ -merged) $@; \
 	fi
 
-temp-generic: config-generic-merged config-nodebug-merged
+temp-generic: config-nodebug-merged config-generic-merged
 	perl merge.pl $^  > $@
 
-temp-debug-generic: config-generic-merged config-debug-merged
+temp-debug-generic: config-debug-merged config-generic-merged
 	perl merge.pl $^  > $@
 
 temp-x86-64: config-x86_64-generic-merged config-x86-generic-merged
