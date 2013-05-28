@@ -6,9 +6,9 @@ KVERSION:=3.10.0
 GITID:= $(shell git log --max-count=1 --pretty=format:%H)
 RPMVERSION:=3.10.0
 # marker is git tag which we base off of for exporting patches
-MARKER:=v3.10-rc2
-PREBUILD := 0.rc2.
-BUILD:=56
+MARKER:=v3.10-rc3
+PREBUILD := 0.rc3.
+BUILD:=57
 DIST:=.el7
 SPECFILE:=kernel.spec
 RPM:=$(REDHAT)/rpm
