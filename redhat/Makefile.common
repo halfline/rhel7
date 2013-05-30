@@ -1,6 +1,7 @@
 RPMBUILD := $(shell if [ -x "/usr/bin/rpmbuild" ]; then echo rpmbuild; \
                    else echo rpm; fi)
 REDHAT:=$(shell pwd)
+TOPDIR:=$(shell dirname $(REDHAT))
 MACH :=  $(shell uname -m)
 KVERSION:=3.10.0
 GITID:= $(shell git log --max-count=1 --pretty=format:%H)

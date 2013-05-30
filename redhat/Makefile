@@ -1,4 +1,5 @@
 include Makefile.common
+include Makefile.rhpkg
 include Makefile.test
 
 LANG=C
@@ -151,6 +152,16 @@ rh-brew rh-koji: rh-%: rh-srpm
 
 rhg-brew rhg-koji: rhg-%:
 	$* build $(BUILD_FLAGS) $(BUILD_TARGET) "$(RHGITURL)?redhat/koji#$(RHGITCOMMIT)"
+
+$(REDHAT)/rpm/SOURCES/kernel.spec:
+	@echo "rh-sources"
+	@$(MAKE) rh-sources
+
+rh-dist-git: $(REDHAT)/rpm/SOURCES/kernel.spec $(TARBALL)
+ifeq ("$(RHDISTGIT_BRANCH)", "")
+ $(error RHDISTGIT_BRANCH unset)
+endif
+	$(REDHAT)/scripts/rh-dist-git.sh "$(RHDISTGIT_BRANCH)" "$(RHDISTGIT_CACHE)" "$(RHDISTGIT_TMP)" "$(RHDISTGIT)" "$(TARBALL)"
 
 rh-help:
 	@echo  'Cleaning targets:'

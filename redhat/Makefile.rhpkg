@@ -1,0 +1,23 @@
+# variables that can be overrided by ~/.rhel7git.mk or $(TOPDIR)/.rhel7git.mk
+#
+# Kerberos username for pkgs.devel.redhat.com
+RHDISTGIT_USER:="$(shell whoami)"
+# Local dist-git _clean_ clone. To be used when updating dist-git
+#RHDISTGIT_CACHE:=
+# Temporary directory to clone the dist-git repo to. Change this if you
+# have a faster storage
+RHDISTGIT_TMP:=/tmp
+# Branch it should be switched into
+RHDISTGIT_BRANCH:=rhel-7.0
+
+# load configuration, starting with home directory then local
+ifeq ("$(RHDISTGIT_CACHE)", "")
+ ifneq ("$(wildcard ${HOME}/.rhel7git.mk)", "")
+  include ${HOME}/.rhel7git.mk
+ endif
+ ifneq ("$(wildcard $(TOPDIR)/.rhel7git.mk)", "")
+  include $(TOPDIR)/.rhel7git.mk
+ endif
+endif
+
+RHDISTGIT:="ssh://$(RHDISTGIT_USER)@pkgs.devel.redhat.com/rpms/kernel"

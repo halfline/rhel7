@@ -100,3 +100,6 @@ x509.genkey
 #
 configs/*
 localversion
+
+# configuration file for rh- targets
+.rhel7git.mk
