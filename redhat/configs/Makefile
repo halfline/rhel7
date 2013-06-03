@@ -91,6 +91,11 @@ kernel-$(VERSION)-ppc64.config: config-powerpc64-merged temp-powerpc-generic
 
 kernel-$(VERSION)-ppc64-debug.config: config-powerpc64-merged temp-powerpc-debug-generic
 	perl merge.pl $^ powerpc > $@
+	@echo "### DISABLE WHEN BZ#967447 IS FIXED ###"
+	sed -i -e "s!CONFIG_DEBUG_LOCK_ALLOC=y!# CONFIG_DEBUG_LOCK_ALLOC is not set!" $@
+	sed -i -e "s!CONFIG_LOCK_STAT=y!# CONFIG_LOCK_STAT is not set!" $@
+	sed -i -e "s!CONFIG_PROVE_LOCKING=y!# CONFIG_PROVE_LOCKING is not set!" $@
+	@echo "#######################################"
 
 kernel-$(VERSION)-s390x.config: config-s390x-merged temp-s390-generic
 	perl merge.pl $^ s390 > $@
