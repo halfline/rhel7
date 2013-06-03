@@ -42,6 +42,7 @@ $redhat/scripts/copy_files.sh "$topdir" "$tmpdir"
 echo "Uploading new tarball"
 # upload tarball
 sed -i "/linux-3.*.el7.tar.xz/d" $tmpdir/kernel/sources;
+sed -i "/linux-3.*.el7.tar.xz/d" $tmpdir/kernel/.gitignore;
 rhpkg upload $rhdistgit_tarball >/dev/null || die "uploading tarball";
 
 echo "Creating diff for review ($tmpdir/diff) and changelog"
