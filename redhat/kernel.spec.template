@@ -86,8 +86,9 @@ Summary: The Linux kernel
 %define make_target bzImage
 
 %define KVERREL %{version}-%{release}.%{_target_cpu}
-%define hdrarch %_target_cpu
-%define asmarch %_target_cpu
+%define hdrarch %{_target_cpu}
+%define asmarch %{_target_cpu}
+%define cross_target %{_target_cpu}
 
 %if !%{debugbuildsenabled}
 %define with_debug 0
@@ -170,6 +171,7 @@ Summary: The Linux kernel
 %define kernel_image vmlinux
 %define kernel_image_elf 1
 %define with_bootwrapper 1
+%define cross_target powerpc64
 %endif
 
 %ifarch s390x
@@ -319,14 +321,7 @@ BuildRequires: glibc-static
 
 #cross compile make
 %if %{with_cross}
-
-%if "%{_target_cpu}" == "s390x"
-%define cross_opts CROSS_COMPILE=s390x-linux-gnu-
-%endif
-%if "%{_target_cpu}" == "ppc64"
-%define cross_opts CROSS_COMPILE=powerpc64-linux-gnu-
-%endif
-
+%define cross_opts CROSS_COMPILE=%{cross_target}-linux-gnu-
 %endif
 
 Source0: linux-%{rpmversion}-%{pkgrelease}.tar.xz
