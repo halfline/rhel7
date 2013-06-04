@@ -12,6 +12,7 @@ if [ -f ${TARBALL} ]; then
 		echo "`basename ${TARBALL}` unchanged..."
 		exit 0
 	fi
+	rm -f ${TARBALL}
 fi
 
 echo "Creating `basename ${TARBALL}`..."
