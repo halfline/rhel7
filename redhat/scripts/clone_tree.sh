@@ -15,7 +15,8 @@ function die
 	exit 1;
 }
 
-tmp="$(mktemp -d --tmpdir="$tmp_dir")";
+date=`date +"%Y-%m-%d"`
+tmp="$(mktemp -d --tmpdir="$tmp_dir" RHEL7.$date.XXXXXXXX)";
 cd $tmp || die "Unable to create temporary directory";
 
 if [ -n "$repo" -a -n "$local" ]; then
