@@ -32,6 +32,7 @@
 #include <linux/gfp.h>
 #include <linux/memblock.h>
 #include <linux/edd.h>
+#include <linux/crash_dump.h>
 
 #include <xen/xen.h>
 #include <xen/events.h>
@@ -1723,6 +1724,9 @@ static void __init xen_hvm_guest_init(void)
 static bool __init xen_hvm_platform(void)
 {
 	if (xen_pv_domain())
+		return false;
+
+	if (is_kdump_kernel())
 		return false;
 
 	if (!xen_cpuid_base())
