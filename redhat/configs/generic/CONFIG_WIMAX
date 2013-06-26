@@ -1,1 +1,1 @@
-CONFIG_WIMAX=m
+# CONFIG_WIMAX is not set
