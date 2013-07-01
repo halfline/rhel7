@@ -725,3 +725,4 @@ CONFIG_DRM_I2C_SIL164=y
 # CONFIG_RT2500USB is not set
 # CONFIG_ATH5K is not set
 # CONFIG_ATH5K_PCI is not set
+# CONFIG_AR5523 is not set
