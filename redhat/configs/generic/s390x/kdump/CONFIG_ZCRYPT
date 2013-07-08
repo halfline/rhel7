@@ -1,1 +1,1 @@
-CONFIG_ZCRYPT=y
+# CONFIG_ZCRYPT is not set
