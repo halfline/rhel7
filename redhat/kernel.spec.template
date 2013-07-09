@@ -1464,6 +1464,29 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Jul 09 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-1.el7]
+- [x86] fix !CONFIG_HYPERVISOR_GUEST compile (Andrew Jones)
+- [s390x] crash: Fuzzy live dump for Linux on System z (Hendrik Brueckner) [805120]
+- [xen] xenfv: fix hangs when kdumping (Andrew Jones) [845471]
+- [libata] export ata_port port_no attribute via /sys (David Milburn) [951181]
+- [s390x] kdump: Use 4 GiB for KEXEC_AUTO_THRESHOLD (Hendrik Brueckner) [953044]
+- [x86] hpet: allow user controlled mmap for user processes (Prarit Bhargava) [788727]
+- [mm] add memory tracking hooks (James Paradis) [725860]
+- [kernel] clocksource, fix !CONFIG_CLOCKSOURCE_WATCHDOG compile (Prarit Bhargava) [914709]
+- [x86] disable clocksource watchdog (Prarit Bhargava) [914709]
+- [kdump] x86, fix kdump and unsupported HW check (Prarit Bhargava) [923256]
+- [x86] support single cpu on guests only (Prarit Bhargava) [873806]
+- [kernel] Mark power5, power6, !Intel, and !AMD systems as unsupported (Prarit Bhargava) [870129]
+- [kernel] Backport RH specific TAINT flags (Prarit Bhargava) [870129]
+- [s390x] zfcpdump: Add user space tool (Hendrik Brueckner) [825189]
+- [kdump] crashkernel=auto fixes and cleanup (Dave Young) [804077]
+- [fedora] /dev/crash driver (Kyle McMartin) [808839]
+- [kdump] forward port crashkernel auto reservation code (Dave Young) [804077]
+- [block] Change scheduler to CFQ for ATA/SATA (Vivek Goyal) [811016]
+- [kernel] kbuild: AFTER_LINK (Roland McGrath)
+- [ppc64] disable INFINIBAND_EHCA temporarily, it ftbfs (Kyle McMartin)
+- [kernel] Add RHEL_{MAJOR,MINOR,RELEASE} to top level Makefile (Kyle McMartin)
+
 * Mon Jun 03 2013 Kyle McMartin <kyle@redhat.com>
 - Trimmed changelog for rhel7.git, see rhpkg git for earlier history.
 
