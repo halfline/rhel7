@@ -14,7 +14,7 @@ static void show_map(unsigned int *map, unsigned int nr)
 	int i;
 
 	pr_info("blk-mq: CPU -> queue map\n");
-	for (i = 0; i < nr; i++)
+	for_each_online_cpu(i)
 		pr_info("  CPU%2u -> Queue %u\n", i, map[i]);
 }
 
@@ -45,7 +45,7 @@ int blk_mq_update_queue_map(unsigned int *map, unsigned int nr_queues)
 
 	cpumask_clear(cpus);
 	nr_cpus = nr_uniq_cpus = 0;
-	for_each_present_cpu(i) {
+	for_each_online_cpu(i) {
 		nr_cpus++;
 		first_sibling = get_first_sibling(i);
 		if (!cpumask_test_cpu(first_sibling, cpus))
@@ -53,14 +53,21 @@ int blk_mq_update_queue_map(unsigned int *map, unsigned int nr_queues)
 		cpumask_set_cpu(i, cpus);
 	}
 
-	for (queue = 0, i = 0; i < nr_cpus; i++) {
+	queue = 0;
+	for_each_possible_cpu(i) {
+		if (!cpu_online(i)) {
+			map[i] = 0;
+			continue;
+		}
+
 		/*
 		 * Easy case - we have equal or more hardware queues. Or
 		 * there are no thread siblings to take into account. Do
 		 * 1:1 if enough, or sequential mapping if less.
 		 */
 		if (nr_queues >= nr_cpus || nr_cpus == nr_uniq_cpus) {
-			map[i] = cpu_to_queue_index(nr_cpus, nr_queues, i);
+			map[i] = cpu_to_queue_index(nr_cpus, nr_queues, queue);
+			queue++;
 			continue;
 		}
 
