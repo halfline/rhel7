@@ -470,9 +470,6 @@ struct request_queue {
 	struct bsg_class_device bsg_dev;
 #endif
 
-#ifdef CONFIG_BLK_CGROUP
-	struct list_head	all_q_node;
-#endif
 #ifdef CONFIG_BLK_DEV_THROTTLING
 	/* Throttle data */
 	struct throtl_data *td;
@@ -480,6 +477,7 @@ struct request_queue {
 	struct rcu_head		rcu_head;
 	wait_queue_head_t	mq_freeze_wq;
 	struct percpu_counter	mq_usage_counter;
+	struct list_head	all_q_node;
 };
 
 #define QUEUE_FLAG_QUEUED	1	/* uses generic tag queueing */

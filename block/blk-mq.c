@@ -21,6 +21,9 @@
 #include "blk-mq.h"
 #include "blk-mq-tag.h"
 
+static DEFINE_MUTEX(all_q_mutex);
+static LIST_HEAD(all_q_list);
+
 static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx);
 
 DEFINE_PER_CPU(struct llist_head, ipi_lists);
@@ -1219,7 +1222,11 @@ static int blk_mq_init_hw_queues(struct request_queue *q,
 		if (blk_mq_init_rq_map(hctx, reg->reserved_tags, node))
 			break;
 
-		hctx->ctxs = kmalloc_node(hctx->nr_ctx * sizeof(void *),
+		/*
+		 * Allocate space for all possible cpus to avoid allocation in
+		 * runtime
+		 */
+		hctx->ctxs = kmalloc_node(nr_cpu_ids * sizeof(void *),
 						GFP_KERNEL, node);
 		if (!hctx->ctxs)
 			break;
@@ -1290,11 +1297,31 @@ static void blk_mq_init_cpu_queues(struct request_queue *q,
 	}
 }
 
+static void blk_mq_map_swqueue(struct request_queue *q)
+{
+	unsigned int i;
+	struct blk_mq_hw_ctx *hctx;
+	struct blk_mq_ctx *ctx;
+
+	queue_for_each_hw_ctx(q, hctx, i) {
+		hctx->nr_ctx = 0;
+	}
+
+	/*
+	 * Map software to hardware queues
+	 */
+	queue_for_each_ctx(q, ctx, i) {
+		/* If the cpu isn't online, the cpu is mapped to first hctx */
+		hctx = q->mq_ops->map_queue(q, i);
+		ctx->index_hw = hctx->nr_ctx;
+		hctx->ctxs[hctx->nr_ctx++] = ctx;
+	}
+}
+
 struct request_queue *blk_mq_init_queue(struct blk_mq_reg *reg,
 					void *driver_data)
 {
 	struct blk_mq_hw_ctx **hctxs;
-	struct blk_mq_hw_ctx *hctx;
 	struct blk_mq_ctx *ctx;
 	struct request_queue *q;
 	int i;
@@ -1360,15 +1387,11 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_reg *reg,
 	if (blk_mq_init_hw_queues(q, reg, driver_data))
 		goto err_hw;
 
-	/*
-	 * Map software to hardware queues
-	 */
-	queue_for_each_ctx(q, ctx, i) {
-		/* If the cpu isn't online, the cpu is mapped to first hctx */
-		hctx = q->mq_ops->map_queue(q, i);
-		ctx->index_hw = hctx->nr_ctx;
-		hctx->ctxs[hctx->nr_ctx++] = ctx;
-	}
+	blk_mq_map_swqueue(q);
+
+	mutex_lock(&all_q_mutex);
+	list_add_tail(&q->all_q_node, &all_q_list);
+	mutex_unlock(&all_q_mutex);
 
 	return q;
 err_hw:
@@ -1409,8 +1432,52 @@ void blk_mq_free_queue(struct request_queue *q)
 	q->queue_ctx = NULL;
 	q->queue_hw_ctx = NULL;
 	q->mq_map = NULL;
+
+	mutex_lock(&all_q_mutex);
+	list_del_init(&q->all_q_node);
+	mutex_unlock(&all_q_mutex);
 }
 EXPORT_SYMBOL(blk_mq_free_queue);
+
+/* Basically redo blk_mq_init_queue with queue frozen */
+static void __cpuinit blk_mq_queue_reinit(struct request_queue *q)
+{
+	blk_mq_freeze_queue(q);
+
+	blk_mq_update_queue_map(q->mq_map, q->nr_hw_queues);
+
+	/*
+	 * redo blk_mq_init_cpu_queues and blk_mq_init_hw_queues. FIXME: maybe
+	 * we should change hctx numa_node according to new topology (this
+	 * involves free and re-allocate memory, worthy doing?)
+	 */
+
+	blk_mq_map_swqueue(q);
+
+	blk_mq_unfreeze_queue(q);
+}
+
+static int __cpuinit blk_mq_queue_reinit_notify(struct notifier_block *nb,
+		unsigned long action, void *hcpu)
+{
+	struct request_queue *q;
+
+	/*
+	 * Before new mapping is established, hotadded cpu might already start
+	 * handling requests. This doesn't break anything as we map offline
+	 * CPUs to first hardware queue. We will re-init queue below to get
+	 * optimal settings.
+	 */
+	if (action != CPU_DEAD && action != CPU_DEAD_FROZEN &&
+	    action != CPU_ONLINE && action != CPU_ONLINE_FROZEN)
+		return NOTIFY_OK;
+
+	mutex_lock(&all_q_mutex);
+	list_for_each_entry(q, &all_q_list, all_q_node)
+		blk_mq_queue_reinit(q);
+	mutex_unlock(&all_q_mutex);
+	return NOTIFY_OK;
+}
 
 static int __init blk_mq_init(void)
 {
@@ -1420,6 +1487,10 @@ static int __init blk_mq_init(void)
 		init_llist_head(&per_cpu(ipi_lists, i));
 
 	blk_mq_cpu_init();
+
+	/* Must be called after percpu_counter_hotcpu_callback() */
+	hotcpu_notifier(blk_mq_queue_reinit_notify, -10);
+
 	return 0;
 }
 subsys_initcall(blk_mq_init);
