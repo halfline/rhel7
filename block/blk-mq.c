@@ -204,11 +204,8 @@ void blk_mq_finish_request(struct request *rq, int error)
 	blk_mq_free_request(rq);
 }
 
-void __blk_mq_end_io(struct request *rq, int error)
+void blk_mq_complete_request(struct request *rq, int error)
 {
-	if (blk_mark_rq_complete(rq))
-		return;
-
 	trace_block_rq_complete(rq->q, rq);
 
 	/*
@@ -219,6 +216,13 @@ void __blk_mq_end_io(struct request *rq, int error)
 		rq->end_io(rq, error);
 	else
 		blk_mq_finish_request(rq, error);
+
+}
+
+void __blk_mq_end_io(struct request *rq, int error)
+{
+	if (!blk_mark_rq_complete(rq))
+		blk_mq_complete_request(rq, error);
 }
 
 #if defined(CONFIG_SMP) && defined(CONFIG_USE_GENERIC_SMP_HELPERS)
