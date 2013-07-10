@@ -346,7 +346,7 @@ static void blk_mq_timeout_check(void *__data, unsigned long *free_tags)
 		if (tag >= hctx->queue_depth)
 			break;
 
-		rq = hctx->rqs[tag];
+		rq = hctx->rqs[tag++];
 
 		if (!test_bit(REQ_ATOM_STARTED, &rq->atomic_flags))
 			continue;
