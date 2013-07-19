@@ -156,9 +156,6 @@ test -n "$SPECFILE" &&
 	s/%%RPMVERSION%%/$RPMVERSION/
 	s/%%PKGRELEASE%%/$PKGRELEASE/
 	s/%%RELEASED_KERNEL%%/$RELEASED_KERNEL/" $SPECFILE
-if [ -n "$BUILDID" ]; then
-	sed -i -e "s/# % define buildid .local/%define buildid $BUILDID/" $SPECFILE;
-fi
 
 rm -f $clogf{,.rev,.stripped};
 

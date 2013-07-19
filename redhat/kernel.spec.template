@@ -3,13 +3,17 @@
 
 Summary: The Linux kernel
 
+# % define buildid .local
+
 # For a stable, released kernel, released_kernel should be 1. For rawhide
 # and/or a kernel built from an rc or git snapshot, released_kernel should
 # be 0.
 %global released_kernel %%RELEASED_KERNEL%%
 
 %define rpmversion %%RPMVERSION%%
-%define pkg_release %%PKGRELEASE%%
+%define pkgrelease %%PKGRELEASE%%
+
+%define pkg_release %{pkgrelease}%{?buildid}
 
 # The kernel tarball/base version
 %define rheltarball %%RPMVERSION%%-%%PKGRELEASE%%
