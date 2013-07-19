@@ -1464,6 +1464,28 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Jul 19 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-2.el7]
+- [redhat] Kconfig: disable CONFIG_PCMCIA (Andy Gospodarek) [980127]
+- [scsi] sd: fix crash when UA received on DIF enabled device (Ewan Milne) [979440]
+- [redhat] Kconfig: disable CONFIG_BCACHE (Mike Snitzer) [982752]
+- [md] dm-cache: add call to mark_tech_preview (Mike Snitzer) [982752]
+- [fs] nfs: have NFSv3 try server-specified auth flavors in turn (Jeff Layton) [977649]
+- [fs] nfs: have nfs_mount fake up a auth_flavs list when the server didn't provide it (Jeff Layton) [977649]
+- [fs] nfs: move server_authlist into nfs_try_mount_request (Jeff Layton) [977649]
+- [fs] nfs: refactor "need_mount" code out of nfs_try_mount (Jeff Layton) [977649]
+- [pci] ear: Reset link for devices below Root Port or Downstream Port (Myron Stowe) [797485]
+- [acpi] apei: Force fatal AER severity when component has been reset (Myron Stowe) [797485]
+- [pci] aer: Remove "extern" from function declarations (Myron Stowe) [797485]
+- [pci] aer: Move AER severity defines to aer.h (Myron Stowe) [797485]
+- [pci] aer: Set dev->__aer_firmware_first only for matching devices (Myron Stowe) [797485]
+- [pci] aer: Factor out HEST device type matching (Myron Stowe) [797485]
+- [pci] aer: Don't parse HEST table for non-PCIe devices (Myron Stowe) [797485]
+- [redhat] RHMAINTAINERS: add fuse maintainer (Brian Foster)
+- [redhat] Kconfig: disable CONFIG_HERMES (John Linville) [980127]
+- [redhat] Kconfig: disable CONFIG_AR5523 (John Linville) [980127]
+- [redhat] Kconfig: disable CONFIG_ATH5K (John Linville) [980127]
+- [redhat] kernel-3.10.0-1.el7 (Jarod Wilson)
+
 * Tue Jul 09 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-1.el7]
 - [x86] fix !CONFIG_HYPERVISOR_GUEST compile (Andrew Jones)
 - [s390x] crash: Fuzzy live dump for Linux on System z (Hendrik Brueckner) [805120]
