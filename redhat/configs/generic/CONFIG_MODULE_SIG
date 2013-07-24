@@ -1,1 +1,1 @@
-# CONFIG_MODULE_SIG is not set
+CONFIG_MODULE_SIG=y

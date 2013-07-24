@@ -1,1 +1,1 @@
-CONFIG_K8_NUMA=y
+# CONFIG_K8_NUMA is not set

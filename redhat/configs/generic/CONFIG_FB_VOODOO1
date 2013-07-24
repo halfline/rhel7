@@ -1,1 +1,1 @@
-CONFIG_FB_VOODOO1=m
+# CONFIG_FB_VOODOO1 is not set

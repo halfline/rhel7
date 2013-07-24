@@ -1,1 +1,1 @@
-CONFIG_HID_ACRUX_FF=y
+# CONFIG_HID_ACRUX_FF is not set

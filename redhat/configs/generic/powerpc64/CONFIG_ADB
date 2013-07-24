@@ -1,1 +1,1 @@
-CONFIG_ADB=y
+# CONFIG_ADB is not set

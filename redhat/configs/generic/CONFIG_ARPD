@@ -1,1 +1,1 @@
-CONFIG_ARPD=y
+# CONFIG_ARPD is not set

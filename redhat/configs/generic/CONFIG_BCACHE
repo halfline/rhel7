@@ -1,1 +1,1 @@
-CONFIG_BCACHE=m
+# CONFIG_BCACHE is not set

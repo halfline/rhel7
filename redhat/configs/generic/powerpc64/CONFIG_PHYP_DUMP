@@ -1,1 +1,1 @@
-CONFIG_PHYP_DUMP=y
+# CONFIG_PHYP_DUMP is not set

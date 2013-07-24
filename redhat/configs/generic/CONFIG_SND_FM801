@@ -1,1 +1,1 @@
-CONFIG_SND_FM801=m
+# CONFIG_SND_FM801 is not set

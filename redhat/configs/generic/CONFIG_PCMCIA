@@ -1,1 +1,1 @@
-CONFIG_PCMCIA=y
+# CONFIG_PCMCIA is not set

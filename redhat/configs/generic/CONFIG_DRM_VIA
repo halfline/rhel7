@@ -1,1 +1,1 @@
-CONFIG_DRM_VIA=m
+# CONFIG_DRM_VIA is not set

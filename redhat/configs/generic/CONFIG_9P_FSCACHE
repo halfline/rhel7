@@ -1,1 +1,1 @@
-CONFIG_9P_FSCACHE=y
+# CONFIG_9P_FSCACHE is not set

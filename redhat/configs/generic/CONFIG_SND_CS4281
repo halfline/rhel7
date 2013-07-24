@@ -1,1 +1,1 @@
-CONFIG_SND_CS4281=m
+# CONFIG_SND_CS4281 is not set

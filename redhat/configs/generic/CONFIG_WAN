@@ -1,1 +1,1 @@
-# CONFIG_WAN is not set
+CONFIG_WAN=y

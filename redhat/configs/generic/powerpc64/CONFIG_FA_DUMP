@@ -1,1 +1,1 @@
-# CONFIG_FA_DUMP is not set
+CONFIG_FA_DUMP=y

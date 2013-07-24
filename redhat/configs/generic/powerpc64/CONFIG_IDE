@@ -1,1 +1,1 @@
-CONFIG_IDE=y
+# CONFIG_IDE is not set

@@ -1,1 +1,1 @@
-CONFIG_SYSV_FS=m
+# CONFIG_SYSV_FS is not set

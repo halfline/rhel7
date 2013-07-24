@@ -1,1 +1,1 @@
-CONFIG_BLK_CPQ_DA=m
+# CONFIG_BLK_CPQ_DA is not set

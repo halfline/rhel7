@@ -1,1 +1,1 @@
-CONFIG_PPC_PMAC=y
+# CONFIG_PPC_PMAC is not set

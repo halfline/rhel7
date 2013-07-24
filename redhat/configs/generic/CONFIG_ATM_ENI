@@ -1,1 +1,1 @@
-CONFIG_ATM_ENI=m
+# CONFIG_ATM_ENI is not set

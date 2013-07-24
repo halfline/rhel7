@@ -1,1 +1,1 @@
-CONFIG_NETROM=m
+# CONFIG_NETROM is not set

@@ -1,1 +1,1 @@
-CONFIG_BEFS_FS=m
+# CONFIG_BEFS_FS is not set

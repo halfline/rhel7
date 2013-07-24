@@ -1,1 +1,1 @@
-CONFIG_KVM=m
+# CONFIG_KVM is not set
