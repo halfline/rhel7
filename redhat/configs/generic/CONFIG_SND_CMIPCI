@@ -1,1 +1,1 @@
-# CONFIG_SND_CMIPCI is not set
+CONFIG_SND_CMIPCI=m
