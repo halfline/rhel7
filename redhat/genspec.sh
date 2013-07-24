@@ -122,17 +122,6 @@ BEGIN{TYPE="PATCHJUNK"; }
 
 ' SOURCES=$SOURCES SPECFILE=$SPECFILE CLOGF=$clogf
 
-CONFIGS=configs/config.include
-CONFIGS2=configs/config2.include
-find configs/ -mindepth 1 -maxdepth 1 -name config-\* | grep -v merged | cut -f 2 -d '/' >$CONFIGS;
-# Set this to a nice high starting point
-count=50;
-rm -f $CONFIGS2;
-for i in $(cat $CONFIGS); do
-	echo "Source$count: $i" >>$CONFIGS2;
-	count=$((count+1));
-done
-
 cat $clogf | grep -v "updating lastcommit for" |
 	grep -v "tagging $RPM_VERSION" > $clogf.stripped
 cp $clogf.stripped $clogf
@@ -162,8 +151,6 @@ fi
 
 test -n "$SPECFILE" &&
         sed -i -e "
-	/%%CONFIGS%%/r $CONFIGS2
-	/%%CONFIGS%%/d
 	/%%CHANGELOG%%/r $clogf.rev
 	/%%CHANGELOG%%/d
 	s/%%RPMVERSION%%/$RPMVERSION/
@@ -173,5 +160,5 @@ if [ -n "$BUILDID" ]; then
 	sed -i -e "s/# % define buildid .local/%define buildid $BUILDID/" $SPECFILE;
 fi
 
-rm -f $clogf{,.rev,.stripped} $CONFIGS $CONFIGS2;
+rm -f $clogf{,.rev,.stripped};
 

@@ -41,13 +41,13 @@ rh-configs:
 	cd $(REDHAT)/configs; $(MAKE) VERSION=$(KVERSION) configs
 
 rh-configs-prep:
-	cd $(REDHAT)/configs; $(MAKE) VERSION=$(KVERSION) $(_EXTRA_ARGS) configs-prep
+	cd $(REDHAT)/configs; ./build_configs.sh
 
 rh-configs-arch-prep:
 	cd $(REDHAT)/configs; $(MAKE) VERSION=$(KVERSION) $(_EXTRA_ARGS) ARCHCONFIG=$(ARCHCONFIG) configs-prep
 
 rh-clean-configs:
-	cd $(REDHAT)/configs; $(MAKE) VERSION=$(KVERSION) clean
+	cd $(REDHAT)/configs; rm -f kernel-*.config
 
 rh-clean-sources:
 	@for i in $(SOURCES)/*; do \
@@ -60,9 +60,6 @@ rh-clean-rpmdirs:
 	done;
 
 rh-clean: rh-clean-sources rh-clean-configs rh-clean-rpmdirs
-
-rh-pull-configs:
-	cd $(REDHAT)/configs; $(MAKE) VERSION=$(KVERSION) pull-configs
 
 rh-stub-key:
 	@echo "Copying pre-generated keys";
@@ -98,12 +95,11 @@ sources-rh: $(TARBALL)
 	@$(REDHAT)/genspec.sh $(SOURCES) $(SOURCES)/$(SPECFILE) $(PKGRELEASE) $(RPMVERSION) $(BUILDID)
 	@cp $(SOURCES)/$(SPECFILE) $(SOURCES)/../SPECS
 	@cp $(TESTPATCH) $(SOURCES)/linux-kernel-test.patch
-	@cp configs/Makefile $(SOURCES)/Makefile.config
 	@# if the extra_certificates doesn't exist, create a empty one
 	@(if [ ! -f keys/extra_certificates ]; then \
 		touch keys/extra_certificates; \
 	fi)
-	@cp cpupower.* x509.genkey keys/extra_certificates Makefile.common kabi/{find-provides,kabitool,check-kabi} kabi/Module.kabi_{ppc64,s390x,x86_64} configs/{config-*,merge.pl} rhpkg/Makefile scripts/sign-modules $(SOURCES)/
+	@cp cpupower.* x509.genkey keys/extra_certificates Makefile.common kabi/{find-provides,kabitool,check-kabi} kabi/Module.kabi_{ppc64,s390x,x86_64} configs/kernel-*.config rhpkg/Makefile scripts/sign-modules $(SOURCES)/
 
 rh-sources: setup-source sources-rh
 
@@ -207,13 +203,7 @@ rh-help:
 	@echo
 	@echo  '  rh-configs-prep - Creates config files for RHEL 7 architectures, cleans them'
 	@echo  '		    by running make nonint_oldconfig, and copies them to'
-	@echo  '		    configs/ directory. This is the target to use for a config!'
-	@echo  '		    Copy the config file you want from the configs/ directory'
+	@echo  '		    redhat/configs/ directory. This is the target to use for a config!'
+	@echo  '		    Copy the config file you want from the redhat/configs/ directory'
 	@echo  '		    to .config'
-	@echo  '  rh-configs-arch-prep - Executes rh-configs-prep for local architecture only '
 	@echo  ''
-	@echo  ' Most developers will NOT use the following config targets.'
-	@echo  ' See the redhat/README file for more info'
-	@echo  '  rh-configs	    Creates config files in the redhat/configs/ directory,'
-	@echo  '		    these will be used by other Makefile targets and are not'
-	@echo  '		    intended for developer use'

@@ -330,7 +330,6 @@ Source11: x509.genkey
 Source12: extra_certificates
 
 Source14: find-provides
-Source15: merge.pl
 
 %if %{with_kabichk}
 Source17: kabitool
@@ -341,9 +340,15 @@ Source21: Module.kabi_ppc64
 Source22: Module.kabi_s390x
 %endif
 
-Source30: Makefile.config
+Source50: kernel-%{version}-x86_64.config
+Source51: kernel-%{version}-x86_64-debug.config
 
-%%CONFIGS%%
+Source60: kernel-%{version}-ppc64.config
+Source61: kernel-%{version}-ppc64-debug.config
+
+Source70: kernel-%{version}-s390x.config
+Source71: kernel-%{version}-s390x-debug.config
+Source72: kernel-%{version}-s390x-kdump.config
 
 # Sources for kernel-tools
 Source2000: cpupower.service
@@ -663,11 +668,7 @@ cp -rl vanilla-%{rheltarball} linux-%{KVERREL}
 cd linux-%{KVERREL}
 
 # Drop some necessary files from the source dir into the buildroot
-cp $RPM_SOURCE_DIR/config-* .
-cp %{SOURCE15} .
-
-# Dynamically generate kernel .config files from config-* files
-make -f %{SOURCE30} VERSION=%{version} configs
+cp $RPM_SOURCE_DIR/kernel-*.config .
 
 ApplyOptionalPatch linux-kernel-test.patch
 
