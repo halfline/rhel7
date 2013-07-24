@@ -1,0 +1,1 @@
+CONFIG_DEFCONFIG_LIST="/lib/modules/$UNAME_RELEASE/.config"
