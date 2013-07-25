@@ -7,11 +7,8 @@
 
 #include <linux/types.h>
 
-#ifdef CONFIG_PARAVIRT_SPINLOCKS
+/* Increment the ticket by 2, to leave a bit free for pvspinlock */
 #define __TICKET_LOCK_INC	2
-#else
-#define __TICKET_LOCK_INC	1
-#endif
 
 #if (CONFIG_NR_CPUS < (256 / __TICKET_LOCK_INC))
 typedef u8  __ticket_t;
