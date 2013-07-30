@@ -4,6 +4,9 @@
 # and debug to form the necessary kernel-<version>-<arch>-<variant>.config
 # files for building RHEL kernels, based on the contents of a control file
 
+set errexit
+set nounset
+
 control_file="priority"
 
 function combine_config_layer()

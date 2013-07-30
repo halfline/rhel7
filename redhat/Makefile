@@ -101,7 +101,7 @@ sources-rh: $(TARBALL)
 	fi)
 	@cp cpupower.* x509.genkey keys/extra_certificates Makefile.common kabi/{find-provides,kabitool,check-kabi} kabi/Module.kabi_{ppc64,s390x,x86_64} configs/kernel-*.config rhpkg/Makefile scripts/sign-modules $(SOURCES)/
 
-rh-sources: setup-source sources-rh
+rh-sources: setup-source sources-rh rh-configs-prep
 
 rh-test-patch:
 	@git diff --no-renames HEAD > $(TESTPATCH);

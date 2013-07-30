@@ -1,0 +1,3 @@
+Place config options in this directory that you want applied to the
+s390x-kdump kernel variant only. These options are overlayed atop the
+generic/ and generic/s390x/ kernel options.
