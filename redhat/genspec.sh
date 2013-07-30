@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 
 SOURCES=$1
 SPECFILE=$2
@@ -126,8 +126,8 @@ cat $clogf | grep -v "updating lastcommit for" |
 	grep -v "tagging $RPM_VERSION" > $clogf.stripped
 cp $clogf.stripped $clogf
 
-if [ $HIDE_REDHAT = 1 ]; then
-	cat $clogf | grep -v -e "^ \[redhat\]" |
+if [ "x$HIDE_REDHAT" == "x1" ]; then
+	cat $clogf | grep -v -e "^- \[redhat\]" |
 		grep -v "Revert" |
 		sed -e 's!\[Fedora\]!!g' > $clogf.stripped
 	cp $clogf.stripped $clogf

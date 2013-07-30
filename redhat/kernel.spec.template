@@ -1470,9 +1470,6 @@ fi
 %changelog
 %%CHANGELOG%%
 * Wed Jul 31 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-4.el7]
-- [redhat] Kconfig: select SHA1 as the default hmac selection [861469] (Neil Horman) [861469]
-- [redhat] Kconfig: unset CONFIG_PANIC_ON_OOPS on debug kernels (Kyle McMartin) [810201]
-- [redhat] configs: minor fixups for config scheme rework (Jarod Wilson)
 - [x86] signals: Merge EFLAGS bit clearing into a single statement (Jiri Olsa) [986216]
 - [x86] signals: Clear RF EFLAGS bit for signal handler (Jiri Olsa) [986216]
 - [x86] signals: Propagate RF EFLAGS bit through the signal restore call (Jiri Olsa) [986216]
@@ -1577,8 +1574,6 @@ fi
 - [tools] perf/hists: Free unused mem info of a matched hist entry (Jiri Olsa) [984998]
 - [tools] perf/hists: Fix an invalid memory free on he->branch_info (Jiri Olsa) [984998]
 - [tools] perf: Fix bug in isupper() and islower() (Jiri Olsa) [984998]
-- [redhat] Kconfig/powerpc64: powernv enablement (Steve Best) [979523]
-- [redhat] Kconfig: Enables Transparent Huge Pages for powerpc support (Steve Best) [947166]
 - [mm] thp: define HPAGE_PMD_* constants as BUILD_BUG() if !THP (Steve Best) [947166]
 - [powerpc] mm: Fix build warnings with CONFIG_TRANSPARENT_HUGEPAGE disabled (Steve Best) [947166]
 - [powerpc] mm: Optimize hugepage invalidate (Steve Best) [947166]
@@ -1643,10 +1638,6 @@ fi
 - [powerpc] pci: Use PCI_UNKNOWN for unknown power state (Myron Stowe) [984759]
 - [acpi] pci_root: Check acpi_resource_to_address64() return value (Myron Stowe) [984759]
 - [pci] Work around Ivytown NTB BAR size issue (Myron Stowe) [984759]
-- [redhat] kernel.spec: restore {?buildid} (Kyle McMartin)
-- [redhat] configs: adapt tooling for new config option layout (Jarod Wilson)
-- [redhat] configs: split up rhel config options (Jarod Wilson)
-- [redhat] configs: split original Fedora config files up (Jarod Wilson)
 - [net] sunrpc: Fix another issue with rpc_client_register() (Jeff Layton) [924649]
 - [net] sunrpc: Fix a deadlock in rpc_client_register() (Jeff Layton) [924649]
 - [net] sunrpc: PipeFS MOUNT notification optimization for dying clients (Jeff Layton) [924649]
@@ -1655,9 +1646,7 @@ fi
 - [net] sunrpc: fix races on PipeFS MOUNT notifications (Jeff Layton) [924649]
 
 * Fri Jul 19 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-2.el7]
-- [redhat] Kconfig: disable CONFIG_PCMCIA (Andy Gospodarek) [980127]
 - [scsi] sd: fix crash when UA received on DIF enabled device (Ewan Milne) [979440]
-- [redhat] Kconfig: disable CONFIG_BCACHE (Mike Snitzer) [982752]
 - [md] dm-cache: add call to mark_tech_preview (Mike Snitzer) [982752]
 - [fs] nfs: have NFSv3 try server-specified auth flavors in turn (Jeff Layton) [977649]
 - [fs] nfs: have nfs_mount fake up a auth_flavs list when the server didn't provide it (Jeff Layton) [977649]
@@ -1670,11 +1659,6 @@ fi
 - [pci] aer: Set dev->__aer_firmware_first only for matching devices (Myron Stowe) [797485]
 - [pci] aer: Factor out HEST device type matching (Myron Stowe) [797485]
 - [pci] aer: Don't parse HEST table for non-PCIe devices (Myron Stowe) [797485]
-- [redhat] RHMAINTAINERS: add fuse maintainer (Brian Foster)
-- [redhat] Kconfig: disable CONFIG_HERMES (John Linville) [980127]
-- [redhat] Kconfig: disable CONFIG_AR5523 (John Linville) [980127]
-- [redhat] Kconfig: disable CONFIG_ATH5K (John Linville) [980127]
-- [redhat] kernel-3.10.0-1.el7 (Jarod Wilson)
 
 * Tue Jul 09 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-1.el7]
 - [x86] fix !CONFIG_HYPERVISOR_GUEST compile (Andrew Jones)
