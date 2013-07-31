@@ -75,7 +75,6 @@ F:	drivers/net/8139too.c
 ACPI SUBSYSTEM
 M:	Lenny Szubowicz <lszubowi@redhat.com>
 M:	Prarit Bhargava <prarit@redhat.com>
-M:	Peter Martuccelli <peterm@redhat.com>
 S:	Maintained
 F:	drivers/acpi/
 F:	drivers/pnp/pnpacpi/
@@ -136,12 +135,12 @@ F:	drivers/net/bnx2x.*
 F:	drivers/net/bnx2x_*
 
 BROADCOM TG3 GIGABIT ETHERNET DRIVER
-M:	John Feeney <jfeeney@redhat.com>
+M:	Ivan Vecera <ivecera@redhat.com>
 S:	Maintained
 F:	drivers/net/tg3.*
 
 BONDING DRIVER
-M:	Andy Gospodarek <agospoda@redhat.com>
+M:	Veaceslav Falico <vfalico@redhat.com>
 S:	Maintained
 F:	drivers/net/bonding/
 F:	include/linux/if_bonding.h
@@ -164,12 +163,12 @@ F:	drivers/cpufreq/
 F:	arch/x86/kernel/cpu/cpufreq/
 
 CXGB3 ETHERNET DRIVER (cxgb3)
-M:	Neil Horman <nhorman@redhat.com>
+M:	Jay Fenlason <fenlason@redhat.com>
 S:	Maintained
 F:	drivers/net/cxgb3/
 
 CXGB4 ETHERNET DRIVER (cxgb4)
-M:	Neil Horman <nhorman@redhat.com>
+M:	Jay Fenlason <fenlason@redhat.com>
 S:	Maintained
 F:	drivers/net/cxgb4/
 
@@ -182,6 +181,12 @@ EHEA ETHERNET DRIVER (ehea)
 M:	Ameet Paranjape <aparanja@redhat.com>
 S:	Maintained
 F:	drivers/net/ehea/
+
+FCOE STACK (Software libfc/fcoe)
+M:     Neil Horman <nhorman@redhat.com>
+S:     Maintained
+F:     drivers/scsi/libfc/
+F:     drivers/scsi/fcoe/
 
 FORCEDETH ETHERNET DRIVER (forcedeth)
 M:	Ivan Vecera <ivecera@redhat.com>
@@ -210,8 +215,8 @@ S:	Maintained
 F:	drivers/net/e1000/
 
 INTEL E1000E ETHERNET DRIVER (e1000e)
-M:	Andy Gospodarek <agospoda@redhat.com>
 M:	Dean Nelson <dnelson@redhat.com>
+M:	John Greene <jogreene@redhat.com>
 S:	Maintained
 F:	drivers/net/e1000e/
 
@@ -236,7 +241,7 @@ S:	Maintained
 F:	drivers/net/ixgbevf/
 
 KERNEL-BASED VIRTUAL MACHINE (kvm)
-M:	Avi Kivity <avi@redhat.com>
+M:	Gleb Natapov <gleb@redhat.com>
 M:	Marcelo Tosatti <mtosatti@redhat.com>
 S:	Maintained
 F:	arch/x86/include/asm/kvm*.h
@@ -267,15 +272,21 @@ S:	Maintained
 F:	drivers/infiniband/
 
 IPMI SUBSYSTEM
-M:	Peter Martuccelli <peterm@redhat.com>
+M:	Tony Camuso <tcamuso@redhat.com>
 S:	Maintained
 
 IPV4/IPV6 PROTOCOLS
 M:	Neil Horman <nhorman@redhat.com>
+M:	Thomas Graf <tgraf@redhat.com>
 S:	Maintained
 F:	net/ipv4
 F:	net/ipv6
 F:	include/net
+
+ISMT SMBUS DRIVER
+M:	Neil Horman <nhorman@redhat.com>
+S:	Maintained
+F:	drivers/i2c/busses/i2c-ismt.c
 
 MACHINE CHECK ERROR (MCE) SUBSYSTEM
 M:	Prarit Bhargava <prarit@redhat.com>
@@ -302,9 +313,17 @@ M:	Stanislaw Gruszka <sgruszka@redhat.com>
 S:	Maintained
 F:	drivers/net/myri10ge/
 
+NETLINK
+M:	Thomas Graf <tgraf@redhat.com>
+S:	Maintained
+F:	net/netlink/
+F:	include/linux/netlink.h
+F:	include/net/netlink.h
+
 NETWORKING [GENERAL]
 M:	Andy Gospodarek <agospoda@redhat.com>
 M:	Neil Horman <nhorman@redhat.com>
+M:	Thomas Graf <tgraf@redhat.com>
 S:	Maintained
 F:	net/
 F:	include/net/
@@ -313,7 +332,7 @@ F:	include/linux/net.h
 F:	include/linux/netdevice.h
 
 NETXEN (1/10) GbE SUPPORT
-M:	Chad Dupuis <cdupius@redhat.com>
+M:	Chad Dupuis <cdupuis@redhat.com>
 M:	Tony Camuso <tcamuso@redhat.com>
 S:	Maintained
 F:	drivers/net/netxen/
@@ -354,19 +373,27 @@ M:	Prarit Bhargava <prarit@redhat.com>
 S:	Maintained
 F:	drivers/pci/hotplug/
 
+PTP HARDWARE CLOCK SUPPORT
+M:	Jiri Benc <jbenc@redhat.com>
+M:	Prarit Bhargava <prarit@redhat.com>
+S:	Maintained
+F:	Documentation/ptp/
+F:	drivers/ptp/
+F:	include/linux/ptp_cl*
+
 QLOGIC QLA2XXX FC-SCSI DRIVER
-M:	Chad Dupuis <cdupius@redhat.com>
+M:	Chad Dupuis <cdupuis@redhat.com>
 S:	Maintained
 F:	drivers/scsi/qla2xxx/
 
 QLOGIC QLA3XXX NETWORK DRIVER
-M:	Chad Dupuis <cdupius@redhat.com>
+M:	Chad Dupuis <cdupuis@redhat.com>
 S:	Maintained
 F:	Documentation/networking/LICENSE.qla3xxx
 F:	drivers/net/qla3xxx.*
 
 QLOGIC QLGE 10Gb ETHERNET DRIVER
-M:	Chad Dupuis <cdupius@redhat.com>
+M:	Chad Dupuis <cdupuis@redhat.com>
 S:	Maintained
 F:	drivers/net/qlge/
 
@@ -374,6 +401,17 @@ RALINK RT2X00 WIRELESS LAN DRIVER
 M:	Stanislaw Gruszka <sgruszka@redhat.com>
 S:	Maintained
 F:	drivers/net/wireless/rt2x00/
+
+ATHEROS WIRELESS LAN DRIVERS
+M:	John Greene <jogreene@redhat.com>
+S: 	Maintained
+F:	drivers/net/wireless/ath5k
+F: 	drivers/net/wireless/ath9k
+
+REALTEK WIRELESS LAN DRIVERS
+M: 	John Greene <jogreene@redhat.com>
+S:	Maintained
+F:	drivers/net/wireless/rtl818x
 
 RFKILL
 M:	John Linville <linville@redhat.com>
@@ -389,8 +427,9 @@ F:	drivers/scsi/
 
 SCTP PROTOCOL
 M:	Neil Horman <nhorman@redhat.com>
+M:	Thomas Graf <tgraf@redhat.com>
 S:	Maintained
-F:	net/sctp
+F:	net/sctp/
 F:	include/net/sctp/
 
 SERIAL ATA (SATA) SUBSYSTEM
@@ -400,6 +439,11 @@ S:	Maintained
 F:	drivers/ata/
 F:	include/linux/ata.h
 F:	include/linux/libata.h
+
+SIERRA_NET USB BROADBAND MODEM
+M:	Neil Horman <nhorman@redhat.com>
+S:	Maintained
+F:	drivers/net/usb/sierra_net.c
 
 SFC NETWORK DRIVER
 M:	Michal Schmidt <mschmidt@redhat.com>
@@ -437,8 +481,8 @@ F:	arch/x86/
 
 UNIVERSAL EXTENSIBLE FIRMWARE INTERFACE (UEFI/EFI)
 M:	Lenny Szubowicz <lszubowi@redhat.com>
-M:	Prarit Bhargava <prarit@redhat.com>
 M:	Myron Stowe <mstowe@redhat.com>
+M:	Prarit Bhargava <prarit@redhat.com>
 S:	Maintained
 F:	arch/x86/kernel/efi*
 F:	include/linux/efi.h
@@ -452,6 +496,12 @@ UVC WEBCAM DRIVER
 M:	Jay Fenlason <fenlason@redhat.com>
 S:	Maintained
 F:	drivers/media/video/uvc/
+
+VIDEO DRIVERS
+M:	David Airlie <airlied@redhat.com>
+M:	Adam Jackson <ajax@redhat.com>
+S:	Maintained
+F:	drivers/gpu/
 
 VIRTIO CONSOLE DRIVER
 M:	Amit Shah <amit.shah@redhat.com>
@@ -473,6 +523,11 @@ M:	"Michael S. Tsirkin" <mst@redhat.com>
 S:	Maintained
 F:	drivers/vhost/
 F:	include/linux/vhost.h
+
+VMWARE VMXNET3 ETHERNET DRIVER (vmxnet3)
+M:	Neil Horman <nhorman@redhat.com>
+S:	Maintained
+F:	drivers/net/vmxnet3/*
 
 WIRELESS DRIVERS AND STACK
 M:	Stanislaw Gruszka <sgruszka@redhat.com>
