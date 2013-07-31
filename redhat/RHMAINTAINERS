@@ -73,7 +73,8 @@ S:	Maintained
 F:	drivers/net/8139too.c
 
 ACPI SUBSYSTEM
-M:	Matthew Garrett <mjg@redhat.com>
+M:	Lenny Szubowicz <lszubowi@redhat.com>
+M:	Prarit Bhargava <prarit@redhat.com>
 M:	Peter Martuccelli <peterm@redhat.com>
 S:	Maintained
 F:	drivers/acpi/
@@ -104,7 +105,7 @@ S:	Maintained
 F:	drivers/net/benet/
 
 BIOS ISSUES
-M:	Matthew Garrett <mjg@redhat.com>
+M:	Lenny Szubowicz <lszubowi@redhat.com>
 M:	Prarit Bhargava <prarit@redhat.com>
 
 BLOCK LAYER
@@ -156,7 +157,7 @@ S:	Maintained
 F:	drivers/net/enic/
 
 CPU FREQUENCY DRIVERS
-M:	Matthew Garrett <mjg@redhat.com>
+M:	Lenny Szubowicz <lszubowi@redhat.com>
 M:	Prarit Bhargava <prarit@redhat.com>
 S:	Maintained
 F:	drivers/cpufreq/
@@ -426,7 +427,7 @@ S:	Maintained
 F:	net/sunrpc/
 
 SUSPEND/RESUME
-M:	Matthew Garrett <mjg@redhat.com>
+M:	Lenny Szubowicz <lszubowi@redhat.com>
 S:	Maintained
 
 X86 ARCHITECTURE (32-BIT AND 64-BIT)
@@ -435,7 +436,7 @@ S:	Maintained
 F:	arch/x86/
 
 UNIVERSAL EXTENSIBLE FIRMWARE INTERFACE (UEFI/EFI)
-M:	Matthew Garrett <mjg@redhat.com>
+M:	Lenny Szubowicz <lszubowi@redhat.com>
 M:	Prarit Bhargava <prarit@redhat.com>
 M:	Myron Stowe <mstowe@redhat.com>
 S:	Maintained
