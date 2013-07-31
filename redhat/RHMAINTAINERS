@@ -536,3 +536,21 @@ S:	Maintained
 F:	drivers/net/wireless/
 F:	net/mac80211/
 F:	net/wireless/
+
+XEN
+M:	Radim Krcmar <rkrcmar@redhat.com>
+M:	Igor Mammedov <imammedo@redhat.com>
+M:	Andrew Jones <drjones@redhat.com>
+S:	Maintained
+F:	drivers/block/xen-blkfront.c
+F:	drivers/input/misc/xen-kbdfront.c
+F:	drivers/net/xen-netfront.c
+F:	drivers/tty/hvc/hvc_xen.c
+F:	drivers/watchdog/xen_wdt.c
+F:	drivers/xen/
+F:	include/trace/events/xen.h
+F:	include/uapi/xen/
+F:	include/xen/
+F:	arch/x86/include/asm/xen/
+F:	arch/x86/pci/xen.c
+F:	arch/x86/xen/
