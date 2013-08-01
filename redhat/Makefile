@@ -38,13 +38,9 @@ rh-check-kabi:
 	 -s $(REDHAT)/../Module.symvers
 
 rh-configs:
-	cd $(REDHAT)/configs; $(MAKE) VERSION=$(KVERSION) configs
-
-rh-configs-prep:
 	cd $(REDHAT)/configs; ./build_configs.sh
 
-rh-configs-arch-prep:
-	cd $(REDHAT)/configs; $(MAKE) VERSION=$(KVERSION) $(_EXTRA_ARGS) ARCHCONFIG=$(ARCHCONFIG) configs-prep
+rh-configs-prep: rh-configs
 
 rh-clean-configs:
 	cd $(REDHAT)/configs; rm -f kernel-*.config
@@ -101,7 +97,7 @@ sources-rh: $(TARBALL)
 	fi)
 	@cp cpupower.* x509.genkey keys/extra_certificates Makefile.common kabi/{find-provides,kabitool,check-kabi} kabi/Module.kabi_{ppc64,s390x,x86_64} configs/kernel-*.config rhpkg/Makefile scripts/sign-modules $(SOURCES)/
 
-rh-sources: setup-source sources-rh rh-configs-prep
+rh-sources: setup-source rh-configs sources-rh
 
 rh-test-patch:
 	@git diff --no-renames HEAD > $(TESTPATCH);
@@ -201,9 +197,9 @@ rh-help:
 	@echo  ''
 	@echo  'Configuration targets:'
 	@echo
-	@echo  '  rh-configs-prep - Creates config files for RHEL 7 architectures, cleans them'
-	@echo  '		    by running make nonint_oldconfig, and copies them to'
-	@echo  '		    redhat/configs/ directory. This is the target to use for a config!'
-	@echo  '		    Copy the config file you want from the redhat/configs/ directory'
-	@echo  '		    to .config'
+	@echo  '  rh-configs  - Creates config files for RHEL 7 architectures, cleans them'
+	@echo  '		by running make nonint_oldconfig, and copies them to'
+	@echo  '		redhat/configs/ directory. This is the target to use for a config!'
+	@echo  '		Copy the config file you want from the redhat/configs/ directory'
+	@echo  '		to .config'
 	@echo  ''
