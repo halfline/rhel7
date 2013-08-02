@@ -554,3 +554,14 @@ F:	include/xen/
 F:	arch/x86/include/asm/xen/
 F:	arch/x86/pci/xen.c
 F:	arch/x86/xen/
+
+ZBUD COMPRESSED PAGE ALLOCATOR
+M:	Steve Best <sbest@redhat.com>
+S:	Maintained
+F:	mm/zbud.c
+F:	include/linux/zbud.h
+
+ZSWAP COMPRESSED SWAP CACHING
+M:	Steve Best <sbest@redhat.com>
+S:	Maintained
+F:	mm/zswap.c
