@@ -384,8 +384,11 @@ xfs_symlink(
 	/*
 	 * Make sure that we have allocated dquot(s) on disk.
 	 */
-	error = xfs_qm_vop_dqalloc(dp, current_fsuid(), current_fsgid(), prid,
-			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT, &udqp, &gdqp);
+	error = xfs_qm_vop_dqalloc(dp,
+			xfs_kuid_to_uid(current_fsuid()),
+			xfs_kgid_to_gid(current_fsgid()), prid,
+			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+			&udqp, &gdqp);
 	if (error)
 		goto std_return;
 
