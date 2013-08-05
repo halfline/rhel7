@@ -45,6 +45,8 @@ Summary: The Linux kernel
 %define with_kdump     %{?_without_kdump:     0} %{?!_without_kdump:     0}
 # kernel-bootwrapper (for creating zImages from kernel + initrd)
 %define with_bootwrapper %{?_without_bootwrapper: 0} %{?!_without_bootwrapper: 0}
+# kernel-abi-whitelists
+%define with_kernel_abi_whitelists %{?_with_kernel_abi_whitelists: 0} %{?!_with_kernel_abi_whitelists: 1}
 
 # Build the kernel-doc package, but don't fail the build if it botches.
 # Here "true" means "continue" and "false" means "fail the build".
@@ -123,6 +125,7 @@ Summary: The Linux kernel
 # only package docs noarch
 %ifnarch noarch
 %define with_doc 0
+%define with_kernel_abi_whitelists 0
 %endif
 
 # don't build noarch kernels or headers (duh)
@@ -343,6 +346,10 @@ Source21: Module.kabi_ppc64
 Source22: Module.kabi_s390x
 %endif
 
+Source23: kabi_whitelist_ppc64
+Source24: kabi_whitelist_s390x
+Source25: kabi_whitelist_x86_64
+
 Source50: kernel-%{version}-x86_64.config
 Source51: kernel-%{version}-x86_64-debug.config
 
@@ -518,6 +525,14 @@ This package provides debug information for package kernel-tools.
 
 %endif # with_tools
 
+%package -n kernel-abi-whitelists
+Summary: The Red Hat Enterprise Linux kernel ABI symbol whitelists
+Group: System Environment/Kernel
+AutoReqProv: no
+%description -n kernel-abi-whitelists
+The kABI package contains information pertaining to the Red Hat Enterprise
+Linux kernel ABI, including lists of kernel symbols that are needed by
+external Linux kernel modules, and a yum plugin to aid enforcement.
 
 #
 # This macro creates a kernel-<subpackage>-debuginfo package.
@@ -1186,6 +1201,15 @@ find $RPM_BUILD_ROOT/usr/include \
 
 %endif
 
+%if %{with_kernel_abi_whitelists}
+# kabi directory
+INSTALL_KABI_PATH=$RPM_BUILD_ROOT/lib/modules/kabi-rhel70
+mkdir -p $INSTALL_KABI_PATH
+
+# install kabi whitelists
+cp %{SOURCE23} %{SOURCE24} %{SOURCE25} $INSTALL_KABI_PATH
+%endif  # with_kernel_abi_whitelists
+
 %if %{with_perf}
 # perf tool binary and supporting scripts/binaries
 %{perf_make} DESTDIR=$RPM_BUILD_ROOT install
@@ -1363,6 +1387,12 @@ fi
 %dir %{_datadir}/doc/kernel-doc-%{rpmversion}/Documentation
 %dir %{_datadir}/doc/kernel-doc-%{rpmversion}
 %{_datadir}/man/man9/*
+%endif
+
+%if %{with_kernel_abi_whitelists}
+%files -n kernel-abi-whitelists
+%defattr(-,root,root,-)
+/lib/modules/kabi-*
 %endif
 
 %if %{with_perf}
