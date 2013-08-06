@@ -565,11 +565,19 @@ void __init cred_init(void)
 				     0, SLAB_HWCACHE_ALIGN|SLAB_PANIC, NULL);
 }
 
+#ifdef CONFIG_MODULE_SIG
+extern bool sig_enforce;
+#endif
+
 void __init secureboot_enable()
 {
 	pr_info("Secure boot enabled\n");
 	cap_lower((&init_cred)->cap_bset, CAP_COMPROMISE_KERNEL);
 	cap_lower((&init_cred)->cap_permitted, CAP_COMPROMISE_KERNEL);
+#ifdef CONFIG_MODULE_SIG
+	/* Enable module signature enforcing */
+	sig_enforce = true;
+#endif
 }
 
 /* Dummy Secure Boot enable option to fake out UEFI SB=1 */
