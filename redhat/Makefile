@@ -3,8 +3,8 @@ include Makefile.rhpkg
 include Makefile.test
 
 LANG=C
-BUILD_DEFAULT_TARGET = rhel-7.0-test
-BUILD_SCRATCH_TARGET = rhel-7.0-test
+BUILD_DEFAULT_TARGET = rhel-7.0-kernel-test
+BUILD_SCRATCH_TARGET = rhel-7.0-kernel-test
 
 #ifeq ($(shell git diff --quiet HEAD && git describe --exact-match 2>/dev/null && echo ok),)
 BUILD_TARGET ?= --scratch $(BUILD_SCRATCH_TARGET)
