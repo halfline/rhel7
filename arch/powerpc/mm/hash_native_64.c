@@ -560,6 +560,7 @@ static void hpte_decode(struct hash_pte *hpte, unsigned long slot,
 			seg_off |= vpi << shift;
 		}
 		*vpn = vsid << (SID_SHIFT - VPN_SHIFT) | seg_off >> VPN_SHIFT;
+		break;
 	case MMU_SEGSIZE_1T:
 		/* We only have 40 - 23 bits of seg_off in avpn */
 		seg_off = (avpn & 0x1ffff) << 23;
@@ -569,6 +570,7 @@ static void hpte_decode(struct hash_pte *hpte, unsigned long slot,
 			seg_off |= vpi << shift;
 		}
 		*vpn = vsid << (SID_SHIFT_1T - VPN_SHIFT) | seg_off >> VPN_SHIFT;
+		break;
 	default:
 		*vpn = size = 0;
 	}
