@@ -98,7 +98,7 @@ x509.genkey
 #
 # Red Hat
 #
-configs/*
+configs/*.config
 localversion
 
 # configuration file for rh- targets

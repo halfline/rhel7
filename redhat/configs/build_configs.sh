@@ -48,11 +48,22 @@ function merge_configs()
 	echo "done"
 }
 
+function restore_orig_config()
+{
+	if [ -e .config-saveme ]; then
+		mv .config-saveme .config
+	fi
+}
+
 function process_configs()
 {
 	cfg_dir=$(pwd)
 	kroot=$(cd ../..; pwd)
 	pushd $kroot/ > /dev/null
+	trap restore_orig_config EXIT
+	if [ -e .config ]; then
+		mv .config .config-saveme
+	fi
 	for cfg in $cfg_dir/kernel-3.10.0-*.config
 	do
 		mv $cfg .config
@@ -65,6 +76,8 @@ function process_configs()
 		rm -f .config
 		echo "done"
 	done
+	restore_orig_config
+	trap - EXIT
 	popd > /dev/null
 
 	echo "Processed config files are in $cfg_dir"
