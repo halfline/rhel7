@@ -579,6 +579,7 @@ int blk_register_queue(struct gendisk *disk)
 	 * bypass from queue allocation.
 	 */
 	blk_queue_bypass_end(q);
+	queue_flag_set_unlocked(QUEUE_FLAG_INIT_DONE, q);
 
 	ret = blk_trace_init_sysfs(dev);
 	if (ret)
