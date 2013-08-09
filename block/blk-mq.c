@@ -270,7 +270,7 @@ void blk_mq_free_request(struct request *rq)
 }
 EXPORT_SYMBOL(blk_mq_free_request);
 
-void blk_mq_finish_request(struct request *rq, int error)
+static void blk_mq_finish_request(struct request *rq, int error)
 {
 	struct bio *bio = rq->bio;
 	unsigned int bytes = 0;
@@ -286,22 +286,17 @@ void blk_mq_finish_request(struct request *rq, int error)
 
 	blk_account_io_completion(rq, bytes);
 	blk_account_io_done(rq);
-	blk_mq_free_request(rq);
 }
 
 void blk_mq_complete_request(struct request *rq, int error)
 {
 	trace_block_rq_complete(rq->q, rq);
+	blk_mq_finish_request(rq, error);
 
-	/*
-	 * If ->end_io is set, it's responsible for doing the rest of the
-	 * completion.
-	 */
 	if (rq->end_io)
 		rq->end_io(rq, error);
 	else
-		blk_mq_finish_request(rq, error);
-
+		blk_mq_free_request(rq);
 }
 
 void __blk_mq_end_io(struct request *rq, int error)
@@ -989,8 +984,7 @@ int blk_mq_execute_rq(struct request_queue *q, struct request *rq)
 	if (rq->errors)
 		err = -EIO;
 
-	blk_mq_finish_request(rq, rq->errors);
-
+	blk_mq_free_request(rq);
 	return err;
 }
 EXPORT_SYMBOL(blk_mq_execute_rq);
