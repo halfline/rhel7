@@ -16,7 +16,7 @@ Summary: The Linux kernel
 %define pkg_release %{pkgrelease}%{?buildid}
 
 # The kernel tarball/base version
-%define rheltarball %%RPMVERSION%%-%%PKGRELEASE%%
+%define rheltarball %{rpmversion}-%{pkgrelease}
 
 # What parts do we want to build?  We must build at least one kernel.
 # These are the kernels that are built IF the architecture allows it.
@@ -324,7 +324,7 @@ BuildRequires: glibc-static
 
 %endif
 
-Source0: linux-%%RPMVERSION%%-%%PKGRELEASE%%.tar.xz
+Source0: linux-%{rpmversion}-%{pkgrelease}.tar.xz
 
 Source1: Makefile.common
 
@@ -686,7 +686,10 @@ touch .scmversion
 # only deal with configs if we are going to build for the arch
 %ifnarch %nobuildarches
 
-mkdir configs
+if [ -L configs ]; then
+	rm -f configs
+	mkdir configs
+fi
 
 # Remove configs not for the buildarch
 for cfg in kernel-%{version}-*.config; do
