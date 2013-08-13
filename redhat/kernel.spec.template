@@ -1472,6 +1472,14 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Aug 13 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-9.el7]
+- [kernel] sched: disable autogroups by default (Josh Poimboeuf) [989741]
+- [powerpc] pseries: Add backward compatibilty to read old kernel oops-log (Steve Best) [991831]
+- [powerpc] pseries: Fix buffer overflow when reading from pstore (Steve Best) [991831]
+- [crypto] nx: saves chaining value from co-processor (Steve Best) [972656]
+- [crypto] nx: fix limits to sg lists for SHA-2 (Steve Best) [972656]
+- [crypto] nx: fix physical addresses added to sg lists (Steve Best) [972656]
+
 * Mon Aug 12 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-8.el7]
 - [net] ipv6: ip6_append_data_mtu did not care about pmtudisc and frag_size (Francesco Fusco) [994346] {CVE-2013-4163}
 - [net] ipv6: call udp_push_pending_frames when uncorking a socket with AF_INET pending data (Francesco Fusco) [988355] {CVE-2013-4162}
