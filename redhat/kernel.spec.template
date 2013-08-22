@@ -1502,6 +1502,9 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Aug 21 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-11.el7]
+- [security] Revert: Secure Boot related kernel enforcements (Jarod Wilson) [903815]
+
 * Tue Aug 20 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-10.el7]
 - [block] blk-mq: blk-mq should free bios in pass through case (Mike Snitzer) [960150]
 - [block] blk-mq: add missing percpu_counter_destroy for mq_usage_counter (Mike Snitzer) [960150]
