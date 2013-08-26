@@ -344,11 +344,11 @@ Source18: check-kabi
 Source20: Module.kabi_x86_64
 Source21: Module.kabi_ppc64
 Source22: Module.kabi_s390x
-%endif
 
 Source23: kabi_whitelist_ppc64
 Source24: kabi_whitelist_s390x
 Source25: kabi_whitelist_x86_64
+%endif
 
 Source50: kernel-%{version}-x86_64.config
 Source51: kernel-%{version}-x86_64-debug.config
