@@ -361,6 +361,14 @@ NON-MASKABLE INTERRUPT (NMI)
 M:	Don Zickus <dzickus@redhat.com>
 S:	Maintained
 
+OPENVSWITCH (OVS)
+M:	Thomas Graf <tgraf@redhat.com>
+M:	Francesco Fusco <ffusco@redhat.com>
+M:	Flavio Leitner <fbl@redhat.com>
+S:	Maintained
+F:	net/openvswitch/
+F:	include/linux/openvswitch.h
+
 PCI SUBSYSTEM
 M:	Myron Stowe <mstowe@redhat.com>
 M:	Prarit Bhargava <prarit@redhat.com>
