@@ -13,7 +13,7 @@ BUILD_TARGET ?= --scratch $(BUILD_SCRATCH_TARGET)
 #endif
 
 RHGITURL:=$(shell git config remote.origin.url)
-RHGITCOMMIT=$(shell git log -1 --pretty=format:%H)
+RHGITCOMMIT?=$(shell git log -1 --pretty=format:%H)
 
 # this section is needed in order to make O= to work
 _OUTPUT := ..
@@ -167,8 +167,10 @@ rh-help:
 	@echo  '  rh-srpm	- Create a source RPM and put it into the redhat/rpm/SRPMS/ directory'
 	@echo  '  rh-brew	- Create a kernel SRPM and then call brew to build the created SRPM'
 	@echo  '  rh-koji	- Create a kernel SRPM and then call koji to build the created SRPM'
-	@echo  '  rhg-brew	- Pass a commit hash to brew to build an RPM set'
-	@echo  '  rhg-koji	- Pass a commit hash to koji to build an RPM set'
+	@echo  '  rhg-brew	- Pass HEAD of the current git branch to brew to build an RPM set.'
+	@echo  '                  Preceed make command by RHGITCOMMIT=<commitID> to specify commit ID to use.'
+	@echo  '  rhg-koji	- Pass HEAD of the current git branch to koji to build an RPM set.'
+	@echo  '                  Preceed make command by RHGITCOMMIT=<commitID> to specify commit ID to use.'
 	@echo  '  rh-test	- Pass in brew task number, TASK=1234 make rh-test, to use for an RHTS test'
 	@echo  '		  setup ./tests to use a test from redhat/tests (minus the .xml)'
 	@echo  '		  uses a known stable RHEL6 distro as the default'
