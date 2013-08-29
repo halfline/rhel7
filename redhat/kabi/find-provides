@@ -17,6 +17,7 @@ import os
 import re
 import string
 import sys
+import commands
 
 false = 0
 true = 1
@@ -33,6 +34,9 @@ while true:
 	if m:
 		kabideps=sys.argv[1] + "/kernel-" + m.group(2) + "-kabideps"
 	
+fp = commands.getstatusoutput('/usr/lib/rpm/redhat/find-provides kernel')[1].strip()
+sys.stdout.write(fp)
+
 if kabideps == "":
 	sys.exit(0)
 
