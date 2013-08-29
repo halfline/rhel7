@@ -17,27 +17,32 @@ import os
 import re
 import string
 import sys
-import commands
+from subprocess import Popen, PIPE
 
 false = 0
 true = 1
 
 kabideps=""
 
+input = sys.stdin.readlines()
+
 p = re.compile('^(.*)/symvers-(.*).gz$')
-while true:
-	foo = sys.stdin.readline()
-	if foo == "":
+for line in input:
+	if input == "":
 		break
-	string.split(foo)
-	m = p.match(foo)
+	string.split(line)
+	m = p.match(line)
 	if m:
 		kabideps=sys.argv[1] + "/kernel-" + m.group(2) + "-kabideps"
-	
-fp = commands.getstatusoutput('/usr/lib/rpm/redhat/find-provides kernel')[1].strip()
-sys.stdout.write(fp)
 
 if kabideps == "":
+	p = Popen(["/usr/lib/rpm/redhat/find-provides", "kernel"], stdin=PIPE, stdout=PIPE)
+	for line in input:
+		string.split(line)
+		p.stdin.write(line)
+	p.stdin.close()
+	for dep in p.stdout.readlines():
+		sys.stdout.write(dep)
 	sys.exit(0)
 
 if not (os.path.isfile(kabideps)):
