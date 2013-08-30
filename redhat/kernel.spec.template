@@ -1504,6 +1504,18 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Aug 30 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-15.el7]
+- [drm] qxl: backport updates from v3.11-rc1 (Dave Airlie) [979176]
+- [drm] add hotspot support for cursors (Dave Airlie) [983312]
+- [virt] x86: Correctly detect hypervisor (Jason Wang) [985743]
+- [virt] kvm: Switch to use hypervisor_cpuid_base() (Jason Wang) [985743]
+- [virt] xen: Switch to use hypervisor_cpuid_base() (Jason Wang) [985743]
+- [virt] x86: Introduce hypervisor_cpuid_base() (Jason Wang) [985743]
+- [net] sunrpc: prepare NFS for 2038 (Harshula Jayasuriya) [847926]
+- [netdrv] macvtap: Ignore tap features when VNET_HDR is off (Vlad Yasevich) [1001053]
+- [netdrv] macvtap: Correctly set tap features when IFF_VNET_HDR is disabled (Vlad Yasevich) [1001053]
+- [netdrv] macvtap: simplify usage of tap_features (Vlad Yasevich) [1001053]
+
 * Thu Aug 29 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-14.el7]
 - [net] openvswitch: optimize flow compare and mask functions (Thomas Graf) [1002051]
 - [net] openvswitch: Rename key_len to key_end (Thomas Graf) [1002051]
