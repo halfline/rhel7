@@ -1504,6 +1504,14 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Sep 03 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-16.el7]
+- [powerpc] Avoid link stack corruption for MMU on exceptions (Steve Best) [999556]
+- [virt] net/hyperv: Fix the NETIF_F_SG flag setting in netvsc (Jason Wang) [984810]
+- [pci] Retry allocation of only the resource type that failed (Myron Stowe) [1001217]
+- [pci] pciehp: Convert pciehp to be builtin only, not modular (Myron Stowe) [1001217]
+- [pci] hotplug: Convert to be builtin only, not modular (Myron Stowe) [1001217]
+- [pci] pciehp: Fix null pointer deref when hot-removing SR-IOV device (Myron Stowe) [1001217]
+
 * Fri Aug 30 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-15.el7]
 - [drm] qxl: backport updates from v3.11-rc1 (Dave Airlie) [979176]
 - [drm] add hotspot support for cursors (Dave Airlie) [983312]
