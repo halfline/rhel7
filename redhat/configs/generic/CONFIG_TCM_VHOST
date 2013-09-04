@@ -1,1 +1,1 @@
-CONFIG_TCM_VHOST=m
+# CONFIG_TCM_VHOST is not set
