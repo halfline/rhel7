@@ -1512,8 +1512,10 @@ static int __init __parse_crashkernel(char *cmdline,
 			*crash_size = size;
 			*crash_base = arch_default_crash_base();
 			return 0;
-		} else
+		} else {
+			pr_warning("crashkernel=auto resulted in zero bytes of reserved memory.\n");
 			return -ENOMEM;
+		}
 	}
 #endif
 	/*
