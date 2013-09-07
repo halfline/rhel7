@@ -4,6 +4,8 @@
 # and debug to form the necessary kernel-<version>-<arch>-<variant>.config
 # files for building RHEL kernels, based on the contents of a control file
 
+SUBARCH=$1 # defines a specific arch for use with rh-configs-arch-prep target
+
 set errexit
 set nounset
 
@@ -64,7 +66,7 @@ function process_configs()
 	if [ -e .config ]; then
 		mv .config .config-saveme
 	fi
-	for cfg in $cfg_dir/kernel-3.10.0-*.config
+	for cfg in $cfg_dir/kernel-3.10.0-$SUBARCH*.config
 	do
 		mv $cfg .config
 		arch=$(head -1 .config | cut -b 3-)
@@ -100,6 +102,10 @@ do
 	else
 		arch=$(echo "$line" | cut -f1 -d"=")
 		configs=$(echo "$line" | cut -f2 -d"=")
+
+		if [ -n "$SUBARCH" -a "$SUBARCH" != "$arch" ]; then
+			continue
+		fi
 		merge_configs $arch $configs
 	fi
 done < $control_file

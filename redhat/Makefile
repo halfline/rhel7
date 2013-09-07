@@ -42,6 +42,9 @@ rh-configs:
 
 rh-configs-prep: rh-configs
 
+rh-configs-arch-prep:
+	cd $(REDHAT)/configs; ./build_configs.sh $(MACH)
+
 rh-clean-configs:
 	cd $(REDHAT)/configs; rm -f kernel-*.config
 
