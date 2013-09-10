@@ -46,6 +46,7 @@ rh-clean-configs:
 	cd $(REDHAT)/configs; rm -f kernel-*.config
 
 rh-clean-sources:
+	@rm -f $(RPM)/SPECS/*
 	@for i in $(SOURCES)/*; do \
 		rm -f $$i; \
 	done;
@@ -72,6 +73,8 @@ $(TARBALL):
 
 setup-source: rh-clean-sources
 	@cp $(REDHAT)/$(SPECFILE).template $(SOURCES)/$(SPECFILE)
+	@$(REDHAT)/genspec.sh $(SOURCES) $(SOURCES)/$(SPECFILE) $(PKGRELEASE) $(RPMVERSION)
+	@cp $(SOURCES)/$(SPECFILE) $(SOURCES)/../SPECS/
 
 sources-rh: $(TARBALL)
 	@cp -l $(TARBALL) $(SOURCES)/ || cp $(TARBALL) $(SOURCES)/
@@ -88,8 +91,6 @@ sources-rh: $(TARBALL)
 	@diff $(TESTPATCH).tmp $(TESTPATCH) > /dev/null || \
 		echo "WARNING: There are uncommitted changes in your tree or the changes are not in sync with linux-kernel-test.patch.  Either commit the changes or run 'make rh-test-patch'"
 	@rm $(TESTPATCH).tmp
-	@$(REDHAT)/genspec.sh $(SOURCES) $(SOURCES)/$(SPECFILE) $(PKGRELEASE) $(RPMVERSION) $(BUILDID)
-	@cp $(SOURCES)/$(SPECFILE) $(SOURCES)/../SPECS
 	@cp $(TESTPATCH) $(SOURCES)/linux-kernel-test.patch
 	@# if the extra_certificates doesn't exist, create a empty one
 	@(if [ ! -f keys/extra_certificates ]; then \
@@ -125,11 +126,12 @@ rh-perf: rh-sources
 # unless you know what you're doing, you don't want to use the next two ones
 rh-release: rh-clean-sources
 	@$(REDHAT)/scripts/new_release.sh $(KVERSION) $(BUILD) $(REDHAT)
-	@make rh-srpm
+	@make setup-source
 	@$(REDHAT)/scripts/update_changelog.sh $(KVERSION) $(shell echo $$[$(BUILD) + 1]) $(REDHAT) "$(STAMP_VERSION)-$(PREBUILD)$(shell echo $$[$(BUILD) + 1])$(DIST)$(BUILDID)"
-rh-release-commit:
-	@echo kernel-$(STAMP_VERSION)-$(PKGRELEASE) >lastcommit
-	@git commit -s ../Makefile Makefile.common kernel.spec.template lastcommit -m "[redhat] kernel-$(STAMP_VERSION)-$(PKGRELEASE)"
+	@git commit -s ../Makefile Makefile.common kernel.spec.template -m "[redhat] kernel-$(STAMP_VERSION)-$(PREBUILD)$(shell echo $$[$(BUILD) + 1])$(DIST)$(BUILDID)"
+	@make rh-configs
+	@make sources-rh
+rh-release-tag:
 	@git tag -a -m "kernel-$(STAMP_VERSION)-$(PKGRELEASE)" kernel-$(STAMP_VERSION)-$(PKGRELEASE)
 
 .PHONY: rh-brew rh-koji

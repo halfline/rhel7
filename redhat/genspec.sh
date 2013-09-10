@@ -4,20 +4,21 @@ SOURCES=$1
 SPECFILE=$2
 PKGRELEASE=$3
 RPMVERSION=$4
-BUILDID=$5
 clogf="$SOURCES/changelog"
 # hide [redhat] entries from changelog
 HIDE_REDHAT=1;
 # override LC_TIME to avoid date conflicts when building the srpm
 LC_TIME=
-FIRSTCOMMIT=$(cat lastcommit);
 STAMP=$(echo $MARKER | cut -f 1 -d '-' | sed -e "s/v//");
 RELEASED_KERNEL="1";
 RPM_VERSION="$RPMVERSION-$PKGRELEASE";
 
 echo >$clogf
 
-git format-patch --first-parent --no-renames -k --stdout $FIRSTCOMMIT..|awk '
+priorhash=$(git rev-list --tags="kernel-${RPMVERSION}-*" --branches=master --max-count=1)
+lasttag=$(git describe --tags $priorhash)
+echo "Gathering new log entries since $lasttag"
+git format-patch --first-parent --no-renames -k --stdout ${lasttag}.. | awk '
 BEGIN{TYPE="PATCHJUNK"; }
 	# add an entry to changelog
 	function changelog(subjectline, nameline)
@@ -122,8 +123,7 @@ BEGIN{TYPE="PATCHJUNK"; }
 
 ' SOURCES=$SOURCES SPECFILE=$SPECFILE CLOGF=$clogf
 
-cat $clogf | grep -v "updating lastcommit for" |
-	grep -v "tagging $RPM_VERSION" > $clogf.stripped
+cat $clogf | grep -v "tagging $RPM_VERSION" > $clogf.stripped
 cp $clogf.stripped $clogf
 
 if [ "x$HIDE_REDHAT" == "x1" ]; then
