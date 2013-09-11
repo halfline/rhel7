@@ -2939,6 +2939,10 @@ resume:
 			spin_unlock(&dentry->d_lock);
 			continue;
 		}
+		if (!(dentry->d_flags & DCACHE_GENOCIDE)) {
+			dentry->d_flags |= DCACHE_GENOCIDE;
+			dentry->d_count--;
+		}
 		if (!list_empty(&dentry->d_subdirs)) {
 			spin_unlock(&this_parent->d_lock);
 			spin_release(&dentry->d_lock.dep_map, 1, _RET_IP_);
@@ -2946,18 +2950,10 @@ resume:
 			spin_acquire(&this_parent->d_lock.dep_map, 0, 1, _RET_IP_);
 			goto repeat;
 		}
-		if (!(dentry->d_flags & DCACHE_GENOCIDE)) {
-			dentry->d_flags |= DCACHE_GENOCIDE;
-			dentry->d_count--;
-		}
 		spin_unlock(&dentry->d_lock);
 	}
 	if (this_parent != root) {
 		struct dentry *child = this_parent;
-		if (!(this_parent->d_flags & DCACHE_GENOCIDE)) {
-			this_parent->d_flags |= DCACHE_GENOCIDE;
-			this_parent->d_count--;
-		}
 		this_parent = try_to_ascend(this_parent, locked, seq);
 		if (!this_parent)
 			goto rename_retry;
