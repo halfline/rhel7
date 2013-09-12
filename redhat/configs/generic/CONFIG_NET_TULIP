@@ -1,1 +1,1 @@
-# CONFIG_NET_TULIP is not set
+CONFIG_NET_TULIP=y
