@@ -1504,6 +1504,17 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Sep 12 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-21.el7]
+- [net] net_sched: fix a typo in htb_change_class() (Jesper Brouer) [998588]
+- [net] tcp_probe: adapt tbuf size for recent changes (Daniel Borkmann) [1000470]
+- [net] tcp_probe: allow more advanced ingress filtering by mark (Daniel Borkmann) [1000470]
+- [net] tcp_probe: add IPv6 support (Daniel Borkmann) [1000470]
+- [net] tcp_probe: kprobes: adapt jtcp_rcv_established signature (Daniel Borkmann) [1000470]
+- [net] tcp_probe: also include rcv_wnd next to snd_wnd (Daniel Borkmann) [1000470]
+- [lib] vsprintf: add IPv4/v6 generic p[Ii]S[pfs] format specifier (Daniel Borkmann) [1000470]
+- [net] ipv6: fix potential use after free in tcp_v6_do_rcv (Jiri Benc) [1004165]
+- [net] netlabel: use domain based selectors when address based selectors are not available (Paul Moore) [983949]
+
 * Wed Sep 11 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-20.el7]
 - [fs] gfs2: dirty inode correctly in gfs2_write_end (Benjamin Marzinski) [1004054]
 - [netdrv] bnx2x: Convert dma_alloc_coherent(...__GFP_ZERO) to dma_zalloc_coherent (Michal Schmidt) [819849]
