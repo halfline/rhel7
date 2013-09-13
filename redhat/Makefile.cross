@@ -1,9 +1,8 @@
 CROSS_REPO=http://patchwork.lab.bos.redhat.com/packages/rhel7-cross-environment/rhel7-cross-environment.repo
-#CROSS_REPO=/home/4jarod/rhel7-cross-environment.repo
 
 CROSS_RPMFLAGS = $(RPMBUILD) --define "_sourcedir $(SOURCES)" --define "_builddir $(RPM)/BUILD" --define "_srcrpmdir $(RPM)/SRPMS" --define "_rpmdir $(RPM)/RPMS" --define "_specdir $(RPM)/SPECS" --define "dist $(DIST)"
 
-CROSS_PACKAGE_LIST = binutils-powerpc64-linux-gnu binutils-s390x-linux-gnu cross-binutils-common cross-gcc-common gcc-powerpc64-linux-gnu gcc-s390x-linux-gnu
+CROSS_PACKAGE_LIST = binutils-powerpc64-linux-gnu binutils-s390x-linux-gnu cross-binutils-common cross-gcc-common gcc-powerpc64-linux-gnu gcc-s390x-linux-gnu glibc-static
 
 rh-cross-download:
 	@if [ "$(ARCHCONFIG)" != "X86_64" ]; then \
@@ -13,7 +12,7 @@ rh-cross-download:
 ifeq ($(shell whoami), root)
 	@yum -y --config=$(CROSS_REPO) install $(CROSS_PACKAGE_LIST)
 else
-	@echo "Checking for rhel6-cross-compilers.  If this fails, run \"make rh-cross-download\" as root."
+	@echo "Checking for RHEL7 cross compile packages.  If this fails, run \"make rh-cross-download\" as root."
 	@rpm -q $(CROSS_PACKAGE_LIST)
 	@echo "Compilers found."
 endif
