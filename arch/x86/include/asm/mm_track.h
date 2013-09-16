@@ -61,6 +61,8 @@ struct mm_tracker {
 };
 extern struct mm_tracker mm_tracking_struct;
 
+extern int mm_track_init(long);
+extern void mm_track_exit(void);
 extern void do_mm_track_pte(void *);
 extern void do_mm_track_pmd(void *);
 extern void do_mm_track_pud(void *);

@@ -53,6 +53,17 @@ void do_mm_track_pte(void *val)
 		atomic_inc(&mm_tracking_struct.count);
 }
 
+static inline void track_as_pte(void *val)
+{
+	unsigned long pfn = pte_pfn(*(pte_t *)val);
+	if (pfn >= mm_tracking_struct.bitcnt)
+		return;
+
+	if (!test_and_set_bit(pfn, mm_tracking_struct.vector))
+		atomic_inc(&mm_tracking_struct.count);
+}
+
+
 #define LARGE_PMD_SIZE	(1 << PMD_SHIFT)
 
 void do_mm_track_pmd(void *val)
@@ -65,6 +76,9 @@ void do_mm_track_pmd(void *val)
 		return;
 
 	if (unlikely(pmd_large(*pmd))) {
+		/* If we're a hugepage then track all of the
+		 * smallpages within that address range
+		 */
 		unsigned long addr, end;
 
 		if (!(pte_val(*(pte_t *)val) & _PAGE_DIRTY))
@@ -77,28 +91,60 @@ void do_mm_track_pmd(void *val)
 			do_mm_track_phys((void *)addr);
 			addr +=  PAGE_SIZE;
 		}
-		return;
+	} else {
+		/* Track ourselves, then track any pages
+		 * we point to
+		 */
+		track_as_pte((void *)pmd);
+
+		pte = pte_offset_kernel(pmd, 0);
+
+		for (i = 0; i < PTRS_PER_PTE; i++, pte++)
+			do_mm_track_pte(pte);
 	}
-
-	pte = pte_offset_kernel(pmd, 0);
-
-	for (i = 0; i < PTRS_PER_PTE; i++, pte++)
-		do_mm_track_pte(pte);
 }
 
-static inline void track_as_pte(void *val)
-{
-	unsigned long pfn = pte_pfn(*(pte_t *)val);
-	if (pfn >= mm_tracking_struct.bitcnt)
-		return;
-
-	if (!test_and_set_bit(pfn, mm_tracking_struct.vector))
-		atomic_inc(&mm_tracking_struct.count);
-}
+#define LARGE_PUD_SIZE (1 << PUD_SHIFT)
 
 void do_mm_track_pud(void *val)
 {
-	track_as_pte(val);
+	int i;
+	pmd_t *pmd;
+	pud_t *pud = (pud_t *)val;
+
+	if (!pud_present(*pud))
+		return;
+
+	if (unlikely(pud_large(*pud))) {
+		/* If we're a hugepage then track all of the
+		 * smallpages within that address range
+		 */
+		unsigned long addr, end;
+
+		/* Treat this as a PTE for purposes of checking
+		 * the DIRTY bit...
+		 */
+		if (!(pte_val(*(pte_t *)val) & _PAGE_DIRTY))
+			return;
+
+		addr = pmd_pfn(*(pmd_t *)val) << PAGE_SHIFT;
+		end = addr + LARGE_PUD_SIZE;
+
+		while (addr < end) {
+			do_mm_track_phys((void *)addr);
+			addr += PAGE_SIZE;
+		}
+	} else {
+		/* Track ourselves, then track the next
+		 * level down
+		 */
+		track_as_pte((void *)pud);
+
+		pmd = pmd_offset(pud, 0);
+
+		for (i = 0; i < PTRS_PER_PMD; i++, pmd++)
+			do_mm_track_pmd(pmd);
+	}
 }
 
 void do_mm_track_pgd(void *val)
@@ -160,4 +206,3 @@ void mm_track_exit(void)
 		vfree(mm_tracking_struct.vector);
 }
 EXPORT_SYMBOL_GPL(mm_track_exit);
-
