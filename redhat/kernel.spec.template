@@ -1504,6 +1504,9 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Sep 17 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-23.el7]
+- [kernel] kexec: improve logging when crashkernel=auto can't be satisfied (Steve Best) [989576]
+
 * Fri Sep 13 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-22.el7]
 - [netdrv] bnx2: Convert dma_alloc_coherent(...__GFP_ZERO) to dma_zalloc_coherent (Neil Horman) [725061]
 - [netdrv] bnx2: clean up unnecessary MSI/MSI-X capability find (Neil Horman) [725061]
