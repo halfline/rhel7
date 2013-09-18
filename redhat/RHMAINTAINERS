@@ -151,9 +151,9 @@ S:	Maintained
 F:	fs/cifs/
 
 CISCO VIC ETHERNET NIC DRIVER
-M:	Andy Gospodarek <agospoda@redhat.com>
+M:	Stefan Assmann <sassmann@redhat.com>
 S:	Maintained
-F:	drivers/net/enic/
+F:	drivers/net/ethernet/cisco/enic/
 
 CPU FREQUENCY DRIVERS
 M:	Lenny Szubowicz <lszubowi@redhat.com>
@@ -220,15 +220,20 @@ M:	John Greene <jogreene@redhat.com>
 S:	Maintained
 F:	drivers/net/e1000e/
 
+INTEL I40E ETHERNET DRIVERS (i40e)
+M:	Stefan Assmann <sassmann@redhat.com>
+S:	Maintained
+F:	drivers/net/ethernet/intel/i40e/
+
 INTEL IGB ETHERNET DRIVERS (igb)
 M:	Stefan Assmann <sassmann@redhat.com>
 S:	Maintained
-F:	drivers/net/igb/
+F:	drivers/net/ethernet/intel/igb/
 
 INTEL IGBVF ETHERNET DRIVERS (igbvf)
 M:	Stefan Assmann <sassmann@redhat.com>
 S:	Maintained
-F:	drivers/net/igbvf/
+F:	drivers/net/ethernet/intel/igbvf/
 
 INTEL IXGBE ETHERNET DRIVER (ixgbe)
 M:	Andy Gospodarek <agospoda@redhat.com>
@@ -351,11 +356,6 @@ NFS SERVER (nfsd)
 M:	Red Hat NFS Team <nfs-team@redhat.com>
 S:	Maintained
 F:	fs/nfsd/
-
-NIU ETHERNET DRIVER (niu)
-M:	Stefan Assmann <sassmann@redhat.com>
-S:	Maintained
-F:	drivers/net/niu/
 
 NON-MASKABLE INTERRUPT (NMI)
 M:	Don Zickus <dzickus@redhat.com>
