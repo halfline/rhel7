@@ -57,6 +57,11 @@ M:	Jarod Wilson <jarod@redhat.com>
 S:	Maintained
 F:	redhat/
 
+3ware 9000 Storage Controller Linux Driver (3w-9xxx)
+M:	Tomas Henzl <thenzl@redhat.com>
+S:	Maintained
+F:	drivers/scsi/3w-9xxx*
+
 8169 10/100/1000 GIGABIT ETHERNET DRIVER (r8169)
 M:	Ivan Vecera <ivecera@redhat.com>
 S:	Maintained
@@ -92,6 +97,11 @@ ALSA SOUND DRIVER
 M:	John Feeney <jfeeney@redhat.com>
 M:	Jaroslav Kysela <jkysela@redhat.com>
 S:	Maintained
+
+ARECA (ARC11xx/12xx/16xx/1880) SATA/SAS RAID Host Bus Adapter (arcmsr)
+M:      Tomas Henzl <thenzl@redhat.com>
+S:      Maintained
+F:      drivers/scsi/arcmsr/
 
 ATL1E/ATL1C ETHERNET DRIVER (atl1e/atl1c)
 M:	Dean Nelson <dnelson@redhat.com>
@@ -133,6 +143,21 @@ M:	Michal Schmidt <mschmidt@redhat.com>
 S:	Maintained
 F:	drivers/net/bnx2x.*
 F:	drivers/net/bnx2x_*
+
+Broadcom NetXtreme II BCM5706/5708/5709/57710/57711/57712/57800/57810/57840 iSCSI Driver
+M:	Tomas Henzl <thenzl@redhat.com>
+S:	Maintained
+F:	drivers/scsi/bnx2i/
+
+Broadcom NetXtreme II BCM57710 FCoE Driver
+M:	Tomas Henzl <thenzl@redhat.com>
+S:	Maintained
+F:	drivers/scsi/bnx2fc/
+
+Broadcom NetXtreme II CNIC Driver (cnic)
+M:	Tomas Henzl <thenzl@redhat.com>
+S:	Maintained
+F:	drivers/net/ethernet/broadcom/cnic*
 
 BROADCOM TG3 GIGABIT ETHERNET DRIVER
 M:	Ivan Vecera <ivecera@redhat.com>
@@ -177,6 +202,11 @@ M:	Jeff Moyer <jmoyer@redhat.com>
 S:	Maintained
 F:	fs/direct-io.c
 
+Disk Array driver for HP Smart Array SAS controllers (hpsa)
+M:	Tomas Henzl <thenzl@redhat.com>
+S:	Maintained
+F:	drivers/scsi/hpsa*
+
 EHEA ETHERNET DRIVER (ehea)
 M:	Ameet Paranjape <aparanja@redhat.com>
 S:	Maintained
@@ -203,6 +233,11 @@ FUSE FILESYSTEM
 M:	Brian Foster <bfoster@redhat.com>
 S:	Maintained
 F:	fs/fuse/
+
+Fusion MPT SAS Host driver (mptsas)
+M:	Tomas Henzl <thenzl@redhat.com>
+S:	Maintained
+F:	drivers/message/fusion/
 
 INTEL E1000 ETHERNET DRIVER (e1000)
 M:	John Greene <jogreene@redhat.com>
@@ -287,6 +322,26 @@ ISMT SMBUS DRIVER
 M:	Neil Horman <nhorman@redhat.com>
 S:	Maintained
 F:	drivers/i2c/busses/i2c-ismt.c
+
+LSI 3ware SAS/SATA-RAID Linux Drive (3w-sas)
+M:	Tomas Henzl <thenzl@redhat.com>
+S:	Maintained
+F:	drivers/scsi/3w-sas*
+
+LSI MPT Fusion SAS 2.0 Device Driver (mpt2sas)
+M:	Tomas Henzl <thenzl@redhat.com>
+S:	Maintained
+F:	drivers/scsi/mpt2sas/
+
+LSI MPT Fusion SAS 3.0 Device Driver (mpt3sas)
+M:	Tomas Henzl <thenzl@redhat.com>
+S:	Maintained
+F:	drivers/scsi/mpt3sas/
+
+LSI MegaRAID SAS Driver (megaraid_sas)
+M:	Tomas Henzl <thenzl@redhat.com>
+S:	Maintained
+F:	drivers/scsi/megaraid/
 
 MACHINE CHECK ERROR (MCE) SUBSYSTEM
 M:	Prarit Bhargava <prarit@redhat.com>
