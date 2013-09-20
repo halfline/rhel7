@@ -47,7 +47,7 @@
 
 /* list of all detected zpci devices */
 static LIST_HEAD(zpci_list);
-static DEFINE_MUTEX(zpci_list_lock);
+static DEFINE_SPINLOCK(zpci_list_lock);
 
 static DECLARE_BITMAP(zpci_domain, ZPCI_NR_DEVICES);
 static DEFINE_SPINLOCK(zpci_domain_lock);
@@ -122,14 +122,14 @@ struct zpci_dev *get_zdev_by_fid(u32 fid)
 {
 	struct zpci_dev *tmp, *zdev = NULL;
 
-	mutex_lock(&zpci_list_lock);
+	spin_lock(&zpci_list_lock);
 	list_for_each_entry(tmp, &zpci_list, entry) {
 		if (tmp->fid == fid) {
 			zdev = tmp;
 			break;
 		}
 	}
-	mutex_unlock(&zpci_list_lock);
+	spin_unlock(&zpci_list_lock);
 	return zdev;
 }
 
@@ -929,9 +929,9 @@ int zpci_create_device(struct zpci_dev *zdev)
 	if (rc)
 		goto out_disable;
 
-	mutex_lock(&zpci_list_lock);
+	spin_lock(&zpci_list_lock);
 	list_add_tail(&zdev->entry, &zpci_list);
-	mutex_unlock(&zpci_list_lock);
+	spin_unlock(&zpci_list_lock);
 
 	zpci_init_slot(zdev);
 
@@ -1060,3 +1060,8 @@ out_mem:
 	return rc;
 }
 subsys_initcall_sync(pci_base_init);
+
+void zpci_rescan(void)
+{
+	clp_rescan_pci_devices_simple();
+}
