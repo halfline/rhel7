@@ -8,8 +8,8 @@
 #include <asm/required-features.h>
 #endif
 
-#define NCAPINTS	10	/* N 32-bit words worth of info */
-#define NBUGINTS	1	/* N 32-bit bug flags */
+#define NCAPINTS	20	/* N 32-bit words worth of info */
+#define NBUGINTS	10	/* N 32-bit bug flags */
 
 /*
  * Note: If the comment begins with a quoted string, that string is used
