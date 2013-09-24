@@ -61,3 +61,4 @@ module_exit(crc_t10dif_mod_fini);
 
 MODULE_DESCRIPTION("T10 DIF CRC calculation");
 MODULE_LICENSE("GPL");
+MODULE_SOFTDEP("pre: crct10dif");
