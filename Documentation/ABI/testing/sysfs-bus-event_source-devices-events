@@ -32,7 +32,7 @@ What: 		/sys/devices/cpu/events/PM_LD_MISS_L1
 		/sys/devices/cpu/events/PM_CYC
 		/sys/devices/cpu/events/PM_BRU_FIN
 		/sys/devices/cpu/events/PM_GCT_NOSLOT_CYC
-		/sys/devices/cpu/events/PM_BRU_MPRED
+		/sys/devices/cpu/events/PM_BR_MPRED
 		/sys/devices/cpu/events/PM_INST_CMPL
 		/sys/devices/cpu/events/PM_CMPLU_STALL
 
