@@ -31,7 +31,7 @@ function merge_configs()
 	arch=$(echo "$archvar" | cut -f1 -d"-")
 	configs=$2
 	name=kernel-3.10.0-$archvar.config
-	echo -n "Building $name... "
+	echo -n "Building $name ... "
 	touch config-merging config-merged
 	for config in $(echo $configs | sed -e 's/:/ /g')
 	do
@@ -70,7 +70,7 @@ function process_configs()
 	do
 		mv $cfg .config
 		arch=$(head -1 .config | cut -b 3-)
-		echo -n "Processing $cfg... "
+		echo -n "Processing $cfg ... "
 		make ARCH=$arch listnewconfig > /dev/null || exit 1
 		make ARCH=$arch oldnoconfig > /dev/null || exit 1
 		echo "# $arch" > $cfg
