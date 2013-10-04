@@ -416,7 +416,8 @@ static void throtl_pd_init(struct blkcg_gq *blkg)
 	 */
 	parent_sq = &td->service_queue;
 
-	if (cgroup_sane_behavior(blkg->blkcg->css.cgroup) && blkg->parent)
+	/* Enable hierarchical throttling even without sane option/flag. */
+	if (blkg->parent)
 		parent_sq = &blkg_to_tg(blkg->parent)->service_queue;
 
 	throtl_service_queue_init(&tg->service_queue, parent_sq);
