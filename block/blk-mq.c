@@ -284,10 +284,12 @@ static void blk_mq_bio_endio(struct request *rq, struct bio *bio, int error)
 		bio_endio(bio, error);
 }
 
-static void blk_mq_finish_request(struct request *rq, int error)
+void blk_mq_complete_request(struct request *rq, int error)
 {
 	struct bio *bio = rq->bio;
 	unsigned int bytes = 0;
+
+	trace_block_rq_complete(rq->q, rq);
 
 	while (bio) {
 		struct bio *next = bio->bi_next;
@@ -299,19 +301,13 @@ static void blk_mq_finish_request(struct request *rq, int error)
 	}
 
 	blk_account_io_completion(rq, bytes);
-	blk_account_io_done(rq);
-}
-
-void blk_mq_complete_request(struct request *rq, int error)
-{
-	trace_block_rq_complete(rq->q, rq);
-
-	blk_mq_finish_request(rq, error);
 
 	if (rq->end_io)
 		rq->end_io(rq, error);
 	else
 		blk_mq_free_request(rq);
+
+	blk_account_io_done(rq);
 }
 
 void __blk_mq_end_io(struct request *rq, int error)
