@@ -686,7 +686,8 @@ void blk_mq_start_stopped_hw_queues(struct request_queue *q)
 		if (!test_bit(BLK_MQ_S_STOPPED, &hctx->state))
 			continue;
 
-		blk_mq_start_hw_queue(hctx);
+		clear_bit(BLK_MQ_S_STOPPED, &hctx->state);
+		blk_mq_run_hw_queue(hctx, true);
 	}
 }
 EXPORT_SYMBOL(blk_mq_start_stopped_hw_queues);
