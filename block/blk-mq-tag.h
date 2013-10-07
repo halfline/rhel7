@@ -14,7 +14,13 @@ extern bool blk_mq_has_free_tags(struct blk_mq_tags *tags);
 extern ssize_t blk_mq_tag_sysfs_show(struct blk_mq_tags *tags, char *page);
 
 enum {
+	BLK_MQ_TAG_CACHE_MIN	= 4,
+	BLK_MQ_TAG_CACHE_MAX	= 64,
+};
+
+enum {
 	BLK_MQ_TAG_FAIL		= -1U,
+	BLK_MQ_TAG_MIN		= BLK_MQ_TAG_CACHE_MIN,
 	BLK_MQ_TAG_MAX		= BLK_MQ_TAG_FAIL - 1,
 };
 

@@ -1166,8 +1166,8 @@ static int blk_mq_init_rq_map(struct blk_mq_hw_ctx *hctx,
 		}
 	}
 
-	if (!i)
-		return -ENOMEM;
+	if (i < (reserved_tags + BLK_MQ_TAG_MIN))
+		goto err_rq_map;
 	else if (i != hctx->queue_depth) {
 		hctx->queue_depth = i;
 		pr_warn("%s: queue depth set to %u because of low memory\n",
@@ -1176,6 +1176,7 @@ static int blk_mq_init_rq_map(struct blk_mq_hw_ctx *hctx,
 
 	hctx->tags = blk_mq_init_tags(hctx->queue_depth, reserved_tags, node);
 	if (!hctx->tags) {
+err_rq_map:
 		blk_mq_free_rq_map(hctx);
 		return -ENOMEM;
 	}
@@ -1320,9 +1321,10 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_reg *reg,
 	struct request_queue *q;
 	int i;
 
-	if (!reg->nr_hw_queues || !reg->ops->queue_rq ||
-	    !reg->ops->map_queue || !reg->ops->alloc_hctx ||
-	    !reg->ops->free_hctx)
+	if (!reg->nr_hw_queues ||
+	    !reg->ops->queue_rq || !reg->ops->map_queue ||
+	    !reg->ops->alloc_hctx || !reg->ops->free_hctx ||
+	    (reg->queue_depth < (reg->reserved_tags + BLK_MQ_TAG_MIN)))
 		return ERR_PTR(-EINVAL);
 
 	if (!reg->queue_depth)

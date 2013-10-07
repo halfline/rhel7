@@ -447,10 +447,10 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
 	tags->nr_tags = nr_tags;
 	tags->reserved_tags = reserved_tags;
 	tags->max_cache = nr_tags / num_possible_cpus();
-	if (tags->max_cache < 4)
-		tags->max_cache = 4;
-	else if (tags->max_cache > 64)
-		tags->max_cache = 64;
+	if (tags->max_cache < BLK_MQ_TAG_CACHE_MIN)
+		tags->max_cache = BLK_MQ_TAG_CACHE_MIN;
+	else if (tags->max_cache > BLK_MQ_TAG_CACHE_MAX)
+		tags->max_cache = BLK_MQ_TAG_CACHE_MAX;
 
 	tags->batch_move = tags->max_cache / 2;
 
