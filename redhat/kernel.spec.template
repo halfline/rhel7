@@ -286,7 +286,7 @@ ExclusiveOS: Linux
 #
 BuildRequires: module-init-tools, patch >= 2.5.4, bash >= 2.03, sh-utils, tar
 BuildRequires: xz, findutils, gzip, m4, perl, make >= 3.78, diffutils, gawk
-BuildRequires: gcc >= 3.4.2, binutils >= 2.12, redhat-rpm-config
+BuildRequires: gcc >= 3.4.2, binutils >= 2.12, redhat-rpm-config >= 9.1.0-55
 BuildRequires: hostname, net-tools, bc
 BuildRequires: xmlto, asciidoc
 BuildRequires: openssl
@@ -335,10 +335,7 @@ Source10: sign-modules
 Source11: x509.genkey
 Source12: extra_certificates
 
-Source14: find-provides
-
 %if %{with_kabichk}
-Source17: kabitool
 Source18: check-kabi
 
 Source20: Module.kabi_x86_64
@@ -368,14 +365,6 @@ Source2001: cpupower.config
 Patch999999: linux-kernel-test.patch
 
 BuildRoot: %{_tmppath}/kernel-%{KVERREL}-root
-
-%if %{with_kabichk}
-# Override find_provides to use a script that provides "kernel(symbol) = hash".
-# Pass path of the RPM temp dir containing kabideps to find-provides script.
-%global _use_internal_dependency_generator 0
-%define __find_provides %_sourcedir/find-provides %{_tmppath}
-%define __find_requires /usr/lib/rpm/redhat/find-requires kernel
-%endif
 
 %description
 The kernel package contains the Linux kernel (vmlinuz), the core of any
@@ -899,13 +888,13 @@ BuildKernel() {
 
 %if %{with_kabichk}
     # create the kABI metadata for use in packaging
+    # NOTENOTE: the name symvers is used by the rpm backend
+    # NOTENOTE: to discover and run the /usr/lib/rpm/fileattrs/kabi.attr
+    # NOTENOTE: script which dynamically adds exported kernel symbol
+    # NOTENOTE: checksums to the rpm metadata provides list.
+    # NOTENOTE: if you change the symvers name, update the backend too
     echo "**** GENERATING kernel ABI metadata ****"
     gzip -c9 < Module.symvers > $RPM_BUILD_ROOT/boot/symvers-$KernelVer.gz
-
-%if %{with_kabichk}
-    chmod 0755 %_sourcedir/kabitool
-    rm -f %{_tmppath}/kernel-$KernelVer-kabideps
-    %_sourcedir/kabitool -s Module.symvers -o %{_tmppath}/kernel-$KernelVer-kabideps
 
     echo "**** kABI checking is enabled in kernel SPEC file. ****"
     chmod 0755 $RPM_SOURCE_DIR/check-kabi
@@ -916,9 +905,6 @@ BuildKernel() {
     else
         echo "**** NOTE: Cannot find reference Module.kabi file. ****"
     fi
-%endif
-    # Ensure the kabideps file always exists for the RPM ProvReq scripts
-    touch %{_tmppath}/kernel-$KernelVer-kabideps
 %endif %{with_kabichk}
 
     # then drop all but the needed Makefiles/Kconfig files
