@@ -284,7 +284,7 @@ static void blk_mq_bio_endio(struct request *rq, struct bio *bio, int error)
 		bio_endio(bio, error);
 }
 
-void blk_mq_finish_request(struct request *rq, int error)
+static void blk_mq_finish_request(struct request *rq, int error)
 {
 	struct bio *bio = rq->bio;
 	unsigned int bytes = 0;
@@ -306,17 +306,12 @@ void blk_mq_complete_request(struct request *rq, int error)
 {
 	trace_block_rq_complete(rq->q, rq);
 
-	/*
-	 * If ->end_io is set, it's responsible for doing the rest of the
-	 * completion.
-	 */
+	blk_mq_finish_request(rq, error);
+
 	if (rq->end_io)
 		rq->end_io(rq, error);
-	else {
-		blk_mq_finish_request(rq, error);
+	else
 		blk_mq_free_request(rq);
-	}
-
 }
 
 void __blk_mq_end_io(struct request *rq, int error)
