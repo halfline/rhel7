@@ -1323,8 +1323,7 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_reg *reg,
 
 	if (!reg->nr_hw_queues ||
 	    !reg->ops->queue_rq || !reg->ops->map_queue ||
-	    !reg->ops->alloc_hctx || !reg->ops->free_hctx ||
-	    (reg->queue_depth < (reg->reserved_tags + BLK_MQ_TAG_MIN)))
+	    !reg->ops->alloc_hctx || !reg->ops->free_hctx)
 		return ERR_PTR(-EINVAL);
 
 	if (!reg->queue_depth)
@@ -1333,6 +1332,9 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_reg *reg,
 		pr_err("blk-mq: queuedepth too large (%u)\n", reg->queue_depth);
 		reg->queue_depth = BLK_MQ_MAX_DEPTH;
 	}
+
+	if (reg->queue_depth < (reg->reserved_tags + BLK_MQ_TAG_MIN))
+		return ERR_PTR(-EINVAL);
 
 	ctx = alloc_percpu(struct blk_mq_ctx);
 	if (!ctx)
