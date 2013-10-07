@@ -958,42 +958,6 @@ run_queue:
 	blk_mq_run_hw_queue(hctx, !is_sync || is_flush_fua);
 }
 
-static void blk_mq_execute_end_io(struct request *rq, int error)
-{
-	struct completion *wait = rq->end_io_data;
-
-	complete(wait);
-}
-
-/*
- * Insert request, pass to device, and wait for it to finish.
- */
-int blk_mq_execute_rq(struct request_queue *q, struct request *rq)
-{
-	DECLARE_COMPLETION_ONSTACK(wait);
-	unsigned long hang_check;
-	int err = 0;
-
-	rq->end_io_data = &wait;
-	rq->end_io = blk_mq_execute_end_io;
-	blk_mq_insert_request(q, rq, true);
-
-	/* Prevent hang_check timer from firing at us during very long I/O */
-	hang_check = sysctl_hung_task_timeout_secs;
-	if (hang_check)
-		while (!wait_for_completion_io_timeout(&wait, hang_check * (HZ/2)));
-	else
-		wait_for_completion_io(&wait);
-
-	if (rq->errors)
-		err = -EIO;
-
-	blk_mq_finish_request(rq, rq->errors);
-
-	return err;
-}
-EXPORT_SYMBOL(blk_mq_execute_rq);
-
 /*
  * Default mapping to a software queue, since we use one per CPU.
  */
