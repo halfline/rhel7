@@ -269,6 +269,21 @@ void blk_mq_free_request(struct request *rq)
 	__blk_mq_free_request(hctx, ctx, rq);
 }
 
+static void blk_mq_bio_endio(struct request *rq, struct bio *bio, int error)
+{
+	if (error)
+		clear_bit(BIO_UPTODATE, &bio->bi_flags);
+	else if (!test_bit(BIO_UPTODATE, &bio->bi_flags))
+		error = -EIO;
+
+	if (unlikely(rq->cmd_flags & REQ_QUIET))
+		set_bit(BIO_QUIET, &bio->bi_flags);
+
+	/* don't actually finish bio if it's part of flush sequence */
+	if (!(rq->cmd_flags & REQ_FLUSH_SEQ))
+		bio_endio(bio, error);
+}
+
 void blk_mq_finish_request(struct request *rq, int error)
 {
 	struct bio *bio = rq->bio;
@@ -279,7 +294,7 @@ void blk_mq_finish_request(struct request *rq, int error)
 
 		bio->bi_next = NULL;
 		bytes += bio->bi_size;
-		bio_endio(bio, error);
+		blk_mq_bio_endio(rq, bio, error);
 		bio = next;
 	}
 
