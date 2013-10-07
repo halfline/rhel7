@@ -857,15 +857,8 @@ void blk_mq_insert_requests(struct request_queue *q, struct list_head *list,
 						from_schedule);
 }
 
-static void blk_mq_bio_to_request(struct request_queue *q,
-				  struct request *rq, struct bio *bio)
+static void blk_mq_bio_to_request(struct request *rq, struct bio *bio)
 {
-	unsigned int rw_flags;
-
-	rw_flags = bio_data_dir(bio);
-	if (rw_is_sync(bio->bi_rw))
-		rw_flags |= REQ_SYNC;
-
 	init_request_from_bio(rq, bio);
 	blk_account_io_start(rq, 1);
 }
@@ -915,7 +908,7 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
 	hctx->queued++;
 
 	if (unlikely(is_flush_fua)) {
-		blk_mq_bio_to_request(q, rq, bio);
+		blk_mq_bio_to_request(rq, bio);
 		blk_mq_put_ctx(ctx);
 		blk_insert_flush(rq);
 		goto run_queue;
@@ -930,7 +923,7 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
 		struct blk_plug *plug = current->plug;
 
 		if (plug) {
-			blk_mq_bio_to_request(q, rq, bio);
+			blk_mq_bio_to_request(rq, bio);
 			if (list_empty(&plug->list))
 				trace_block_plug(q);
 			else if (request_count >= BLK_MAX_REQUEST_COUNT) {
@@ -949,7 +942,7 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
 	    blk_mq_attempt_merge(q, ctx, bio))
 		__blk_mq_free_request(hctx, ctx, rq);
 	else {
-		blk_mq_bio_to_request(q, rq, bio);
+		blk_mq_bio_to_request(rq, bio);
 		__blk_mq_insert_request(hctx, rq);
 	}
 
