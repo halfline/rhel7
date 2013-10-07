@@ -411,13 +411,14 @@ static void blk_mq_tag_notify(void *data, unsigned long action,
 	}
 }
 
-struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
+struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
 				     unsigned int reserved_tags, int node)
 {
+	unsigned int nr_tags, nr_cache;
 	struct blk_mq_tags *tags;
 	size_t map_size;
 
-	if (nr_tags > BLK_MQ_TAG_MAX) {
+	if (total_tags > BLK_MQ_TAG_MAX) {
 		pr_err("blk-mq: tag depth too large\n");
 		return NULL;
 	}
@@ -426,7 +427,15 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
 	if (!tags)
 		return NULL;
 
-	map_size = sizeof(struct blk_mq_tag_map) + nr_tags * sizeof(int);
+	nr_tags = total_tags - reserved_tags;
+	nr_cache = nr_tags / num_possible_cpus();
+
+	if (nr_cache < BLK_MQ_TAG_CACHE_MIN)
+		nr_cache = BLK_MQ_TAG_CACHE_MIN;
+	else if (nr_cache > BLK_MQ_TAG_CACHE_MAX)
+		nr_cache = BLK_MQ_TAG_CACHE_MAX;
+
+	map_size = sizeof(struct blk_mq_tag_map) + nr_cache * sizeof(int);
 	tags->free_maps = __alloc_percpu(map_size, sizeof(void *));
 	if (!tags->free_maps)
 		goto err_free_maps;
@@ -444,15 +453,10 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
 
 	spin_lock_init(&tags->lock);
 	INIT_LIST_HEAD(&tags->wait);
-	tags->nr_tags = nr_tags;
+	tags->nr_tags = total_tags;
 	tags->reserved_tags = reserved_tags;
-	tags->max_cache = nr_tags / num_possible_cpus();
-	if (tags->max_cache < BLK_MQ_TAG_CACHE_MIN)
-		tags->max_cache = BLK_MQ_TAG_CACHE_MIN;
-	else if (tags->max_cache > BLK_MQ_TAG_CACHE_MAX)
-		tags->max_cache = BLK_MQ_TAG_CACHE_MAX;
-
-	tags->batch_move = tags->max_cache / 2;
+	tags->max_cache = nr_cache;
+	tags->batch_move = nr_cache / 2;
 
 	/*
 	 * Reserved tags are first
@@ -470,10 +474,9 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
 	 * Rest of the tags start at the queue list
 	 */
 	tags->nr_free = 0;
-	while (nr_tags - tags->nr_reserved) {
+	while (nr_tags--) {
 		tags->freelist[tags->nr_free] = tags->nr_free +
 							tags->nr_reserved;
-		nr_tags--;
 		tags->nr_free++;
 	}
 
