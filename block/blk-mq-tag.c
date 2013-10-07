@@ -456,7 +456,7 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
 	tags->nr_tags = total_tags;
 	tags->reserved_tags = reserved_tags;
 	tags->max_cache = nr_cache;
-	tags->batch_move = nr_cache / 2;
+	tags->batch_move = max(1u, nr_cache / 2);
 
 	/*
 	 * Reserved tags are first
