@@ -300,7 +300,6 @@ void blk_mq_finish_request(struct request *rq, int error)
 
 	blk_account_io_completion(rq, bytes);
 	blk_account_io_done(rq);
-	blk_mq_free_request(rq);
 }
 
 void blk_mq_complete_request(struct request *rq, int error)
@@ -313,8 +312,10 @@ void blk_mq_complete_request(struct request *rq, int error)
 	 */
 	if (rq->end_io)
 		rq->end_io(rq, error);
-	else
+	else {
 		blk_mq_finish_request(rq, error);
+		blk_mq_free_request(rq);
+	}
 
 }
 
