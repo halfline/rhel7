@@ -268,7 +268,6 @@ void blk_mq_free_request(struct request *rq)
 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
 	__blk_mq_free_request(hctx, ctx, rq);
 }
-EXPORT_SYMBOL(blk_mq_free_request);
 
 void blk_mq_finish_request(struct request *rq, int error)
 {

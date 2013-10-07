@@ -1080,7 +1080,8 @@ retry:
 	goto retry;
 }
 
-struct request *blk_get_request(struct request_queue *q, int rw, gfp_t gfp_mask)
+static struct request *blk_old_get_request(struct request_queue *q, int rw,
+		gfp_t gfp_mask)
 {
 	struct request *rq;
 
@@ -1096,6 +1097,14 @@ struct request *blk_get_request(struct request_queue *q, int rw, gfp_t gfp_mask)
 	/* q->queue_lock is unlocked at this point */
 
 	return rq;
+}
+
+struct request *blk_get_request(struct request_queue *q, int rw, gfp_t gfp_mask)
+{
+	if (q->mq_ops)
+		return blk_mq_alloc_request(q, rw, gfp_mask);
+	else
+		return blk_old_get_request(q, rw, gfp_mask);
 }
 EXPORT_SYMBOL(blk_get_request);
 
@@ -1133,12 +1142,7 @@ EXPORT_SYMBOL(blk_get_request);
 struct request *blk_make_request(struct request_queue *q, struct bio *bio,
 				 gfp_t gfp_mask)
 {
-	struct request *rq;
-
-	if (q->mq_ops)
-		rq = blk_mq_alloc_request(q, bio_data_dir(bio), gfp_mask);
-	else
-		rq = blk_get_request(q, bio_data_dir(bio), gfp_mask);
+	struct request *rq = blk_get_request(q, bio_data_dir(bio), gfp_mask);
 
 	if (unlikely(!rq))
 		return ERR_PTR(-ENOMEM);
@@ -1276,12 +1280,17 @@ EXPORT_SYMBOL_GPL(__blk_put_request);
 
 void blk_put_request(struct request *req)
 {
-	unsigned long flags;
 	struct request_queue *q = req->q;
 
-	spin_lock_irqsave(q->queue_lock, flags);
-	__blk_put_request(q, req);
-	spin_unlock_irqrestore(q->queue_lock, flags);
+	if (q->mq_ops)
+		blk_mq_free_request(req);
+	else {
+		unsigned long flags;
+
+		spin_lock_irqsave(q->queue_lock, flags);
+		__blk_put_request(q, req);
+		spin_unlock_irqrestore(q->queue_lock, flags);
+	}
 }
 EXPORT_SYMBOL(blk_put_request);
 
