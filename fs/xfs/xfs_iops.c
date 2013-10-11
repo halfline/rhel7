@@ -541,7 +541,7 @@ xfs_setattr_nonsize(
 		error = xfs_qm_vop_dqalloc(ip, xfs_kuid_to_uid(uid),
 					   xfs_kgid_to_gid(gid),
 					   xfs_get_projid(ip),
-					   qflags, &udqp, &gdqp);
+					   qflags, &udqp, &gdqp, NULL);
 		if (error)
 			return error;
 	}
@@ -577,7 +577,7 @@ xfs_setattr_nonsize(
 		     (XFS_IS_GQUOTA_ON(mp) && !gid_eq(igid, gid)))) {
 			ASSERT(tp);
 			error = xfs_qm_vop_chown_reserve(tp, ip, udqp, gdqp,
-						capable(CAP_FOWNER) ?
+						NULL, capable(CAP_FOWNER) ?
 						XFS_QMOPT_FORCE_RES : 0);
 			if (error)	/* out of quota */
 				goto out_trans_cancel;
