@@ -1390,6 +1390,8 @@ void blk_mq_free_queue(struct request_queue *q)
 		kfree(hctx->ctxs);
 		blk_mq_free_rq_map(hctx);
 		blk_mq_unregister_cpu_notifier(&hctx->cpu_notifier);
+		if (q->mq_ops->exit_hctx)
+			q->mq_ops->exit_hctx(hctx, i);
 		q->mq_ops->free_hctx(hctx, i);
 	}
 
