@@ -1202,7 +1202,7 @@ static int br_ip6_multicast_query(struct net_bridge *br,
 		if (!mld2q->mld2q_nsrcs)
 			group = &mld2q->mld2q_mca;
 
-		max_delay = max(msecs_to_jiffies(MLDV2_MRC(ntohs(mld2q->mld2q_mrc))), 1UL);
+		max_delay = max(msecs_to_jiffies(mldv2_mrc(mld2q)), 1UL);
 	}
 
 	br_multicast_query_received(br, port, !ipv6_addr_any(&ip6h->saddr),
