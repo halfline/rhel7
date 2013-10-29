@@ -1490,6 +1490,26 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Oct 29 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-38.el7]
+- [net] ip_output: do skb ufo init for peeked non ufo skb as well (Jiri Pirko) [1014599]
+- [net] ip6_output: do skb ufo init for peeked non ufo skb as well (Jiri Pirko) [1014599]
+- [net] udp6: respect IPV6_DONTFRAG sockopt in case there are pending frames (Jiri Pirko) [1014599]
+- [net] ipv6: udp packets following an UFO enqueued packet need also be handled by UFO (Jiri Pirko) [1011931] {CVE-2013-4387}
+- [net] bonding: combine pr_debugs in bond_set_dev_addr into one (Nikolay Aleksandrov) [1020621]
+- [net] bonding: when cloning a MAC use NET_ADDR_STOLEN (Nikolay Aleksandrov) [1020621]
+- [net] bonding: remove unnecessary dev_addr_from_first member (Nikolay Aleksandrov) [1020621]
+- [net] netfilter: nf_conntrack: use RCU safe kfree for conntrack extensions (Jesper Brouer) [1010252]
+- [net] tcp: TSQ can use a dynamic limit (Jiri Pirko) [998775]
+- [net] tcp: TSO packets automatic sizing (Jiri Pirko) [998775]
+- [security] selinux: fix selinuxfs policy file on big endian systems (Eric Paris) [839671]
+- [powerpc] Fix memory hotplug with sparse vmemmap (Steve Best) [805181]
+- [powerpc] mm: Mark Memory Resources as busy (Steve Best) [805181]
+- [tools] perf/bench: Fix failing assertions in numa bench (Petr Holasek) [1011923]
+- [hid] pantherlord: heap overflow flaw (Radomir Vrbovsky) [1000436] {CVE-2013-2892}
+- [powerpc] tm: Turn interrupts hard off in tm_reclaim() (Steve Best) [1017135]
+- [powerpc] tm: Clear MSR RI in non-recoverable TM code (Steve Best) [1017135]
+- [powerpc] perf: Fix handling of FAB events (Steve Best) [1015439]
+
 * Thu Oct 24 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-37.el7]
 - [fs] xfs: remove dead code from xlog_recover_inode_pass2 (Dave Chinner) [1001861]
 - [fs] xfs: = vs == typo in ASSERT() (Dave Chinner) [1001861]
