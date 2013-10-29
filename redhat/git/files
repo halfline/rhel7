@@ -1,9 +1,7 @@
 kernel.spec
 check-kabi
 extra_certificates
-find-provides
 x509.genkey
-kabitool
 Makefile.common
 Makefile
 cpupower.config
