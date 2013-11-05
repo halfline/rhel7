@@ -407,6 +407,18 @@ M:	Red Hat NFS Team <nfs-team@redhat.com>
 S:	Maintained
 F:	fs/nfsd/
 
+NF_TABLES
+M:	Jiri Benc <jbenc@redhat.com>
+M:	Jesper Brouer <jbrouer@redhat.com>
+S:	Maintained
+F:	net/netfilter/nf_tables*
+F:	net/netfilter/nft_*
+F:	net/*/netfilter/nf_tables*
+F:	net/*/netfilter/nft_*
+F:	include/net/netfilter/nf_tables*
+F:	include/uapi/linux/netfilter/nf_tables*
+F:	include/net/netns/nftables.h
+
 NON-MASKABLE INTERRUPT (NMI)
 M:	Don Zickus <dzickus@redhat.com>
 S:	Maintained
