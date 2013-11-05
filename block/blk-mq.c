@@ -1211,7 +1211,7 @@ static int blk_mq_init_hw_queues(struct request_queue *q,
 			break;
 
 		num_maps = ALIGN(nr_cpu_ids, BITS_PER_LONG) / BITS_PER_LONG;
-		hctx->ctx_map = kmalloc_node(num_maps * sizeof(unsigned long),
+		hctx->ctx_map = kzalloc_node(num_maps * sizeof(unsigned long),
 						GFP_KERNEL, node);
 		if (!hctx->ctx_map)
 			break;
