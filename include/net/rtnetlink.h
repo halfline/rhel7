@@ -81,6 +81,32 @@ struct rtnl_link_ops {
 					       const struct net_device *dev);
 	unsigned int		(*get_num_tx_queues)(void);
 	unsigned int		(*get_num_rx_queues)(void);
+
+	/* RHEL SPECIFIC
+	 *
+	 * The following padding has been inserted before ABI freeze to
+	 * allow extending the structure while preserve ABI. Feel free
+	 * to replace reserved slots with required structure field
+	 * additions of your backport.
+	 */
+#ifndef __GENKSYMS__
+	void			(*rh_reserved1)(void);
+	void			(*rh_reserved2)(void);
+	void			(*rh_reserved3)(void);
+	void			(*rh_reserved4)(void);
+	void			(*rh_reserved5)(void);
+	void			(*rh_reserved6)(void);
+	void			(*rh_reserved7)(void);
+	void			(*rh_reserved8)(void);
+	void			(*rh_reserved9)(void);
+	void			(*rh_reserved10)(void);
+	void			(*rh_reserved11)(void);
+	void			(*rh_reserved12)(void);
+	void			(*rh_reserved13)(void);
+	void			(*rh_reserved14)(void);
+	void			(*rh_reserved15)(void);
+	void			(*rh_reserved16)(void);
+#endif
 };
 
 extern int	__rtnl_link_register(struct rtnl_link_ops *ops);
