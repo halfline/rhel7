@@ -9,6 +9,7 @@
 #include <linux/workqueue.h>
 #include <linux/smp.h>
 #include <linux/llist.h>
+#include <linux/list_sort.h>
 #include <linux/cpu.h>
 #include <linux/cache.h>
 #include <linux/sched/sysctl.h>
@@ -775,14 +776,17 @@ void blk_mq_run_request(struct request *rq, bool run_queue, bool async)
 		blk_mq_run_hw_queue(hctx, async);
 }
 
-static void __blk_mq_insert_requests(struct request_queue *q,
+static void blk_mq_insert_requests(struct request_queue *q,
 				     struct blk_mq_ctx *ctx,
 				     struct list_head *list,
-				     bool run_queue, bool from_schedule)
+				     int depth,
+				     bool from_schedule)
 
 {
 	struct blk_mq_hw_ctx *hctx;
 	struct blk_mq_ctx *current_ctx;
+
+	trace_block_unplug(q, depth, !from_schedule);
 
 	current_ctx = blk_mq_get_ctx(q);
 
@@ -807,55 +811,64 @@ static void __blk_mq_insert_requests(struct request_queue *q,
 
 	blk_mq_put_ctx(current_ctx);
 
-	if (run_queue)
-		blk_mq_run_hw_queue(hctx, from_schedule);
+	blk_mq_run_hw_queue(hctx, from_schedule);
 }
 
-void blk_mq_insert_requests(struct request_queue *q, struct list_head *list,
-			    bool run_queue, bool from_schedule)
+static int plug_ctx_cmp(void *priv, struct list_head *a, struct list_head *b)
+{
+	struct request *rqa = container_of(a, struct request, queuelist);
+	struct request *rqb = container_of(b, struct request, queuelist);
+
+	return !(rqa->mq_ctx < rqb->mq_ctx ||
+		 (rqa->mq_ctx == rqb->mq_ctx &&
+		  blk_rq_pos(rqa) < blk_rq_pos(rqb)));
+}
+
+void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
 {
 	struct blk_mq_ctx *this_ctx;
+	struct request_queue *this_q;
+	struct request *rq;
+	LIST_HEAD(list);
 	LIST_HEAD(ctx_list);
+	unsigned int depth;
 
-	if (list_empty(list))
-		return;
+	list_splice_init(&plug->mq_list, &list);
 
-	/*
-	 * Iterate list, placing requests on the right ctx. Do one ctx
-	 * at the time. Given general CPU stickiness, the requests will
-	 * typically end up being ordered anyway.
-	 */
+	list_sort(NULL, &list, plug_ctx_cmp);
+
+	this_q = NULL;
 	this_ctx = NULL;
-	while (!list_empty(list)) {
-		struct request *rq, *tmp;
+	depth = 0;
 
-		/*
-		 * If this_ctx is set and different from rq->mq_ctx,
-		 * skip this 'rq'. This groups the same ctx's together,
-		 * so we batch completions for those.
-		 */
-		list_for_each_entry_safe(rq, tmp, list, queuelist) {
-			if (rq->mq_ctx != this_ctx) {
-				if (this_ctx)
-					continue;
-
-				this_ctx = rq->mq_ctx;
+	while (!list_empty(&list)) {
+		rq = list_entry_rq(list.next);
+		list_del_init(&rq->queuelist);
+		BUG_ON(!rq->q);
+		if (rq->mq_ctx != this_ctx) {
+			if (this_ctx) {
+				blk_mq_insert_requests(this_q, this_ctx,
+							&ctx_list, depth,
+							from_schedule);
 			}
-			list_move_tail(&rq->queuelist, &ctx_list);
+
+			this_ctx = rq->mq_ctx;
+			this_q = rq->q;
+			depth = 0;
 		}
 
-		__blk_mq_insert_requests(q, this_ctx, &ctx_list, run_queue,
-						from_schedule);
-		this_ctx = NULL;
+		depth++;
+		list_add_tail(&rq->queuelist, &ctx_list);
 	}
 
 	/*
 	 * If 'this_ctx' is set, we know we have entries to complete
 	 * on 'ctx_list'. Do those.
 	 */
-	if (this_ctx)
-		__blk_mq_insert_requests(q, this_ctx, &ctx_list, run_queue,
-						from_schedule);
+	if (this_ctx) {
+		blk_mq_insert_requests(this_q, this_ctx, &ctx_list, depth,
+				       from_schedule);
+	}
 }
 
 static void blk_mq_bio_to_request(struct request *rq, struct bio *bio)
@@ -931,7 +944,7 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
 				blk_flush_plug_list(plug, false);
 				trace_block_plug(q);
 			}
-			list_add_tail(&rq->queuelist, &plug->list);
+			list_add_tail(&rq->queuelist, &plug->mq_list);
 			blk_mq_put_ctx(ctx);
 			return;
 		}

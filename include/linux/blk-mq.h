@@ -118,9 +118,9 @@ int blk_mq_register_disk(struct gendisk *);
 void blk_mq_unregister_disk(struct gendisk *);
 void blk_mq_init_commands(struct request_queue *, void (*init)(void *data, struct blk_mq_hw_ctx *, struct request *, unsigned int), void *data);
 
-void blk_mq_flush_plug(struct request_queue *, bool);
+void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule);
+
 void blk_mq_insert_request(struct request_queue *, struct request *, bool);
-void blk_mq_insert_requests(struct request_queue *, struct list_head *, bool, bool);
 void blk_mq_run_queues(struct request_queue *q, bool async);
 void blk_mq_free_request(struct request *rq);
 bool blk_mq_can_queue(struct blk_mq_hw_ctx *);
