@@ -243,6 +243,7 @@ int __init nf_tables_core_module_init(void)
 	if (err < 0)
 		goto err6;
 
+	mark_tech_preview("nf_tables", THIS_MODULE);
 	return 0;
 
 err6:
