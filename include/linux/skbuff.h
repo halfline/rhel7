@@ -523,6 +523,21 @@ struct sk_buff {
 	__u16			transport_header;
 	__u16			network_header;
 	__u16			mac_header;
+
+	/* RHEL SPECIFIC
+	 *
+	 * The following padding has been inserted before ABI freeze to
+	 * allow extending the structure while preserve ABI. Feel free
+	 * to replace reserved slots with required structure field
+	 * additions of your backport.
+	 */
+#ifndef __GENKSYMS__
+	u32			rh_reserved1;
+	u32			rh_reserved2;
+	u32			rh_reserved3;
+	u32			rh_reserved4;
+#endif
+
 	/* These elements must be at the end, see alloc_skb() for details.  */
 	sk_buff_data_t		tail;
 	sk_buff_data_t		end;
