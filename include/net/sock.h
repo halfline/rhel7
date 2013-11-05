@@ -407,6 +407,24 @@ struct sock {
 	int			(*sk_backlog_rcv)(struct sock *sk,
 						  struct sk_buff *skb);
 	void                    (*sk_destruct)(struct sock *sk);
+
+	/* RHEL SPECIFIC
+	 *
+	 * The following padding has been inserted before ABI freeze to
+	 * allow extending the structure while preserve ABI. Feel free
+	 * to replace reserved slots with required structure field
+	 * additions of your backport.
+	 */
+#ifndef __GENKSYMS__
+	void			(*rh_reserved1)(void);
+	void			(*rh_reserved2)(void);
+	void			(*rh_reserved3)(void);
+	void			(*rh_reserved4)(void);
+	void			(*rh_reserved5)(void);
+	void			(*rh_reserved6)(void);
+	void			(*rh_reserved7)(void);
+	void			(*rh_reserved8)(void);
+#endif
 };
 
 /*
