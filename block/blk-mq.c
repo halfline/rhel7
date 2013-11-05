@@ -251,11 +251,12 @@ static void __blk_mq_free_request(struct blk_mq_hw_ctx *hctx,
 				  struct blk_mq_ctx *ctx, struct request *rq)
 {
 	const int tag = rq->tag;
+	struct request_queue *q = rq->q;
 
 	blk_mq_rq_init(hctx, rq);
 	blk_mq_put_tag(hctx->tags, tag);
 
-	blk_mq_queue_exit(rq->q);
+	blk_mq_queue_exit(q);
 }
 
 void blk_mq_free_request(struct request *rq)
