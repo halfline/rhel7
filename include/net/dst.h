@@ -104,6 +104,20 @@ struct dst_entry {
 		struct rt6_info		*rt6_next;
 		struct dn_route __rcu	*dn_next;
 	};
+
+	/* RHEL SPECIFIC
+	 *
+	 * The following padding has been inserted before ABI freeze to
+	 * allow extending the structure while preserve ABI. Feel free
+	 * to replace reserved slots with required structure field
+	 * additions of your backport.
+	 */
+#ifndef __GENKSYMS__
+	u32			rh_reserved1;
+	u32			rh_reserved2;
+	u32			rh_reserved3;
+	u32			rh_reserved4;
+#endif
 };
 
 extern u32 *dst_cow_metrics_generic(struct dst_entry *dst, unsigned long old);
