@@ -286,7 +286,7 @@ static struct blk_mq_hw_ctx_sysfs_entry blk_mq_hw_sysfs_pending = {
 	.show = blk_mq_hw_sysfs_rq_list_show,
 };
 static struct blk_mq_hw_ctx_sysfs_entry blk_mq_hw_sysfs_ipi = {
-	.attr = {.name = "ipi_redirect", .mode = S_IRUGO | S_IWUGO},
+	.attr = {.name = "ipi_redirect", .mode = S_IRUGO | S_IWUSR},
 	.show = blk_mq_hw_sysfs_ipi_show,
 	.store = blk_mq_hw_sysfs_ipi_store,
 };
