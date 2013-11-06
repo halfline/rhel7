@@ -1,1 +1,1 @@
-# CONFIG_ZSMALLOC is not set
+CONFIG_ZSMALLOC=y
