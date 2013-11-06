@@ -1490,6 +1490,9 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Nov 06 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-43.el7]
+- [misc] synchronize with upstream linux-3.10.y stable branch up to 3.10.17 (Veaceslav Falico) [1006938]
+
 * Tue Nov 05 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-42.el7]
 - [kernel] keys: align system_certificate_list (Jan Stancek) [985961]
 - [security] keys: Fix keyring quota misaccounting on key replacement and unlink (David Howells) [1017806 991110]
