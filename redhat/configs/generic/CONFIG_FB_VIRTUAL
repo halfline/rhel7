@@ -1,1 +1,1 @@
-CONFIG_FB_VIRTUAL=m
+# CONFIG_FB_VIRTUAL is not set
