@@ -291,6 +291,9 @@ BuildRequires: hostname, net-tools, bc
 BuildRequires: xmlto, asciidoc
 BuildRequires: openssl
 BuildRequires: hmaccalc
+%ifarch x86_64
+BuildRequires: pesign >= 0.109-4
+%endif
 %if %{with_sparse}
 BuildRequires: sparse >= 0.4.1
 %endif
@@ -334,6 +337,8 @@ Source10: sign-modules
 %define modsign_cmd %{SOURCE10}
 Source11: x509.genkey
 Source12: extra_certificates
+Source13: redhatsecurebootca2.cer
+Source14: redhatsecureboot003.cer
 
 %if %{with_kabichk}
 Source18: check-kabi
@@ -838,6 +843,11 @@ BuildKernel() {
     if [ -f arch/$Arch/boot/zImage.stub ]; then
       cp arch/$Arch/boot/zImage.stub $RPM_BUILD_ROOT/%{image_install_path}/zImage.stub-$KernelVer || :
     fi
+# EFI SecureBoot signing, x86_64-only
+%ifarch x86_64
+    %pesign -s -i $KernelImage -o $KernelImage.signed -a %{SOURCE13} -c %{SOURCE14} -n redhatsecureboot003
+    mv $KernelImage.signed $KernelImage
+%endif
     $CopyKernel $KernelImage \
     		$RPM_BUILD_ROOT/%{image_install_path}/$InstallName-$KernelVer
     chmod 755 $RPM_BUILD_ROOT/%{image_install_path}/$InstallName-$KernelVer
