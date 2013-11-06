@@ -594,7 +594,22 @@ static void __init reserve_crashkernel(void)
 					high ? CRASH_KERNEL_ADDR_HIGH_MAX :
 					       CRASH_KERNEL_ADDR_LOW_MAX,
 					crash_size, alignment);
-
+#ifdef CONFIG_X86_64
+		/*
+		 * crashkernel=X reserve below 896M fails? Try below 4G
+		 */
+		if (!high && !crash_base)
+			crash_base = memblock_find_in_range(alignment,
+						(1ULL << 32),
+						crash_size, alignment);
+		/*
+		 * crashkernel=X reserve below 4G fails? Try MAXMEM
+		 */
+		if (!high && !crash_base)
+			crash_base = memblock_find_in_range(alignment,
+						CRASH_KERNEL_ADDR_HIGH_MAX,
+						crash_size, alignment);
+#endif
 		if (!crash_base) {
 			pr_info("crashkernel reservation failed - No suitable area found.\n");
 			return;
