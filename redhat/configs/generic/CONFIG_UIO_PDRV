@@ -1,1 +1,1 @@
-# CONFIG_UIO_PDRV is not set
+CONFIG_UIO_PDRV=m
