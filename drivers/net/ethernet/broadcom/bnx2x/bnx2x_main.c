@@ -12333,7 +12333,6 @@ err_out_release:
 
 err_out_disable:
 	pci_disable_device(pdev);
-	pci_set_drvdata(pdev, NULL);
 
 err_out:
 	return rc;
@@ -12876,7 +12875,6 @@ init_one_exit:
 		pci_release_regions(pdev);
 
 	pci_disable_device(pdev);
-	pci_set_drvdata(pdev, NULL);
 
 	return rc;
 }
@@ -12959,7 +12957,6 @@ static void __bnx2x_remove(struct pci_dev *pdev,
 		pci_release_regions(pdev);
 
 	pci_disable_device(pdev);
-	pci_set_drvdata(pdev, NULL);
 }
 
 static void bnx2x_remove_one(struct pci_dev *pdev)
