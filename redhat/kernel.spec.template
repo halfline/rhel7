@@ -1500,6 +1500,26 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Nov 07 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-46.el7]
+- [scsi] aacraid: missing capable() check in compat ioctl (Rich Bono) [1025840]
+- [scsi] scsi_dh_rdac: Add new IBM 1813 product id to rdac devlist (Rob Evers) [1020969]
+- [scsi] aic94xx: remove driver (Rich Bono) [978980]
+- [scsi] qla4xxx: Populate local CHAP credentials for flash target sessions (Chad Dupuis) [1006158]
+- [scsi] qla4xxx: Support setting of local CHAP index for flash target entry (Chad Dupuis) [1006158]
+- [scsi] qla4xxx: Correct the check for local CHAP entry type (Chad Dupuis) [1006158]
+- [scsi] qla4xxx: correctly update session discovery_parent_idx (Chad Dupuis) [1020197]
+- [scsi] aacraid: avoid parsing names as kthread_run() format strings (Rich Bono) [752081]
+- [scsi] hpsa: return 0 from driver probe function on success, not 1 (Tomas Henzl) [862713]
+- [scsi] hpsa: remove unused Smart Array ID (Tomas Henzl) [862713]
+- [scsi] hpsa: bump driver version to reflect changes (Tomas Henzl) [862713]
+- [scsi] hpsa: housekeeping patch for device_id and product arrays (Tomas Henzl) [862713]
+- [scsi] hpsa: add HP Smart Array Gen8 names (Tomas Henzl) [862713]
+- [scsi] hpsa: add HP Smart Array Gen9 PCI ID's (Tomas Henzl) [862713]
+- [treewide] Convert retrun typos to return (Tomas Henzl) [862713]
+- [scsi] hpsa: fix warning with smp_processor_id() in preemptible (Tomas Henzl) [862713]
+- [scsi] hpsa: remove unneeded variable (Tomas Henzl) [862713]
+- [scsi] hpsa: fix a race in cmd_free/scsi_done (Tomas Henzl) [862713]
+
 * Thu Nov 07 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-45.el7]
 - [ethernet] tg3: remove unnecessary pci_set_drvdata() (Ivan Vecera) [1024060]
 - [ethernet] tg3: Miscellaneous conversions to ETH_ALEN (Ivan Vecera) [1024060]
