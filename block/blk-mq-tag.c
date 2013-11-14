@@ -335,6 +335,8 @@ static void __blk_mq_put_reserved_tag(struct blk_mq_tags *tags,
 {
 	unsigned long flags;
 
+	BUG_ON(tag >= tags->reserved_tags);
+
 	spin_lock_irqsave(&tags->lock, flags);
 	tags->reservelist[tags->nr_reserved] = tag;
 	tags->nr_reserved++;
