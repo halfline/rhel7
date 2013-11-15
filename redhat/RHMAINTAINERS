@@ -531,7 +531,7 @@ S:	Maintained
 F:	drivers/net/sky2.*
 
 SOFTWARE RAID (Multiple Disks, MD) SUPPORT
-M:	Doug Ledford <dledford@redhat.com>
+M:	Jes Sorensen <Jes.Sorensen@redhat.com>
 S:	Maintained
 F:	drivers/md/
 
