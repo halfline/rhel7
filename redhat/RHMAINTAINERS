@@ -535,6 +535,21 @@ M:	Jes Sorensen <Jes.Sorensen@redhat.com>
 S:	Maintained
 F:	drivers/md/
 
+DEVICE MAPPER SUPPORT
+M:	Mike Snitzer <snitzer@redhat.com>
+S:	Maintained
+F:      Documentation/device-mapper/
+F:      drivers/md/dm*
+F:      drivers/md/persistent-data/
+F:      include/linux/device-mapper.h
+F:      include/linux/dm-*.h
+F:      include/uapi/linux/dm-*.h
+
+DM-RAID SUPPORT
+M:	Jonathan Brassow <jbrassow@redhat.com>
+S:	Maintained
+F:	drivers/md/dm-raid*
+
 SUN REMOTE PROCEDURE CALL (sunrpc)
 M:	Red Hat NFS Team <nfs-team@redhat.com>
 S:	Maintained
