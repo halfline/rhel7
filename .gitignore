@@ -103,3 +103,6 @@ localversion
 
 # configuration file for rh- targets
 .rhel7git.mk
+
+# Red Hat key security
+kernel/x509_certificate_list
