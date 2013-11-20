@@ -680,7 +680,7 @@ cp -rl vanilla-%{rheltarball} linux-%{KVERREL}
 cd linux-%{KVERREL}
 
 # Drop some necessary files from the source dir into the buildroot
-cp $RPM_SOURCE_DIR/kernel-*.config .
+cp $RPM_SOURCE_DIR/kernel-%{version}-*.config .
 
 ApplyOptionalPatch linux-kernel-test.patch
 
