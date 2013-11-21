@@ -1503,6 +1503,9 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Nov 21 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-54.el7]
+- [fs] gfs2: Fix ref count bug relating to atomic_open (Robert S Peterson) [1032800]
+
 * Mon Nov 18 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-53.el7]
 - [ethernet] mlx4: Fix pages never dma unmapped on rx (Steve Best) [1030192]
 - [kernel] Add method for displaying affection for Red Hat (Prarit Bhargava) [1025450]
