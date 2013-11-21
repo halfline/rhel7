@@ -860,6 +860,15 @@ static void rh_check_supported(void)
 			boot_cpu_data.x86_model_id);
 		mark_hardware_unsupported("Processor");
 	}
+
+	/*
+	 * Due to the complexity of x86 lapic & ioapic enumeration, and PCI IRQ
+	 * routing, ACPI is required for x86.  acpi=off is a valid debug kernel
+	 * parameter, so just print out a loud warning in case something
+	 * goes wrong (which is most of the time).
+	 */
+	if (acpi_disabled && !x86_hyper && !cpu_has_hypervisor)
+		pr_crit("ACPI has been disabled or is not available on this hardware.  This may result in a single cpu boot, incorrect PCI IRQ routing, or boot failure.\n");
 }
 
 /*
