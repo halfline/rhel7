@@ -1503,6 +1503,9 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Nov 26 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-57.el7]
+- [acpi] Correct faulty check of Secure Level in acpi_os_get_root_pointer() (Lenny Szubowicz) [1034598]
+
 * Tue Nov 26 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-56.el7]
 - [net] netfilter: push reasm skb through instead of original frag skbs (Jiri Pirko) [1032012]
 - [net] ip6_output: fragment outgoing reassembled skb properly (Jiri Pirko) [1032012]
