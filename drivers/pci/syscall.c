@@ -45,7 +45,7 @@ SYSCALL_DEFINE5(pciconfig_read, unsigned long, bus, unsigned long, dfn,
 	default:
 		err = -EINVAL;
 		goto error;
-	};
+	}
 
 	err = -EIO;
 	if (cfg_ret != PCIBIOS_SUCCESSFUL)
