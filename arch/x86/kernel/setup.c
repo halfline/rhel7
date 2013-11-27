@@ -843,8 +843,8 @@ static void __init trim_low_memory_range(void)
 static void rh_check_supported(void)
 {
 	/* RHEL7 supports single cpu on guests only */
-	if ((cpumask_weight(cpu_present_mask) == 1) && !x86_hyper &&
-	    !cpu_has_hypervisor && !is_kdump_kernel()) {
+	if (((boot_cpu_data.x86_max_cores * smp_num_siblings) == 1) &&
+	    !x86_hyper && !cpu_has_hypervisor && !is_kdump_kernel()) {
 		pr_crit("Detected single cpu native boot.\n");
 		pr_crit("Important:  In Red Hat Enterprise Linux 7, single threaded, single CPU 64-bit physical systems are unsupported by Red Hat. Please contact your Red Hat support representative for a list of certified and supported systems.");
 	}
