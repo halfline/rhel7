@@ -1498,6 +1498,41 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Dec 04 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-58.el7]
+- [pci] msi: add default MSI operations for !HAVE_GENERIC_HARDIRQS platforms (Myron Stowe) [1034514]
+- [of] of_pci: add registry of MSI chips (Myron Stowe) [1034514]
+- [pci] Introduce new MSI chip infrastructure (Myron Stowe) [1034514]
+- [pci] remove ARCH_SUPPORTS_MSI kconfig option (Myron Stowe) [1034514]
+- [pci] use weak functions for MSI arch-specific functions (Myron Stowe) [1034514]
+- [of] of_pci: Add of_pci_parse_bus_range() function (Myron Stowe) [1034514]
+- [of] of_pci: Add of_pci_get_devfn() function (Myron Stowe) [1034514]
+- [fs] sysfs: sysfs_create_groups returns a value (Myron Stowe) [1034491]
+- [fs] sysfs: add sysfs_create/remove_groups for when SYSFS is not enabled (Myron Stowe) [1034491]
+- [fs] sysfs/group: fix up kerneldoc (Myron Stowe) [1034491]
+- [fs] sysfs/group: update copyright to add myself and the LF (Myron Stowe) [1034491]
+- [fs] sysfs/group: add kerneldoc for sysfs_remove_group (Myron Stowe) [1034491]
+- [fs] sysfs/group: fix up broken string coding style (Myron Stowe) [1034491]
+- [fs] sysfs/group: fix up some * coding style issues (Myron Stowe) [1034491]
+- [fs] sysfs/group: fix trailing whitespace (Myron Stowe) [1034491]
+- [fs] sysfs/group: move EXPORT_SYMBOL_GPL() to the proper location (Myron Stowe) [1034491]
+- [fs] sysfs: add sysfs_create/remove_groups() (Myron Stowe) [1034491]
+- [base] bus_type: add bus_groups (Myron Stowe) [1034491]
+- [base] bus_type: add drv_groups (Myron Stowe) [1034491]
+- [base] bus_type: add dev_groups (Myron Stowe) [1034491]
+- [ethernet] e1000e: fix overrun of PHY RAR array (John Green) [1031123]
+- [kernel] perf/ftrace: Fix paranoid level for enabling function tracer (Jiri Olsa) [1027778] {CVE-2013-2930}
+- [powerpc] kdump: Adding symbols in vmcoreinfo to facilitate dump filtering (Steve Best) [1025746]
+- [s390] block/dasd: hold request queue sysfs lock when calling elevator_init() (Tomoki Sekiyama) [1030615]
+- [block] elevator: acquire q->sysfs_lock in elevator_change() (Tomoki Sekiyama) [1030615]
+- [block] elevator: Fix a race in elevator switching and dm device initialization (Tomoki Sekiyama) [1030615]
+- [s390] vtime: correct idle time calculation (Hendrik Brueckner) [1029891]
+- [s390] time: fix get_tod_clock_ext inline assembly (Hendrik Brueckner) [1029891]
+- [s390] time: correct use of store clock fast (Hendrik Brueckner) [1029891]
+- [s390] time: return with irqs disabled from psw_idle (Hendrik Brueckner) [1029891]
+- [s390] fix save and restore of the floating-point-control register (Hendrik Brueckner) [1029602]
+- [s390] compat, signal: change return values to -EFAULT (Hendrik Brueckner) [1029602]
+- [net] flow_dissector: fail on evil iph->ihl (Jason Wang) [1007955] {CVE-2013-4348}
+
 * Tue Nov 26 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-57.el7]
 - [acpi] Correct faulty check of Secure Level in acpi_os_get_root_pointer() (Lenny Szubowicz) [1034598]
 
