@@ -1372,7 +1372,8 @@ static void ndisc_redirect_rcv(struct sk_buff *skb)
 		return;
 
 	if (!ndopts.nd_opts_rh) {
-		ip6_redirect_no_header(skb, dev_net(skb->dev), 0, 0);
+		ip6_redirect_no_header(skb, dev_net(skb->dev),
+					skb->dev->ifindex, 0);
 		return;
 	}
 
