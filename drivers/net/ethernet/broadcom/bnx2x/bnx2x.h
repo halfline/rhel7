@@ -515,7 +515,7 @@ struct bnx2x_fastpath {
 
 	struct napi_struct	napi;
 
-#ifdef CONFIG_NET_LL_RX_POLL
+#ifdef CONFIG_NET_RX_BUSY_POLL
 	unsigned int state;
 #define BNX2X_FP_STATE_IDLE		      0
 #define BNX2X_FP_STATE_NAPI		(1 << 0)    /* NAPI owns this FP */
@@ -527,7 +527,7 @@ struct bnx2x_fastpath {
 #define BNX2X_FP_USER_PEND (BNX2X_FP_STATE_POLL | BNX2X_FP_STATE_POLL_YIELD)
 	/* protect state */
 	spinlock_t lock;
-#endif /* CONFIG_NET_LL_RX_POLL */
+#endif /* CONFIG_NET_RX_BUSY_POLL */
 
 	union host_hc_status_block	status_blk;
 	/* chip independent shortcuts into sb structure */
@@ -601,7 +601,7 @@ struct bnx2x_fastpath {
 #define bnx2x_fp_stats(bp, fp)	(&((bp)->fp_stats[(fp)->index]))
 #define bnx2x_fp_qstats(bp, fp)	(&((bp)->fp_stats[(fp)->index].eth_q_stats))
 
-#ifdef CONFIG_NET_LL_RX_POLL
+#ifdef CONFIG_NET_RX_BUSY_POLL
 static inline void bnx2x_fp_init_lock(struct bnx2x_fastpath *fp)
 {
 	spin_lock_init(&fp->lock);
@@ -709,7 +709,7 @@ static inline bool bnx2x_fp_ll_polling(struct bnx2x_fastpath *fp)
 {
 	return false;
 }
-#endif /* CONFIG_NET_LL_RX_POLL */
+#endif /* CONFIG_NET_RX_BUSY_POLL */
 
 /* Use 2500 as a mini-jumbo MTU for FCoE */
 #define BNX2X_FCOE_MINI_JUMBO_MTU	2500
