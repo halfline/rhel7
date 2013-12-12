@@ -1497,6 +1497,25 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Dec 12 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-61.el7]
+- [ethernet] cxgb3: Fix warning about using rcu_dereference when not in a rcu-locked section (Veaceslav Falico) [1038494]
+- [fs] btrfs: relocate csums properly with prealloc extents (Eric Sandeen) [1030074]
+- [fs] btrfs: release path before starting transaction in can_nocow_extent (Eric Sandeen) [1030074]
+- [fs] btrfs: fix oops caused by the space balance and dead roots (Eric Sandeen) [1030074]
+- [fs] btrfs: insert orphan roots into fs radix tree (Eric Sandeen) [1030074]
+- [fs] btrfs: limit delalloc pages outside of find_delalloc_range (Eric Sandeen) [1030074]
+- [fs] btrfs: Fix crash due to not allocating integrity data for a bioset (Eric Sandeen) [1030074]
+- [fs] btrfs: fix a use-after-free bug in btrfs_dev_replace_finishing (Eric Sandeen) [1030074]
+- [fs] btrfs: eliminate races in worker stopping code (Eric Sandeen) [1030074]
+- [fs] btrfs: fix crash of compressed writes (Eric Sandeen) [1030074]
+- [fs] btrfs: fix transid verify errors when recovering log tree (Eric Sandeen) [1030074]
+- [fs] vfs: fix subtle use-after-free of pipe_inode_info (Steve Best) [1033905]
+- [powerpc] signals: Mark VSX not saved with small contexts (Steve Best) [1019549]
+- [security] selinux: correct locking in selinux_netlbl_socket_connect() (Paul Moore) [991605]
+- [net] xfrm: Fix potential null pointer dereference in xdst_queue_output (Herbert Xu) [1034891]
+- [net] ipv6: introduce function to find route for redirect (Jiri Pirko) [1035996]
+- [net] ipv6: handle Redirect ICMP Message with no Redirected Header option (Jiri Pirko) [1035996]
+
 * Fri Dec 06 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-60.el7]
 - [misc] synchronize with upstream linux-3.10.y stable branch up to 3.10.20 (Veaceslav Falico) [1034281]
 - [s390] allow to set gcc -mtune flag (Hendrik Brueckner) [1032642]
