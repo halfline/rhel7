@@ -1497,6 +1497,33 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Dec 16 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-63.el7]
+- [net] ipv6: router reachability probing (Jiri Benc) [1032118]
+- [net] ipv6: remove the unnecessary statement in find_match() (Jiri Benc) [1032118]
+- [net] arp/neighbour.h: Remove extern from function prototypes (Jiri Benc) [1032118]
+- [net] netfilter: tproxy: fix build with IP6_NF_IPTABLES=n (Jiri Benc) [1035295]
+- [net] netfilter: tproxy: remove nf_tproxy_core.h (Jiri Benc) [1035295]
+- [net] netfilter: tproxy: remove nf_tproxy_core, keep tw sk assigned to skb (Jiri Benc) [1035295]
+- [net] neigh: ipv6: respect default values set before an address is assigned to device (Jiri Pirko) [1040347]
+- [net] neigh: restore old behaviour of default parms values (Jiri Pirko) [1040347]
+- [net] neigh: use tbl->family to distinguish ipv4 from ipv6 (Jiri Pirko) [1040347]
+- [net] neigh: wrap proc dointvec functions (Jiri Pirko) [1040347]
+- [net] neigh: convert parms to an array (Jiri Pirko) [1040347]
+- [net] net: neighbour: Remove CONFIG_ARPD (Jiri Pirko) [1040347]
+- [net] ndisc: bool initializations should use true and false (Jiri Pirko) [1040347]
+- [net] ipv4: add support for IFA_FLAGS nl attribute (Jiri Pirko) [1021871]
+- [net] ipv6: addrconf: revert /proc/net/if_inet6 ifa_flag format (Jiri Pirko) [1021871]
+- [net] ipv6: addrconf: introduce IFA_F_MANAGETEMPADDR to tell kernel to manage temporary addresses (Jiri Pirko) [1021871]
+- [net] ipv6: addrconf: extend ifa_flags to u32 (Jiri Pirko) [1021871]
+- [net] ipv6: Remove privacy config option (Jiri Pirko) [1021871]
+- [net] ipv6: fix leaking uninitialized port number of offender sockaddr (Florian Westphal) [1035884] {CVE-2013-6405}
+- [net] inet: fix addr_len/msg->msg_namelen assignment in recv_error and rxpmtu functions (Florian Westphal) [1035884] {CVE-2013-6405}
+- [net] inet: prevent leakage of uninitialized memory to user in recv syscalls (Florian Westphal) [1035884] {CVE-2013-6405}
+- [net] rename busy poll MIB counter (Michal Schmidt) [1038631]
+- [net] rename CONFIG_NET_LL_RX_POLL to CONFIG_NET_RX_BUSY_POLL (Michal Schmidt) [1038631]
+- [net] fix a compile error when CONFIG_NET_LL_RX_POLL is not set (Michal Schmidt) [1038631]
+- [net] af_packet: block BH in prb_shutdown_retire_blk_timer() (Veaceslav Falico) [1034605]
+
 * Mon Dec 16 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-62.el7]
 - [scsi] pm80xx: remove unneeded NULL check (Rich Bono) [1019457]
 - [scsi] pm80xx: Fix for 32 bit compilation warning (Rich Bono) [1019457]
