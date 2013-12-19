@@ -3446,15 +3446,6 @@ static void alc283_fixup_chromebook(struct hda_codec *codec,
 	}
 }
 
-static void alc290_fixup_mono_speakers(struct hda_codec *codec,
-				       const struct hda_fixup *fix, int action)
-{
-	if (action == HDA_FIXUP_ACT_PRE_PROBE)
-		/* Remove DAC node 0x03, as it seems to be
-		   giving mono output */
-		snd_hda_override_wcaps(codec, 0x03, 0);
-}
-
 /* mute tablet speaker pin (0x14) via dock plugging in addition */
 static void asus_tx300_automute(struct hda_codec *codec)
 {
@@ -3505,6 +3496,15 @@ static void alc282_fixup_asus_tx300(struct hda_codec *codec,
 	}
 }
 
+static void alc290_fixup_mono_speakers(struct hda_codec *codec,
+				       const struct hda_fixup *fix, int action)
+{
+	if (action == HDA_FIXUP_ACT_PRE_PROBE)
+		/* Remove DAC node 0x03, as it seems to be
+		   giving mono output */
+		snd_hda_override_wcaps(codec, 0x03, 0);
+}
+
 enum {
 	ALC269_FIXUP_SONY_VAIO,
 	ALC275_FIXUP_SONY_VAIO_GPIO2,
@@ -3533,7 +3533,6 @@ enum {
 	ALC269_FIXUP_DELL1_MIC_NO_PRESENCE,
 	ALC269_FIXUP_DELL2_MIC_NO_PRESENCE,
 	ALC269_FIXUP_DELL3_MIC_NO_PRESENCE,
-	ALC290_FIXUP_MONO_SPEAKERS,
 	ALC269_FIXUP_HEADSET_MODE,
 	ALC269_FIXUP_HEADSET_MODE_NO_HP_MIC,
 	ALC269_FIXUP_ASUS_X101_FUNC,
@@ -3547,6 +3546,7 @@ enum {
 	ALC283_FIXUP_CHROME_BOOK,
 	ALC282_FIXUP_ASUS_TX300,
 	ALC283_FIXUP_INT_MIC,
+	ALC290_FIXUP_MONO_SPEAKERS,
 };
 
 static const struct hda_fixup alc269_fixups[] = {
