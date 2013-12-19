@@ -3040,7 +3040,6 @@ static void azx_notifier_unregister(struct azx *chip)
 		unregister_reboot_notifier(&chip->reboot_notifier);
 }
 
-static int azx_first_init(struct azx *chip);
 static int azx_probe_continue(struct azx *chip);
 
 #ifdef SUPPORT_VGA_SWITCHEROO
@@ -3067,8 +3066,7 @@ static void azx_vs_set_state(struct pci_dev *pci,
 			snd_printk(KERN_INFO SFX
 				   "%s: Start delayed initialization\n",
 				   pci_name(chip->pci));
-			if (azx_first_init(chip) < 0 ||
-			    azx_probe_continue(chip) < 0) {
+			if (azx_probe_continue(chip) < 0) {
 				snd_printk(KERN_ERR SFX
 					   "%s: initialization error\n",
 					   pci_name(chip->pci));
@@ -3787,11 +3785,6 @@ static int azx_probe(struct pci_dev *pci,
 	}
 
 	probe_now = !chip->disabled;
-	if (probe_now) {
-		err = azx_first_init(chip);
-		if (err < 0)
-			goto out_free;
-	}
 
 #ifdef CONFIG_SND_HDA_PATCH_LOADER
 	if (patch[dev] && *patch[dev]) {
