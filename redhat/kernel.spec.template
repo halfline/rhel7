@@ -670,7 +670,7 @@ if [ -d linux-%{KVERREL} ]; then
 	rm -rf deleteme.%{_target_cpu} &
 fi
 
-cp -rl vanilla-%{rheltarball} linux-%{KVERREL}
+cp -drl vanilla-%{rheltarball} linux-%{KVERREL}
 cd linux-%{KVERREL}
 
 # Drop some necessary files from the source dir into the buildroot
