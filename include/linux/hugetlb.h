@@ -67,7 +67,6 @@ int hugetlb_reserve_pages(struct inode *inode, long from, long to,
 						vm_flags_t vm_flags);
 void hugetlb_unreserve_pages(struct inode *inode, long offset, long freed);
 int dequeue_hwpoisoned_huge_page(struct page *page);
-void copy_huge_page(struct page *dst, struct page *src);
 
 extern unsigned long hugepages_treat_as_movable;
 extern const unsigned long hugetlb_zero, hugetlb_infinity;
@@ -130,10 +129,6 @@ static inline void hugetlb_show_meminfo(void)
 static inline int dequeue_hwpoisoned_huge_page(struct page *page)
 {
 	return 0;
-}
-
-static inline void copy_huge_page(struct page *dst, struct page *src)
-{
 }
 
 static inline unsigned long hugetlb_change_protection(struct vm_area_struct *vma,
