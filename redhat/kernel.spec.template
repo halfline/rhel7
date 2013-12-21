@@ -85,7 +85,8 @@ Summary: The Linux kernel
 
 %define make_target bzImage
 
-%define KVERREL %{version}-%{release}.%{_target_cpu}
+# Kernel Version Release + Arch -> KVRA
+%define KVRA %{version}-%{release}.%{_target_cpu}
 %define hdrarch %{_target_cpu}
 %define asmarch %{_target_cpu}
 %define cross_target %{_target_cpu}
@@ -251,7 +252,7 @@ Provides: kernel-%{_target_cpu} = %{rpmversion}-%{pkg_release}%{?1:.%{1}}\
 Provides: kernel-drm = 4.3.0\
 Provides: kernel-drm-nouveau = 16\
 Provides: kernel-modeset = 1\
-Provides: kernel-uname-r = %{KVERREL}%{?1:.%{1}}\
+Provides: kernel-uname-r = %{KVRA}%{?1:.%{1}}\
 Requires(pre): %{kernel_prereq}\
 Requires(pre): %{initrd_prereq}\
 Requires(pre): linux-firmware >= 20100806-2\
@@ -363,7 +364,7 @@ Source2001: cpupower.config
 # empty final patch to facilitate testing of kernel patches
 Patch999999: linux-kernel-test.patch
 
-BuildRoot: %{_tmppath}/kernel-%{KVERREL}-root
+BuildRoot: %{_tmppath}/kernel-%{KVRA}-root
 
 %description
 The kernel package contains the Linux kernel (vmlinuz), the core of any
@@ -535,8 +536,8 @@ Provides: %{name}%{?1:-%{1}}-debuginfo-%{_target_cpu} = %{version}-%{release}\
 AutoReqProv: no\
 %description -n %{name}%{?1:-%{1}}-debuginfo\
 This package provides debug information for package %{name}%{?1:-%{1}}.\
-This is required to use SystemTap with %{name}%{?1:-%{1}}-%{KVERREL}.\
-%{expand:%%global debuginfo_args %{?debuginfo_args} -p '/.*/%%{KVERREL}%{?1:\.%{1}}/.*|/.*%%{KVERREL}%{?1:\.%{1}}(\.debug)?' -o debuginfo%{?1}.list}\
+This is required to use SystemTap with %{name}%{?1:-%{1}}-%{KVRA}.\
+%{expand:%%global debuginfo_args %{?debuginfo_args} -p '/.*/%%{KVRA}%{?1:\.%{1}}/.*|/.*%%{KVRA}%{?1:\.%{1}}(\.debug)?' -o debuginfo%{?1}.list}\
 %{nil}
 
 #
@@ -550,7 +551,7 @@ Group: System Environment/Kernel\
 Provides: kernel%{?1:-%{1}}-devel-%{_target_cpu} = %{version}-%{release}\
 Provides: kernel-devel-%{_target_cpu} = %{version}-%{release}%{?1:.%{1}}\
 Provides: kernel-devel = %{version}-%{release}%{?1:.%{1}}\
-Provides: kernel-devel-uname-r = %{KVERREL}%{?1:.%{1}}\
+Provides: kernel-devel-uname-r = %{KVRA}%{?1:.%{1}}\
 AutoReqProv: no\
 Requires(pre): /usr/bin/find\
 Requires: perl\
@@ -654,24 +655,9 @@ ApplyOptionalPatch()
   fi
 }
 
-if [ ! -d kernel-%{rheltarball}/vanilla-%{rheltarball}/ ]; then
-	rm -f pax_global_header;
 %setup -q -n kernel-%{rheltarball} -c
-	mv linux-%{rheltarball} vanilla-%{rheltarball};
-else
-	cd kernel-%{rheltarball}/;
-fi
-
-if [ -d linux-%{KVERREL} ]; then
-	# Just in case we ctrl-c'd a prep already
-	rm -rf deleteme.%{_target_cpu}
-	# Move away the stale away, and delete in background.
-	mv linux-%{KVERREL} deleteme.%{_target_cpu}
-	rm -rf deleteme.%{_target_cpu} &
-fi
-
-cp -drl vanilla-%{rheltarball} linux-%{KVERREL}
-cd linux-%{KVERREL}
+mv linux-%{rheltarball} linux-%{KVRA}
+cd linux-%{KVRA}
 
 # Drop some necessary files from the source dir into the buildroot
 cp $RPM_SOURCE_DIR/kernel-%{version}-*.config .
@@ -748,9 +734,7 @@ cd ..
 # in the stripped object, but repeating debugedit is a no-op.  We do it
 # beforehand to get the proper final build ID bits into the embedded image.
 # This affects the vDSO images in vmlinux, and the vmlinux image in bzImage.
-export AFTER_LINK=\
-'sh -xc "/usr/lib/rpm/debugedit -b $$RPM_BUILD_DIR -d /usr/src/debug \
-    				-i $@ > $@.id"'
+export AFTER_LINK='sh -xc "/usr/lib/rpm/debugedit -b $$RPM_BUILD_DIR -d /usr/src/debug -i $@ > $@.id"'
 %endif
 
 cp_vmlinux()
@@ -766,7 +750,7 @@ BuildKernel() {
 
     # Pick the right config file for the kernel we're building
     Config=kernel-%{version}-%{_target_cpu}${Flavour:+-${Flavour}}.config
-    DevelDir=/usr/src/kernels/%{KVERREL}${Flavour:+.${Flavour}}
+    DevelDir=/usr/src/kernels/%{KVRA}${Flavour:+.${Flavour}}
 
     # When the bootable image is just the ELF kernel, strip it.
     # We already copy the unstripped file into the debuginfo package.
@@ -776,23 +760,11 @@ BuildKernel() {
       CopyKernel=cp
     fi
 
-    KernelVer=%{version}-%{release}.%{_target_cpu}${Flavour:+.${Flavour}}
+    KernelVer=%{KVRA}${Flavour:+.${Flavour}}
     echo BUILDING A KERNEL FOR ${Flavour} %{_target_cpu}...
-
-    %if 0%{?stable_update}
-    # make sure SUBLEVEL is incremented on a stable release.  Sigh 3.x.
-    perl -p -i -e "s/^SUBLEVEL.*/SUBLEVEL = %{?stablerev}/" Makefile
-    %endif
 
     # make sure EXTRAVERSION says what we want it to say
     perl -p -i -e "s/^EXTRAVERSION.*/EXTRAVERSION = -%{release}.%{_target_cpu}${Flavour:+.${Flavour}}/" Makefile
-
-    # if pre-rc1 devel kernel, must fix up PATCHLEVEL for our versioning scheme
-    %if !0%{?rcrev}
-    %if 0%{?gitrev}
-    perl -p -i -e 's/^PATCHLEVEL.*/PATCHLEVEL = %{upstream_sublevel}/' Makefile
-    %endif
-    %endif
 
     # and now to start the build process
 
@@ -842,8 +814,7 @@ BuildKernel() {
     %pesign -s -i $KernelImage -o $KernelImage.signed -a %{SOURCE13} -c %{SOURCE14} -n redhatsecureboot003
     mv $KernelImage.signed $KernelImage
 %endif
-    $CopyKernel $KernelImage \
-    		$RPM_BUILD_ROOT/%{image_install_path}/$InstallName-$KernelVer
+    $CopyKernel $KernelImage $RPM_BUILD_ROOT/%{image_install_path}/$InstallName-$KernelVer
     chmod 755 $RPM_BUILD_ROOT/%{image_install_path}/$InstallName-$KernelVer
 
     # hmac sign the kernel for FIPS
@@ -864,8 +835,7 @@ BuildKernel() {
       echo > ldconfig-kernel.conf "\
 # Placeholder file, no vDSO hwcap entries used in this kernel."
     fi
-    %{__install} -D -m 444 ldconfig-kernel.conf \
-        $RPM_BUILD_ROOT/etc/ld.so.conf.d/kernel-$KernelVer.conf
+    %{__install} -D -m 444 ldconfig-kernel.conf $RPM_BUILD_ROOT/etc/ld.so.conf.d/kernel-$KernelVer.conf
 %endif
 
     # And save the headers/makefiles etc for building modules against
@@ -974,14 +944,10 @@ BuildKernel() {
       fi
     }
 
-    collect_modules_list networking \
-    			 'register_netdev|ieee80211_register_hw|usbnet_probe|phy_driver_register|rt2x00(pci|usb)_probe|register_netdevice'
-    collect_modules_list block \
-    			 'ata_scsi_ioctl|scsi_add_host|scsi_add_host_with_dma|blk_alloc_queue|blk_init_queue|register_mtd_blktrans|scsi_esp_register|scsi_register_device_handler|blk_queue_physical_block_size' 'pktcdvd.ko|dm-mod.ko'
-    collect_modules_list drm \
-    			 'drm_open|drm_init'
-    collect_modules_list modesetting \
-    			 'drm_crtc_init'
+    collect_modules_list networking 'register_netdev|ieee80211_register_hw|usbnet_probe|phy_driver_register|rt2x00(pci|usb)_probe|register_netdevice'
+    collect_modules_list block 'ata_scsi_ioctl|scsi_add_host|scsi_add_host_with_dma|blk_alloc_queue|blk_init_queue|register_mtd_blktrans|scsi_esp_register|scsi_register_device_handler|blk_queue_physical_block_size' 'pktcdvd.ko|dm-mod.ko'
+    collect_modules_list drm 'drm_open|drm_init'
+    collect_modules_list modesetting 'drm_crtc_init'
 
     # detect missing or incorrect license tags
     rm -f modinfo
@@ -991,9 +957,7 @@ BuildKernel() {
       /sbin/modinfo -l $i >> modinfo
     done < modnames
 
-    grep -E -v \
-    	  'GPL( v2)?$|Dual BSD/GPL$|Dual MPL/GPL$|GPL and additional rights$' \
-	  modinfo && exit 1
+    grep -E -v 'GPL( v2)?$|Dual BSD/GPL$|Dual MPL/GPL$|GPL and additional rights$' modinfo && exit 1
 
     rm -f modinfo modnames
 
@@ -1029,7 +993,7 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/boot
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}
 
-cd linux-%{KVERREL}
+cd linux-%{KVRA}
 
 %if %{with_default}
 BuildKernel %make_target %kernel_image
@@ -1043,8 +1007,7 @@ BuildKernel %make_target %kernel_image debug
 BuildKernel %make_target %kernel_image kdump
 %endif
 
-%global perf_make \
-  make %{?_smp_mflags} -C tools/perf -s V=1 WERROR=0 NO_LIBUNWIND=1 HAVE_CPLUS_DEMANGLE=1 NO_GTK2=1 NO_LIBNUMA=1 NO_STRLCPY=1 prefix=%{_prefix}
+%global perf_make make %{?_smp_mflags} -C tools/perf -s V=1 WERROR=0 NO_LIBUNWIND=1 HAVE_CPLUS_DEMANGLE=1 NO_GTK2=1 NO_LIBNUMA=1 NO_STRLCPY=1 prefix=%{_prefix}
 %if %{with_perf}
 # perf
 %{perf_make} all
@@ -1104,7 +1067,7 @@ find Documentation -type d | xargs chmod u+w
     mv .tmp_versions.sign.debug .tmp_versions \
     mv signing_key.priv.sign.debug signing_key.priv \
     mv signing_key.x509.sign.debug signing_key.x509 \
-    %{modsign_cmd} $RPM_BUILD_ROOT/lib/modules/%{KVERREL}.debug || exit 1 \
+    %{modsign_cmd} $RPM_BUILD_ROOT/lib/modules/%{KVRA}.debug || exit 1 \
   fi \
     if [ "%{with_default}" -ne "0" ]; then \
     Arch=`head -1 configs/kernel-%{version}-%{_target_cpu}.config | cut -b 3-` \
@@ -1112,7 +1075,7 @@ find Documentation -type d | xargs chmod u+w
     mv .tmp_versions.sign .tmp_versions \
     mv signing_key.priv.sign signing_key.priv \
     mv signing_key.x509.sign signing_key.x509 \
-    %{modsign_cmd} $RPM_BUILD_ROOT/lib/modules/%{KVERREL} || exit 1 \
+    %{modsign_cmd} $RPM_BUILD_ROOT/lib/modules/%{KVRA} || exit 1 \
   fi \
 %{nil}
 
@@ -1154,7 +1117,7 @@ find Documentation -type d | xargs chmod u+w
 
 %install
 
-cd linux-%{KVERREL}
+cd linux-%{KVRA}
 
 %if %{with_doc}
 docdir=$RPM_BUILD_ROOT%{_datadir}/doc/kernel-doc-%{rpmversion}
@@ -1180,17 +1143,14 @@ ls $man9dir | grep -q '' || > $man9dir/BROKEN
 make %{?cross_opts} ARCH=%{hdrarch} INSTALL_HDR_PATH=$RPM_BUILD_ROOT/usr headers_install
 
 # Do headers_check but don't die if it fails.
-make %{?cross_opts} ARCH=%{hdrarch} INSTALL_HDR_PATH=$RPM_BUILD_ROOT/usr headers_check \
-     > hdrwarnings.txt || :
+make %{?cross_opts} ARCH=%{hdrarch} INSTALL_HDR_PATH=$RPM_BUILD_ROOT/usr headers_check > hdrwarnings.txt || :
 if grep -q exist hdrwarnings.txt; then
    sed s:^$RPM_BUILD_ROOT/usr/include/:: hdrwarnings.txt
    # Temporarily cause a build failure if header inconsistencies.
    # exit 1
 fi
 
-find $RPM_BUILD_ROOT/usr/include \
-     \( -name .install -o -name .check -o \
-     	-name ..install.cmd -o -name ..check.cmd \) | xargs rm -f
+find $RPM_BUILD_ROOT/usr/include \( -name .install -o -name .check -o -name ..install.cmd -o -name ..check.cmd \) | xargs rm -f
 
 %endif
 
@@ -1279,7 +1239,7 @@ then\
 fi\
 if [ "$HARDLINK" != "no" -a -x /usr/sbin/hardlink ]\
 then\
-    (cd /usr/src/kernels/%{KVERREL}%{?1:.%{1}} &&\
+    (cd /usr/src/kernels/%{KVRA}%{?1:.%{1}} &&\
      /usr/bin/find . -type f | while read f; do\
        hardlink -c /usr/src/kernels/*.fc*.*/$f $f\
      done)\
@@ -1293,8 +1253,8 @@ fi\
 #
 %define kernel_variant_posttrans() \
 %{expand:%%posttrans %{?1}}\
-%{_sbindir}/new-kernel-pkg --package kernel%{?-v:-%{-v*}} --mkinitrd --dracut --depmod --update %{KVERREL}%{?-v:.%{-v*}} || exit $?\
-%{_sbindir}/new-kernel-pkg --package kernel%{?1:-%{1}} --rpmposttrans %{KVERREL}%{?1:.%{1}} || exit $?\
+%{_sbindir}/new-kernel-pkg --package kernel%{?-v:-%{-v*}} --mkinitrd --dracut --depmod --update %{KVRA}%{?-v:.%{-v*}} || exit $?\
+%{_sbindir}/new-kernel-pkg --package kernel%{?1:-%{1}} --rpmposttrans %{KVRA}%{?1:.%{1}} || exit $?\
 %{nil}
 
 #
@@ -1312,7 +1272,7 @@ if [ `uname -i` == "x86_64" ] &&\
   /bin/sed -r -i -e 's/^DEFAULTKERNEL=%{-r*}$/DEFAULTKERNEL=kernel%{?-v:-%{-v*}}/' /etc/sysconfig/kernel || exit $?\
 fi}\
 %{expand:\
-%{_sbindir}/new-kernel-pkg --package kernel%{?-v:-%{-v*}} --install %{KVERREL}%{?-v:.%{-v*}} || exit $?\
+%{_sbindir}/new-kernel-pkg --package kernel%{?-v:-%{-v*}} --install %{KVRA}%{?-v:.%{-v*}} || exit $?\
 }\
 %{nil}
 
@@ -1322,7 +1282,7 @@ fi}\
 #
 %define kernel_variant_preun() \
 %{expand:%%preun %{?1}}\
-%{_sbindir}/new-kernel-pkg --rminitrd --rmmoddep --remove %{KVERREL}%{?1:.%{1}} || exit $?\
+%{_sbindir}/new-kernel-pkg --rminitrd --rmmoddep --remove %{KVRA}%{?1:.%{1}} || exit $?\
 %{nil}
 
 %kernel_variant_preun
@@ -1335,7 +1295,7 @@ fi}\
 %postun kdump
     # Create softlink to latest remaining kdump kernel.
     # If no more kdump kernel is available, remove softlink.
-    if [ "$(readlink /boot/zfcpdump)" == "/boot/vmlinuz-%{KVERREL}.kdump" ]
+    if [ "$(readlink /boot/zfcpdump)" == "/boot/vmlinuz-%{KVRA}.kdump" ]
     then
         vmlinuz_next=$(ls /boot/vmlinuz-*.kdump 2> /dev/null | sort | tail -n1)
         if [ $vmlinuz_next ]
@@ -1347,7 +1307,7 @@ fi}\
     fi
 
 %post kdump
-    ln -sf /boot/vmlinuz-%{KVERREL}.kdump /boot/zfcpdump
+    ln -sf /boot/vmlinuz-%{KVRA}.kdump /boot/zfcpdump
 %endif # s390x
 
 if [ -x /sbin/ldconfig ]
@@ -1462,26 +1422,26 @@ fi
 %if %{1}\
 %{expand:%%files %{?2}}\
 %defattr(-,root,root)\
-/%{image_install_path}/%{?-k:%{-k*}}%{!?-k:vmlinuz}-%{KVERREL}%{?2:.%{2}}\
-/%{image_install_path}/.vmlinuz-%{KVERREL}%{?2:.%{2}}.hmac \
-%attr(600,root,root) /boot/System.map-%{KVERREL}%{?2:.%{2}}\
-/boot/symvers-%{KVERREL}%{?2:.%{2}}.gz\
-/boot/config-%{KVERREL}%{?2:.%{2}}\
-%dir /lib/modules/%{KVERREL}%{?2:.%{2}}\
-/lib/modules/%{KVERREL}%{?2:.%{2}}/kernel\
-/lib/modules/%{KVERREL}%{?2:.%{2}}/build\
-/lib/modules/%{KVERREL}%{?2:.%{2}}/source\
-/lib/modules/%{KVERREL}%{?2:.%{2}}/extra\
-/lib/modules/%{KVERREL}%{?2:.%{2}}/updates\
+/%{image_install_path}/%{?-k:%{-k*}}%{!?-k:vmlinuz}-%{KVRA}%{?2:.%{2}}\
+/%{image_install_path}/.vmlinuz-%{KVRA}%{?2:.%{2}}.hmac \
+%attr(600,root,root) /boot/System.map-%{KVRA}%{?2:.%{2}}\
+/boot/symvers-%{KVRA}%{?2:.%{2}}.gz\
+/boot/config-%{KVRA}%{?2:.%{2}}\
+%dir /lib/modules/%{KVRA}%{?2:.%{2}}\
+/lib/modules/%{KVRA}%{?2:.%{2}}/kernel\
+/lib/modules/%{KVRA}%{?2:.%{2}}/build\
+/lib/modules/%{KVRA}%{?2:.%{2}}/source\
+/lib/modules/%{KVRA}%{?2:.%{2}}/extra\
+/lib/modules/%{KVRA}%{?2:.%{2}}/updates\
 %ifarch %{vdso_arches}\
-/lib/modules/%{KVERREL}%{?2:.%{2}}/vdso\
-/etc/ld.so.conf.d/kernel-%{KVERREL}%{?2:.%{2}}.conf\
+/lib/modules/%{KVRA}%{?2:.%{2}}/vdso\
+/etc/ld.so.conf.d/kernel-%{KVRA}%{?2:.%{2}}.conf\
 %endif\
-/lib/modules/%{KVERREL}%{?2:.%{2}}/modules.*\
-%ghost /boot/initramfs-%{KVERREL}%{?2:.%{2}}.img\
+/lib/modules/%{KVRA}%{?2:.%{2}}/modules.*\
+%ghost /boot/initramfs-%{KVRA}%{?2:.%{2}}.img\
 %{expand:%%files %{?2:%{2}-}devel}\
 %defattr(-,root,root)\
-/usr/src/kernels/%{KVERREL}%{?2:.%{2}}\
+/usr/src/kernels/%{KVRA}%{?2:.%{2}}\
 %if %{with_debuginfo}\
 %ifnarch noarch\
 %{expand:%%files -f debuginfo%{?2}.list %{?2:%{2}-}debuginfo}\
