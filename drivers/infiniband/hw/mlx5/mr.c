@@ -593,7 +593,6 @@ int mlx5_mr_cache_cleanup(struct mlx5_ib_dev *dev)
 	for (i = 0; i < MAX_MR_CACHE_ENTRIES; i++)
 		clean_keys(dev, i);
 
-	flush_workqueue(dev->cache.wq);
 	destroy_workqueue(dev->cache.wq);
 	del_timer_sync(&dev->delay_timer);
 
