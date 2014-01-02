@@ -1497,6 +1497,33 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Jan 02 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-65.el7]
+- [md] fix calculation of stacking limits on level change (Jes Sorensen) [1033479]
+- [x86] better solution for x86 single cpu support check (Prarit Bhargava) [1032604]
+- [kernel] sched: Fix asymmetric scheduling for POWER7 (Steve Best) [1032796]
+- [fs] writeback: Fix data corruption on NFS (Jeff Layton) [1042112]
+- [fs] writeback: do not sync data dirtied after sync start (Jeff Layton) [1042112]
+- [fs] writeback: fix race that cause writeback hung (Jeff Layton) [1042112]
+- [fs] writeback: make writeback_inodes_wb static (Jeff Layton) [1042112]
+- [fs] writeback: fix occasional slow sync(1) (Jeff Layton) [1042112]
+- [fs] writeback: don't check force_wait to handle bdi->work_list (Jeff Layton) [1042112]
+- [fs] fs-writeback: make wb_do_writeback() as static (Jeff Layton) [1042112]
+- [fs] writeback: Do not sort b_io list only because of block device inode (Jeff Layton) [1042112]
+- [fs] sync: don't block the flusher thread waiting on IO (Jeff Layton) [1042112]
+- [security] selinux: process labeled IPsec TCP SYN-ACK packets properly in selinux_ip_postroute() (Paul Moore) [1040183]
+- [security] selinux: look for IPsec labels on both inbound and outbound packets (Paul Moore) [1040183]
+- [security] selinux: handle TCP SYN-ACK packets correctly in selinux_ip_postroute() (Paul Moore) [1040183]
+- [security] selinux: handle TCP SYN-ACK packets correctly in selinux_ip_output() (Paul Moore) [1040183]
+- [s390] signal: always restore saved runtime instrumentation psw bit (Hendrik Brueckner) [1029884]
+- [s390] fix handling of runtime instrumentation psw bit (Hendrik Brueckner) [1029884]
+- [platform] asus-nb-wmi: set wapf=4 for ASUSTeK COMPUTER INC. 1015E/U (Prarit Bhargava) [1043248]
+- [platform] asus-nb-wmi: ignore ALS notification key code (Prarit Bhargava) [1043248]
+- [fs] gfs2: Fix slab memory leak in gfs2_bufdata (Robert S Peterson) [1038123]
+- [fs] gfs2: Fix use-after-free race when calling gfs2_remove_from_ail (Robert S Peterson) [1038123]
+- [virt] kvm: fix guest-initiated crash with x2apic (Andrew Jones) [1042101] {CVE-2013-6376}
+- [drm] qxl: fix memory leak in release list handling (Dave Airlie) [1035564]
+- [scsi] ipr: Increase msi-x interrupt vectors to 16 (Steve Best) [1038501]
+
 * Tue Dec 17 2013 Jarod Wilson <jarod@redhat.com> [3.10.0-64.el7]
 - [powerpc] powernv: Don't crash if there are no OPAL consoles (Steve Best) [1033086]
 - [powerpc] powernv: Reserve the correct PE number (Steve Best) [1033086]
