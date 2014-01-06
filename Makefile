@@ -5,7 +5,7 @@ EXTRAVERSION =
 NAME = Unicycling Gorilla
 RHEL_MAJOR = 7
 RHEL_MINOR = 0
-RHEL_RELEASE = 65
+RHEL_RELEASE = 66
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
