@@ -1460,6 +1460,12 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Jan 07 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-67.el7]
+- [s390] time, vdso: fix clock_gettime for CLOCK_MONOTONIC (Hendrik Brueckner) [1036677]
+- [s390] vdso: ectg gettime support for CLOCK_THREAD_CPUTIME_ID (Hendrik Brueckner) [1036677]
+- [s390] vdso: fix access-list entry initialization (Hendrik Brueckner) [1036677]
+- [s390] time, vdso: convert to the new update_vsyscall interface (Hendrik Brueckner) [1036677]
+
 * Mon Jan 06 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-66.el7]
 - [net] netfilter: fix wrong byte order in nf_ct_seqadj_set internal information (Jesper Brouer) [1045360]
 - [net] br: fix use of ->rx_handler_data in code executed on non-rx_handler path (Jiri Pirko) [1039118]
