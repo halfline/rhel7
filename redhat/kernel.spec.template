@@ -474,7 +474,7 @@ Provides:  cpufreq-utils = 1:009-0.6.p1
 Provides:  cpufrequtils = 1:009-0.6.p1
 Obsoletes: cpufreq-utils < 1:009-0.6.p1
 Obsoletes: cpufrequtils < 1:009-0.6.p1
-Obsoletes: cpuspeed < 1:1.5-16
+Obsoletes: cpuspeed < 1:2.0
 Requires: kernel-tools-libs = %{version}-%{release}
 %description -n kernel-tools
 This package contains the tools/ directory from the kernel source
