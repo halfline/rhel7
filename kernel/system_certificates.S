@@ -6,7 +6,6 @@
 	VMLINUX_SYMBOL(name):
 
 	__INITRODATA
-	.align 8
 
 GLOBAL(system_certificate_list)
 	.incbin "kernel/x509_certificate_list"
