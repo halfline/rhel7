@@ -1675,6 +1675,7 @@ void __qlcnic_down(struct qlcnic_adapter *adapter, struct net_device *netdev)
 	if (qlcnic_sriov_vf_check(adapter))
 		qlcnic_sriov_cleanup_async_list(&adapter->ahw->sriov->bc);
 	smp_mb();
+	spin_lock(&adapter->tx_clean_lock);
 	netif_carrier_off(netdev);
 	adapter->ahw->linkup = 0;
 	netif_tx_disable(netdev);
@@ -1695,6 +1696,7 @@ void __qlcnic_down(struct qlcnic_adapter *adapter, struct net_device *netdev)
 
 	for (ring = 0; ring < adapter->max_drv_tx_rings; ring++)
 		qlcnic_release_tx_buffers(adapter, &adapter->tx_ring[ring]);
+	spin_unlock(&adapter->tx_clean_lock);
 }
 
 /* Usage: During suspend and firmware recovery module */
@@ -2215,6 +2217,7 @@ qlcnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	rwlock_init(&adapter->ahw->crb_lock);
 	mutex_init(&adapter->ahw->mem_lock);
 
+	spin_lock_init(&adapter->tx_clean_lock);
 	INIT_LIST_HEAD(&adapter->mac_list);
 
 	if (qlcnic_82xx_check(adapter)) {
