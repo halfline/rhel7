@@ -1,1 +1,22 @@
+# We may come across a situation where we want to enable this feature because
+# a particular driver or device requires udev to do some additional work
+# in userspace in order to load an updated firmware image.  If this option
+# is enabled it will result in 60 second timeouts for all devices that do
+# not find an image on the filesystem.  For example the x86 microcode driver
+# will timeout for every CPU on the system:
+#
+# [  253.516631] microcode: CPU4 sig=0x206f2, pf=0x4, revision=0x26
+# [  313.684795] microcode: CPU5 sig=0x206f2, pf=0x4, revision=0x26
+# [  373.876289] microcode: CPU6 sig=0x206f2, pf=0x4, revision=0x26
+# [  434.046824] microcode: CPU7 sig=0x206f2, pf=0x4, revision=0x26
+# [  494.216002] microcode: CPU8 sig=0x206f2, pf=0x4, revision=0x26
+# [  554.386315] microcode: CPU9 sig=0x206f2, pf=0x4, revision=0x26
+# etc.
+#
+# Upstream has introduced request_firmware_direct() which will not delay 60
+# seconds, however, each use of request_firmware() in the tree will have to be
+# audited for possible replacement.
+#
+# In other words ... proceed at your own risk.
+#
 # CONFIG_FW_LOADER_USER_HELPER is not set
