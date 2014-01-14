@@ -1065,6 +1065,7 @@ void __init setup_arch(char **cmdline_p)
 	setup_vmcoreinfo();
 	setup_lowcore();
 
+	smp_fill_possible_mask();
         cpu_init();
 	s390_init_cpu_topology();
 
