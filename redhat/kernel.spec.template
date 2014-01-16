@@ -1460,6 +1460,26 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Jan 16 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-73.el7]
+- [kernel] audit: audit_log_start running on auditd should not stop (Richard Guy Briggs) [1019895]
+- [kernel] audit: drop audit_cmd_lock in AUDIT_USER family of cases (Richard Guy Briggs) [1019895]
+- [security] smack: call WARN_ONCE() instead of calling audit_log_start() (Richard Guy Briggs) [1019895]
+- [security] selinux: call WARN_ONCE() instead of calling audit_log_start() (Richard Guy Briggs) [1019895]
+- [virt] vfio: Convert control interface to misc driver (Alex Williamson) [1044595]
+- [virt] vfio: Reserve minor for VFIO (Alex Williamson) [1044595]
+- [ethernet] qlcnic: Update version to 5.3.48.1 (Chad Dupuis) [1048773]
+- [ethernet] qlcnic: Fix bug in Tx completion path (Chad Dupuis) [1048773]
+- [ethernet] qlcnic: Fix usage of netif_tx_{wake, stop} api during link change (Chad Dupuis) [1048773]
+- [ethernet] qlcnic: Fix system hang while running traffic and bringing interface down (Chad Dupuis) [1048773]
+- [virt] hyperv/netvsc: don't flush peers notifying work during setting mtu (Jason Wang) [1040785 983434]
+- [virt] hyperv: Fix race between probe and open calls (Jason Wang) [983434]
+- [s390] kvm: mark as Tech Preview (Hendrik Brueckner) [1049469]
+- [x86] irq: Fix do_IRQ() interrupt warning for cpu hotplug retriggered irqs (Prarit Bhargava) [1052179]
+- [kernel] audit: log on errors from filter user rules (Richard Guy Briggs) [1034446]
+- [x86] uv: Add GRU distributed mode mappings (George Beshers) [1032365]
+- [iommu] dmar: Modify warn_invalid_dmar() message to do a less loud warning (Prarit Bhargava) [968249]
+- [dma] ioat: Modify ioat3_dca_init() message to do a less loud warning (Prarit Bhargava) [968235]
+
 * Wed Jan 15 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-72.el7]
 - [ethernet] sfc: fix sparse non static symbol warning (Nikolay Aleksandrov) [1028038]
 - [ethernet] sfc: Fix RX drop filters for EF10 (Nikolay Aleksandrov) [1028038]
