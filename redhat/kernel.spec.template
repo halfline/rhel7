@@ -1460,6 +1460,27 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Jan 17 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-76.el7]
+- [scsi] aacraid: kdump fix (Rich Bono) [1019091]
+- [scsi] lpfc: update version for 8.3.7.34.3p driver release (Rob Evers) [1025854]
+- [scsi] lpfc: Fixed unassigned variable in ELS timeout message (Rob Evers) [1025854]
+- [scsi] lpfc: Fixed incorrect allocation of iDiags directories/files in debugfs (Rob Evers) [1025854]
+- [scsi] lpfc: Fix kernel panics from corrupted ndlp list (Rob Evers) [1025854]
+- [scsi] lpfc: Fix Crash in lpfc_els_timeout_handler (Rob Evers) [1025854]
+- [scsi] lpfc: Fixed stopped FCF discovery on failed FCF record read (Rob Evers) [1025854]
+- [scsi] lpfc: Fixed IO hang when in msi mode (Rob Evers) [1025854]
+- [scsi] lpfc: Fix wrong assignment in lpfc_debugfs.c (Rob Evers) [1025854]
+- [scsi] lpfc: Fix typo on NULL assignment (Rob Evers) [1025854]
+- [scsi] lpfc: Update lpfc version for 8.3.7.34.1p driver release (Rob Evers) [1025854]
+- [scsi] lpfc: Fixed not processing task management IOCB response status (Rob Evers) [1025854]
+- [scsi] lpfc: Fixed spinlock hang (Rob Evers) [1025854]
+- [scsi] lpfc: Fixed invalid Total_Data_Placed value received for els and ct command responses (Rob Evers) [1025854]
+- [scsi] lpfc: Fixed invalid fcp_rsp length fir FCP_ICMND (Rob Evers) [1025854]
+- [scsi] lpfc: Fixed invalid mailbox timeouts (Rob Evers) [1025854]
+- [scsi] lpfc: Fixed spinlock inversion problem (Rob Evers) [1025854]
+- [scsi] lpfc: Fix crash after xri limit is reached (Rob Evers) [1025854]
+- [scsi] lpfc: remove unnecessary read of PCI_CAP_ID_EXP (Rob Evers) [1025854]
+
 * Fri Jan 17 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-75.el7]
 - [kernel] audit: log task info on feature change (Richard Guy Briggs) [1050425]
 - [kernel] keys: correct alignment of system_certificate_list content in assembly file (Hendrik Brueckner) [1038139]
