@@ -1,4 +1,5 @@
-CROSS_REPO=http://patchwork.lab.bos.redhat.com/packages/rhel7-cross-environment/rhel7-cross-environment.repo
+EPEL_RELEASE=epel-release-7-0.1.noarch
+CROSS_EPEL_RPM = http://download.bos.redhat.com/pub/epel/beta/7/x86_64/$(EPEL_RELEASE).rpm
 
 CROSS_RPMFLAGS = $(RPMBUILD) --define "_sourcedir $(SOURCES)" --define "_builddir $(RPM)/BUILD" --define "_srcrpmdir $(RPM)/SRPMS" --define "_rpmdir $(RPM)/RPMS" --define "_specdir $(RPM)/SPECS" --define "dist $(DIST)"
 
@@ -10,7 +11,10 @@ rh-cross-download:
 		exit 1; \
 	fi;
 ifeq ($(shell whoami), root)
-	@yum -y --config=$(CROSS_REPO) install $(CROSS_PACKAGE_LIST)
+ifneq ($(shell rpm -q epel-release), $(EPEL_RELEASE))
+	rpm -ivh $(CROSS_EPEL_RPM)
+endif
+	@yum -y install $(CROSS_PACKAGE_LIST)
 else
 	@echo "Checking for RHEL7 cross compile packages.  If this fails, run \"make rh-cross-download\" as root."
 	@rpm -q $(CROSS_PACKAGE_LIST)
