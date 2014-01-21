@@ -173,6 +173,7 @@ Summary: The Linux kernel
 %define kernel_image_elf 1
 %define with_bootwrapper 1
 %define cross_target powerpc64
+%define kcflags -O3
 %endif
 
 %ifarch s390x
@@ -790,10 +791,10 @@ BuildKernel() {
 %endif
 
     make -s %{?cross_opts} ARCH=$Arch oldnoconfig >/dev/null
-    make -s %{?cross_opts} ARCH=$Arch V=1 %{?_smp_mflags} $MakeTarget %{?sparse_mflags}
+    make -s %{?cross_opts} ARCH=$Arch V=1 %{?_smp_mflags} KCFLAGS="%{?kcflags}" $MakeTarget %{?sparse_mflags}
 
     if [ "$Flavour" != "kdump" ]; then
-        make -s %{?cross_opts} ARCH=$Arch V=1 %{?_smp_mflags} modules %{?sparse_mflags} || exit 1
+        make -s %{?cross_opts} ARCH=$Arch V=1 %{?_smp_mflags} KCFLAGS="%{?kcflags}" modules %{?sparse_mflags} || exit 1
     fi
 
     # Start installing the results
