@@ -1460,6 +1460,11 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Jan 21 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-78.el7]
+- [scsi] hpsa: remove cancelled ID's and add a new one (Tomas Henzl) [1040644]
+- [scsi] hpsa: bump driver version to 3.4.2-1 (Tomas Henzl) [1040644]
+- [scsi] hpsa: add 4 new PCI ID's for HP Gen9 servers (Tomas Henzl) [1040644]
+
 * Tue Jan 21 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-77.el7]
 - [s390] revert kvm support patches (Jarod Wilson) [1035261 1049469]
 - [block] nvme: Disable admin queue on init failure (David Milburn) [1049584]
