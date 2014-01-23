@@ -524,6 +524,19 @@ struct scsi_host_template {
 	 *   scsi_netlink.h
 	 */
 	u64 vendor_id;
+
+	/* FOR RH USE ONLY
+	 *
+	 * The following padding has been inserted before ABI freeze to
+	 * allow extending the structure while preserve ABI.
+	 */
+#ifndef __GENKSYMS__
+	void			(*rh_reserved1)(void);
+	void			(*rh_reserved2)(void);
+	void			(*rh_reserved3)(void);
+	void			(*rh_reserved4)(void);
+#endif
+
 };
 
 /*
@@ -752,6 +765,20 @@ struct Scsi_Host {
 	 * Needed just in case we have virtual hosts.
 	 */
 	struct device *dma_dev;
+
+	/* FOR RH USE ONLY
+	 *
+	 * The following padding has been inserted before ABI freeze to
+	 * allow extending the structure while preserve ABI.
+	 */
+#ifndef __GENKSYMS__
+	void			(*rh_reserved1)(void);
+	void			(*rh_reserved2)(void);
+	void			(*rh_reserved3)(void);
+	void			(*rh_reserved4)(void);
+	void			(*rh_reserved5)(void);
+	void			(*rh_reserved6)(void);
+#endif
 
 	/*
 	 * We should ensure that this is aligned, both for better performance

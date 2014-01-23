@@ -192,6 +192,21 @@ struct scsi_device {
 
 	struct scsi_dh_data	*scsi_dh_data;
 	enum scsi_device_state sdev_state;
+
+	/* FOR RH USE ONLY
+	 *
+	 * The following padding has been inserted before ABI freeze to
+	 * allow extending the structure while preserve ABI.
+	 */
+#ifndef __GENKSYMS__
+	void			(*rh_reserved1)(void);
+	void			(*rh_reserved2)(void);
+	void			(*rh_reserved3)(void);
+	void			(*rh_reserved4)(void);
+	void			(*rh_reserved5)(void);
+	void			(*rh_reserved6)(void);
+#endif
+
 	unsigned long		sdev_data[0];
 } __attribute__((aligned(sizeof(unsigned long))));
 
@@ -287,6 +302,19 @@ struct scsi_target {
 	struct execute_work	ew;
 	enum scsi_target_state	state;
 	void 			*hostdata; /* available to low-level driver */
+
+	/* FOR RH USE ONLY
+	 *
+	 * The following padding has been inserted before ABI freeze to
+	 * allow extending the structure while preserve ABI.
+	 */
+#ifndef __GENKSYMS__
+	void			(*rh_reserved1)(void);
+	void			(*rh_reserved2)(void);
+	void			(*rh_reserved3)(void);
+	void			(*rh_reserved4)(void);
+#endif
+
 	unsigned long		starget_data[0]; /* for the transport */
 	/* starget_data must be the last element!!!! */
 } __attribute__((aligned(sizeof(unsigned long))));
