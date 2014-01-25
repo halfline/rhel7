@@ -656,7 +656,7 @@ static int emulate_vsx(unsigned char __user *addr, unsigned int reg,
 	if (reg < 32)
 		ptr = (char *) &current->thread.TS_FPR(reg);
 	else
-		ptr = (char *) &current->thread.vr[reg - 32];
+		ptr = (char *) &current->thread.vr_state.vr[reg - 32];
 
 	lptr = (unsigned long *) ptr;
 
@@ -893,7 +893,7 @@ int fix_alignment(struct pt_regs *regs)
 				return -EFAULT;
 		}
 	} else if (flags & F) {
-		data.dd = current->thread.TS_FPR(reg);
+		data.ll = current->thread.TS_FPR(reg);
 		if (flags & S) {
 			/* Single-precision FP store requires conversion... */
 #ifdef CONFIG_PPC_FPU
@@ -971,7 +971,7 @@ int fix_alignment(struct pt_regs *regs)
 		if (unlikely(ret))
 			return -EFAULT;
 	} else if (flags & F)
-		current->thread.TS_FPR(reg) = data.dd;
+		current->thread.TS_FPR(reg) = data.ll;
 	else
 		regs->gpr[reg] = data.ll;
 
