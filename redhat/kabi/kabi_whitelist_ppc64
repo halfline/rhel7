@@ -68,6 +68,7 @@
 	irq_stat
 	jiffies
 	jiffies_64
+	jiffies_to_msecs
 	kernel_bind
 	kernel_getsockopt
 	kernel_recvmsg
