@@ -1,5 +1,6 @@
 [rhel7_x86_64_whitelist]
 	___pskb_trim
+	__alloc_percpu
 	__alloc_skb
 	__dev_get_by_index
 	__dev_get_by_name
