@@ -204,3 +204,4 @@
 	vlan_dev_real_dev
 	vlan_dev_vlan_id
 	vmalloc
+	vmap
