@@ -74,6 +74,7 @@
 	kernel_sock_ioctl
 	kfree
 	kfree_skb
+	kthread_should_stop
 	lock_sock_nested
 	napi_complete
 	napi_get_frags
