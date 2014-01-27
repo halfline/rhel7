@@ -87,6 +87,7 @@
 	lock_sock_nested
 	memcmp
 	memcpy
+	memmove
 	napi_complete
 	napi_get_frags
 	napi_gro_frags
