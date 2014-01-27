@@ -20,6 +20,7 @@
 	call_usermodehelper
 	cancel_delayed_work
 	consume_skb
+	cpu_online_mask
 	csum_ipv6_magic
 	dev_addr_add
 	dev_addr_del
