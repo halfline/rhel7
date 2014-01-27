@@ -52,6 +52,7 @@
 	eth_validate_addr
 	ether_setup
 	ethtool_op_get_link
+	finish_wait
 	free_netdev
 	in_aton
 	init_net
