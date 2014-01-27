@@ -218,4 +218,5 @@
 	vprintk
 	vscnprintf
 	vsnprintf
+	vsprintf
 	wireless_send_event
