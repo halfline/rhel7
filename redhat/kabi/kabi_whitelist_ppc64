@@ -115,6 +115,7 @@
 	panic
 	pci_bus_read_config_byte
 	pci_bus_read_config_dword
+	pci_bus_read_config_word
 	pskb_expand_head
 	register_inet6addr_notifier
 	register_inetaddr_notifier
