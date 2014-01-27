@@ -112,6 +112,7 @@
 	netpoll_trap
 	nr_cpu_ids
 	on_each_cpu
+	panic
 	pskb_expand_head
 	register_inet6addr_notifier
 	register_inetaddr_notifier
