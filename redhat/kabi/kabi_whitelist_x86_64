@@ -127,6 +127,7 @@
 	pci_disable_msi
 	pci_disable_msix
 	pci_enable_device
+	pci_enable_msi_block
 	pskb_expand_head
 	register_inet6addr_notifier
 	register_inetaddr_notifier
