@@ -73,6 +73,7 @@
 	jiffies
 	jiffies_64
 	jiffies_to_msecs
+	jiffies_to_timespec
 	kernel_bind
 	kernel_getsockopt
 	kernel_recvmsg
