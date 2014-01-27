@@ -10,6 +10,7 @@
 	__napi_schedule
 	__netdev_alloc_skb
 	__netif_schedule
+	__pci_register_driver
 	__pskb_pull_tail
 	add_timer
 	arp_create
