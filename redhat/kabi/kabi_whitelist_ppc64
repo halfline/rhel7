@@ -24,6 +24,7 @@
 	cancel_delayed_work
 	consume_skb
 	cpu_online_mask
+	cpu_possible_mask
 	csum_ipv6_magic
 	current_kernel_time
 	del_timer
