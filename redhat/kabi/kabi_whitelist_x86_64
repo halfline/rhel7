@@ -86,6 +86,7 @@
 	kthread_stop
 	lock_sock_nested
 	memcmp
+	memcpy
 	napi_complete
 	napi_get_frags
 	napi_gro_frags
