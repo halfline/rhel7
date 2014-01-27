@@ -45,6 +45,7 @@
 	dev_set_promiscuity
 	dev_trans_start
 	dma_set_mask
+	do_gettimeofday
 	eth_change_mtu
 	eth_mac_addr
 	eth_type_trans
