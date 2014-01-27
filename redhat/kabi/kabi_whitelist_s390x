@@ -55,6 +55,7 @@
 	finish_wait
 	free_irq
 	free_netdev
+	free_percpu
 	in_aton
 	init_net
 	ip6_route_output
