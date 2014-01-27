@@ -219,4 +219,5 @@
 	vscnprintf
 	vsnprintf
 	vsprintf
+	vunmap
 	wireless_send_event

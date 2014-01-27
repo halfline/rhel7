@@ -209,3 +209,4 @@
 	vscnprintf
 	vsnprintf
 	vsprintf
+	vunmap
