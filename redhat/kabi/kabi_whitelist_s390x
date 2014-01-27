@@ -132,6 +132,7 @@
 	prepare_to_wait_exclusive
 	printk
 	pskb_expand_head
+	queue_delayed_work_on
 	register_inet6addr_notifier
 	register_inetaddr_notifier
 	register_netdev
