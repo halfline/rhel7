@@ -48,6 +48,7 @@
 	dma_set_mask
 	dma_supported
 	dmi_find_device
+	dmi_get_system_info
 	eth_change_mtu
 	eth_mac_addr
 	eth_type_trans
