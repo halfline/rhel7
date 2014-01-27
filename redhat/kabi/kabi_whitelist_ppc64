@@ -76,6 +76,7 @@
 	kernel_sendmsg
 	kernel_setsockopt
 	kernel_sock_ioctl
+	kfree
 	kfree_skb
 	lock_sock_nested
 	napi_complete
