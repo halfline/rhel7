@@ -207,3 +207,4 @@
 	vmap
 	vprintk
 	vscnprintf
+	vsnprintf

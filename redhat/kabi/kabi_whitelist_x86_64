@@ -217,4 +217,5 @@
 	vmap
 	vprintk
 	vscnprintf
+	vsnprintf
 	wireless_send_event
