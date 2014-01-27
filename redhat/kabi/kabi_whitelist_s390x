@@ -63,6 +63,7 @@
 	ip6_route_output
 	irq_stat
 	jiffies
+	jiffies_64
 	kernel_bind
 	kernel_getsockopt
 	kernel_recvmsg
