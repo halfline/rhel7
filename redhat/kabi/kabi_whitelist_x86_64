@@ -159,6 +159,7 @@
 	rtnl_unlock
 	schedule
 	schedule_timeout
+	simple_strtol
 	sk_alloc
 	sk_free
 	skb_checksum
