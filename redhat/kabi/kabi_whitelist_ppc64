@@ -210,4 +210,5 @@
 	vmalloc
 	vmap
 	vprintk
+	vscnprintf
 	wireless_send_event
