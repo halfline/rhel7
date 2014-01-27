@@ -32,6 +32,7 @@
 	dev_close
 	dev_get_by_index
 	dev_get_by_name
+	dev_get_drvdata
 	dev_get_stats
 	dev_kfree_skb_any
 	dev_kfree_skb_irq
