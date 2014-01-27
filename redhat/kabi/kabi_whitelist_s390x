@@ -210,3 +210,4 @@
 	vsnprintf
 	vsprintf
 	vunmap
+	wait_for_completion

@@ -214,4 +214,5 @@
 	vsnprintf
 	vsprintf
 	vunmap
+	wait_for_completion
 	wireless_send_event
