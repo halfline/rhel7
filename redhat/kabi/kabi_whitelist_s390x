@@ -82,6 +82,7 @@
 	memmove
 	memset
 	mod_timer
+	msleep
 	napi_complete
 	napi_get_frags
 	napi_gro_frags
