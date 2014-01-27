@@ -117,6 +117,7 @@
 	nr_cpu_ids
 	on_each_cpu
 	panic
+	pci_bus_read_config_byte
 	pskb_expand_head
 	register_inet6addr_notifier
 	register_inetaddr_notifier
