@@ -14,6 +14,7 @@
 	__per_cpu_offset
 	__pskb_pull_tail
 	__register_chrdev
+	__unregister_chrdev
 	add_timer
 	arp_create
 	arp_send

@@ -15,6 +15,7 @@
 	__pskb_pull_tail
 	__register_chrdev
 	__udelay
+	__unregister_chrdev
 	add_timer
 	arp_create
 	arp_send
