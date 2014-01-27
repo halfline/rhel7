@@ -22,6 +22,7 @@
 	consume_skb
 	cpu_online_mask
 	csum_ipv6_magic
+	current_kernel_time
 	dev_addr_add
 	dev_addr_del
 	dev_close
