@@ -56,6 +56,7 @@
 	free_irq
 	free_netdev
 	free_percpu
+	get_random_bytes
 	hci_alloc_dev
 	hci_free_dev
 	hci_register_dev
