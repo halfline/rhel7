@@ -90,6 +90,7 @@
 	msleep
 	mutex_lock
 	mutex_trylock
+	mutex_unlock
 	napi_complete
 	napi_get_frags
 	napi_gro_frags
