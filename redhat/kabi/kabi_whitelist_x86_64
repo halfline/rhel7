@@ -208,6 +208,7 @@
 	strstr
 	touch_nmi_watchdog
 	touch_softlockup_watchdog
+	unregister_chrdev_region
 	unregister_inet6addr_notifier
 	unregister_inetaddr_notifier
 	unregister_netdev
