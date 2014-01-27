@@ -215,4 +215,5 @@
 	vlan_dev_vlan_id
 	vmalloc
 	vmap
+	vprintk
 	wireless_send_event
