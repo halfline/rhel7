@@ -149,6 +149,7 @@
 	rtnl_lock
 	rtnl_trylock
 	rtnl_unlock
+	schedule
 	sk_alloc
 	sk_free
 	skb_checksum
