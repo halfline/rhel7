@@ -1461,6 +1461,13 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Jan 27 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-80.el7]
+- [misc] synchronize with upstream linux-3.10.y stable branch up to 3.10.24 (Veaceslav Falico) [1040946]
+- [acpi] memhotplug: add parameter to disable memory hotplug (Prarit Bhargava) [1046555]
+- [kernel] kdump: Increase x86 crashkernel=auto base reservation from 128M to 160M (Baoquan He) [1044832]
+- [mfd] lpc_ich: Add support for Intel Avoton SoC (Prarit Bhargava) [1049638]
+- [net] ipv6: send Change Status Report after DAD is completed (Flavio Leitner) [1049092]
+
 * Thu Jan 23 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-79.el7]
 - [virt] virtio-net: put virtio net header inline with data ("Michael S. Tsirkin") [990993]
 - [virt] virtio: VIRTIO_F_ANY_LAYOUT feature ("Michael S. Tsirkin") [990993]
