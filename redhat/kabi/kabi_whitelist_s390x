@@ -125,6 +125,7 @@
 	pci_find_capability
 	pci_get_device
 	pci_release_regions
+	pci_request_regions
 	pskb_expand_head
 	register_inet6addr_notifier
 	register_inetaddr_notifier
