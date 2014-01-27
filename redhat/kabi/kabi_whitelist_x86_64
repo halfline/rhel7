@@ -115,6 +115,7 @@
 	netif_set_real_num_tx_queues
 	netpoll_trap
 	nr_cpu_ids
+	on_each_cpu
 	pskb_expand_head
 	register_inet6addr_notifier
 	register_inetaddr_notifier
