@@ -160,6 +160,7 @@
 	schedule
 	schedule_timeout
 	simple_strtol
+	simple_strtoul
 	sk_alloc
 	sk_free
 	skb_checksum
