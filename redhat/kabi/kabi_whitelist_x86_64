@@ -18,6 +18,7 @@
 	atomic_notifier_chain_unregister
 	autoremove_wake_function
 	call_usermodehelper
+	cancel_delayed_work
 	consume_skb
 	csum_ipv6_magic
 	dev_addr_add
