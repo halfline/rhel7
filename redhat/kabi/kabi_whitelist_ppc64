@@ -133,6 +133,7 @@
 	pci_request_regions
 	pci_unregister_driver
 	prepare_to_wait
+	prepare_to_wait_exclusive
 	pskb_expand_head
 	register_inet6addr_notifier
 	register_inetaddr_notifier
