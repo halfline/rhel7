@@ -57,6 +57,7 @@
 	ether_setup
 	ethtool_op_get_link
 	finish_wait
+	free_irq
 	free_netdev
 	hci_alloc_dev
 	hci_free_dev
