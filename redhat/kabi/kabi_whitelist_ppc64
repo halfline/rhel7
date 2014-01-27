@@ -79,6 +79,7 @@
 	kfree
 	kfree_skb
 	kthread_should_stop
+	kthread_stop
 	lock_sock_nested
 	napi_complete
 	napi_get_frags
