@@ -57,6 +57,7 @@
 	free_netdev
 	free_percpu
 	get_random_bytes
+	get_seconds
 	in_aton
 	init_net
 	ip6_route_output
