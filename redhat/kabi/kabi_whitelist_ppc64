@@ -24,6 +24,7 @@
 	csum_ipv6_magic
 	current_kernel_time
 	del_timer
+	del_timer_sync
 	dev_addr_add
 	dev_addr_del
 	dev_close
