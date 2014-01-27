@@ -40,6 +40,7 @@
 	dev_open
 	dev_queue_xmit
 	dev_set_allmulti
+	dev_set_drvdata
 	dev_set_mac_address
 	dev_set_mtu
 	dev_set_promiscuity
