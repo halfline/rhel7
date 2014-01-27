@@ -65,6 +65,7 @@
 	in_aton
 	init_net
 	ip6_route_output
+	irq_stat
 	kernel_bind
 	kernel_getsockopt
 	kernel_recvmsg
