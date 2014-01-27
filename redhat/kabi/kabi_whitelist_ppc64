@@ -85,6 +85,7 @@
 	memcpy
 	memmove
 	memset
+	mod_timer
 	napi_complete
 	napi_get_frags
 	napi_gro_frags
