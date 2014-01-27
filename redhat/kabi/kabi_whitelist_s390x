@@ -9,6 +9,7 @@
 	__netdev_alloc_skb
 	__netif_schedule
 	__pskb_pull_tail
+	add_timer
 	arp_create
 	arp_send
 	arp_xmit
