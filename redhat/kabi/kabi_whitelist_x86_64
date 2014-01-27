@@ -125,6 +125,7 @@
 	pci_bus_write_config_word
 	pci_disable_device
 	pci_disable_msi
+	pci_disable_msix
 	pskb_expand_head
 	register_inet6addr_notifier
 	register_inetaddr_notifier
