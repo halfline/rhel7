@@ -92,6 +92,7 @@
 	memset
 	mod_timer
 	msleep
+	mutex_lock
 	napi_complete
 	napi_get_frags
 	napi_gro_frags
