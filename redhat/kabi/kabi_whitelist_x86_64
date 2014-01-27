@@ -26,6 +26,7 @@
 	current_kernel_time
 	del_timer
 	del_timer_sync
+	destroy_workqueue
 	dev_addr_add
 	dev_addr_del
 	dev_close
