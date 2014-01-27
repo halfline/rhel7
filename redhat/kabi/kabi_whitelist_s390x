@@ -182,6 +182,7 @@
 	sscanf
 	strcat
 	strchr
+	strcmp
 	unregister_inet6addr_notifier
 	unregister_inetaddr_notifier
 	unregister_netdev
