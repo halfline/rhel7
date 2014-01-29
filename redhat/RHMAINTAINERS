@@ -364,6 +364,12 @@ MEMORY HOTPLUG
 M:	Prarit Bhargava <prarit@redhat.com>
 S:	Maintained
 
+MICRON PCIe SSD DRIVER (mtip32xx)
+M:	David Milburn <dmilburn@redhat.com>
+S:	Maintained
+F:	drivers/block/mtip32xx/mtip32xx.c
+F:	drivers/block/mtip32xx/mtip32xx.h
+
 MLX4 ETHERNET DRIVER (mlx4)
 M:	Doug Ledford <dledford@redhat.com>
 S:	Maintained
@@ -428,6 +434,14 @@ F:	include/net/netns/nftables.h
 NON-MASKABLE INTERRUPT (NMI)
 M:	Don Zickus <dzickus@redhat.com>
 S:	Maintained
+
+NVM EXPRESS BLOCK DRIVER (nvme)
+M:	David Milburn <dmilburn@redhat.com>
+S:	Maintained
+F:	drivers/block/nvme-core.c
+F:	drivers/block/nvme-scsi.c
+F:	include/linux/nvme.h
+F:	include/uapi/linux/nvme.h
 
 OPENVSWITCH (OVS)
 M:	Thomas Graf <tgraf@redhat.com>
