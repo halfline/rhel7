@@ -155,7 +155,7 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
 	__set_bit(GPCMD_READ_DVD_STRUCTURE, filter->read_ok);
 	__set_bit(GPCMD_READ_HEADER, filter->read_ok);
 	__set_bit(GPCMD_READ_TRACK_RZONE_INFO, filter->read_ok);
-	__set_bit(GPCMD_READ_SUBCHANNEL, filter->read_ok);
+	__set_bit(GPCMD_READ_SUBCHANNEL, filter->read_ok); /* UNMAP too! */
 	__set_bit(GPCMD_READ_TOC_PMA_ATIP, filter->read_ok);
 	__set_bit(GPCMD_REPORT_KEY, filter->read_ok);
 	__set_bit(GPCMD_SCAN, filter->read_ok);
@@ -169,10 +169,12 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
 	/* Basic writing commands */
 	__set_bit(WRITE_6, filter->write_ok);
 	__set_bit(WRITE_10, filter->write_ok);
+	__set_bit(WRITE_SAME, filter->write_ok);
 	__set_bit(WRITE_VERIFY, filter->write_ok);
 	__set_bit(WRITE_12, filter->write_ok);
 	__set_bit(WRITE_VERIFY_12, filter->write_ok);
 	__set_bit(WRITE_16, filter->write_ok);
+	__set_bit(WRITE_SAME_16, filter->write_ok);
 	__set_bit(WRITE_LONG, filter->write_ok);
 	__set_bit(WRITE_LONG_2, filter->write_ok);
 	__set_bit(ERASE, filter->write_ok);
