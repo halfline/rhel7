@@ -1177,6 +1177,22 @@ static const struct dev_pm_ops pci_dev_pm_ops = {
 int __pci_register_driver(struct pci_driver *drv, struct module *owner,
 			  const char *mod_name)
 {
+	struct pci_driver_rh *ptr;
+
+	if (drv->pci_driver_rh) {
+		ptr = kzalloc(sizeof(*ptr), GFP_KERNEL);
+		if (!ptr)
+			return -ENOMEM;
+		/*
+		 * pci_driver_rh->size must be initialized in the driver.
+		 * See pci_driver_rh declaration in include/linux/pci.h
+		 */
+		BUG_ON(!drv->pci_driver_rh->size ||
+		       drv->pci_driver_rh->size > sizeof(*ptr));
+		memcpy(ptr, drv->pci_driver_rh, drv->pci_driver_rh->size);
+		drv->pci_driver_rh = ptr;
+	}
+
 	/* initialize common driver fields */
 	drv->driver.name = drv->name;
 	drv->driver.bus = &pci_bus_type;
@@ -1205,6 +1221,7 @@ pci_unregister_driver(struct pci_driver *drv)
 {
 	driver_unregister(&drv->driver);
 	pci_free_dynids(drv);
+	kfree(drv->pci_driver_rh);
 }
 
 static struct pci_driver pci_compat_driver = {

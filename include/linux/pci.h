@@ -655,7 +655,35 @@ struct pci_driver {
 	const struct pci_error_handlers *err_handler;
 	struct device_driver	driver;
 	struct pci_dynids dynids;
+
+	/* Extension to accomodate future upstream changes to this structure
+	 * yet maintain RHEL7 KABI.  For Red Hat internal use only!
+	 */
+	struct pci_driver_rh	*pci_driver_rh;
 };
+
+/*
+ * RHEL7 specific 'struct pci_driver' shadow structure to help maintain KABI
+ * going forward.  This structure will never be under KABI restrictions.
+ *
+ * When a new member is added to this shadow structure the driver should
+ * define this struct in the driver, like is done with struct pci_driver,
+ * and have pci_driver->pci_driver_rh point to it.
+ *
+ * The driver _must_ initialize the size member via a call to
+ *   set_pci_driver_rh_size(pci_driver_rh);
+ * or some equivalent so that the memcpy in __pci_register_driver() works as
+ * expected.
+ */
+struct pci_driver_rh {
+	unsigned int  size;	/* Note: always outside of __GENKSYMS__ check */
+#ifndef __GENKSYMS__
+#endif
+};
+
+/* Helper to set pci_driver_rh->size */
+#define set_pci_driver_rh_size(ptr) \
+	ptr.size = sizeof(struct pci_driver_rh)
 
 #define	to_pci_driver(drv) container_of(drv, struct pci_driver, driver)
 
