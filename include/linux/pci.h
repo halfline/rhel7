@@ -476,6 +476,20 @@ struct pci_bus {
 	struct bin_attribute	*legacy_io; /* legacy I/O for this bus */
 	struct bin_attribute	*legacy_mem; /* legacy mem */
 	unsigned int		is_added:1;
+
+	/* Extension to accomodate future upstream changes to this structure
+	 * yet maintain RHEL7 KABI.  For Red Hat internal use only!
+	 */
+	struct pci_bus_rh	*pci_bus_rh;
+};
+
+/*
+ * RHEL7 specific 'struct pci_bus' shadow structure to help maintain KABI
+ * going forward.  This structure will never be under KABI restrictions.
+ */
+struct pci_bus_rh {
+#ifndef __GENKSYMS__
+#endif
 };
 
 #define pci_bus_b(n)	list_entry(n, struct pci_bus, node)
