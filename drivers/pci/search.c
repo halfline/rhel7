@@ -149,6 +149,12 @@ struct pci_dev *pci_get_slot(struct pci_bus *bus, unsigned int devfn)
 	return dev;
 }
 
+struct pci_dev *pci_get_bus_and_slot(unsigned int bus, unsigned int devfn)
+{
+	return pci_get_domain_bus_and_slot(0, bus, devfn);
+}
+EXPORT_SYMBOL(pci_get_bus_and_slot);
+
 /**
  * pci_get_domain_bus_and_slot - locate PCI device for a given PCI domain (segment), bus, and slot
  * @domain: PCI domain/segment on which the PCI device resides.

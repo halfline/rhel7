@@ -26,6 +26,18 @@ struct pci_dynid {
 	struct pci_device_id id;
 };
 
+bool dev_is_pf(struct device *dev)
+{
+	return ((dev_is_pci(dev) ? to_pci_dev(dev)->is_physfn : false));
+}
+EXPORT_SYMBOL_GPL(dev_is_pf);
+
+bool dev_num_vf(struct device *dev)
+{
+	return ((dev_is_pci(dev) ? pci_num_vf(to_pci_dev(dev)) : 0));
+}
+EXPORT_SYMBOL_GPL(dev_num_vf);
+
 /**
  * pci_add_dynid - add a new PCI device ID to this driver and re-probe devices
  * @drv: target pci driver

@@ -799,8 +799,8 @@ void pci_remove_root_bus(struct pci_bus *bus);
 void pci_setup_cardbus(struct pci_bus *bus);
 void pci_sort_breadthfirst(void);
 #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
-#define dev_is_pf(d) ((dev_is_pci(d) ? to_pci_dev(d)->is_physfn : false))
-#define dev_num_vf(d) ((dev_is_pci(d) ? pci_num_vf(to_pci_dev(d)) : 0))
+bool dev_is_pf(struct device *dev);
+bool dev_num_vf(struct device *dev);
 
 /* Generic PCI functions exported to card drivers */
 
@@ -827,11 +827,7 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
 struct pci_dev *pci_get_slot(struct pci_bus *bus, unsigned int devfn);
 struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
 					    unsigned int devfn);
-static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
-						   unsigned int devfn)
-{
-	return pci_get_domain_bus_and_slot(0, bus, devfn);
-}
+struct pci_dev *pci_get_bus_and_slot(unsigned int bus, unsigned int devfn);
 struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
 int pci_dev_present(const struct pci_device_id *ids);
 
@@ -849,32 +845,12 @@ int pci_bus_write_config_dword(struct pci_bus *bus, unsigned int devfn,
 			       int where, u32 val);
 struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops);
 
-static inline int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
-{
-	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
-}
-static inline int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
-{
-	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
-}
-static inline int pci_read_config_dword(const struct pci_dev *dev, int where,
-					u32 *val)
-{
-	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
-}
-static inline int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
-{
-	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
-}
-static inline int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
-{
-	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
-}
-static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
-					 u32 val)
-{
-	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
-}
+int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val);
+int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val);
+int pci_read_config_dword(const struct pci_dev *dev, int where, u32 *val);
+int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val);
+int pci_write_config_word(const struct pci_dev *dev, int where, u16 val);
+int pci_write_config_dword(const struct pci_dev *dev, int where, u32 val);
 
 int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val);
 int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val);
@@ -884,23 +860,13 @@ int pcie_capability_clear_and_set_word(struct pci_dev *dev, int pos,
 				       u16 clear, u16 set);
 int pcie_capability_clear_and_set_dword(struct pci_dev *dev, int pos,
 					u32 clear, u32 set);
-
-static inline int pcie_capability_set_word(struct pci_dev *dev, int pos,
-					   u16 set)
-{
-	return pcie_capability_clear_and_set_word(dev, pos, 0, set);
-}
+int pcie_capability_set_word(struct pci_dev *dev, int pos, u16 set);
+int pcie_capability_clear_word(struct pci_dev *dev, int pos, u16 clear);
 
 static inline int pcie_capability_set_dword(struct pci_dev *dev, int pos,
 					    u32 set)
 {
 	return pcie_capability_clear_and_set_dword(dev, pos, 0, set);
-}
-
-static inline int pcie_capability_clear_word(struct pci_dev *dev, int pos,
-					     u16 clear)
-{
-	return pcie_capability_clear_and_set_word(dev, pos, clear, 0);
 }
 
 static inline int pcie_capability_clear_dword(struct pci_dev *dev, int pos,
@@ -923,11 +889,7 @@ int __must_check pci_enable_device_mem(struct pci_dev *dev);
 int __must_check pci_reenable_device(struct pci_dev *);
 int __must_check pcim_enable_device(struct pci_dev *pdev);
 void pcim_pin_device(struct pci_dev *pdev);
-
-static inline int pci_is_enabled(struct pci_dev *pdev)
-{
-	return (atomic_read(&pdev->enable_cnt) > 0);
-}
+int pci_is_enabled(struct pci_dev *pdev);
 
 static inline int pci_is_managed(struct pci_dev *pdev)
 {
@@ -1016,12 +978,7 @@ int pci_back_from_sleep(struct pci_dev *dev);
 bool pci_dev_run_wake(struct pci_dev *dev);
 bool pci_check_pme_status(struct pci_dev *dev);
 void pci_pme_wakeup_bus(struct pci_bus *bus);
-
-static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
-				  bool enable)
-{
-	return __pci_enable_wake(dev, state, false, enable);
-}
+int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable);
 
 /* PCI Virtual Channel */
 int pci_save_vc_state(struct pci_dev *dev);
@@ -1770,32 +1727,8 @@ void pci_hp_create_module_link(struct pci_slot *pci_slot);
 void pci_hp_remove_module_link(struct pci_slot *pci_slot);
 #endif
 
-/**
- * pci_pcie_cap - get the saved PCIe capability offset
- * @dev: PCI device
- *
- * PCIe capability offset is calculated at PCI device initialization
- * time and saved in the data structure. This function returns saved
- * PCIe capability offset. Using this instead of pci_find_capability()
- * reduces unnecessary search in the PCI configuration space. If you
- * need to calculate PCIe capability offset from raw device for some
- * reasons, please use pci_find_capability() instead.
- */
-static inline int pci_pcie_cap(struct pci_dev *dev)
-{
-	return dev->pcie_cap;
-}
-
-/**
- * pci_is_pcie - check if the PCI device is PCI Express capable
- * @dev: PCI device
- *
- * Returns: true if the PCI device is PCI Express capable, false otherwise.
- */
-static inline bool pci_is_pcie(struct pci_dev *dev)
-{
-	return pci_pcie_cap(dev);
-}
+extern int pci_pcie_cap(struct pci_dev *dev);
+extern bool pci_is_pcie(struct pci_dev *dev);
 
 /**
  * pcie_caps_reg - get the PCIe Capabilities Register
@@ -1806,15 +1739,7 @@ static inline u16 pcie_caps_reg(const struct pci_dev *dev)
 	return dev->pcie_flags_reg;
 }
 
-/**
- * pci_pcie_type - get the PCIe device/port type
- * @dev: PCI device
- */
-static inline int pci_pcie_type(const struct pci_dev *dev)
-{
-	return (pcie_caps_reg(dev) & PCI_EXP_FLAGS_TYPE) >> 4;
-}
-
+int pci_pcie_type(const struct pci_dev *dev);
 void pci_request_acs(void);
 bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
 bool pci_acs_path_enabled(struct pci_dev *start,

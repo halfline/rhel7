@@ -1171,6 +1171,12 @@ static int do_pci_enable_device(struct pci_dev *dev, int bars)
 	return 0;
 }
 
+int pci_is_enabled(struct pci_dev *pdev)
+{
+	return (atomic_read(&pdev->enable_cnt) > 0);
+}
+EXPORT_SYMBOL(pci_is_enabled);
+
 /**
  * pci_reenable_device - Resume abandoned device
  * @dev: PCI device to be resumed
@@ -1710,6 +1716,12 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
 
 	dev_dbg(&dev->dev, "PME# %s\n", enable ? "enabled" : "disabled");
 }
+
+int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable)
+{
+	return __pci_enable_wake(dev, state, false, enable);
+}
+EXPORT_SYMBOL(pci_enable_wake);
 
 /**
  * __pci_enable_wake - enable PCI device as wakeup event source
