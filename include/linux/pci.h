@@ -364,6 +364,20 @@ struct pci_dev {
 #endif
 	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
 	size_t romlen; /* Length of ROM if it's not from the BAR */
+
+	/* Extension to accomodate future upstream changes to this structure
+	 * yet maintain RHEL7 KABI.  For Red Hat internal use only!
+	 */
+	struct pci_dev_rh  *pci_dev_rh;
+};
+
+/*
+ * RHEL7 specific 'struct pci_dev' shadow structure to help maintain KABI
+ * going forward.  This structure will never be under KABI restrictions.
+ */
+struct pci_dev_rh {
+#ifndef __GENKSYMS__
+#endif
 };
 
 static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
