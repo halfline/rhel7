@@ -90,6 +90,7 @@ static void release_pcibus_dev(struct device *dev)
 		put_device(pci_bus->bridge);
 	pci_bus_remove_resources(pci_bus);
 	pci_release_bus_of_node(pci_bus);
+	kfree(pci_bus->pci_bus_rh);
 	kfree(pci_bus);
 }
 
@@ -518,6 +519,12 @@ static struct pci_bus *pci_alloc_bus(void)
 	b = kzalloc(sizeof(*b), GFP_KERNEL);
 	if (!b)
 		return NULL;
+
+	b->pci_bus_rh = kzalloc(sizeof(struct pci_bus_rh), GFP_KERNEL);
+	if (!b->pci_bus_rh) {
+		kfree(b);
+		return NULL;
+	}
 
 	INIT_LIST_HEAD(&b->node);
 	INIT_LIST_HEAD(&b->children);
