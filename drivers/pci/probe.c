@@ -1170,6 +1170,7 @@ static void pci_release_dev(struct device *dev)
 	pci_release_of_node(pci_dev);
 	pcibios_release_device(pci_dev);
 	pci_bus_put(pci_dev->bus);
+	kfree(pci_dev->pci_dev_rh);
 	kfree(pci_dev);
 }
 
@@ -1233,6 +1234,12 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
 	dev = kzalloc(sizeof(struct pci_dev), GFP_KERNEL);
 	if (!dev)
 		return NULL;
+
+	dev->pci_dev_rh = kzalloc(sizeof(struct pci_dev_rh), GFP_KERNEL);
+	if (!dev->pci_dev_rh) {
+		kfree(dev);
+		return NULL;
+	}
 
 	INIT_LIST_HEAD(&dev->bus_list);
 	dev->dev.type = &pci_dev_type;
@@ -1308,6 +1315,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
 
 	if (pci_setup_device(dev)) {
 		pci_bus_put(dev->bus);
+		kfree(dev->pci_dev_rh);
 		kfree(dev);
 		return NULL;
 	}

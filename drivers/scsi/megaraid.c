@@ -2033,6 +2033,7 @@ make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
 	memcpy(*pdev, adapter->dev, sizeof(struct pci_dev));
 
 	if( pci_set_dma_mask(*pdev, DMA_BIT_MASK(32)) != 0 ) {
+		kfree((*pdev)->pci_dev_rh);
 		kfree(*pdev);
 		return -1;
 	}
@@ -2043,6 +2044,7 @@ make_local_pdev(adapter_t *adapter, struct pci_dev **pdev)
 static inline void
 free_local_pdev(struct pci_dev *pdev)
 {
+	kfree(pdev->pci_dev_rh);
 	kfree(pdev);
 }
 
