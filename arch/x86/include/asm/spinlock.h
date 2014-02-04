@@ -9,6 +9,11 @@
 #include <asm/paravirt.h>
 #include <asm/bitops.h>
 
+static __always_inline int arch_spin_value_unlocked(arch_spinlock_t lock)
+{
+	return lock.tickets.head == lock.tickets.tail;
+}
+
 /*
  * Your basic SMP spinlocks, allowing only a single CPU anywhere
  *
