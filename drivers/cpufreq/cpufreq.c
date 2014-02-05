@@ -794,14 +794,11 @@ static int cpufreq_add_dev_symlink(unsigned int cpu,
 			continue;
 
 		pr_debug("Adding link for CPU: %u\n", j);
-		cpufreq_cpu_get(cpu);
 		cpu_dev = get_cpu_device(j);
 		ret = sysfs_create_link(&cpu_dev->kobj, &policy->kobj,
 					"cpufreq");
-		if (ret) {
-			cpufreq_cpu_put(policy);
-			return ret;
-		}
+		if (ret)
+			break;
 	}
 	return ret;
 }
@@ -888,7 +885,8 @@ static int cpufreq_add_policy_cpu(unsigned int cpu, unsigned int sibling,
 	unsigned long flags;
 
 	policy = cpufreq_cpu_get(sibling);
-	WARN_ON(!policy);
+	if (WARN_ON_ONCE(!policy))
+		return -ENODATA;
 
 	if (has_target)
 		__cpufreq_governor(policy, CPUFREQ_GOV_STOP);
@@ -910,12 +908,9 @@ static int cpufreq_add_policy_cpu(unsigned int cpu, unsigned int sibling,
 	}
 
 	ret = sysfs_create_link(&dev->kobj, &policy->kobj, "cpufreq");
-	if (ret) {
-		cpufreq_cpu_put(policy);
-		return ret;
-	}
 
-	return 0;
+	cpufreq_cpu_put(policy);
+	return ret;
 }
 #endif
 
@@ -1177,8 +1172,6 @@ static int __cpufreq_remove_dev(struct device *dev,
 		free_cpumask_var(data->cpus);
 		kfree(data);
 	} else {
-		pr_debug("%s: removing link, cpu: %d\n", __func__, cpu);
-		cpufreq_cpu_put(data);
 		if (cpufreq_driver->target) {
 			__cpufreq_governor(data, CPUFREQ_GOV_START);
 			__cpufreq_governor(data, CPUFREQ_GOV_LIMITS);
