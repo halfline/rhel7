@@ -4166,6 +4166,9 @@ static int hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id)
 			"0x%08x, ignoring.\n", *board_id);
 			return -ENODEV;
 	}
+
+	mark_tech_preview("hpsa: this controller", THIS_MODULE);
+
 	return ARRAY_SIZE(products) - 1; /* generic unknown smart array */
 }
 
