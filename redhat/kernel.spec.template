@@ -188,6 +188,13 @@ Summary: The Linux kernel
 %define with_kdump 1
 %endif
 
+#cross compile make
+%if %{with_cross}
+%define cross_opts CROSS_COMPILE=%{cross_target}-linux-gnu-
+%define with_perf 0
+%define with_tools 0
+%endif
+
 # Should make listnewconfig fail if there's config options
 # printed out?
 %define listnewconfig_fail 1
@@ -323,11 +330,6 @@ BuildRequires: rpm-build >= 4.9.0-1, elfutils >= 0.153-1
 %ifarch s390x
 # required for zfcpdump
 BuildRequires: glibc-static
-%endif
-
-#cross compile make
-%if %{with_cross}
-%define cross_opts CROSS_COMPILE=%{cross_target}-linux-gnu-
 %endif
 
 Source0: linux-%{rpmversion}-%{pkgrelease}.tar.xz
