@@ -3,6 +3,7 @@
 	__alloc_percpu
 	__alloc_skb
 	__bdevname
+	__bitmap_weight
 	__blk_put_request
 	__class_create
 	__dev_get_by_index
