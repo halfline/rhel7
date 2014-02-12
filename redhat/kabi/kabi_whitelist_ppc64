@@ -53,6 +53,7 @@
 	blk_get_queue
 	blk_queue_dma_alignment
 	blk_queue_softirq_done
+	blk_rq_map_kern
 	blkdev_get_by_dev
 	bus_register
 	bus_unregister
