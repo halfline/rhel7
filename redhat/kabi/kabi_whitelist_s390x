@@ -21,6 +21,7 @@
 	__udelay
 	__unregister_chrdev
 	add_timer
+	alloc_chrdev_region
 	alloc_etherdev_mqs
 	alloc_netdev_mqs
 	arp_create

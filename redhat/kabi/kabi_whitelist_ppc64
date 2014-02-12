@@ -35,6 +35,7 @@
 	_raw_write_lock_bh
 	_raw_write_unlock_bh
 	add_timer
+	alloc_chrdev_region
 	alloc_etherdev_mqs
 	alloc_netdev_mqs
 	arp_create
