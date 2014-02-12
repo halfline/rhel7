@@ -86,6 +86,7 @@
 	dev_set_mtu
 	dev_set_promiscuity
 	dev_trans_start
+	device_create_file
 	dma_set_mask
 	dma_supported
 	dmi_find_device
