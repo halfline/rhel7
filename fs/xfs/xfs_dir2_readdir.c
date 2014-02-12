@@ -157,7 +157,7 @@ xfs_dir2_sf_getdents(
 				xfs_dir2_sf_get_offset(sfep));
 
 		if (*offset > off) {
-			sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep);
+			sfep = dp->d_ops->sf_nextentry(sfp, sfep);
 			continue;
 		}
 
@@ -169,7 +169,7 @@ xfs_dir2_sf_getdents(
 			*offset = off & 0x7fffffff;
 			return 0;
 		}
-		sfep = xfs_dir3_sf_nextentry(mp, sfp, sfep);
+		sfep = dp->d_ops->sf_nextentry(sfp, sfep);
 	}
 
 	*offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk + 1, 0) &
