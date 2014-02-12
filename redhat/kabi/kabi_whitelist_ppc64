@@ -42,6 +42,7 @@
 	atomic_notifier_chain_register
 	atomic_notifier_chain_unregister
 	autoremove_wake_function
+	bdi_destroy
 	call_usermodehelper
 	cancel_delayed_work
 	consume_skb
