@@ -1300,7 +1300,7 @@ out:
 		file->f_pos = offset;
 
 out_unlock:
-	xfs_iunlock_map_shared(ip, lock);
+	xfs_iunlock(ip, lock);
 
 	if (error)
 		return -error;
@@ -1409,7 +1409,7 @@ out:
 		file->f_pos = offset;
 
 out_unlock:
-	xfs_iunlock_map_shared(ip, lock);
+	xfs_iunlock(ip, lock);
 
 	if (error)
 		return -error;
