@@ -108,6 +108,7 @@
 	csum_ipv6_magic
 	current_kernel_time
 	del_gendisk
+	default_wake_function
 	del_timer
 	del_timer_sync
 	destroy_workqueue
