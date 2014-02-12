@@ -110,6 +110,7 @@
 	cdev_init
 	class_destroy
 	class_unregister
+	complete
 	consume_skb
 	cpu_info
 	cpu_khz

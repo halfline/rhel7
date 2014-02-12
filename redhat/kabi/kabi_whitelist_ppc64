@@ -98,6 +98,7 @@
 	cdev_init
 	class_destroy
 	class_unregister
+	complete
 	consume_skb
 	cpu_online_mask
 	cpu_possible_mask
