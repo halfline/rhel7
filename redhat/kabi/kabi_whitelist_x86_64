@@ -17,6 +17,7 @@
 	__pskb_pull_tail
 	__register_chrdev
 	__register_nmi_handler
+	__skb_checksum_complete
 	__udelay
 	__unregister_chrdev
 	add_timer

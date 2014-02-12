@@ -16,6 +16,7 @@
 	__per_cpu_offset
 	__pskb_pull_tail
 	__register_chrdev
+	__skb_checksum_complete
 	__udelay
 	__unregister_chrdev
 	add_timer
