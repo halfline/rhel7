@@ -143,6 +143,7 @@
 	napi_get_frags
 	napi_gro_frags
 	napi_gro_receive
+	native_read_tsc
 	net_msg_warn
 	net_ratelimit
 	netdev_features_change
