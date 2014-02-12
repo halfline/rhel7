@@ -79,6 +79,7 @@
 	blk_queue_stack_limits
 	blk_rq_map_kern
 	blkdev_get_by_dev
+	blkdev_put
 	boot_tvec_bases
 	bus_register
 	bus_unregister
