@@ -5,6 +5,7 @@
 	__dev_get_by_index
 	__dev_get_by_name
 	__ipv6_addr_type
+	__kmalloc
 	__list_add_rcu
 	__list_del_entry
 	__mutex_init
