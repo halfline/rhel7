@@ -20,6 +20,7 @@
 	__skb_checksum_complete
 	__udelay
 	__unregister_chrdev
+	_copy_from_user
 	add_timer
 	arp_create
 	arp_send
