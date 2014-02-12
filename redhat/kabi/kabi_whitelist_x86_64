@@ -116,6 +116,7 @@
 	do_gettimeofday
 	driver_register
 	driver_unregister
+	emergency_restart
 	eth_change_mtu
 	eth_mac_addr
 	eth_type_trans
