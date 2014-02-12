@@ -200,6 +200,7 @@
 	rcu_barrier
 	recalc_sigpending
 	ref_module
+	register_blkdev
 	register_inet6addr_notifier
 	register_inetaddr_notifier
 	register_netdev
