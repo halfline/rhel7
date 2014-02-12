@@ -54,6 +54,7 @@
 	blk_queue_make_request
 	blk_queue_merge_bvec
 	blk_queue_softirq_done
+	blk_queue_stack_limits
 	blk_rq_map_kern
 	blkdev_get_by_dev
 	boot_tvec_bases
