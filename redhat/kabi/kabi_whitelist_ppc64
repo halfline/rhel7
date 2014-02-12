@@ -19,6 +19,7 @@
 	__skb_checksum_complete
 	__unregister_chrdev
 	_raw_read_lock
+	_raw_read_lock_bh
 	add_timer
 	arp_create
 	arp_send

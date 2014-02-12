@@ -23,6 +23,7 @@
 	_copy_from_user
 	_copy_to_user
 	_raw_read_lock
+	_raw_read_lock_bh
 	add_timer
 	arp_create
 	arp_send
