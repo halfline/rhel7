@@ -363,3 +363,4 @@
 	vunmap
 	wait_for_completion
 	wait_for_completion_interruptible_timeout
+	wake_up_process
