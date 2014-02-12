@@ -57,6 +57,7 @@
 	cancel_delayed_work
 	cdev_add
 	cdev_alloc
+	cdev_init
 	class_destroy
 	consume_skb
 	cpu_online_mask
