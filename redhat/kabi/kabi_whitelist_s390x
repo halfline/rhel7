@@ -140,6 +140,7 @@
 	param_array_ops
 	param_ops_byte
 	param_ops_charp
+	param_ops_int
 	pci_bus_read_config_byte
 	pci_bus_read_config_dword
 	pci_bus_read_config_word
