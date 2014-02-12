@@ -21,6 +21,7 @@
 	__register_chrdev
 	__register_nmi_handler
 	__skb_checksum_complete
+	__symbol_put
 	__udelay
 	__unregister_chrdev
 	_copy_from_user
