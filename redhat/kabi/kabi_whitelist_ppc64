@@ -101,6 +101,7 @@
 	icmpv6_send
 	in_aton
 	init_net
+	ioctl_by_bdev
 	ip6_route_output
 	irq_stat
 	jiffies
