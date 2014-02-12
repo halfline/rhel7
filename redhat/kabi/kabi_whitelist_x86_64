@@ -112,6 +112,7 @@
 	init_net
 	ioctl_by_bdev
 	ip6_route_output
+	ip_send_check
 	irq_stat
 	jiffies
 	jiffies_64
