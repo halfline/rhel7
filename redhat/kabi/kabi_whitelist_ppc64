@@ -158,6 +158,7 @@
 	kfree_skb
 	kmem_cache_create
 	kmem_cache_destroy
+	kobject_put
 	kstrtoll
 	kthread_should_stop
 	kthread_stop
