@@ -57,6 +57,7 @@
 	blk_execute_rq_nowait
 	blk_get_queue
 	blk_put_request
+	blk_queue_bounce_limit
 	blk_queue_dma_alignment
 	blk_queue_softirq_done
 	blk_rq_map_kern
