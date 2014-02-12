@@ -1188,7 +1188,7 @@ xfs_bwrite(
 	ASSERT(xfs_buf_islocked(bp));
 
 	bp->b_flags |= XBF_WRITE;
-	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q);
+	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q | XBF_WRITE_FAIL);
 
 	xfs_bdstrat_cb(bp);
 
@@ -1511,6 +1511,12 @@ restart:
 		 */
 		atomic_set(&bp->b_lru_ref, 0);
 		spin_unlock(&btp->bt_lru_lock);
+		if (bp->b_flags & XBF_WRITE_FAIL) {
+			xfs_alert(btp->bt_mount,
+"Corruption Alert: Buffer at block 0x%llx had permanent write failures!\n"
+"Please run xfs_repair to determine the extent of the problem.",
+				(long long)bp->b_bn);
+		}
 		xfs_buf_rele(bp);
 		spin_lock(&btp->bt_lru_lock);
 	}
@@ -1767,7 +1773,7 @@ __xfs_buf_delwri_submit(
 
 	blk_start_plug(&plug);
 	list_for_each_entry_safe(bp, n, io_list, b_list) {
-		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_ASYNC);
+		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_ASYNC | XBF_WRITE_FAIL);
 		bp->b_flags |= XBF_WRITE;
 
 		if (!wait) {
