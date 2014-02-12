@@ -2451,6 +2451,10 @@ extern int             skb_splice_bits(struct sk_buff *skb,
 						unsigned int len,
 						unsigned int flags);
 extern void	       skb_copy_and_csum_dev(const struct sk_buff *skb, u8 *to);
+unsigned int skb_zerocopy_headlen(const struct sk_buff *from);
+void skb_zerocopy(struct sk_buff *to, const struct sk_buff *from,
+                 int len, int hlen);
+
 extern void	       skb_split(struct sk_buff *skb,
 				 struct sk_buff *skb1, const u32 len);
 extern int	       skb_shift(struct sk_buff *tgt, struct sk_buff *skb,
@@ -2460,7 +2464,6 @@ unsigned int skb_gso_transport_seglen(const struct sk_buff *skb);
 
 extern struct sk_buff *skb_segment(struct sk_buff *skb,
 				   netdev_features_t features);
-
 static inline void *skb_header_pointer(const struct sk_buff *skb, int offset,
 				       int len, void *buffer)
 {
