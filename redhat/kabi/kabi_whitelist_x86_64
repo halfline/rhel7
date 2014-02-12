@@ -111,6 +111,7 @@
 	class_destroy
 	class_unregister
 	complete
+	complete_all
 	consume_skb
 	cpu_info
 	cpu_khz
