@@ -151,6 +151,7 @@
 	kernel_sock_ioctl
 	kfree
 	kfree_skb
+	kmem_cache_create
 	kmem_cache_destroy
 	kstrtoll
 	kthread_should_stop
