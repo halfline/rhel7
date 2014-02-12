@@ -167,6 +167,7 @@
 	kmem_cache_create
 	kmem_cache_destroy
 	kobject_put
+	kobject_set_name
 	kstrtoll
 	kthread_should_stop
 	kthread_stop
