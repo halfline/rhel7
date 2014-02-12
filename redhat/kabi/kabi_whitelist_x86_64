@@ -119,6 +119,7 @@
 	dmi_get_system_info
 	do_gettimeofday
 	down_read
+	down_write
 	driver_register
 	driver_unregister
 	emergency_restart
