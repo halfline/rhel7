@@ -53,6 +53,7 @@
 	bdi_init
 	bdi_register_dev
 	bdi_unregister
+	blk_get_queue
 	blkdev_get_by_dev
 	bus_unregister
 	call_rcu_sched
