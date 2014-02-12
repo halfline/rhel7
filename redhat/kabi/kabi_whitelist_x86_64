@@ -22,6 +22,7 @@
 	__unregister_chrdev
 	_copy_from_user
 	_copy_to_user
+	_raw_read_lock
 	add_timer
 	arp_create
 	arp_send
