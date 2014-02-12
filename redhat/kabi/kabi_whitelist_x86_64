@@ -267,6 +267,7 @@
 	unregister_netdevice_notifier
 	unregister_netdevice_queue
 	unregister_netevent_notifier
+	unregister_nmi_handler
 	unregister_pernet_subsys
 	vlan_dev_real_dev
 	vlan_dev_vlan_id
