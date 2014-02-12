@@ -43,6 +43,7 @@
 	call_rcu_sched
 	call_usermodehelper
 	cancel_delayed_work
+	cdev_add
 	consume_skb
 	cpu_online_mask
 	cpu_possible_mask
