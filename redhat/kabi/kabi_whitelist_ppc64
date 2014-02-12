@@ -162,6 +162,7 @@
 	init_uts_ns
 	invalidate_bdev
 	ioctl_by_bdev
+	iounmap
 	ip6_route_output
 	ip_send_check
 	irq_stat
