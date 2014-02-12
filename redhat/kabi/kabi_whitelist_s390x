@@ -141,6 +141,7 @@
 	memcmp
 	memcpy
 	memmove
+	mempool_destroy
 	memset
 	misc_deregister
 	misc_register
