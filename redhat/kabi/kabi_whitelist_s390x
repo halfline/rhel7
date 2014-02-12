@@ -20,6 +20,7 @@
 	__udelay
 	__unregister_chrdev
 	add_timer
+	alloc_etherdev_mqs
 	arp_create
 	arp_send
 	arp_xmit
