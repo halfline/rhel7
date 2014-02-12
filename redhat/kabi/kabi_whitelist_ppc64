@@ -2,6 +2,7 @@
 	___pskb_trim
 	__alloc_percpu
 	__alloc_skb
+	__blk_put_request
 	__dev_get_by_index
 	__dev_get_by_name
 	__ipv6_addr_type
