@@ -79,6 +79,7 @@
 	dev_set_drvdata
 	dev_set_mac_address
 	dev_set_mtu
+	dev_set_name
 	dev_set_promiscuity
 	dev_trans_start
 	device_create
