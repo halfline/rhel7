@@ -31,6 +31,7 @@
 	bdi_destroy
 	bdi_init
 	bdi_register_dev
+	bdi_unregister
 	call_usermodehelper
 	cancel_delayed_work
 	consume_skb
