@@ -36,6 +36,7 @@
 	__udelay
 	__unregister_chrdev
 	__wake_up
+	_cond_resched
 	_copy_from_user
 	_copy_to_user
 	_raw_read_lock

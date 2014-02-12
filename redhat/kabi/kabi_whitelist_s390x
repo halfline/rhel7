@@ -31,6 +31,7 @@
 	__udelay
 	__unregister_chrdev
 	__wake_up
+	_cond_resched
 	add_disk
 	add_timer
 	alloc_chrdev_region
