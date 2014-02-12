@@ -137,6 +137,7 @@
 	memcpy
 	memmove
 	memset
+	misc_deregister
 	mod_timer
 	msleep
 	mutex_lock
