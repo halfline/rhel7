@@ -116,6 +116,7 @@
 	down_write
 	driver_register
 	driver_unregister
+	dump_stack
 	emergency_restart
 	eth_change_mtu
 	eth_mac_addr
