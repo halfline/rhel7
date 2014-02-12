@@ -121,6 +121,7 @@
 	netdev_change_features
 	netdev_features_change
 	netdev_increment_features
+	netdev_master_upper_dev_get
 	netif_carrier_off
 	netif_carrier_on
 	netif_device_attach
