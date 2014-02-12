@@ -139,6 +139,7 @@
 	free_netdev
 	free_percpu
 	fs_bio_set
+	generic_make_request
 	generic_segment_checks
 	get_device
 	get_random_bytes
