@@ -172,6 +172,7 @@
 	init_uts_ns
 	invalidate_bdev
 	ioctl_by_bdev
+	ioremap_nocache
 	iounmap
 	ip6_route_output
 	ip_send_check
