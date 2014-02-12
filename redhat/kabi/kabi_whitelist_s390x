@@ -45,6 +45,7 @@
 	bdi_register_dev
 	bdi_unregister
 	bdput
+	blk_alloc_queue
 	blk_cleanup_queue
 	blk_execute_rq_nowait
 	blk_get_queue
