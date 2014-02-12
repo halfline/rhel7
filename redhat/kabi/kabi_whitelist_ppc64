@@ -5,6 +5,7 @@
 	__dev_get_by_index
 	__dev_get_by_name
 	__ipv6_addr_type
+	__list_add_rcu
 	__mutex_init
 	__napi_complete
 	__napi_schedule
