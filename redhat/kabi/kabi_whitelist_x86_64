@@ -172,6 +172,7 @@
 	param_ops_long
 	param_ops_short
 	param_ops_uint
+	param_ops_ulong
 	pci_bus_read_config_byte
 	pci_bus_read_config_dword
 	pci_bus_read_config_word
