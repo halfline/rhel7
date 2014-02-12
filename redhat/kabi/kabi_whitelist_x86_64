@@ -88,6 +88,7 @@
 	dmi_find_device
 	dmi_get_system_info
 	do_gettimeofday
+	driver_unregister
 	eth_change_mtu
 	eth_mac_addr
 	eth_type_trans
