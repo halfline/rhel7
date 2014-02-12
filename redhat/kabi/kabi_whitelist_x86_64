@@ -200,6 +200,7 @@
 	nr_cpu_ids
 	on_each_cpu
 	panic
+	panic_notifier_list
 	param_array_ops
 	param_ops_byte
 	param_ops_charp
