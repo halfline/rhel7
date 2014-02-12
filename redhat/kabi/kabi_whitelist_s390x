@@ -213,6 +213,7 @@
 	register_netdevice_notifier
 	register_netevent_notifier
 	register_pernet_subsys
+	register_reboot_notifier
 	release_sock
 	rtnl_is_locked
 	rtnl_link_register
