@@ -142,6 +142,7 @@
 	param_ops_charp
 	param_ops_int
 	param_ops_long
+	param_ops_short
 	pci_bus_read_config_byte
 	pci_bus_read_config_dword
 	pci_bus_read_config_word
