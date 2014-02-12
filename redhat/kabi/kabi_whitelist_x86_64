@@ -143,6 +143,7 @@
 	kstrtoll
 	kthread_should_stop
 	kthread_stop
+	list_del
 	lock_sock_nested
 	memcmp
 	memcpy
