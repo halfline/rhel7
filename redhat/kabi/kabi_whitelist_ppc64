@@ -23,6 +23,7 @@
 	_raw_read_lock_irqsave
 	_raw_read_unlock_bh
 	_raw_read_unlock_irqrestore
+	_raw_spin_lock
 	add_timer
 	arp_create
 	arp_send
