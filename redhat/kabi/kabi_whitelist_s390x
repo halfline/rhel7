@@ -99,6 +99,7 @@
 	kernel_sock_ioctl
 	kfree
 	kfree_skb
+	kstrtoll
 	kthread_should_stop
 	kthread_stop
 	lock_sock_nested
