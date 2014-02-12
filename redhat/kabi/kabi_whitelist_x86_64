@@ -40,6 +40,7 @@
 	_raw_write_unlock_bh
 	add_timer
 	alloc_etherdev_mqs
+	alloc_netdev_mqs
 	arp_create
 	arp_send
 	arp_xmit
