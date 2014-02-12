@@ -136,6 +136,7 @@
 	napi_gro_receive
 	net_msg_warn
 	net_ratelimit
+	netdev_change_features
 	netdev_features_change
 	netdev_increment_features
 	netif_carrier_off
