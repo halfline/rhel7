@@ -21,6 +21,7 @@
 	__udelay
 	__unregister_chrdev
 	_copy_from_user
+	_copy_to_user
 	add_timer
 	arp_create
 	arp_send
