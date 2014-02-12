@@ -42,6 +42,7 @@
 	_raw_spin_unlock_irqrestore
 	_raw_write_lock
 	_raw_write_lock_bh
+	_raw_write_lock_irqsave
 	_raw_write_unlock_bh
 	acpi_get_table
 	add_timer
