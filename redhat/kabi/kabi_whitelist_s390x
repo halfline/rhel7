@@ -142,6 +142,7 @@
 	misc_deregister
 	misc_register
 	mod_timer
+	module_put
 	msleep
 	mutex_lock
 	mutex_trylock
