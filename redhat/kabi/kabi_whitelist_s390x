@@ -307,6 +307,7 @@
 	strsep
 	strstr
 	sync_blockdev
+	sys_tz
 	unregister_blkdev
 	unregister_chrdev_region
 	unregister_inet6addr_notifier

@@ -339,6 +339,7 @@
 	strsep
 	strstr
 	sync_blockdev
+	sys_tz
 	touch_nmi_watchdog
 	touch_softlockup_watchdog
 	unregister_blkdev
