@@ -133,6 +133,7 @@
 	icmpv6_send
 	in_aton
 	init_net
+	init_timer_key
 	ioctl_by_bdev
 	ip6_route_output
 	ip_send_check
