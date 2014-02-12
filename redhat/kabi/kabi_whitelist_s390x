@@ -56,6 +56,7 @@
 	blk_queue_dma_alignment
 	blk_queue_make_request
 	blk_queue_max_hw_sectors
+	blk_queue_max_segments
 	blk_queue_merge_bvec
 	blk_queue_softirq_done
 	blk_queue_stack_limits
