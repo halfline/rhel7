@@ -1791,7 +1791,7 @@ xfs_inactive_ifree(
  * now be truncated.  Also, we clear all of the read-ahead state
  * kept for the inode here since the file is now closed.
  */
-int
+void
 xfs_inactive(
 	xfs_inode_t	*ip)
 {
@@ -1806,16 +1806,14 @@ xfs_inactive(
 	if (ip->i_d.di_mode == 0) {
 		ASSERT(ip->i_df.if_real_bytes == 0);
 		ASSERT(ip->i_df.if_broot_bytes == 0);
-		return VN_INACTIVE_CACHE;
+		return;
 	}
 
 	mp = ip->i_mount;
 
-	error = 0;
-
 	/* If this is a read-only mount, don't do this (would generate I/O) */
 	if (mp->m_flags & XFS_MOUNT_RDONLY)
-		goto out;
+		return;
 
 	if (ip->i_d.di_nlink != 0) {
 		/*
@@ -1823,12 +1821,10 @@ xfs_inactive(
 		 * cache. Post-eof blocks must be freed, lest we end up with
 		 * broken free space accounting.
 		 */
-		if (xfs_can_free_eofblocks(ip, true)) {
-			error = xfs_free_eofblocks(mp, ip, false);
-			if (error)
-				return VN_INACTIVE_CACHE;
-		}
-		goto out;
+		if (xfs_can_free_eofblocks(ip, true))
+			xfs_free_eofblocks(mp, ip, false);
+
+		return;
 	}
 
 	if (S_ISREG(ip->i_d.di_mode) &&
@@ -1838,14 +1834,14 @@ xfs_inactive(
 
 	error = xfs_qm_dqattach(ip, 0);
 	if (error)
-		return VN_INACTIVE_CACHE;
+		return;
 
 	if (S_ISLNK(ip->i_d.di_mode))
 		error = xfs_inactive_symlink(ip);
 	else if (truncate)
 		error = xfs_inactive_truncate(ip);
 	if (error)
-		goto out;
+		return;
 
 	/*
 	 * If there are attributes associated with the file then blow them away
@@ -1858,7 +1854,7 @@ xfs_inactive(
 
 		error = xfs_attr_inactive(ip);
 		if (error)
-			goto out;
+			return;
 	}
 
 	if (ip->i_afp)
@@ -1871,14 +1867,12 @@ xfs_inactive(
 	 */
 	error = xfs_inactive_ifree(ip);
 	if (error)
-		goto out;
+		return;
 
 	/*
 	 * Release the dquots held by inode, if any.
 	 */
 	xfs_qm_dqdetach(ip);
-out:
-	return VN_INACTIVE_CACHE;
 }
 
 /*
