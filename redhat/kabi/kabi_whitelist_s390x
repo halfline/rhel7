@@ -30,6 +30,7 @@
 	__task_pid_nr_ns
 	__udelay
 	__unregister_chrdev
+	__wake_up
 	add_disk
 	add_timer
 	alloc_chrdev_region

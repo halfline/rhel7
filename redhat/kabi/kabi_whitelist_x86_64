@@ -35,6 +35,7 @@
 	__task_pid_nr_ns
 	__udelay
 	__unregister_chrdev
+	__wake_up
 	_copy_from_user
 	_copy_to_user
 	_raw_read_lock

@@ -30,6 +30,7 @@
 	__symbol_put
 	__task_pid_nr_ns
 	__unregister_chrdev
+	__wake_up
 	_raw_read_lock
 	_raw_read_lock_bh
 	_raw_read_lock_irqsave
