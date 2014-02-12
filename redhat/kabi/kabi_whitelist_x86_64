@@ -107,6 +107,7 @@
 	hci_free_dev
 	hci_register_dev
 	hci_unregister_dev
+	icmpv6_send
 	in_aton
 	init_net
 	ip6_route_output

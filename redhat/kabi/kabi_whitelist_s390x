@@ -80,6 +80,7 @@
 	generic_segment_checks
 	get_random_bytes
 	get_seconds
+	icmpv6_send
 	in_aton
 	init_net
 	ip6_route_output
