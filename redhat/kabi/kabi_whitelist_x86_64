@@ -32,6 +32,7 @@
 	_raw_spin_lock_irq
 	_raw_spin_lock_irqsave
 	_raw_spin_trylock
+	_raw_spin_unlock
 	add_timer
 	arp_create
 	arp_send
