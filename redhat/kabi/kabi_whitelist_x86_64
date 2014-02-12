@@ -324,6 +324,7 @@
 	unregister_reboot_notifier
 	unregister_sysctl_table
 	up
+	up_read
 	up_write
 	vlan_dev_real_dev
 	vlan_dev_vlan_id
