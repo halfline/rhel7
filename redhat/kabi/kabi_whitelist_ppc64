@@ -109,6 +109,7 @@
 	device_unregister
 	dma_set_mask
 	do_gettimeofday
+	down
 	down_read
 	down_write
 	driver_register
