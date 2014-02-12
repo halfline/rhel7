@@ -96,6 +96,7 @@
 	device_create_file
 	device_del
 	device_remove_file
+	device_unregister
 	dma_set_mask
 	do_gettimeofday
 	driver_register

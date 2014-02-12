@@ -102,6 +102,7 @@
 	device_create_file
 	device_del
 	device_remove_file
+	device_unregister
 	dma_set_mask
 	dma_supported
 	dmi_find_device
