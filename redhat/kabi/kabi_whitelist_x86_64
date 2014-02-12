@@ -70,6 +70,7 @@
 	blk_queue_softirq_done
 	blk_rq_map_kern
 	blkdev_get_by_dev
+	boot_tvec_bases
 	bus_register
 	bus_unregister
 	call_rcu_sched
