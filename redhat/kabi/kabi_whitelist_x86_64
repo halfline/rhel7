@@ -2,6 +2,7 @@
 	___pskb_trim
 	__alloc_percpu
 	__alloc_skb
+	__bdevname
 	__blk_put_request
 	__class_create
 	__dev_get_by_index
