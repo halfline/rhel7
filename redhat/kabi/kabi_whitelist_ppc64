@@ -44,6 +44,7 @@
 	add_disk
 	add_timer
 	alloc_chrdev_region
+	alloc_disk
 	alloc_etherdev_mqs
 	alloc_netdev_mqs
 	arp_create
