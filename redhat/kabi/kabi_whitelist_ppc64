@@ -25,6 +25,7 @@
 	__skb_checksum_complete
 	__symbol_get
 	__symbol_put
+	__task_pid_nr_ns
 	__unregister_chrdev
 	_raw_read_lock
 	_raw_read_lock_bh
