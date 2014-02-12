@@ -30,6 +30,7 @@
 	autoremove_wake_function
 	bdi_destroy
 	bdi_init
+	bdi_register_dev
 	call_usermodehelper
 	cancel_delayed_work
 	consume_skb
