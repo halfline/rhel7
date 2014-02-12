@@ -47,6 +47,7 @@
 	_raw_write_unlock_bh
 	_raw_write_unlock_irqrestore
 	acpi_get_table
+	add_disk
 	add_timer
 	alloc_chrdev_region
 	alloc_etherdev_mqs

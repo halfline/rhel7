@@ -41,6 +41,7 @@
 	_raw_write_lock_irqsave
 	_raw_write_unlock_bh
 	_raw_write_unlock_irqrestore
+	add_disk
 	add_timer
 	alloc_chrdev_region
 	alloc_etherdev_mqs
