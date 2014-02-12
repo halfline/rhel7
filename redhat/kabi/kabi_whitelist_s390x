@@ -115,6 +115,7 @@
 	do_gettimeofday
 	down
 	down_read
+	down_trylock
 	down_write
 	driver_register
 	driver_unregister
