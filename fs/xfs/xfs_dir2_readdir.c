@@ -121,9 +121,9 @@ xfs_dir2_sf_getdents(
 	 * mp->m_dirdatablk.
 	 */
 	dot_offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
-						dp->d_ops->data_dot_offset());
+						dp->d_ops->data_dot_offset);
 	dotdot_offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
-						dp->d_ops->data_dotdot_offset());
+						dp->d_ops->data_dotdot_offset);
 
 	/*
 	 * Put . entry unless we're starting past it.
@@ -594,7 +594,7 @@ xfs_dir2_leaf_getdents(
 			 * Skip past the header.
 			 */
 			if (byteoff == 0)
-				curoff += dp->d_ops->data_entry_offset();
+				curoff += dp->d_ops->data_entry_offset;
 			/*
 			 * Skip past entries until we reach our offset.
 			 */
