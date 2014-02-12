@@ -166,6 +166,7 @@
 	on_each_cpu
 	panic
 	param_array_ops
+	param_ops_byte
 	pci_bus_read_config_byte
 	pci_bus_read_config_dword
 	pci_bus_read_config_word
