@@ -237,6 +237,7 @@
 	printk
 	pskb_expand_head
 	put_device
+	put_disk
 	queue_delayed_work_on
 	rcu_barrier
 	recalc_sigpending
