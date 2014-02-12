@@ -96,6 +96,7 @@
 	dev_set_promiscuity
 	dev_trans_start
 	device_create_file
+	device_del
 	device_remove_file
 	dma_set_mask
 	dma_supported
