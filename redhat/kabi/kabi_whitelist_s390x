@@ -118,6 +118,7 @@
 	driver_unregister
 	dump_stack
 	emergency_restart
+	enable_irq
 	eth_change_mtu
 	eth_mac_addr
 	eth_type_trans
