@@ -273,6 +273,7 @@
 	unregister_netevent_notifier
 	unregister_nmi_handler
 	unregister_pernet_subsys
+	up
 	vlan_dev_real_dev
 	vlan_dev_vlan_id
 	vmalloc
