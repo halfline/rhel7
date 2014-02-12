@@ -182,6 +182,7 @@
 	kernel_sock_ioctl
 	kfree
 	kfree_skb
+	kmem_cache_alloc
 	kmem_cache_create
 	kmem_cache_destroy
 	kobject_put
