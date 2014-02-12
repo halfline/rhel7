@@ -194,6 +194,7 @@
 	misc_register
 	mod_timer
 	module_put
+	msecs_to_jiffies
 	msleep
 	mutex_lock
 	mutex_trylock
