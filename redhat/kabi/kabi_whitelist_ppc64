@@ -159,6 +159,7 @@
 	in_aton
 	init_net
 	init_timer_key
+	init_uts_ns
 	invalidate_bdev
 	ioctl_by_bdev
 	ip6_route_output
