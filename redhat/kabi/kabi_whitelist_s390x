@@ -171,6 +171,7 @@
 	netif_rx_ni
 	netif_set_real_num_tx_queues
 	netpoll_trap
+	nf_register_hooks
 	nr_cpu_ids
 	on_each_cpu
 	panic
