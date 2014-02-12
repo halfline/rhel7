@@ -16,6 +16,7 @@
 	__per_cpu_offset
 	__pskb_pull_tail
 	__register_chrdev
+	__register_nmi_handler
 	__udelay
 	__unregister_chrdev
 	add_timer
