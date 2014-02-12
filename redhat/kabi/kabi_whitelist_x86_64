@@ -165,6 +165,7 @@
 	nr_cpu_ids
 	on_each_cpu
 	panic
+	param_array_ops
 	pci_bus_read_config_byte
 	pci_bus_read_config_dword
 	pci_bus_read_config_word
