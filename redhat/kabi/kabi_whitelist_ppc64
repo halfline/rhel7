@@ -125,6 +125,7 @@
 	device_del
 	device_remove_file
 	device_unregister
+	disable_irq_nosync
 	dma_set_mask
 	do_gettimeofday
 	down

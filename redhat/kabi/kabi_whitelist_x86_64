@@ -132,6 +132,7 @@
 	device_del
 	device_remove_file
 	device_unregister
+	disable_irq_nosync
 	dma_set_mask
 	dma_supported
 	dmi_find_device
