@@ -108,6 +108,7 @@
 	device_unregister
 	dma_set_mask
 	do_gettimeofday
+	down_read
 	driver_register
 	driver_unregister
 	emergency_restart
