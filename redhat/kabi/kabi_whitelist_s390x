@@ -37,6 +37,7 @@
 	bdi_unregister
 	blk_execute_rq_nowait
 	blk_get_queue
+	blk_get_request
 	blk_put_queue
 	blk_put_request
 	blk_queue_bounce_limit
