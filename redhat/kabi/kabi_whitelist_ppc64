@@ -86,6 +86,7 @@
 	free_irq
 	free_netdev
 	free_percpu
+	fs_bio_set
 	get_random_bytes
 	get_seconds
 	hci_alloc_dev

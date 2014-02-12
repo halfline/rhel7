@@ -72,6 +72,7 @@
 	free_irq
 	free_netdev
 	free_percpu
+	fs_bio_set
 	get_random_bytes
 	get_seconds
 	in_aton
