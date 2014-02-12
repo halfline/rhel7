@@ -190,6 +190,7 @@
 	pci_release_regions
 	pci_request_regions
 	pci_unregister_driver
+	phys_base
 	prepare_to_wait
 	prepare_to_wait_exclusive
 	printk
