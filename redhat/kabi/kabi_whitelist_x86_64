@@ -24,6 +24,7 @@
 	_copy_to_user
 	_raw_read_lock
 	_raw_read_lock_bh
+	_raw_read_lock_irqsave
 	add_timer
 	arp_create
 	arp_send
