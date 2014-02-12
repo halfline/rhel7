@@ -20,6 +20,7 @@
 	__pskb_pull_tail
 	__register_chrdev
 	__skb_checksum_complete
+	__symbol_get
 	__symbol_put
 	__unregister_chrdev
 	_raw_read_lock
