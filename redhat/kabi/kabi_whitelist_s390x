@@ -271,6 +271,7 @@
 	unregister_netdevice_queue
 	unregister_netevent_notifier
 	unregister_pernet_subsys
+	unregister_sysctl_table
 	up
 	vlan_dev_real_dev
 	vlan_dev_vlan_id
