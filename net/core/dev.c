@@ -3874,6 +3874,7 @@ struct packet_offload *gro_find_receive_by_type(__be16 type)
 	}
 	return NULL;
 }
+EXPORT_SYMBOL(gro_find_receive_by_type);
 
 struct packet_offload *gro_find_complete_by_type(__be16 type)
 {
@@ -3887,6 +3888,7 @@ struct packet_offload *gro_find_complete_by_type(__be16 type)
 	}
 	return NULL;
 }
+EXPORT_SYMBOL(gro_find_complete_by_type);
 
 static gro_result_t napi_skb_finish(gro_result_t ret, struct sk_buff *skb)
 {
