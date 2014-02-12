@@ -32,6 +32,7 @@
 	bdi_init
 	bdi_register_dev
 	bdi_unregister
+	blkdev_get_by_dev
 	call_usermodehelper
 	cancel_delayed_work
 	consume_skb
