@@ -310,6 +310,7 @@
 	strrchr
 	strsep
 	strstr
+	sync_blockdev
 	touch_softlockup_watchdog
 	unregister_blkdev
 	unregister_chrdev_region
