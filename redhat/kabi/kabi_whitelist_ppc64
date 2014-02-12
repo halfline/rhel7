@@ -68,6 +68,7 @@
 	dev_kfree_skb_any
 	dev_kfree_skb_irq
 	dev_mc_add
+	dev_mc_del
 	dev_open
 	dev_queue_xmit
 	dev_set_allmulti
