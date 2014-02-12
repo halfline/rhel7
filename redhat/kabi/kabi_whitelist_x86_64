@@ -6,6 +6,7 @@
 	__class_create
 	__dev_get_by_index
 	__dev_get_by_name
+	__init_rwsem
 	__ipv6_addr_type
 	__kmalloc
 	__list_add_rcu
