@@ -53,6 +53,7 @@
 	atomic_notifier_chain_unregister
 	autoremove_wake_function
 	bdget
+	bdget_disk
 	bdi_destroy
 	bdi_init
 	bdi_register_dev
