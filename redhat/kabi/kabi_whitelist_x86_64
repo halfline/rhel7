@@ -265,6 +265,7 @@
 	unregister_inetaddr_notifier
 	unregister_netdev
 	unregister_netdevice_notifier
+	unregister_netdevice_queue
 	unregister_netevent_notifier
 	unregister_pernet_subsys
 	vlan_dev_real_dev
