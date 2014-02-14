@@ -256,6 +256,7 @@
 	netpoll_trap
 	nf_register_hooks
 	nf_unregister_hooks
+	node_to_cpumask_map
 	nr_cpu_ids
 	on_each_cpu
 	panic
