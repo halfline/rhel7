@@ -8,6 +8,7 @@
 	__class_create
 	__dev_get_by_index
 	__dev_get_by_name
+	__get_user_2
 	__init_rwsem
 	__ipv6_addr_type
 	__kmalloc
