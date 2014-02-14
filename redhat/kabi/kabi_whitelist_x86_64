@@ -57,6 +57,7 @@
 	alloc_disk
 	alloc_etherdev_mqs
 	alloc_netdev_mqs
+	apic
 	arp_create
 	arp_send
 	arp_xmit
