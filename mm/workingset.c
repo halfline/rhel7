@@ -251,3 +251,158 @@ void workingset_activation(struct page *page)
 {
 	atomic_long_inc(&page_zone(page)->inactive_age);
 }
+
+/*
+ * Shadow entries reflect the share of the working set that does not
+ * fit into memory, so their number depends on the access pattern of
+ * the workload.  In most cases, they will refault or get reclaimed
+ * along with the inode, but a (malicious) workload that streams
+ * through files with a total size several times that of available
+ * memory, while preventing the inodes from being reclaimed, can
+ * create excessive amounts of shadow nodes.  To keep a lid on this,
+ * track shadow nodes and reclaim them when they grow way past the
+ * point where they would still be useful.
+ */
+
+static unsigned long nr_shadow_nodes;
+static LIST_HEAD(shadow_nodes);
+static DEFINE_SPINLOCK(shadow_node_lock);
+
+void workingset_remember_node(struct radix_tree_node *node)
+{
+	spin_lock(&shadow_node_lock);
+	list_add(&node->private_list, &shadow_nodes);
+	nr_shadow_nodes++;
+	spin_unlock(&shadow_node_lock);
+}
+
+void workingset_forget_node(struct radix_tree_node *node)
+{
+	spin_lock(&shadow_node_lock);
+	list_del_init(&node->private_list);
+	nr_shadow_nodes--;
+	spin_unlock(&shadow_node_lock);
+}
+
+static unsigned long nr_excessive_shadows(void)
+{
+	unsigned long shadow_nodes;
+	unsigned long max_nodes;
+	unsigned long pages;
+
+	shadow_nodes = nr_shadow_nodes;
+	pages = totalram_pages;
+	/*
+	 * Active cache pages are limited to 50% of memory, and shadow
+	 * entries that represent a refault distance bigger than that
+	 * do not have any effect.  Limit the number of shadow nodes
+	 * such that shadow entries do not exceed the number of active
+	 * cache pages, assuming a worst-case node population density
+	 * of 1/8th on average.
+	 *
+	 * On 64-bit with 7 radix_tree_nodes per page and 64 slots
+	 * each, this will reclaim shadow entries when they consume
+	 * ~2% of available memory:
+	 *
+	 * PAGE_SIZE / radix_tree_nodes / node_entries / PAGE_SIZE
+	 */
+	max_nodes = pages >> (1 + RADIX_TREE_MAP_SHIFT - 3);
+
+	if (shadow_nodes <= max_nodes)
+		return 0;
+
+	return shadow_nodes - max_nodes;
+}
+
+static void shadow_lru_isolate(struct list_head *item,
+			       spinlock_t *lru_lock)
+{
+	struct address_space *mapping;
+	struct radix_tree_node *node;
+	unsigned int i;
+
+	/*
+	 * Page cache insertions and deletions synchroneously maintain
+	 * the shadow node LRU under the mapping->tree_lock and the
+	 * lru_lock.  Because the page cache tree is emptied before
+	 * the inode can be destroyed, holding the lru_lock pins any
+	 * address_space that has radix tree nodes on the LRU.
+	 *
+	 * We can then safely transition to the mapping->tree_lock to
+	 * pin only the address_space of the particular node we want
+	 * to reclaim, take the node off-LRU, and drop the lru_lock.
+	 */
+
+	node = container_of(item, struct radix_tree_node, private_list);
+	mapping = node->private_data;
+
+	/* Coming from the list, invert the lock order */
+	if (!spin_trylock(&mapping->tree_lock)) {
+		spin_unlock(lru_lock);
+		goto out;
+	}
+
+	list_del_init(item);
+	nr_shadow_nodes--;
+
+	spin_unlock(lru_lock);
+
+	/*
+	 * The nodes should only contain one or more shadow entries,
+	 * no pages, so we expect to be able to remove them all and
+	 * delete and free the empty node afterwards.
+	 */
+
+	BUG_ON(!node->count);
+	BUG_ON(node->count & RADIX_TREE_COUNT_MASK);
+
+	for (i = 0; i < RADIX_TREE_MAP_SIZE; i++) {
+		if (node->slots[i]) {
+			BUG_ON(!radix_tree_exceptional_entry(node->slots[i]));
+			node->slots[i] = NULL;
+			BUG_ON(node->count < (1U << RADIX_TREE_COUNT_SHIFT));
+			node->count -= 1U << RADIX_TREE_COUNT_SHIFT;
+			BUG_ON(!mapping->nrshadows);
+			mapping->nrshadows--;
+		}
+	}
+	BUG_ON(node->count);
+	inc_zone_state(page_zone(virt_to_page(node)), WORKINGSET_NODERECLAIM);
+	if (!__radix_tree_delete_node(&mapping->page_tree, node))
+		BUG();
+
+	spin_unlock(&mapping->tree_lock);
+out:
+	local_irq_enable();
+	cond_resched();
+	local_irq_disable();
+	spin_lock(lru_lock);
+}
+
+static int shrink_shadow_nodes(struct shrinker *shrink,
+			       struct shrink_control *sc)
+{
+	unsigned long nr_to_scan = sc->nr_to_scan;
+
+	if (!nr_to_scan)
+		return nr_excessive_shadows();
+
+	spin_lock_irq(&shadow_node_lock);
+	while (--nr_to_scan && !list_empty(&shadow_nodes))
+		shadow_lru_isolate(shadow_nodes.prev, &shadow_node_lock);
+	spin_unlock_irq(&shadow_node_lock);
+
+	return nr_excessive_shadows();
+}
+
+static struct shrinker workingset_shadow_shrinker = {
+	.shrink = shrink_shadow_nodes,
+	.seeks = DEFAULT_SEEKS,
+};
+
+static int __init workingset_init(void)
+{
+	register_shrinker(&workingset_shadow_shrinker);
+	return 0;
+}
+module_init(workingset_init);
