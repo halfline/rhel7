@@ -354,6 +354,7 @@
 	strstr
 	sync_blockdev
 	sys_tz
+	this_cpu_off
 	touch_nmi_watchdog
 	touch_softlockup_watchdog
 	unregister_blkdev
