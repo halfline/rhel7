@@ -14,6 +14,7 @@
 	__kmalloc
 	__list_add_rcu
 	__list_del_entry
+	__mmu_notifier_register
 	__mutex_init
 	__napi_complete
 	__napi_schedule
