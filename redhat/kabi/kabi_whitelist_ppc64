@@ -96,6 +96,7 @@
 	consume_skb
 	cpu_online_mask
 	cpu_possible_mask
+	cpu_sibling_map
 	csum_ipv6_magic
 	current_kernel_time
 	del_gendisk
