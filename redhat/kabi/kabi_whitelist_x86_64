@@ -107,6 +107,7 @@
 	cdev_alloc
 	cdev_init
 	class_destroy
+	class_unregister
 	consume_skb
 	cpu_info
 	cpu_khz

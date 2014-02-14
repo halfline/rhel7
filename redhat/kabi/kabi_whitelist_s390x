@@ -78,6 +78,7 @@
 	cdev_alloc
 	cdev_init
 	class_destroy
+	class_unregister
 	consume_skb
 	cpu_online_mask
 	cpu_possible_mask
