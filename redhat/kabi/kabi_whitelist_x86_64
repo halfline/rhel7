@@ -91,6 +91,7 @@
 	blkdev_get
 	blkdev_get_by_dev
 	blkdev_put
+	boot_cpu_data
 	boot_tvec_bases
 	bus_register
 	bus_unregister
