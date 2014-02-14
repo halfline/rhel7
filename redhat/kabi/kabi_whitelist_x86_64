@@ -331,6 +331,7 @@
 	skb_trim
 	skb_tstamp_tx
 	skb_unlink
+	sn_rtc_cycles_per_second
 	snprintf
 	sock_alloc_send_skb
 	sock_create_kern
