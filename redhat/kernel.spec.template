@@ -1461,6 +1461,21 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Feb 14 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-89.el7]
+- [powerpc] Fix kdump hang issue on p8 with relocation on exception enabled (Steve Best) [1056321]
+- [powerpc] pseries: Disable relocation on exception while going down during crash (Steve Best) [1056321]
+- [kernel] sched/debug: Fix formatting of /proc/<PID>/sched (Rik van Riel) [1064583]
+- [kernel] sched/fair: Remove unused variable from expire_cfs_rq_runtime() (Rik van Riel) [1064583]
+- [mm] vmscan: do not scale writeback pages when deciding whether to set ZONE_WRITEBACK (Rafael Aquini) [1009508]
+- [mm] vmscan: do not continue scanning if reclaim was aborted for compaction (Rafael Aquini) [1009508]
+- [ethernet] bnx2{,x}: Make module parameters readable (Neil Horman) [1062836]
+- [ethernet] bnx2x: namespace and dead code cleanups (Neil Horman) [1062836]
+- [drm] radeon: remove generic rptr/wptr functions (Steve Best) [1048290]
+- [block] nvme: Namespace use after free on surprise removal (David Milburn) [1062640]
+- [block] nvme: Correct uses of INIT_WORK (David Milburn) [1062640]
+- [block] nvme: Include device and queue numbers in interrupt name (David Milburn) [1062640]
+- [block] nvme: Add a pci_driver shutdown method (David Milburn) [1062640]
+
 * Thu Feb 13 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-88.el7]
 - [mm] hugetlb: correct missing private flag clearing (Steve Best) [1062671]
 - [mm] hugetlb: return a reserved page to a reserved pool if failed (Steve Best) [1062671]
