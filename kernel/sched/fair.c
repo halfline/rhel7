@@ -1336,9 +1336,7 @@ static void numa_migrate_preferred(struct task_struct *p)
 		return;
 
 	/* Otherwise, try migrate to a CPU on the preferred node */
-	get_online_cpus();
 	task_numa_migrate(p);
-	put_online_cpus();
 }
 
 /*
