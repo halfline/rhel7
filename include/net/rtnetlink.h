@@ -155,7 +155,8 @@ extern struct net_device *rtnl_create_link(struct net *net,
 	char *ifname, const struct rtnl_link_ops *ops, struct nlattr *tb[]);
 extern int rtnl_configure_link(struct net_device *dev,
 			       const struct ifinfomsg *ifm);
-extern const struct nla_policy ifla_policy[IFLA_MAX+1];
+
+int rtnl_nla_parse_ifla(struct nlattr **tb, const struct nlattr *head, int len);
 
 #define MODULE_ALIAS_RTNL_LINK(kind) MODULE_ALIAS("rtnl-link-" kind)
 
