@@ -81,7 +81,7 @@ struct netns_ct {
 	int			sysctl_events;
 	int			sysctl_acct;
 	int			sysctl_auto_assign_helper;
-	bool			auto_assign_helper_warned;
+	bool			__rh_reserved;
 	int			sysctl_tstamp;
 	int			sysctl_checksum;
 
