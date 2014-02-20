@@ -207,6 +207,11 @@ M:	Tomas Henzl <thenzl@redhat.com>
 S:	Maintained
 F:	drivers/scsi/hpsa*
 
+EDAC/HERM
+M:	Aristeu Rozanski <aris@redhat.com>
+S:	Maintained
+F:	drivers/edac/
+
 EHEA ETHERNET DRIVER (ehea)
 M:	Ameet Paranjape <aparanja@redhat.com>
 S:	Maintained
