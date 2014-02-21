@@ -315,7 +315,7 @@ BuildRequires: pciutils-devel gettext
 # The -r flag to find-debuginfo.sh invokes eu-strip --reloc-debug-sections
 # which reduces the number of relocations in kernel module .ko.debug files and
 # was introduced with rpm 4.9 and elfutils 0.153.
-BuildRequires: rpm-build >= 4.9.0-1, elfutils >= elfutils-0.153-1
+BuildRequires: rpm-build >= 4.9.0-1, elfutils >= 0.153-1
 %define debuginfo_args --strict-build-id -r
 %endif
 %ifarch s390x
