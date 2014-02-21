@@ -1461,6 +1461,19 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Feb 21 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-91.el7]
+- [kernel] sched: Fix endless sync_sched/rcu() loop inside _cpu_down() (Rik van Riel) [1062647]
+- [kernel] sched: Remove extra put_online_cpus() inside sched_setaffinity() (Rik van Riel) [1062647]
+- [kernel] sched: Remove get_online_cpus() usage (Rik van Riel) [1062647]
+- [mm] move mmu notifier call from change_protection to change_pmd_range (Rik van Riel) [1066655]
+- [mm] numa: reorganize change_pmd_range (Rik van Riel) [1066655]
+- [kernel] sched/numa: add cond_resched to task_numa_work (Rik van Riel) [1066655]
+- [cpufreq] intel_pstate: Fail initialization if P-state information is missing (Marcelo Tosatti) [1061481]
+- [cpufreq] intel_pstate: Add X86_FEATURE_APERFMPERF to cpu match (Marcelo Tosatti) [1061481]
+- [ethernet] bnx2x: More Shutdown revisions (Michal Schmidt) [1046885]
+- [ethernet] bnx2x: Don't release PCI bars on shutdown (Michal Schmidt) [1046885]
+- [security] keys, shmem: implement kernel private shmem inodes (Paul Moore) [1031154 1034833]
+
 * Wed Feb 19 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-90.el7]
 - [drm] nouveau/devinit: prevent use of engines marked as disabled by hw/vbios (Rob Clark) [1054409]
 - [drm] nouveau/device: provide a way for devinit to mark engines as disabled (Rob Clark) [1054409]
