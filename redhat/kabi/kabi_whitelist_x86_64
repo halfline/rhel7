@@ -301,6 +301,7 @@
 	pci_request_regions
 	pci_unregister_driver
 	phys_base
+	platform_device_add
 	prepare_to_wait
 	prepare_to_wait_exclusive
 	printk
