@@ -154,6 +154,7 @@
 	fb_dealloc_cmap
 	find_module
 	finish_wait
+	framebuffer_alloc
 	free_irq
 	free_netdev
 	free_percpu
