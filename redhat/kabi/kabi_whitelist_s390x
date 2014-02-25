@@ -137,6 +137,7 @@
 	finish_wait
 	free_irq
 	free_netdev
+	free_pages
 	free_percpu
 	fs_bio_set
 	generic_make_request
