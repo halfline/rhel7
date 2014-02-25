@@ -304,6 +304,7 @@
 	platform_device_add
 	platform_device_alloc
 	platform_device_put
+	platform_device_unregister
 	prepare_to_wait
 	prepare_to_wait_exclusive
 	printk
