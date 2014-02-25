@@ -282,6 +282,7 @@
 	pci_unregister_driver
 	platform_device_add
 	platform_device_alloc
+	platform_device_put
 	prepare_to_wait
 	prepare_to_wait_exclusive
 	printk
