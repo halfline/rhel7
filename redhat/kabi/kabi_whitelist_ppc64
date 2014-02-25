@@ -91,6 +91,7 @@
 	call_rcu_sched
 	call_usermodehelper
 	cancel_delayed_work
+	cancel_delayed_work_sync
 	cdev_add
 	cdev_alloc
 	cdev_init
