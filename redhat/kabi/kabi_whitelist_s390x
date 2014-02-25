@@ -310,6 +310,7 @@
 	sock_create_kern
 	sprintf
 	sscanf
+	static_key_slow_dec
 	strcat
 	strchr
 	strcmp
