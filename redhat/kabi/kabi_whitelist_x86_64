@@ -201,6 +201,7 @@
 	ip6_route_output
 	ip_send_check
 	ipmi_register_smi
+	ipmi_smi_msg_received
 	irq_stat
 	jiffies
 	jiffies_64
