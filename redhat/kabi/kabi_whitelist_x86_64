@@ -365,6 +365,7 @@
 	sscanf
 	static_key_slow_dec
 	static_key_slow_inc
+	stop_machine
 	strcat
 	strchr
 	strcmp
