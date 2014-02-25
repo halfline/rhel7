@@ -155,6 +155,7 @@
 	find_module
 	finish_wait
 	framebuffer_alloc
+	framebuffer_release
 	free_irq
 	free_netdev
 	free_percpu
