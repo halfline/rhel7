@@ -200,6 +200,7 @@
 	iounmap
 	ip6_route_output
 	ip_send_check
+	ipmi_register_smi
 	irq_stat
 	jiffies
 	jiffies_64
