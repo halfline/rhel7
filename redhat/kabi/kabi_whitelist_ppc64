@@ -342,6 +342,7 @@
 	sprintf
 	sscanf
 	static_key_slow_dec
+	static_key_slow_inc
 	strcat
 	strchr
 	strcmp
