@@ -202,6 +202,7 @@
 	ip_send_check
 	ipmi_register_smi
 	ipmi_smi_msg_received
+	ipmi_unregister_smi
 	irq_stat
 	jiffies
 	jiffies_64
