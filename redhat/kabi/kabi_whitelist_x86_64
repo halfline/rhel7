@@ -401,6 +401,7 @@
 	up
 	up_read
 	up_write
+	vga_set_legacy_decoding
 	vlan_dev_real_dev
 	vlan_dev_vlan_id
 	vmalloc
