@@ -57,11 +57,7 @@ typedef void (*crash_shutdown_t)(void);
 
 #ifdef CONFIG_KEXEC_AUTO_RESERVE
 
-#if PAGE_SHIFT == 12
 #define KEXEC_AUTO_THRESHOLD (1ULL<<31) /* 2G */
-#else
-#define KEXEC_AUTO_THRESHOLD (1ULL<<33) /* 8G */
-#endif /*PAGE_SHIFT == 12 */
 
 extern
 unsigned long long __init arch_default_crash_base(void);
