@@ -151,6 +151,7 @@
 	eth_validate_addr
 	ether_setup
 	ethtool_op_get_link
+	fb_dealloc_cmap
 	find_module
 	finish_wait
 	free_irq
