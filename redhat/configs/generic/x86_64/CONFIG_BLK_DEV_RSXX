@@ -1,1 +1,1 @@
-CONFIG_BLK_DEV_RSXX=m
+# CONFIG_BLK_DEV_RSXX is not set
