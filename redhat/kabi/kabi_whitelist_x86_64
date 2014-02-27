@@ -230,6 +230,7 @@
 	list_del
 	lock_sock_nested
 	mem_section
+	memchr
 	memcmp
 	memcpy
 	memmove
