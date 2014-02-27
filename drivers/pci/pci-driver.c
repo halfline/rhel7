@@ -32,7 +32,7 @@ bool dev_is_pf(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(dev_is_pf);
 
-bool dev_num_vf(struct device *dev)
+int dev_num_vf(struct device *dev)
 {
 	return ((dev_is_pci(dev) ? pci_num_vf(to_pci_dev(dev)) : 0));
 }

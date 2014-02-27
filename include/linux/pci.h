@@ -842,7 +842,7 @@ void pci_setup_cardbus(struct pci_bus *bus);
 void pci_sort_breadthfirst(void);
 #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
 bool dev_is_pf(struct device *dev);
-bool dev_num_vf(struct device *dev);
+int dev_num_vf(struct device *dev);
 
 /* Generic PCI functions exported to card drivers */
 
