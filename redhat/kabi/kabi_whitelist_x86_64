@@ -416,5 +416,6 @@
 	vsprintf
 	vunmap
 	wait_for_completion
+	wait_for_completion_interruptible_timeout
 	wireless_send_event
 	x86_cpu_to_apicid

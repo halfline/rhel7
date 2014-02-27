@@ -355,3 +355,4 @@
 	vsprintf
 	vunmap
 	wait_for_completion
+	wait_for_completion_interruptible_timeout
