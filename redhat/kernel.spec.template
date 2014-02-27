@@ -1461,6 +1461,26 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Feb 27 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-98.el7]
+- [scsi] qla4xxx: v5.04.00.04.07.00-k0 (Chad Dupuis) [1063205]
+- [scsi] qla4xxx: Initialize hardware queue for ISP40XX (Chad Dupuis) [1063205]
+- [fs] cifs: mask off top byte in get_rfc1002_length() (Sachin Prabhu) [1062588] {CVE-2014-0069}
+- [infiniband] mlx4: Add support for steerable IB UD QPs (Doug Ledford) [1058518]
+- [infiniband] mlx4: Add mechanism to support flow steering over IB links (Doug Ledford) [1058518]
+- [infiniband] mlx4: Enable device-managed steering support for IB ports too (Doug Ledford) [1058518]
+- [ethernet] mlx4: Add support for steerable IB UD QPs (Doug Ledford) [1058518]
+- [infiniband] core: Add support for IB L2 device-managed steering (Doug Ledford) [1058518]
+- [infiniband] core: Add flow steering support for IPoIB UD traffic (Doug Ledford) [1058518]
+- [scsi] isci: correct erroneous for_each_isci_host macro (David Milburn) [1054302]
+- [virt] vhost/net: disable zero copy by default (Jason Wang) [1069045]
+- [x86] cpu-hotplug: Fix stack frame warning in check_irq_vectors_for_cpu_disable() (Prarit Bhargava) [1061317]
+- [drm] radeon/kms: add crtc_disable function for legacy crtc (Jerome Glisse) [1029570]
+- [drm] radeon/kms: unpin fb in atombios crtc disable (Jerome Glisse) [1029570]
+- [powerpc] Fix 32-bit frames for signals delivered when transactional (Steve Best) [1059703]
+- [edac] Correct workqueue setup path (Aristeu Rozanski) [1055892]
+- [edac] Poll timeout cannot be zero, p2 (Aristeu Rozanski) [1055892]
+- [edac] edac_mc_sysfs: poll timeout cannot be zero (Aristeu Rozanski) [1055892]
+
 * Tue Feb 25 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-97.el7]
 - [fs] cifs: sanity check length of data to send before sending (Sachin Prabhu) [1062588] {CVE-2014-0069}
 - [fs] cifs: ensure that uncached writes handle unmapped areas correctly (Sachin Prabhu) [1062588] {CVE-2014-0069}
