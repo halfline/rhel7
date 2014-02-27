@@ -204,6 +204,7 @@
 	kobject_put
 	kobject_set_name
 	kstrtoll
+	kthread_bind
 	kthread_should_stop
 	kthread_stop
 	list_del
