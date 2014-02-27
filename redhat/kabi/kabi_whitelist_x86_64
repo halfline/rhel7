@@ -410,6 +410,7 @@
 	vlan_dev_real_dev
 	vlan_dev_vlan_id
 	vm_mmap
+	vm_munmap
 	vmalloc
 	vmalloc_user
 	vmap
