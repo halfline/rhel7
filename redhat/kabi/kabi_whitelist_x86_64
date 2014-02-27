@@ -325,6 +325,7 @@
 	register_pernet_subsys
 	register_reboot_notifier
 	release_sock
+	rtc_lock
 	rtnl_is_locked
 	rtnl_link_register
 	rtnl_link_unregister
