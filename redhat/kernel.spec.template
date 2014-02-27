@@ -1904,7 +1904,7 @@ fi
 - [fs] xfs: growfs overruns AGFL buffer on V4 filesystems (Brian Foster) [1059843]
 - [fs] xfs: don't perform discard if the given range length is less than block size (Brian Foster) [1059843]
 - [fs] xfs: fix the comment explaining xfs_trans_dqlockedjoin (Brian Foster) [1059843]
-- [fs] xfs: underflow bug in xfs_attrlist_by_handle() (Brian Foster) [1059843]
+- [fs] xfs: underflow bug in xfs_attrlist_by_handle() (Brian Foster) [1059843 1034667] {CVE-2013-6382}
 - [fs] xfs: remove unused FI_ flags (Brian Foster) [1059843]
 - [fs] xfs: open code inc_inode_iversion when logging an inode (Brian Foster) [1059843]
 - [fs] xfs: increase inode cluster size for v5 filesystems (Brian Foster) [1059843]
