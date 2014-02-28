@@ -17,6 +17,12 @@ struct scsi_driver {
 	void (*uninit_command)(struct scsi_cmnd *);
 	int (*done)(struct scsi_cmnd *);
 	int (*eh_action)(struct scsi_cmnd *, int);
+
+#ifndef __GENKSYMS__
+	int (*scsi_mq_reserved1)(struct scsi_cmnd *);
+	void (*scsi_mq_reserved2)(struct scsi_cmnd *);
+	void (*rh_reserved)(void);
+#endif
 };
 #define to_scsi_driver(drv) \
 	container_of((drv), struct scsi_driver, gendrv)

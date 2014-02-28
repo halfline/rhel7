@@ -535,6 +535,11 @@ struct scsi_host_template {
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
 	void			(*rh_reserved4)(void);
+
+	unsigned int scsi_mq_reserved1;
+	unsigned int scsi_mq_reserved2;
+	void *scsi_mq_reserved3;
+	void *scsi_mq_reserved4;
 #endif
 
 };
@@ -778,6 +783,13 @@ struct Scsi_Host {
 	void			(*rh_reserved4)(void);
 	void			(*rh_reserved5)(void);
 	void			(*rh_reserved6)(void);
+
+	unsigned int scsi_mq_reserved1;
+	unsigned int scsi_mq_reserved2;
+	void *scsi_mq_reserved3;
+	void *scsi_mq_reserved4;
+	atomic_t scsi_mq_reserved5;
+	atomic_t scsi_mq_reserved6;
 #endif
 
 	/*

@@ -205,6 +205,9 @@ struct scsi_device {
 	void			(*rh_reserved4)(void);
 	void			(*rh_reserved5)(void);
 	void			(*rh_reserved6)(void);
+
+	atomic_t scsi_mq_reserved1;
+	atomic_t scsi_mq_reserved2;
 #endif
 
 	unsigned long		sdev_data[0];
@@ -313,6 +316,9 @@ struct scsi_target {
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
 	void			(*rh_reserved4)(void);
+
+	atomic_t		scsi_mq_reserved1;
+	atomic_t		scsi_mq_reserved2;
 #endif
 
 	unsigned long		starget_data[0]; /* for the transport */
