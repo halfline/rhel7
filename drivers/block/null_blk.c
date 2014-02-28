@@ -346,8 +346,8 @@ static int null_queue_rq(struct blk_mq_hw_ctx *hctx, struct request *rq)
 
 static struct blk_mq_hw_ctx *null_alloc_hctx(struct blk_mq_reg *reg, unsigned int hctx_index)
 {
-	return kmalloc_node(sizeof(struct blk_mq_hw_ctx),
-				GFP_KERNEL | __GFP_ZERO, hctx_index);
+	return kzalloc_node(sizeof(struct blk_mq_hw_ctx), GFP_KERNEL,
+				hctx_index);
 }
 
 static void null_free_hctx(struct blk_mq_hw_ctx *hctx, unsigned int hctx_index)
@@ -489,11 +489,9 @@ static int null_add_dev(void)
 	struct nullb *nullb;
 	sector_t size;
 
-	nullb = kmalloc_node(sizeof(*nullb), GFP_KERNEL, home_node);
+	nullb = kzalloc_node(sizeof(*nullb), GFP_KERNEL, home_node);
 	if (!nullb)
 		return -ENOMEM;
-
-	memset(nullb, 0, sizeof(*nullb));
 
 	spin_lock_init(&nullb->lock);
 
@@ -555,11 +553,10 @@ err:
 	blk_queue_physical_block_size(nullb->q, bs);
 
 	size = gb * 1024 * 1024 * 1024ULL;
-	size = sector_div(size, bs);
+	sector_div(size, bs);
 	set_capacity(disk, size);
 
 	disk->flags |= GENHD_FL_EXT_DEVT;
-	spin_lock_init(&nullb->lock);
 	disk->major		= null_major;
 	disk->first_minor	= nullb->index;
 	disk->fops		= &null_fops;
