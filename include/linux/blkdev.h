@@ -290,6 +290,12 @@ struct queue_limits {
 	unsigned char		discard_misaligned;
 	unsigned char		cluster;
 	unsigned char		discard_zeroes_data;
+
+#ifndef __GENKSYMS__
+	unsigned long		rh_reserved1;
+	unsigned long		rh_reserved2;
+	unsigned long		rh_reserved3;
+#endif
 };
 
 struct request_queue {
