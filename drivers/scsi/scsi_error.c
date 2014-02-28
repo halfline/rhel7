@@ -457,6 +457,8 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
 	if (! scsi_command_normalize_sense(scmd, &sshdr))
 		return FAILED;	/* no valid sense data */
 
+	scsi_report_sense(sdev, &sshdr);
+
 	if (scmd->cmnd[0] == TEST_UNIT_READY && scmd->scsi_done != scsi_eh_done)
 		/*
 		 * nasty: for mid-layer issued TURs, we need to return the
@@ -464,8 +466,6 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
 		 * issued ones, we need to try to recover and interpret
 		 */
 		return SUCCESS;
-
-	scsi_report_sense(sdev, &sshdr);
 
 	if (scsi_sense_is_deferred(&sshdr))
 		return NEEDS_RETRY;
