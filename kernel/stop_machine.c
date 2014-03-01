@@ -285,6 +285,7 @@ int stop_two_cpus(unsigned int cpu1, unsigned int cpu2, cpu_stop_fn_t fn, void *
 		return -ENOENT;
 	}
 
+	lg_local_lock(&stop_cpus_lock);
 	/*
 	 * Queuing needs to be done by the lowest numbered CPU, to ensure
 	 * that works are always queued in the same order on every CPU.
@@ -292,7 +293,8 @@ int stop_two_cpus(unsigned int cpu1, unsigned int cpu2, cpu_stop_fn_t fn, void *
 	 */
 	smp_call_function_single(min(cpu1, cpu2),
 				 &irq_cpu_stop_queue_work,
-				 &call_args, 0);
+				 &call_args, 1);
+	lg_local_unlock(&stop_cpus_lock);
 	preempt_enable();
 
 	wait_for_completion(&done.completion);
