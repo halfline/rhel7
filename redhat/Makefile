@@ -159,6 +159,10 @@ ifeq ("$(RHDISTGIT_BRANCH)", "")
 endif
 	$(REDHAT)/scripts/rh-dist-git.sh "$(RHDISTGIT_BRANCH)" "$(RHDISTGIT_CACHE)" "$(RHDISTGIT_TMP)" "$(RHDISTGIT)" "$(TARBALL)"
 
+rh-rtg: rh-release
+	@$(MAKE) rh-release-tag
+	@$(MAKE) rh-dist-git
+
 rh-help:
 	@echo  'Cleaning targets:'
 	@echo  '  rh-clean            - Do rh-clean-sources, rh-clean-configs, & rh-clean-rpmdirs'
