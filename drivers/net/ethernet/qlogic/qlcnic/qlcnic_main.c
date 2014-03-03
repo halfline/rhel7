@@ -1860,7 +1860,6 @@ int qlcnic_diag_alloc_res(struct net_device *netdev, int test)
 	adapter->max_sds_rings = 1;
 	adapter->ahw->diag_test = test;
 	adapter->ahw->linkup = 0;
-	adapter->max_drv_tx_rings = 1;
 
 	ret = qlcnic_attach(adapter);
 	if (ret) {
