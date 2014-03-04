@@ -1461,6 +1461,9 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Mar 04 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-104.el7]
+- [redhat] kabi: add initial whitelist checksums (Jiri Olsa) [726863]
+
 * Tue Mar 04 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-103.el7]
 - [fs] epoll: do not take the nested ep->mtx on EPOLL_CTL_DEL (Rik van Riel) [1069371]
 - [fs] epoll: do not take global 'epmutex' for simple topologies (Rik van Riel) [1069371]
