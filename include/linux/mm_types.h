@@ -298,6 +298,10 @@ struct vm_area_struct {
 #ifdef CONFIG_NUMA
 	struct mempolicy *vm_policy;	/* NUMA policy for the VMA */
 #endif
+#ifndef __GENKSYMS__
+	/* reserved for Red Hat */
+	unsigned long rh_reserved[4];
+#endif
 };
 
 struct core_thread {
@@ -446,6 +450,10 @@ struct mm_struct {
 	bool tlb_flush_pending;
 #endif
 	struct uprobes_state uprobes_state;
+#ifndef __GENKSYMS__
+	/* reserved for Red Hat */
+	unsigned long rh_reserved[8];
+#endif
 };
 
 static inline void mm_init_cpumask(struct mm_struct *mm)

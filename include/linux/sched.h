@@ -626,6 +626,10 @@ struct signal_struct {
 	struct mutex cred_guard_mutex;	/* guard against foreign influences on
 					 * credential calculations
 					 * (notably. ptrace) */
+#ifndef __GENKSYMS__
+	/* reserved for Red Hat */
+	unsigned long rh_reserved[4];
+#endif
 };
 
 /*
@@ -1016,6 +1020,10 @@ struct sched_entity {
 #if defined(CONFIG_SMP) && defined(CONFIG_FAIR_GROUP_SCHED)
 	/* Per-entity load-tracking */
 	struct sched_avg	avg;
+#endif
+#ifndef __GENKSYMS__
+	/* reserved for Red Hat */
+	unsigned long rh_reserved[4];
 #endif
 };
 
@@ -1474,6 +1482,10 @@ struct task_struct {
 #if defined(CONFIG_BCACHE) || defined(CONFIG_BCACHE_MODULE)
 	unsigned int	sequential_io;
 	unsigned int	sequential_io_avg;
+#endif
+#ifndef __GENKSYMS__
+	/* reserved for Red Hat */
+	unsigned long rh_reserved[8];
 #endif
 };
 
