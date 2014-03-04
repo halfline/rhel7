@@ -1519,7 +1519,7 @@ out_return_cmd:
  * @done:			Callback entry point
  */
 static int
-megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+megasas_queue_command_lck(struct scsi_cmnd *scmd, void (*done) (struct scsi_cmnd *))
 {
 	struct megasas_instance *instance;
 	unsigned long flags;
@@ -1535,7 +1535,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
 	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) {
 		spin_unlock_irqrestore(&instance->hba_lock, flags);
 		scmd->result = DID_ERROR << 16;
-		scmd->scsi_done(scmd);
+		done(scmd);
 		return 0;
 	}
 
@@ -1546,6 +1546,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
 
 	spin_unlock_irqrestore(&instance->hba_lock, flags);
 
+	scmd->scsi_done = done;
 	scmd->result = 0;
 
 	if (MEGASAS_IS_LOGICAL(scmd) &&
@@ -1574,9 +1575,11 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
 	return 0;
 
  out_done:
-	scmd->scsi_done(scmd);
+	done(scmd);
 	return 0;
 }
+
+static DEF_SCSI_QCMD(megasas_queue_command)
 
 static struct megasas_instance *megasas_lookup_instance(u16 host_no)
 {
