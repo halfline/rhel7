@@ -686,7 +686,6 @@ xfs_readdir(
 {
 	int		rval;		/* return value */
 	int		v;		/* type-checking value */
-	uint		lock_mode;
 
 	trace_xfs_readdir(dp);
 
@@ -696,7 +695,6 @@ xfs_readdir(
 	ASSERT(S_ISDIR(dp->i_d.di_mode));
 	XFS_STATS_INC(xs_dir_getdents);
 
-	lock_mode = xfs_ilock_data_map_shared(dp);
 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
 		rval = xfs_dir2_sf_getdents(dp, dirent, offset, filldir);
 	else if ((rval = xfs_dir2_isblock(NULL, dp, &v)))
@@ -706,8 +704,6 @@ xfs_readdir(
 	else
 		rval = xfs_dir2_leaf_getdents(dp, dirent, bufsize, offset,
 					      filldir);
-	xfs_iunlock(dp, lock_mode);
-
 	return rval;
 }
 
