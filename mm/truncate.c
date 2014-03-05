@@ -316,6 +316,7 @@ void truncate_inode_pages_range(struct address_space *mapping,
 			continue;
 		}
 		if (index == start && indices[0] > end) {
+			pagevec_remove_exceptionals(&pvec);
 			pagevec_release(&pvec);
 			break;
 		}
