@@ -1461,6 +1461,9 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Mar 05 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-105.el7]
+- [redhat] kabi: actually add symbols to the whitelists this time (Jarod Wilson) [726863]
+
 * Tue Mar 04 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-104.el7]
 - [redhat] kabi: add initial whitelist checksums (Jiri Olsa) [726863]
 
