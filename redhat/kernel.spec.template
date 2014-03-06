@@ -1431,7 +1431,9 @@ fi
 /%{image_install_path}/%{?-k:%{-k*}}%{!?-k:vmlinuz}-%{KVRA}%{?2:.%{2}}\
 /%{image_install_path}/.vmlinuz-%{KVRA}%{?2:.%{2}}.hmac \
 %attr(600,root,root) /boot/System.map-%{KVRA}%{?2:.%{2}}\
+%if %{with_kabichk}\
 /boot/symvers-%{KVRA}%{?2:.%{2}}.gz\
+%endif\
 /boot/config-%{KVRA}%{?2:.%{2}}\
 %dir /lib/modules/%{KVRA}%{?2:.%{2}}\
 /lib/modules/%{KVRA}%{?2:.%{2}}/kernel\
