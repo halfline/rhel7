@@ -380,7 +380,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 
 ifeq ($(KBUILD_EXTMOD),)
 ifneq (,$(filter $(ARCH), x86 x86_64))
-KBUILD_CFLAGS   += -Werror
+KBUILD_CFLAGS   += $(call cc-ifversion, -eq, 0408, -Werror)
 endif
 endif
 
