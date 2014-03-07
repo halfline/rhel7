@@ -206,7 +206,7 @@ static bool ivb_can_enable_err_int(struct drm_device *dev)
 	for_each_pipe(pipe) {
 		crtc = to_intel_crtc(dev_priv->pipe_to_crtc_mapping[pipe]);
 
-		if (crtc->cpu_fifo_underrun_disabled)
+		if (crtc && crtc->cpu_fifo_underrun_disabled)
 			return false;
 	}
 
