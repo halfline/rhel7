@@ -73,7 +73,7 @@ int nouveau_modeset = -1;
 module_param_named(modeset, nouveau_modeset, int, 0400);
 
 MODULE_PARM_DESC(runpm, "disable (0), force enable (1), optimus only default (-1)");
-int nouveau_runtime_pm = -1;
+int nouveau_runtime_pm = 0;
 module_param_named(runpm, nouveau_runtime_pm, int, 0400);
 
 static struct drm_driver driver;
