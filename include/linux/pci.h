@@ -355,6 +355,7 @@ struct pci_dev {
 #ifdef CONFIG_PCI_MSI
 	struct list_head msi_list;
 	struct kset *msi_kset;
+	const struct attribute_group **msi_irq_groups;
 #endif
 	struct pci_vpd *vpd;
 #ifdef CONFIG_PCI_ATS
