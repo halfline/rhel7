@@ -1461,6 +1461,24 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Mar 07 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-107.el7]
+- [net] make neigh_priv_len in struct net_device 16bit instead of 8bit (Jiri Benc) [1062308]
+- [net] sctp: fix sctp_sf_do_5_1D_ce to verify if we/peer is AUTH capable (Daniel Borkmann) [1070716] {CVE-2014-0101}
+- [net] sctp: fix sctp_connectx abi for ia32 emulation/compat mode (Daniel Borkmann) [1058284]
+- [net] ip_tunnel: return more precise errno value when adding tunnel fails (Florian Westphal) [1070135]
+- [net] ip_tunnel: Add fallback tunnels to the hash lists (Florian Westphal) [1070135]
+- [net] openvswitch: Fix ovs_dp_cmd_msg_size() (Francesco Fusco) [1069577]
+- [net] team: Don't allow team devices to change network namespaces (Jiri Pirko) [1069527]
+- [net] team: add support for sending multicast rejoins (Jiri Pirko) [1069520]
+- [net] convert resend IGMP to notifier event (Jiri Pirko) [1069520]
+- [net] team: add peer notification (Jiri Pirko) [1069490]
+- [net] team: remove synchronize_rcu() called during port disable (Jiri Pirko) [1069498]
+- [net] team: use kfree_rcu instead of synchronize_rcu in team_port_dev (Jiri Pirko) [1069498]
+- [net] team: remove synchronize_rcu() called during queue override change (Jiri Pirko) [1069498]
+- [net] remove last caller of skb_tail_offset() and itself (Jiri Pirko) [1068666]
+- [net] netpoll: fix position of network header (Jiri Pirko) [1068666]
+- [net] neigh: fix setting of default gc_* values (Jiri Pirko) [1067274]
+
 * Thu Mar 06 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-106.el7]
 - [drm] nouveau/devinit: lock/unlock crtc regs for all devices, not just pre-nv50 (Ben Skeggs) [928744]
 - [drm] nouveau: use correct register to determine DP display bpp (Ben Skeggs) [928744]
