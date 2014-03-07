@@ -62,6 +62,14 @@ struct genl_family {
 	struct list_head	family_list;	/* private */
 	struct list_head	mcast_groups;	/* private */
 	struct module		*module;
+#ifndef __GENKSYMS__
+	/* Reserved slots. For Red Hat usage only, modules are required to
+	 * set them to zero. */
+	unsigned long		rh_reserved1;
+	unsigned long		rh_reserved2;
+	unsigned long		rh_reserved3;
+	unsigned long		rh_reserved4;
+#endif
 };
 
 /**
