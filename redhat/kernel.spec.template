@@ -341,7 +341,6 @@ Source12: extra_certificates
 Source13: redhatsecurebootca2.cer
 Source14: redhatsecureboot003.cer
 
-%if %{with_kabichk}
 Source18: check-kabi
 
 Source20: Module.kabi_x86_64
@@ -351,7 +350,6 @@ Source22: Module.kabi_s390x
 Source23: kabi_whitelist_ppc64
 Source24: kabi_whitelist_s390x
 Source25: kabi_whitelist_x86_64
-%endif
 
 Source50: kernel-%{version}-x86_64.config
 Source51: kernel-%{version}-x86_64-debug.config
@@ -866,7 +864,6 @@ BuildKernel() {
       cp Module.markers $RPM_BUILD_ROOT/lib/modules/$KernelVer/build
     fi
 
-%if %{with_kabichk}
     # create the kABI metadata for use in packaging
     # NOTENOTE: the name symvers is used by the rpm backend
     # NOTENOTE: to discover and run the /usr/lib/rpm/fileattrs/kabi.attr
@@ -876,6 +873,7 @@ BuildKernel() {
     echo "**** GENERATING kernel ABI metadata ****"
     gzip -c9 < Module.symvers > $RPM_BUILD_ROOT/boot/symvers-$KernelVer.gz
 
+%if %{with_kabichk}
     echo "**** kABI checking is enabled in kernel SPEC file. ****"
     chmod 0755 $RPM_SOURCE_DIR/check-kabi
     if [ -e $RPM_SOURCE_DIR/Module.kabi_%{_target_cpu}$Flavour ]; then
@@ -885,7 +883,7 @@ BuildKernel() {
     else
         echo "**** NOTE: Cannot find reference Module.kabi file. ****"
     fi
-%endif %{with_kabichk}
+%endif
 
     # then drop all but the needed Makefiles/Kconfig files
     rm -rf $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/Documentation
@@ -1431,9 +1429,7 @@ fi
 /%{image_install_path}/%{?-k:%{-k*}}%{!?-k:vmlinuz}-%{KVRA}%{?2:.%{2}}\
 /%{image_install_path}/.vmlinuz-%{KVRA}%{?2:.%{2}}.hmac \
 %attr(600,root,root) /boot/System.map-%{KVRA}%{?2:.%{2}}\
-%if %{with_kabichk}\
 /boot/symvers-%{KVRA}%{?2:.%{2}}.gz\
-%endif\
 /boot/config-%{KVRA}%{?2:.%{2}}\
 %dir /lib/modules/%{KVRA}%{?2:.%{2}}\
 /lib/modules/%{KVRA}%{?2:.%{2}}/kernel\
