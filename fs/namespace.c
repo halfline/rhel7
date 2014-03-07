@@ -26,7 +26,7 @@
 #include "pnode.h"
 #include "internal.h"
 
-#define HASH_SHIFT ilog2(PAGE_SIZE / sizeof(struct list_head))
+#define HASH_SHIFT 12
 #define HASH_SIZE (1UL << HASH_SHIFT)
 
 static int event;
@@ -36,8 +36,8 @@ static DEFINE_SPINLOCK(mnt_id_lock);
 static int mnt_id_start = 0;
 static int mnt_group_start = 1;
 
-static struct list_head *mount_hashtable __read_mostly;
-static struct list_head *mountpoint_hashtable __read_mostly;
+static struct list_head mount_hashtable[HASH_SIZE];
+static struct list_head mountpoint_hashtable[HASH_SIZE];
 static struct kmem_cache *mnt_cache __read_mostly;
 static struct rw_semaphore namespace_sem;
 
@@ -2715,12 +2715,6 @@ void __init mnt_init(void)
 
 	mnt_cache = kmem_cache_create("mnt_cache", sizeof(struct mount),
 			0, SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
-
-	mount_hashtable = (struct list_head *)__get_free_page(GFP_ATOMIC);
-	mountpoint_hashtable = (struct list_head *)__get_free_page(GFP_ATOMIC);
-
-	if (!mount_hashtable || !mountpoint_hashtable)
-		panic("Failed to allocate mount hash table\n");
 
 	printk(KERN_INFO "Mount-cache hash table entries: %lu\n", HASH_SIZE);
 
