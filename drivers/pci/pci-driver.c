@@ -254,6 +254,30 @@ static const struct pci_device_id *pci_match_device(struct pci_driver *drv,
 	return pci_match_id(drv->id_table, dev);
 }
 
+/**
+ * pci_hw_vendor_status - Tell if a PCI device is supported by the HW vendor
+ * @ids: array of PCI device id structures to search in
+ * @dev: the PCI device structure to match against
+ *
+ * Used by a driver to check whether this device is in its list of unsupported
+ * devices.  Returns the matching pci_device_id structure or %NULL if there is
+ * no match.
+ *
+ * Reserved for Internal Red Hat use only.
+ */
+const struct pci_device_id *pci_hw_vendor_status(
+						const struct pci_device_id *ids,
+						struct pci_dev *dev)
+{
+	const struct pci_device_id *ret = pci_match_id(ids, dev);
+
+	if (ret)
+		dev_printk(KERN_WARNING, &dev->dev,
+			   "The hardware vendor of this device has identified it as being unsupported.  Driver updates and fixes are limited for this device.  Please contact your device's hardware vendor for additional information.\n");
+
+	return ret;
+}
+
 struct drv_dev_and_id {
 	struct pci_driver *drv;
 	struct pci_dev *dev;
@@ -1362,6 +1386,7 @@ postcore_initcall(pci_driver_init);
 
 EXPORT_SYMBOL_GPL(pci_add_dynid);
 EXPORT_SYMBOL(pci_match_id);
+EXPORT_SYMBOL(pci_hw_vendor_status);
 EXPORT_SYMBOL(__pci_register_driver);
 EXPORT_SYMBOL(pci_unregister_driver);
 EXPORT_SYMBOL(pci_dev_driver);
