@@ -2,8 +2,8 @@ kernel.spec
 check-kabi
 extra_certificates
 x509.genkey
-redhatsecurebootca2.cer
-redhatsecureboot003.cer
+securebootca.cer
+secureboot.cer
 Makefile.common
 Makefile
 cpupower.config
