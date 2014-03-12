@@ -1461,6 +1461,9 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Mar 12 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-110.el7]
+- [mm] Revert: percpu scalability fixes (Jarod Wilson) [1072446]
+
 * Tue Mar 11 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-109.el7]
 - [block] change flush sequence list addition back to front add (Mike Snitzer) [1072577]
 - [block] fix q->flush_rq NULL pointer crash on dm-mpath flush (Mike Snitzer) [1072577]
