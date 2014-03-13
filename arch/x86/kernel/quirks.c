@@ -585,4 +585,4 @@ static void quirk_intel_DH8900CC(struct pci_dev *dev)
 		printed = 1;
 	}
 }
-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0438, quirk_intel_DH8900CC);
+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2310, quirk_intel_DH8900CC);
