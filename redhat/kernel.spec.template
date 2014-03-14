@@ -1461,6 +1461,32 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Mar 14 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-111.el7]
+- [net] inet: fix for a race condition in the inet frag code (Nikolay Aleksandrov) [1070711] {CVE-2014-0100}
+- [scsi] aacraid: Print warning message if unsupported card is being used (Rich Bono) [1019091]
+- [drm] ttm: don't oops if no invalidate_caches() (Rob Clark) [1073470 1075068]
+- [security] selinux: bigendian problems with filename trans rules (Paul Moore) [1029837]
+- [security] selinux: Fix memory leak upon loading policy (Paul Moore) [1051042]
+- [x86] apic: Plug racy xAPIC access of CPU hotplug code (Igor Mammedov) [1073568]
+- [kernel] sched: Remove redundant update_runtime notifier (Igor Mammedov) [1074476]
+- [virt] kvm/svm: fix cr8 intercept window (Radim Krcmar) [1056982]
+- [video] fb: reorder the lock sequence to fix potential dead lock (Jason Wang) [1040781]
+- [virt] hv/vmbus: Don't timeout during the initial connection with host (Jason Wang) [1037957]
+- [virt] hv/vmbus: Specify the target CPU that should receive notification (Jason Wang) [1037957]
+- [mm] percpu scalability fixes (Alexander Viro) [1072446]
+- [x86] fix compile error due to X86_TRAP_NMI use in asm files (Don Zickus) [1051428]
+- [x86] Ignore NMIs that come in during early boot (Don Zickus) [1051428]
+- [fs] cifs: Add support for follow_link on dfs shares under posix extensions (Sachin Prabhu) [1020715]
+- [fs] cifs: move unix extension call to cifs_query_symlink() (Sachin Prabhu) [1020715]
+- [kernel] audit: include subject in login records (Richard Guy Briggs) [1075155]
+- [kernel] audit: remove superfluous new- prefix in AUDIT_LOGIN messages (Richard Guy Briggs) [1075155]
+- [ethernet] tg3: Don't check undefined error bits in RXBD (Ivan Vecera) [1071483]
+- [fs] gfs2: Move recovery variables to journal structure in memory (Robert S Peterson) [1059439]
+- [security] keys: Make the keyring cycle detector ignore other keyrings of the same name (David Howells) [1071346] {CVE-2014-0102}
+- [x86] fix x86 fixup_irqs() error handling (Prarit Bhargava) [1074644]
+- [fs] gfs2: Re-add a call to log_flush_wait when flushing the journal (Robert S Peterson) [1074556]
+- [fs] gfs2: Ensure workqueue is scheduled after noexp request (Robert S Peterson) [1074556]
+
 * Wed Mar 12 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-110.el7]
 - [mm] Revert: percpu scalability fixes (Jarod Wilson) [1072446]
 
