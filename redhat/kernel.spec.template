@@ -1463,6 +1463,31 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Mar 17 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-112.el7]
+- [net] bridge: multicast: enable snooping on general queries only (Florian Westphal) [1074491]
+- [net] bridge: multicast: add sanity check for general query destination (Florian Westphal) [1074491]
+- [net] bridge: multicast: add sanity check for query source addresses (Florian Westphal) [1074491]
+- [net] inet: frag: fix oops when unloading inetfrag modules (Florian Westphal) [1073962]
+- [virt] vhost/net: fix ref cnt checking deadlock ("Michael S. Tsirkin") [1065878]
+- [virt] vhost_net: correctly limit the max pending buffers ("Michael S. Tsirkin") [1065878]
+- [virt] vhost/net: fix a theoretical race in device cleanup ("Michael S. Tsirkin") [1065878]
+- [powerpc] pseries: Expose in kernel device tree update to drmgr (Steve Best) [1064745]
+- [powerpc] pseries: Update dynamic cache nodes for suspend/resume operation (Steve Best) [1064745]
+- [powerpc] pseries: Device tree should only be updated once after suspend/migrate (Steve Best) [1064745]
+- [powerpc] pseries: Child nodes are not detached by dlpar_detach_node (Steve Best) [1064745]
+- [powerpc] pseries: Add mising of_node_put in delete_dt_node (Steve Best) [1064745]
+- [powerpc] pseries: Make dlpar_configure_connector parent node aware (Steve Best) [1064745]
+- [powerpc] pseries: Do all node initialization in dlpar_parse_cc_node (Steve Best) [1064745]
+- [powerpc] pseries: Fix parsing of initial node path in update_dt_node (Steve Best) [1064745]
+- [powerpc] pseries: Pack update_props_workarea to map correctly to rtas buffer header (Steve Best) [1064745]
+- [powerpc] pseries: Fix over writing of rtas return code in update_dt_node (Steve Best) [1064745]
+- [powerpc] pseries: Fix creation of loop in device node property list (Steve Best) [1064745]
+- [infiniband] mlx4: Don't allocate range of steerable UD QPs for Ethernet-only device (Doug Ledford) [1061795]
+- [ethernet] e1000: fix lockdep warning in e1000_reset_task (John Green) [1056355]
+- [ethernet] mlx4: mlx4_init_slave() shouldn't access comm channel before PF is ready (Amir Vadai) [1058413]
+- [ethernet] mlx4: Fix memory access error in mlx4_QUERY_DEV_CAP_wrapper() (Amir Vadai) [1058413]
+- [mm] numa: recheck for transhuge pages under lock during protection changes (Rik van Riel) [1073674]
+
 * Fri Mar 14 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-111.el7]
 - [net] inet: fix for a race condition in the inet frag code (Nikolay Aleksandrov) [1070711] {CVE-2014-0100}
 - [scsi] aacraid: Print warning message if unsupported card is being used (Rich Bono) [1019091]
