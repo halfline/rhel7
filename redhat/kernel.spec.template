@@ -1463,6 +1463,15 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Mar 18 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-113.el7]
+- [security] selinux: fix broken peer recv check (Paul Moore) [1043165]
+- [md] dm-raid: Fix possibility of skipping device recovery (Jonathan E Brassow) [1069927]
+- [fs] xfs: avoid AGI/AGF deadlock scenario for inode chunk allocation (Brian Foster) [1052789]
+- [md] dm-cache: fix access beyond end of origin device (Mike Snitzer) [1074606]
+- [md] dm-cache: fix truncation bug when copying a block to/from >2TB fast device (Mike Snitzer) [1075709]
+- [ethernet] bna: don't disable VLAN tag stripping in promisc mode (Ivan Vecera) [1057842]
+- [kernel] posix-timers: Spare workqueue if there is no full dynticks CPU to kick (Frederic Weisbecker) [1074168]
+
 * Mon Mar 17 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-112.el7]
 - [net] bridge: multicast: enable snooping on general queries only (Florian Westphal) [1074491]
 - [net] bridge: multicast: add sanity check for general query destination (Florian Westphal) [1074491]
