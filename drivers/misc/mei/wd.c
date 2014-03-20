@@ -370,9 +370,15 @@ static struct watchdog_device amt_wd_dev = {
 
 void mei_watchdog_register(struct mei_device *dev)
 {
-	if (watchdog_register_device(&amt_wd_dev)) {
-		dev_err(&dev->pdev->dev,
-			"wd: unable to register watchdog device.\n");
+	int ret;
+
+	/* unlock to perserve correct locking order */
+	mutex_unlock(&dev->device_lock);
+	ret = watchdog_register_device(&amt_wd_dev);
+	mutex_lock(&dev->device_lock);
+	if (ret) {
+		dev_err(&dev->pdev->dev, "wd: unable to register watchdog device = %d.\n",
+			ret);
 		return;
 	}
 
