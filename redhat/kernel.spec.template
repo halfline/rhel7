@@ -1463,6 +1463,25 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Mar 21 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-114.el7]
+- [net] netfilter: nf_conntrack_dccp: fix skb_header_pointer API usages (Jiri Pirko) [1077351] {CVE-2014-2523}
+- [net] ipv6: don't set DST_NOCOUNT for remotely added routes (Jiri Pirko) [1075060] {CVE-2014-2309}
+- [net] skbuff: skb_segment: orphan frags before copying ("Michael S. Tsirkin") [1056934] {CVE-2014-0131}
+- [net] skbuff: skb_segment: s/fskb/list_skb/ ("Michael S. Tsirkin") [1056934] {CVE-2014-0131}
+- [net] skbuff: skb_segment: s/skb/head_skb/ ("Michael S. Tsirkin") [1056934] {CVE-2014-0131}
+- [net] skbuff: skb_segment: s/skb_frag/frag/ ("Michael S. Tsirkin") [1056934] {CVE-2014-0131}
+- [net] skbuff: skb_segment: s/frag/nskb_frag/ ("Michael S. Tsirkin") [1056934] {CVE-2014-0131}
+- [net] use kfree_skb_list() helper ("Michael S. Tsirkin") [1056934] {CVE-2014-0131}
+- [net] veth: fix veth vlan features (Flavio Leitner) [1076077]
+- [net] sunrpc/xprtrdma: add separate Kconfig options for NFSoRDMA client and server support (Jeff Layton) [1077957]
+- [virt] kvm/x86: emulate MOVAPD (Igor Mammedov) [1052090]
+- [virt] kvm/x86: emulate MOVAPS (Igor Mammedov) [1052090]
+- [mm] x86: Wrong page freed on preallocate_pmds() failure exit (Larry Woodman) [1073641]
+- [mm] x86: do not leak page->ptl for pmd page tables (Larry Woodman) [1073641]
+- [virt] kvm/x86: fix emulator buffer overflow (Andrew Jones) [1071836] {CVE-2014-0049}
+- [virt] hyperv: Change the receive buffer size for legacy hosts (Jason Wang) [1075279]
+- [x86] quirks: Update DH8900CC Unsupported Device ID (Prarit Bhargava) [1076137]
+
 * Tue Mar 18 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-113.el7]
 - [security] selinux: fix broken peer recv check (Paul Moore) [1043165]
 - [md] dm-raid: Fix possibility of skipping device recovery (Jonathan E Brassow) [1069927]
