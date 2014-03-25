@@ -1463,6 +1463,17 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Mar 25 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-115.el7]
+- [block] free q->flush_rq in blk_init_allocated_queue error paths (Mike Snitzer) [1078522]
+- [x86] fpu: Clear exceptions in AMD FXSAVE workaround (Phillip Lougher) [1053596] {CVE-2014-1438}
+- [mm] page_alloc: spill to remote nodes before waking kswapd (Johannes Weiner) [1076546]
+- [mm] vmscan: do not swap anon pages just because free+file is low (Johannes Weiner) [1076546]
+- [fs] sunrpc: Ensure call_connect_status() deals correctly with SOFTCONN tasks (Steve Dickson) [1071532]
+- [fs] nfs: Ensure we respect soft mount timeouts during trunking discovery (Steve Dickson) [1071532]
+- [fs] nfs: Schedule recovery if nfs40_walk_client_list() is interrupted (Steve Dickson) [1071532]
+- [fs] sunrpc: Ensure that call_bind times out correctly (Steve Dickson) [1071532]
+- [fs] sunrpc: Ensure that call_connect times out correctly (Steve Dickson) [1071532]
+
 * Fri Mar 21 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-114.el7]
 - [net] netfilter: nf_conntrack_dccp: fix skb_header_pointer API usages (Jiri Pirko) [1077351] {CVE-2014-2523}
 - [net] ipv6: don't set DST_NOCOUNT for remotely added routes (Jiri Pirko) [1075060] {CVE-2014-2309}
