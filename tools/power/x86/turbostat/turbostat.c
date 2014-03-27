@@ -219,7 +219,7 @@ int cpu_migrate(int cpu)
 		return 0;
 }
 
-int _get_msr(int cpu, off_t offset, unsigned long long *msr, int warn)
+int get_msr(int cpu, off_t offset, unsigned long long *msr)
 {
 	ssize_t retval;
 	char pathname[32];
@@ -234,23 +234,11 @@ int _get_msr(int cpu, off_t offset, unsigned long long *msr, int warn)
 	close(fd);
 
 	if (retval != sizeof *msr) {
-		if (warn)
-			fprintf(stderr, "%s offset 0x%zx read failed\n",
-				pathname, offset);
+		fprintf(stderr, "%s offset 0x%zx read failed\n", pathname, offset);
 		return -1;
 	}
 
 	return 0;
-}
-
-int get_msr(int cpu, off_t offset, unsigned long long *msr)
-{
-	return _get_msr(cpu, offset, msr, 1);
-}
-
-int get_msr_nowarn(int cpu, off_t offset, unsigned long long *msr)
-{
-	return _get_msr(cpu, offset, msr, 0);
 }
 
 void print_header(void)
@@ -965,10 +953,9 @@ int get_counters(struct thread_data *t, struct core_data *c, struct pkg_data *p)
 		p->energy_dram = msr & 0xFFFFFFFF;
 	}
 	if (do_rapl & RAPL_GFX) {
-		if (get_msr_nowarn(cpu, MSR_PP1_ENERGY_STATUS, &msr))
-			do_rapl &= ~RAPL_GFX; /* unsupported on servers */
-		else
-			p->energy_gfx = msr & 0xFFFFFFFF;
+		if (get_msr(cpu, MSR_PP1_ENERGY_STATUS, &msr))
+			return -16;
+		p->energy_gfx = msr & 0xFFFFFFFF;
 	}
 	if (do_rapl & RAPL_PKG_PERF_STATUS) {
 		if (get_msr(cpu, MSR_PKG_PERF_STATUS, &msr))
