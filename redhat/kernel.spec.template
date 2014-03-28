@@ -1463,6 +1463,12 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Mar 28 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-116.el7]
+- [s390] qeth: postpone freeing of qdio memory (Hendrik Brueckner) [1077650]
+- [kernel] rh_taint: Remove taint and update unsupported hardware message (Prarit Bhargava) [1076974]
+- [fs] proc/vmcore: continue vmcore initialization if PT_NOTE is found empty (Chao WANG) [1077535]
+- [net] ipv6: ip6_append_data_mtu do not handle the mtu of the second fragment properly (Jiri Pirko) [1079873]
+
 * Tue Mar 25 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-115.el7]
 - [block] free q->flush_rq in blk_init_allocated_queue error paths (Mike Snitzer) [1078522]
 - [x86] fpu: Clear exceptions in AMD FXSAVE workaround (Phillip Lougher) [1053596] {CVE-2014-1438}
