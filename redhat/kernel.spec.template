@@ -1463,6 +1463,19 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Mar 31 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-117.el7]
+- [md] dm-thin: fix dangling bio in process_deferred_bios error path (Mike Snitzer) [1081781]
+- [md] dm: take care to copy the space map roots before locking the superblock (Mike Snitzer) [1081781]
+- [md] dm-transaction-manager: fix corruption due to non-atomic transaction commit (Mike Snitzer) [1081781]
+- [md] dm-era: fixes for issues identified upstream (Mike Snitzer) [1081781]
+- [md] dm-cache: remove remainder of distinct discard block size (Mike Snitzer) [1062679]
+- [md] dm-cache: prevent corruption caused by discard_block_size > cache_block_size (Mike Snitzer) [1062679]
+- [ipc] change kern_ipc_perm.deleted type to bool (Phillip Lougher) [1043807] {CVE-2013-7026}
+- [ipc] introduce ipc_valid_object() helper to sort out IPC_RMID races (Phillip Lougher) [1043807] {CVE-2013-7026}
+- [ipc] shm: fix shm_file deletion races (Phillip Lougher) [1043807] {CVE-2013-7026}
+- [drm] udl: take reference to device struct for dma-bufs (Dave Airlie) [1077774]
+- [security] keys: Allow special keys (eg. DNS results) to be invalidated by CAP_SYS_ADMIN (David Howells) [1074240]
+
 * Fri Mar 28 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-116.el7]
 - [s390] qeth: postpone freeing of qdio memory (Hendrik Brueckner) [1077650]
 - [kernel] rh_taint: Remove taint and update unsupported hardware message (Prarit Bhargava) [1076974]
