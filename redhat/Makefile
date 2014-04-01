@@ -99,7 +99,7 @@ sources-rh: $(TARBALL)
 	@(if [ ! -f keys/extra_certificates ]; then \
 		touch keys/extra_certificates; \
 	fi)
-	@cp cpupower.* x509.genkey keys/extra_certificates Makefile.common kabi/check-kabi kabi/Module.kabi_{ppc64,s390x,x86_64} kabi/kabi_whitelist_{ppc64,s390x,x86_64} configs/kernel-*.config rhpkg/Makefile scripts/sign-modules keys/*.cer $(SOURCES)/
+	@cp cpupower.* x509.genkey keys/*.x509 keys/extra_certificates Makefile.common kabi/check-kabi kabi/Module.kabi_{ppc64,s390x,x86_64} kabi/kabi_whitelist_{ppc64,s390x,x86_64} configs/kernel-*.config rhpkg/Makefile scripts/sign-modules keys/*.cer $(SOURCES)/
 
 rh-sources: setup-source rh-configs sources-rh
 

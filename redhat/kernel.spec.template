@@ -342,6 +342,8 @@ Source11: x509.genkey
 Source12: extra_certificates
 Source13: securebootca.cer
 Source14: secureboot.cer
+Source15: rheldup3.x509
+Source16: rhelkpatch1.x509
 
 Source18: check-kabi
 
@@ -778,6 +780,8 @@ BuildKernel() {
 
     cp %{SOURCE11} .	# x509.genkey
     cp %{SOURCE12} .	# extra_certificates
+    cp %{SOURCE15} .	# rheldup3.x509
+    cp %{SOURCE16} .	# rhelkpatch1.x509
 
     cp configs/$Config .config
 
