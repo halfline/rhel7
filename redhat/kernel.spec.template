@@ -1463,6 +1463,19 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Apr 01 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-118.el7]
+- [wireless] ath9k: Fix LNA gpio for AR9485 (John Green) [1082017]
+- [infiniband] core: Don't resolve passive side RoCE L2 address in cma req handler (Amir Vadai) [1075852]
+- [fs] xfs: fix buffer use after free on IO error (Eric Sandeen) [924301]
+- [scsi] be2iscsi: Bump the driver version (Rob Evers) [1052416]
+- [scsi] be2iscsi: Fix DMA Out of SW-IOMMU space error (Rob Evers) [1052416]
+- [scsi] be2iscsi: Fix scsi_cmnd leakage in driver (Rob Evers) [1052416]
+- [scsi] be2iscsi: Fix the session cleanup when reboot/shutdown happens (Rob Evers) [1052416]
+- [scsi] be2iscsi: Fix doorbell format for EQ/CQ/RQ s per SLI spec (Rob Evers) [1052416]
+- [scsi] be2iscsi: Fix port speed typo in driver (Rob Evers) [1052416]
+- [scsi] be2iscsi: Fix handling timed out MBX completion from FW (Rob Evers) [1052416]
+- [fs] nfs: Fix a use-after-free problem in open() (Steve Dickson) [1062809]
+
 * Mon Mar 31 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-117.el7]
 - [md] dm-thin: fix dangling bio in process_deferred_bios error path (Mike Snitzer) [1081781]
 - [md] dm: take care to copy the space map roots before locking the superblock (Mike Snitzer) [1081781]
