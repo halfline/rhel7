@@ -754,6 +754,19 @@ struct device {
 
 	bool			offline_disabled:1;
 	bool			offline:1;
+
+	/* Extension to accomodate future upstream changes to this structure
+	 * yet maintain RHEL7 KABI.  For Red Hat internal use only!
+	 */
+	struct device_rh	*device_rh;
+};
+
+/* RHEL7 specific 'struct device_rh' shadow structure to help maintain KABI
+ * going forward.  This structure will never be under KABI restrictions.
+ */
+struct device_rh {
+#ifndef __GENKSYMS__
+#endif
 };
 
 static inline struct device *kobj_to_dev(struct kobject *kobj)
