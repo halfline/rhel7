@@ -249,8 +249,20 @@ struct device_driver {
 	const struct dev_pm_ops *pm;
 
 	struct driver_private *p;
+
+	/* Extension to accomodate future upstream changes to this structure
+	 * yet maintain RHEL7 KABI.  For Red Hat internal use only!
+	 */
+	struct device_driver_rh	*device_driver_rh;
 };
 
+/* RHEL7 specific 'struct device_driver' shadow structure to help maintain
+ * KABI going forward.  This structure will never be under KABI restrictions.
+ */
+struct device_driver_rh {
+#ifndef __GENKSYMS__
+#endif
+};
 
 extern int __must_check driver_register(struct device_driver *drv);
 extern void driver_unregister(struct device_driver *drv);
