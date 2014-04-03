@@ -1467,6 +1467,19 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Apr 03 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-119.el7]
+- [net] bonding: remove bond_resend_igmp_join_requests read_unlock leftover (Veaceslav Falico) [1080924]
+- [ethernet] mlx4: Support shutdown() interface (Amir Vadai) [1046216]
+- [zram] fix invalid memory access (Jerome Marchand) [1081936]
+- [zram] protect zram_reset_device() call (Jerome Marchand) [1081936]
+- [zram] remove zram_sysfs file (Jerome Marchand) [1081936]
+- [zram] use atomic64_xxx() to replace zram_stat64_xxx() (Jerome Marchand) [1081936]
+- [zram] optimize memory operations with clear_page()/copy_page() (Jerome Marchand) [1081936]
+- [zram] kill unused zram_get_num_devices() (Jerome Marchand) [1081936]
+- [zram] simplify and optimize dev_to_zram() (Jerome Marchand) [1081936]
+- [kernel] futex: revert back to the explicit waiter counting code (Larry Woodman) [1081100]
+- [kernel] audit: Allow login in non-init namespaces (Richard Guy Briggs) [1082597]
+
 * Tue Apr 01 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-118.el7]
 - [wireless] ath9k: Fix LNA gpio for AR9485 (John Green) [1082017]
 - [infiniband] core: Don't resolve passive side RoCE L2 address in cma req handler (Amir Vadai) [1075852]
