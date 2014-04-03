@@ -168,6 +168,14 @@ struct scsi_device {
 	unsigned wce_default_on:1;	/* Cache is ON by default */
 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
 
+	/* FOR RH USE ONLY
+	 *
+	 * The following padding has been inserted before ABI freeze to
+	 * allow extending the structure while preserving ABI.
+	 */
+	unsigned vpd_reserved:1;
+	unsigned xcopy_reserved:1;
+
 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
 
 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
@@ -198,6 +206,19 @@ struct scsi_device {
 	 * The following padding has been inserted before ABI freeze to
 	 * allow extending the structure while preserve ABI.
 	 */
+
+	void	*vpd_reserved1;
+	void	*vpd_reserved2;
+	void	*vpd_reserved3;
+	void	*vpd_reserved4;
+
+	char	vpd_reserved5;
+	char	vpd_reserved6;
+	char	vpd_reserved7;
+	char	vpd_reserved8;
+
+	spinlock_t	vpd_reserved9;
+
 #ifndef __GENKSYMS__
 	void			(*rh_reserved1)(void);
 	void			(*rh_reserved2)(void);

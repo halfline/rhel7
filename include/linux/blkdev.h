@@ -291,6 +291,13 @@ struct queue_limits {
 	unsigned char		cluster;
 	unsigned char		discard_zeroes_data;
 
+	/* FOR RH USE ONLY
+	 *
+	 * The following padding has been inserted before ABI freeze to
+	 * allow extending the structure while preserving ABI.
+	 */
+	unsigned int		xcopy_reserved;
+
 #ifndef __GENKSYMS__
 	unsigned long		rh_reserved1;
 	unsigned long		rh_reserved2;
