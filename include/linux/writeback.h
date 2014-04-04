@@ -81,7 +81,8 @@ struct writeback_control {
 	unsigned for_sync:1;		/* sync(2) WB_SYNC_ALL writeback */
 
 	/* reserved for Red Hat */
-	unsigned long rh_reserved[2];
+	unsigned long rh_reserved1;
+	unsigned long rh_reserved2;
 };
 
 /*

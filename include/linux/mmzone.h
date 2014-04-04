@@ -502,7 +502,14 @@ struct zone {
 	const char		*name;
 
 	/* reserved for Red Hat */
-	unsigned long rh_reserved[8];
+	unsigned long rh_reserved1;
+	unsigned long rh_reserved2;
+	unsigned long rh_reserved3;
+	unsigned long rh_reserved4;
+	unsigned long rh_reserved5;
+	unsigned long rh_reserved6;
+	unsigned long rh_reserved7;
+	unsigned long rh_reserved8;
 
 } ____cacheline_internodealigned_in_smp;
 
@@ -777,7 +784,10 @@ typedef struct pglist_data {
 #endif
 
 	/* reserved for Red Hat */
-	unsigned long rh_reserved[4];
+	unsigned long rh_reserved1;
+	unsigned long rh_reserved2;
+	unsigned long rh_reserved3;
+	unsigned long rh_reserved4;
 
 } pg_data_t;
 

@@ -300,7 +300,10 @@ struct vm_area_struct {
 #endif
 
 	/* reserved for Red Hat */
-	unsigned long rh_reserved[4];
+	unsigned long rh_reserved1;
+	unsigned long rh_reserved2;
+	unsigned long rh_reserved3;
+	unsigned long rh_reserved4;
 };
 
 struct core_thread {
@@ -451,7 +454,14 @@ struct mm_struct {
 	struct uprobes_state uprobes_state;
 
 	/* reserved for Red Hat */
-	unsigned long rh_reserved[8];
+	unsigned long rh_reserved1;
+	unsigned long rh_reserved2;
+	unsigned long rh_reserved3;
+	unsigned long rh_reserved4;
+	unsigned long rh_reserved5;
+	unsigned long rh_reserved6;
+	unsigned long rh_reserved7;
+	unsigned long rh_reserved8;
 };
 
 static inline void mm_init_cpumask(struct mm_struct *mm)

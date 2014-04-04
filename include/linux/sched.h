@@ -628,7 +628,10 @@ struct signal_struct {
 					 * (notably. ptrace) */
 
 	/* reserved for Red Hat */
-	unsigned long rh_reserved[4];
+	unsigned long rh_reserved1;
+	unsigned long rh_reserved2;
+	unsigned long rh_reserved3;
+	unsigned long rh_reserved4;
 };
 
 /*
@@ -1022,7 +1025,10 @@ struct sched_entity {
 #endif
 
 	/* reserved for Red Hat */
-	unsigned long rh_reserved[4];
+	unsigned long rh_reserved1;
+	unsigned long rh_reserved2;
+	unsigned long rh_reserved3;
+	unsigned long rh_reserved4;
 };
 
 struct sched_rt_entity {
@@ -1483,7 +1489,14 @@ struct task_struct {
 #endif
 
 	/* reserved for Red Hat */
-	unsigned long rh_reserved[8];
+	unsigned long rh_reserved1;
+	unsigned long rh_reserved2;
+	unsigned long rh_reserved3;
+	unsigned long rh_reserved4;
+	unsigned long rh_reserved5;
+	unsigned long rh_reserved6;
+	unsigned long rh_reserved7;
+	unsigned long rh_reserved8;
 };
 
 /* Future-safe accessor for struct task_struct's cpus_allowed. */

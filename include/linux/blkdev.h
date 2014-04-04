@@ -1586,7 +1586,11 @@ struct block_device_operations {
 	void (*swap_slot_free_notify) (struct block_device *, unsigned long);
 
 	/* future placeholders for nvdimm */
-	void *rh_reserved_ptrs[5];
+	void *rh_reserved_ptrs1;
+	void *rh_reserved_ptrs2;
+	void *rh_reserved_ptrs3;
+	void *rh_reserved_ptrs4;
+	void *rh_reserved_ptrs5;
 
 	struct module *owner;
 };
