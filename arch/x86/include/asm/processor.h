@@ -76,9 +76,7 @@ extern s8  __read_mostly tlb_flushall_shift;
 
 /* this struct is NEVER under kabi restrictions */
 struct rh_cpuinfo_x86 {
-#ifndef __GENKSYMS__
 	int dummy; /* this dummy entry can be removed */
-#endif
 };
 
 /*

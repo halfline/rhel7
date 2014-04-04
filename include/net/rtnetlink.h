@@ -89,7 +89,6 @@ struct rtnl_link_ops {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-#ifndef __GENKSYMS__
 	void			(*rh_reserved1)(void);
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
@@ -106,7 +105,6 @@ struct rtnl_link_ops {
 	void			(*rh_reserved14)(void);
 	void			(*rh_reserved15)(void);
 	void			(*rh_reserved16)(void);
-#endif
 };
 
 extern int	__rtnl_link_register(struct rtnl_link_ops *ops);

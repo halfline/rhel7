@@ -298,11 +298,9 @@ struct queue_limits {
 	 */
 	unsigned int		xcopy_reserved;
 
-#ifndef __GENKSYMS__
 	unsigned long		rh_reserved1;
 	unsigned long		rh_reserved2;
 	unsigned long		rh_reserved3;
-#endif
 };
 
 struct request_queue {

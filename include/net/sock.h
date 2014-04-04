@@ -430,7 +430,6 @@ struct sock {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-#ifndef __GENKSYMS__
 	void			(*rh_reserved1)(void);
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
@@ -439,7 +438,6 @@ struct sock {
 	void			(*rh_reserved6)(void);
 	void			(*rh_reserved7)(void);
 	void			(*rh_reserved8)(void);
-#endif
 };
 
 #define __sk_user_data(sk) ((*((void __rcu **)&(sk)->sk_user_data)))

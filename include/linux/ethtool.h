@@ -253,7 +253,6 @@ struct ethtool_ops {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-#ifndef __GENKSYMS__
 	void			(*rh_reserved1)(void);
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
@@ -270,6 +269,5 @@ struct ethtool_ops {
 	void			(*rh_reserved14)(void);
 	void			(*rh_reserved15)(void);
 	void			(*rh_reserved16)(void);
-#endif
 };
 #endif /* _LINUX_ETHTOOL_H */

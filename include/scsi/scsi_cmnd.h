@@ -137,12 +137,10 @@ struct scsi_cmnd {
 	 * The following padding has been inserted before ABI freeze to
 	 * allow extending the structure while preserve ABI.
 	 */
-#ifndef __GENKSYMS__
 	void			(*rh_reserved1)(void);
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
 	void			(*rh_reserved4)(void);
-#endif
 
 };
 

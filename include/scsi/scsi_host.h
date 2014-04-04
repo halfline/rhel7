@@ -530,7 +530,6 @@ struct scsi_host_template {
 	 * The following padding has been inserted before ABI freeze to
 	 * allow extending the structure while preserve ABI.
 	 */
-#ifndef __GENKSYMS__
 	void			(*rh_reserved1)(void);
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
@@ -540,7 +539,6 @@ struct scsi_host_template {
 	unsigned int scsi_mq_reserved2;
 	void *scsi_mq_reserved3;
 	void *scsi_mq_reserved4;
-#endif
 
 };
 
@@ -776,7 +774,6 @@ struct Scsi_Host {
 	 * The following padding has been inserted before ABI freeze to
 	 * allow extending the structure while preserve ABI.
 	 */
-#ifndef __GENKSYMS__
 	void			(*rh_reserved1)(void);
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
@@ -790,7 +787,6 @@ struct Scsi_Host {
 	void *scsi_mq_reserved4;
 	atomic_t scsi_mq_reserved5;
 	atomic_t scsi_mq_reserved6;
-#endif
 
 	/*
 	 * We should ensure that this is aligned, both for better performance

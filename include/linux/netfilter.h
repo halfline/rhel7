@@ -60,14 +60,13 @@ struct nf_hook_ops {
 	unsigned int	hooknum;
 	/* Hooks are ordered in ascending priority. */
 	int		priority;
-#ifndef __GENKSYMS__
+
 	/* Reserved for use in the future RHEL versions. Set to zero. */
 	unsigned long	__rht_reserved1;
 	unsigned long	__rht_reserved2;
 	unsigned long	__rht_reserved3;
 	unsigned long	__rht_reserved4;
 	unsigned long	__rht_reserved5;
-#endif
 };
 
 struct nf_sockopt_ops {

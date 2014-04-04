@@ -15,14 +15,13 @@ struct netns_nftables {
 	struct nft_af_info	*bridge;
 	u8			gencursor;
 	u8			genctr;
-#ifndef __GENKSYMS__
+
 	/* Reserved for use in the future RHEL versions. */
 	unsigned long		__rht_reserved1;
 	unsigned long		__rht_reserved2;
 	unsigned long		__rht_reserved3;
 	unsigned long		__rht_reserved4;
 	unsigned long		__rht_reserved5;
-#endif
 };
 
 #endif

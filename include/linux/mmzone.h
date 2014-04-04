@@ -500,10 +500,10 @@ struct zone {
 	 * rarely used fields:
 	 */
 	const char		*name;
-#ifndef __GENKSYMS__
+
 	/* reserved for Red Hat */
 	unsigned long rh_reserved[8];
-#endif
+
 } ____cacheline_internodealigned_in_smp;
 
 typedef enum {
@@ -775,10 +775,10 @@ typedef struct pglist_data {
 	/* Number of pages migrated during the rate limiting time interval */
 	unsigned long numabalancing_migrate_nr_pages;
 #endif
-#ifndef __GENKSYMS__
+
 	/* reserved for Red Hat */
 	unsigned long rh_reserved[4];
-#endif
+
 } pg_data_t;
 
 #define node_present_pages(nid)	(NODE_DATA(nid)->node_present_pages)

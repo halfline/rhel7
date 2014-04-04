@@ -1105,7 +1105,6 @@ struct net_device_ops {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-#ifndef __GENKSYMS__
 	void			(*rh_reserved1)(void);
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
@@ -1122,7 +1121,6 @@ struct net_device_ops {
 	void			(*rh_reserved14)(void);
 	void			(*rh_reserved15)(void);
 	void			(*rh_reserved16)(void);
-#endif
 };
 
 /*
@@ -1443,7 +1441,6 @@ struct net_device {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-#ifndef __GENKSYMS__
 	void			(*rh_reserved1)(void);
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
@@ -1460,7 +1457,6 @@ struct net_device {
 	void			(*rh_reserved14)(void);
 	void			(*rh_reserved15)(void);
 	void			(*rh_reserved16)(void);
-#endif
 };
 #define to_net_dev(d) container_of(d, struct net_device, dev)
 

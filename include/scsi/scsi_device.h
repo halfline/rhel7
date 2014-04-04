@@ -219,7 +219,6 @@ struct scsi_device {
 
 	spinlock_t	vpd_reserved9;
 
-#ifndef __GENKSYMS__
 	void			(*rh_reserved1)(void);
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
@@ -229,7 +228,6 @@ struct scsi_device {
 
 	atomic_t scsi_mq_reserved1;
 	atomic_t scsi_mq_reserved2;
-#endif
 
 	unsigned long		sdev_data[0];
 } __attribute__((aligned(sizeof(unsigned long))));
@@ -332,7 +330,6 @@ struct scsi_target {
 	 * The following padding has been inserted before ABI freeze to
 	 * allow extending the structure while preserve ABI.
 	 */
-#ifndef __GENKSYMS__
 	void			(*rh_reserved1)(void);
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
@@ -340,7 +337,6 @@ struct scsi_target {
 
 	atomic_t		scsi_mq_reserved1;
 	atomic_t		scsi_mq_reserved2;
-#endif
 
 	unsigned long		starget_data[0]; /* for the transport */
 	/* starget_data must be the last element!!!! */
