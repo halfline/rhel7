@@ -1465,6 +1465,22 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Apr 07 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-120.el7]
+- [net] netfilter: fix panic when oom during rule replacement (Florian Westphal) [985657]
+- [net] netfilter: x_tables: fix ordering of jumpstack allocation and table update (Florian Westphal) [985657]
+- [virt] kvm/ioapic: try to recover if pending_eoi goes out of range (Paolo Bonzini) [1036478]
+- [virt] kvm/ioapic: fix assignment of ioapic->rtc_status.pending_eoi (Paolo Bonzini) [1036478 1081590] {CVE-2014-0155}
+- [virt] kvm/ioapic: reinject pending interrupts on KVM_SET_IRQCHIP (Paolo Bonzini) [1036478]
+- [virt] kvm/ioapic: extract body of kvm_ioapic_set_irq (Paolo Bonzini) [1036478]
+- [virt] kvm/ioapic: clear IRR for edge-triggered interrupts at delivery (Paolo Bonzini) [1036478]
+- [virt] kvm/ioapic: merge ioapic_deliver into ioapic_service (Paolo Bonzini) [1036478]
+- [virt] kvm: ignore ioapic polarity (Paolo Bonzini) [1036478]
+- [core] device: Create 'device_driver_rh' KABI shadowing structure (Myron Stowe) [1083692]
+- [core] device: Create 'device_rh' KABI shadowing structure (Myron Stowe) [1083692]
+- [scsi] Reserve space in structures for future XCOPY support (Ewan Milne) [1080430]
+- [fs] xfs: fix bad hash ordering (Brian Foster) [1083206]
+- [fs] xfs: always do log forces via the workqueue (Brian Foster) [1052004]
+
 * Thu Apr 03 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-119.el7]
 - [net] bonding: remove bond_resend_igmp_join_requests read_unlock leftover (Veaceslav Falico) [1080924]
 - [ethernet] mlx4: Support shutdown() interface (Amir Vadai) [1046216]
