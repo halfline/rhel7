@@ -70,9 +70,7 @@ Summary: The Linux kernel
 %define with_dbgonly   %{?_with_dbgonly:      1} %{?!_with_dbgonly:      0}
 
 # Control whether we perform a compat. check against published ABI.
-#define with_kabichk   #{?_without_kabichk:   0} #{?!_without_kabichk:   1}
-# Temporarily disabling kabi checking until RC
-%define with_kabichk 0
+%define with_kabichk   %{?_without_kabichk:   0} %{?!_without_kabichk:   1}
 
 # should we do C=1 builds with sparse
 %define with_sparse    %{?_with_sparse:       1} %{?!_with_sparse:       0}

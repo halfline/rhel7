@@ -123,8 +123,8 @@
 	cpu_sibling_map
 	csum_ipv6_magic
 	current_kernel_time
-	del_gendisk
 	default_wake_function
+	del_gendisk
 	del_timer
 	del_timer_sync
 	destroy_workqueue
@@ -197,10 +197,10 @@
 	icmpv6_send
 	in_aton
 	init_net
-	io_schedule
 	init_timer_key
 	init_uts_ns
 	invalidate_bdev
+	io_schedule
 	ioctl_by_bdev
 	ioremap_nocache
 	iounmap
