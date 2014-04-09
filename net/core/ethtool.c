@@ -96,6 +96,7 @@ static const char netdev_features_strings[NETDEV_FEATURE_COUNT][ETH_GSTRING_LEN]
 	[NETIF_F_LOOPBACK_BIT] =         "loopback",
 	[NETIF_F_RXFCS_BIT] =            "rx-fcs",
 	[NETIF_F_RXALL_BIT] =            "rx-all",
+	[NETIF_F_BUSY_POLL_BIT] =        "busy-poll",
 };
 
 static int ethtool_get_features(struct net_device *dev, void __user *useraddr)
