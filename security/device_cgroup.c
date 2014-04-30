@@ -488,6 +488,34 @@ static int parent_has_perm(struct dev_cgroup *childcg,
 	return verify_new_ex(parent, ex, childcg->behavior);
 }
 
+/*
+ * parent_allows_removal - check if the parent cgroup allows an exception to
+ *			   be removed
+ * @childcg: child cgroup from where the exception will be removed
+ * @ex: exception being removed
+ */
+static bool parent_allows_removal(struct dev_cgroup *childcg,
+				  struct dev_exception_item *ex)
+{
+	struct cgroup *pcg = childcg->css.cgroup->parent;
+	struct dev_cgroup *parent;
+
+	if (!pcg)
+		return true;
+	parent = cgroup_to_devcgroup(pcg);
+
+	if (childcg->behavior == DEVCG_DEFAULT_DENY)
+		/* It's always allowed to remove access to devices */
+		return true;
+
+	/*
+	 * Make sure you're not removing part or a whole exception existing in
+	 * the parent cgroup
+	 */
+	return !match_exception_partial(&parent->exceptions, ex->type,
+					ex->major, ex->minor, ex->access);
+}
+
 /**
  * may_allow_all - checks if it's possible to change the behavior to
  *		   allow based on parent's rules.
@@ -744,17 +772,21 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
 
 	switch (filetype) {
 	case DEVCG_ALLOW:
-		if (!parent_has_perm(devcgroup, &ex))
-			return -EPERM;
 		/*
 		 * If the default policy is to allow by default, try to remove
 		 * an matching exception instead. And be silent about it: we
 		 * don't want to break compatibility
 		 */
 		if (devcgroup->behavior == DEVCG_DEFAULT_ALLOW) {
+			/* Check if the parent allows removing it first */
+			if (!parent_allows_removal(devcgroup, &ex))
+				return -EPERM;
 			dev_exception_rm(devcgroup, &ex);
-			return 0;
+			break;
 		}
+
+		if (!parent_has_perm(devcgroup, &ex))
+			return -EPERM;
 		rc = dev_exception_add(devcgroup, &ex);
 		break;
 	case DEVCG_DENY:
