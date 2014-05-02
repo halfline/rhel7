@@ -293,6 +293,7 @@ copy_buffer:
 	length = min_t(size_t, length, cb->buf_idx - *offset);
 
 	if (copy_to_user(ubuf, cb->response_buffer.data + *offset, length)) {
+		dev_dbg(&dev->pdev->dev, "failed to copy data to userland\n");
 		rets = -EFAULT;
 		goto free;
 	}
@@ -413,7 +414,7 @@ static ssize_t mei_write(struct file *file, const char __user *ubuf,
 
 	rets = copy_from_user(write_cb->request_buffer.data, ubuf, length);
 	if (rets) {
-		dev_err(&dev->pdev->dev, "failed to copy data from userland\n");
+		dev_dbg(&dev->pdev->dev, "failed to copy data from userland\n");
 		rets = -EFAULT;
 		goto out;
 	}
@@ -588,7 +589,7 @@ static long mei_ioctl(struct file *file, unsigned int cmd, unsigned long data)
 	dev_dbg(&dev->pdev->dev, "copy connect data from user\n");
 	if (copy_from_user(connect_data, (char __user *)data,
 				sizeof(struct mei_connect_client_data))) {
-		dev_err(&dev->pdev->dev, "failed to copy data from userland\n");
+		dev_dbg(&dev->pdev->dev, "failed to copy data from userland\n");
 		rets = -EFAULT;
 		goto out;
 	}
