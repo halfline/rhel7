@@ -161,9 +161,11 @@ int mei_wd_send(struct mei_device *dev)
  * @dev: the device structure
  * @preserve: indicate if to keep the timeout value
  *
- * returns 0 if success,
- *	-EIO when message send fails
+ * returns 0 if success
+ * on error:
+ *	-EIO    when message send fails
  *	-EINVAL when invalid message is to be sent
+ *	-ETIME  on message timeout
  */
 int mei_wd_stop(struct mei_device *dev)
 {
@@ -179,12 +181,12 @@ int mei_wd_stop(struct mei_device *dev)
 
 	ret = mei_cl_flow_ctrl_creds(&dev->wd_cl);
 	if (ret < 0)
-		goto out;
+		goto err;
 
 	if (ret && mei_hbuf_acquire(dev)) {
 		ret = mei_wd_send(dev);
 		if (ret)
-			goto out;
+			goto err;
 		dev->wd_pending = false;
 	} else {
 		dev->wd_pending = true;
@@ -192,21 +194,21 @@ int mei_wd_stop(struct mei_device *dev)
 
 	mutex_unlock(&dev->device_lock);
 
-	ret = wait_event_interruptible_timeout(dev->wait_stop_wd,
-					dev->wd_state == MEI_WD_IDLE,
-					msecs_to_jiffies(MEI_WD_STOP_TIMEOUT));
+	ret = wait_event_timeout(dev->wait_stop_wd,
+				dev->wd_state == MEI_WD_IDLE,
+				msecs_to_jiffies(MEI_WD_STOP_TIMEOUT));
 	mutex_lock(&dev->device_lock);
-	if (dev->wd_state == MEI_WD_IDLE) {
-		dev_dbg(&dev->pdev->dev, "wd: stop completed ret=%d.\n", ret);
-		ret = 0;
-	} else {
-		if (!ret)
-			ret = -ETIME;
+	if (dev->wd_state != MEI_WD_IDLE) {
+		/* timeout */
+		ret = -ETIME;
 		dev_warn(&dev->pdev->dev,
 			"wd: stop failed to complete ret=%d.\n", ret);
+		goto err;
 	}
-
-out:
+	dev_dbg(&dev->pdev->dev, "wd: stop completed after %u msec\n",
+			MEI_WD_STOP_TIMEOUT - jiffies_to_msecs(ret));
+	return 0;
+err:
 	return ret;
 }
 
