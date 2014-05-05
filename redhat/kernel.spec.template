@@ -1465,6 +1465,11 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon May 05 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-123.el7]
+- [mm] rmap: try_to_unmap_cluster() should lock_page() before mlocking (Larry Woodman) [1078349] {CVE-2014-3122}
+- [mm] huge_memory: Fix cpuset cgroups so all pages for a task remain on correct node (Larry Woodman) [1076613]
+- [mm] mprotect: fix oops in change_pmd_range called from task_numa_work (Rik van Riel) [1085050]
+
 * Thu May 01 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-122.el7]
 - [security] device_cgroup: check if exception removal is allowed (Aristeu Rozanski) [1086057]
 - [security] device_cgroup: rework device access check and rule checking (Aristeu Rozanski) [1086057]
