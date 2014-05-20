@@ -1465,6 +1465,15 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue May 20 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-124.el7]
+- [tty] n_tty: Fix n_tty_write crash when echoing in raw mode (Aristeu Rozanski) [1094242] {CVE-2014-0196}
+- [fs] gfs2: Fix uninitialized VFS inode in gfs2_create_inode (Abhijith Das) [1087995]
+- [kernel] cputime: Fix jiffies based cputime assumption on steal accounting (Frederic Weisbecker) [1047732]
+- [kernel] cputime: Bring cputime -> nsecs conversion (Frederic Weisbecker) [1047732]
+- [kernel] cputime: Default implementation of nsecs -> cputime conversion (Frederic Weisbecker) [1047732]
+- [x86] irq, pic: Probe for legacy PIC and set legacy_pic appropriately (Vivek Goyal) [1037957]
+- [virt] hyperv/vmbus: Negotiate version 3.0 when running on ws2012r2 hosts (Vivek Goyal) [1037957]
+
 * Mon May 05 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-123.el7]
 - [mm] rmap: try_to_unmap_cluster() should lock_page() before mlocking (Larry Woodman) [1078349] {CVE-2014-3122}
 - [mm] huge_memory: Fix cpuset cgroups so all pages for a task remain on correct node (Larry Woodman) [1076613]
