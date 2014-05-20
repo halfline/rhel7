@@ -1231,10 +1231,6 @@ struct task_struct {
 /* ipc stuff */
 	struct sysv_sem sysvsem;
 #endif
-#ifdef CONFIG_DETECT_HUNG_TASK
-/* hung task detection */
-	unsigned long last_switch_count;
-#endif
 /* CPU-specific state of this task */
 	struct thread_struct thread;
 /* filesystem information */
@@ -1489,7 +1485,14 @@ struct task_struct {
 #endif
 
 	/* reserved for Red Hat */
+#ifndef __GENKSYMS__
+#ifdef CONFIG_DETECT_HUNG_TASK
+/* hung task detection */
+	unsigned long last_switch_count;
+#endif
+#else
 	unsigned long rh_reserved1;
+#endif
 	unsigned long rh_reserved2;
 	unsigned long rh_reserved3;
 	unsigned long rh_reserved4;
