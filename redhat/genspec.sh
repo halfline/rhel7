@@ -4,13 +4,13 @@ SOURCES=$1
 SPECFILE=$2
 PKGRELEASE=$3
 RPMVERSION=$4
+RELEASED_KERNEL=$5
 clogf="$SOURCES/changelog"
 # hide [redhat] entries from changelog
 HIDE_REDHAT=1;
 # override LC_TIME to avoid date conflicts when building the srpm
 LC_TIME=
 STAMP=$(echo $MARKER | cut -f 1 -d '-' | sed -e "s/v//");
-RELEASED_KERNEL="1";
 RPM_VERSION="$RPMVERSION-$PKGRELEASE";
 
 echo >$clogf

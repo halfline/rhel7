@@ -5,9 +5,8 @@ Summary: The Linux kernel
 
 # % define buildid .local
 
-# For a stable, released kernel, released_kernel should be 1. For rawhide
-# and/or a kernel built from an rc or git snapshot, released_kernel should
-# be 0.
+# For a kernel released for public testing, released_kernel should be 1.
+# For internal testing builds during development, it should be 0.
 %global released_kernel %%RELEASED_KERNEL%%
 
 %define rpmversion %%RPMVERSION%%
@@ -48,19 +47,9 @@ Summary: The Linux kernel
 # kernel-abi-whitelists
 %define with_kernel_abi_whitelists %{?_with_kernel_abi_whitelists: 0} %{?!_with_kernel_abi_whitelists: 1}
 
-# Build the kernel-doc package, but don't fail the build if it botches.
-# Here "true" means "continue" and "false" means "fail the build".
-%if 0%{?released_kernel}
+# In RHEL, we always want the doc build failing to build to be a failure,
+# which means settings this to false.
 %define doc_build_fail false
-%else
-%define doc_build_fail true
-%endif
-
-%define rawhide_skip_docs 0
-%if 0%{?rawhide_skip_docs}
-%define with_doc 0
-%define doc_build_fail true
-%endif
 
 # Additional options for user-friendly one-off kernel building:
 #
@@ -80,7 +69,7 @@ Summary: The Linux kernel
 
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
-# See also 'make debug' and 'make release'.
+# See also 'make debug' and 'make release'. RHEL only ever does 1.
 %define debugbuildsenabled 1
 
 %define make_target bzImage
@@ -338,8 +327,15 @@ Source10: sign-modules
 %define modsign_cmd %{SOURCE10}
 Source11: x509.genkey
 Source12: extra_certificates
+%if %{?released_kernel}
 Source13: securebootca.cer
 Source14: secureboot.cer
+%define pesign_name redhatsecureboot301
+%else
+Source13: redhatsecurebootca2.cer
+Source14: redhatsecureboot003.cer
+%define pesign_name redhatsecureboot003
+%endif
 Source15: rheldup3.x509
 Source16: rhelkpatch1.x509
 
@@ -819,7 +815,7 @@ BuildKernel() {
     fi
 # EFI SecureBoot signing, x86_64-only
 %ifarch x86_64
-    %pesign -s -i $KernelImage -o $KernelImage.signed -a %{SOURCE13} -c %{SOURCE14} -n redhatsecureboot301
+    %pesign -s -i $KernelImage -o $KernelImage.signed -a %{SOURCE13} -c %{SOURCE14} -n %{pesign_name}
     mv $KernelImage.signed $KernelImage
 %endif
     $CopyKernel $KernelImage $RPM_BUILD_ROOT/%{image_install_path}/$InstallName-$KernelVer

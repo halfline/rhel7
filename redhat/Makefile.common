@@ -18,7 +18,7 @@ SOURCES:=$(RPM)/SOURCES
 TESTPATCH:=$(REDHAT)/linux-kernel-test.patch
 FILTERDIFF:=/usr/bin/filterdiff -x '*redhat/*' -x '*/.gitignore' -x '*/makefile' -x '*/Makefile'
 
-RELEASED_KERNEL := 1
+RELEASED_KERNEL := 0
 STAMP_VERSION := $(KVERSION)
 
 LOCVERFILE:=../localversion

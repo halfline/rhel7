@@ -4,6 +4,8 @@ extra_certificates
 x509.genkey
 rheldup3.x509
 rhelkpatch1.x509
+redhatsecurebootca2.cer
+redhatsecureboot003.cer
 securebootca.cer
 secureboot.cer
 Makefile.common
