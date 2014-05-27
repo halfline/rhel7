@@ -867,6 +867,7 @@ void aio_complete(struct kiocb *iocb, long res, long res2)
 put_rq:
 	/* everything turned out well, dispose of the aiocb. */
 	aio_put_req(iocb);
+	atomic_dec(&ctx->reqs_active);
 
 	/*
 	 * We have to order our ring_info tail store above and test
@@ -906,6 +907,8 @@ static long aio_read_events_ring(struct kioctx *ctx,
 
 	if (head == ctx->tail)
 		goto out;
+
+	head %= ctx->nr_events;
 
 	while (ret < nr) {
 		long avail;
@@ -956,7 +959,6 @@ static long aio_read_events_ring(struct kioctx *ctx,
 
 	pr_debug("%li  h%u t%u\n", ret, head, ctx->tail);
 
-	atomic_sub(ret, &ctx->reqs_active);
 out:
 	mutex_unlock(&ctx->ring_lock);
 
