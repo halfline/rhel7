@@ -182,9 +182,8 @@ enum {
 struct swap_info_struct {
 	unsigned long	flags;		/* SWP_USED etc: see above */
 	signed short	prio;		/* swap priority of this type */
-	struct plist_node list;		/* entry in swap_active_head */
-	struct plist_node avail_list;	/* entry in swap_avail_head */
 	signed char	type;		/* strange name for an index */
+	signed char     next;           /* unused: kept for kABI */
 	unsigned int	max;		/* extent of the swap_map */
 	unsigned char *swap_map;	/* vmalloc'ed array of usage counts */
 	unsigned int lowest_bit;	/* index of first free in swap_map */
@@ -216,6 +215,10 @@ struct swap_info_struct {
 					 * swap_lock. If both locks need hold,
 					 * hold swap_lock first.
 					 */
+#ifndef __GENKSYMS__
+	struct plist_node list;		/* entry in swap_active_head */
+	struct plist_node avail_list;	/* entry in swap_avail_head */
+#endif
 };
 
 /* linux/mm/workingset.c */
