@@ -46,6 +46,7 @@
  * - detects multi-task circular deadlocks and prints out all affected
  *   locks and tasks (and only those tasks)
  */
+struct mcs_spinlock;
 struct mutex {
 	/* 1: unlocked, 0: locked, negative: locked, possible waiters */
 	atomic_t		count;
@@ -55,7 +56,11 @@ struct mutex {
 	struct task_struct	*owner;
 #endif
 #ifdef CONFIG_MUTEX_SPIN_ON_OWNER
+#ifdef __GENKSYMS__
 	void			*spin_mlock;	/* Spinner MCS lock */
+#else
+	struct mcs_spinlock	*mcs_lock;	/* Spinner MCS lock */
+#endif
 #endif
 #ifdef CONFIG_DEBUG_MUTEXES
 	const char 		*name;
@@ -179,4 +184,4 @@ extern int atomic_dec_and_mutex_lock(atomic_t *cnt, struct mutex *lock);
 #define arch_mutex_cpu_relax()	cpu_relax()
 #endif
 
-#endif
+#endif /* __LINUX_MUTEX_H */
