@@ -73,7 +73,12 @@ void debug_mutex_unlock(struct mutex *lock)
 {
 	if (likely(debug_locks)) {
 		DEBUG_LOCKS_WARN_ON(lock->magic != lock);
-		DEBUG_LOCKS_WARN_ON(lock->owner != current);
+
+		if (!lock->owner)
+			DEBUG_LOCKS_WARN_ON(!lock->owner);
+		else
+			DEBUG_LOCKS_WARN_ON(lock->owner != current);
+
 		DEBUG_LOCKS_WARN_ON(!lock->wait_list.prev &&
 				    !lock->wait_list.next);
 		mutex_clear_owner(lock);
