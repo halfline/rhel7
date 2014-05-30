@@ -860,6 +860,7 @@ BuildKernel() {
     # dirs for additional modules per module-init-tools, kbuild/modules.txt
     mkdir -p $RPM_BUILD_ROOT/lib/modules/$KernelVer/extra
     mkdir -p $RPM_BUILD_ROOT/lib/modules/$KernelVer/updates
+    mkdir -p $RPM_BUILD_ROOT/lib/modules/$KernelVer/weak-updates
     # first copy everything
     cp --parents `find  -type f -name "Makefile*" -o -name "Kconfig*"` $RPM_BUILD_ROOT/lib/modules/$KernelVer/build
     cp Module.symvers $RPM_BUILD_ROOT/lib/modules/$KernelVer/build
@@ -1263,6 +1264,10 @@ fi\
 %{expand:%%posttrans %{?1}}\
 %{_sbindir}/new-kernel-pkg --package kernel%{?-v:-%{-v*}} --mkinitrd --dracut --depmod --update %{KVRA}%{?-v:.%{-v*}} || exit $?\
 %{_sbindir}/new-kernel-pkg --package kernel%{?1:-%{1}} --rpmposttrans %{KVRA}%{?1:.%{1}} || exit $?\
+if [ -x %{_sbindir}/weak-modules ]\
+then\
+    %{_sbindir}/weak-modules --add-kernel %{KVRA}%{?1:.%{1}} || exit $?\
+fi\
 %{nil}
 
 #
@@ -1291,6 +1296,10 @@ fi}\
 %define kernel_variant_preun() \
 %{expand:%%preun %{?1}}\
 %{_sbindir}/new-kernel-pkg --rminitrd --rmmoddep --remove %{KVRA}%{?1:.%{1}} || exit $?\
+if [ -x %{_sbindir}/weak-modules ]\
+then\
+    %{_sbindir}/weak-modules --remove-kernel %{KVRA}%{?1:.%{1}} || exit $?\
+fi\
 %{nil}
 
 %kernel_variant_preun
@@ -1441,6 +1450,7 @@ fi
 /lib/modules/%{KVRA}%{?2:.%{2}}/source\
 /lib/modules/%{KVRA}%{?2:.%{2}}/extra\
 /lib/modules/%{KVRA}%{?2:.%{2}}/updates\
+/lib/modules/%{KVRA}%{?2:.%{2}}/weak-updates\
 %ifarch %{vdso_arches}\
 /lib/modules/%{KVRA}%{?2:.%{2}}/vdso\
 /etc/ld.so.conf.d/kernel-%{KVRA}%{?2:.%{2}}.conf\
