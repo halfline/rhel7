@@ -1471,6 +1471,19 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Jun 03 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-126.el7]
+- [fs] aio: plug memory disclosure and fix reqs_active accounting (Mateusz Guzik) [1094605] {CVE-2014-0206}
+- [kernel] mutexes: Give more informative mutex warning in the !lock->owner case (Larry Woodman) [1087655 1087919 1087922]
+- [kernel] mutex: replace CONFIG_HAVE_ARCH_MUTEX_CPU_RELAX with simple ifdef (Larry Woodman) [1087655 1087919 1087922]
+- [kernel] locking/mutexes: Introduce cancelable MCS lock for adaptive spinning (Larry Woodman) [1087655 1087919 1087922]
+- [kernel] locking/mutexes: Modify the way optimistic spinners are queued (Larry Woodman) [1087655 1087919 1087922]
+- [kernel] locking/mutexes: Return false if task need_resched() in mutex_can_spin_on_owner() (Larry Woodman) [1087655 1087919 1087922]
+- [kernel] Restructure the MCS lock defines and locking & Move mcs_spinlock.h into kernel/locking/ (Larry Woodman) [1087655 1087919 1087922]
+- [misc] arch: Introduce smp_load_acquire(), smp_store_release() (Larry Woodman) [1087655 1087919 1087922]
+- [kernel] locking/mutex: Fix debug_mutexes (Larry Woodman) [1087655 1087919 1087922]
+- [kernel] locking/mutex: Fix debug checks (Larry Woodman) [1087655 1087919 1087922]
+- [kernel] locking/mutexes: Unlock the mutex without the wait_lock (Larry Woodman) [1087655 1087919 1087922]
+
 * Tue Jun 03 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-125.el7]
 - [scsi] st: fix corruption of the st_modedef structures in st_set_options() (Maurizio Lombardi) [1084968]
 - [net] openvswitch: fix a possible deadlock and lockdep warning (Flavio Leitner) [1094867]
