@@ -497,8 +497,6 @@ static void free_ioctx(struct kioctx *ctx)
 				atomic_read(&ctx->reqs_active) <= 0);
 
 		avail = (head <= ctx->tail ? ctx->tail : ctx->nr_events) - head;
-
-		atomic_sub(avail, &ctx->reqs_active);
 		head += avail;
 		head %= ctx->nr_events;
 	}
