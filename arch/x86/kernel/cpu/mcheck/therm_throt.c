@@ -222,8 +222,7 @@ __setup("int_pln_enable", int_pln_enable_setup);
 
 #ifdef CONFIG_SYSFS
 /* Add/Remove thermal_throttle interface for CPU device: */
-static __cpuinit int thermal_throttle_add_dev(struct device *dev,
-				unsigned int cpu)
+static int thermal_throttle_add_dev(struct device *dev, unsigned int cpu)
 {
 	int err;
 	struct cpuinfo_x86 *c = &cpu_data(cpu);
@@ -249,7 +248,7 @@ static __cpuinit int thermal_throttle_add_dev(struct device *dev,
 	return err;
 }
 
-static __cpuinit void thermal_throttle_remove_dev(struct device *dev)
+static void thermal_throttle_remove_dev(struct device *dev)
 {
 	sysfs_remove_group(&dev->kobj, &thermal_attr_group);
 }
@@ -258,7 +257,7 @@ static __cpuinit void thermal_throttle_remove_dev(struct device *dev)
 static DEFINE_MUTEX(therm_cpu_lock);
 
 /* Get notified when a cpu comes on/off. Be hotplug friendly. */
-static __cpuinit int
+static int
 thermal_throttle_cpu_callback(struct notifier_block *nfb,
 			      unsigned long action,
 			      void *hcpu)
@@ -289,7 +288,7 @@ thermal_throttle_cpu_callback(struct notifier_block *nfb,
 	return notifier_from_errno(err);
 }
 
-static struct notifier_block thermal_throttle_cpu_notifier __cpuinitdata =
+static struct notifier_block thermal_throttle_cpu_notifier =
 {
 	.notifier_call = thermal_throttle_cpu_callback,
 };
