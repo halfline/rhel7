@@ -95,10 +95,14 @@ enum rq_cmd_type_bits {
  * as well!
  */
 struct request {
+#ifdef __GENKSYMS__
 	union {
 		struct list_head queuelist;
 		struct llist_node ll_list;
 	};
+#else
+	struct list_head queuelist;
+#endif
 	union {
 		struct call_single_data csd;
 		struct work_struct mq_flush_work;
