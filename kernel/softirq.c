@@ -658,7 +658,7 @@ static int __try_remote_softirq(struct call_single_data *cp, int cpu, int softir
 		cp->info = &softirq;
 		cp->flags = 0;
 
-		__smp_call_function_single(cpu, cp, 0);
+		__smp_call_function_single(cpu, cp);
 		return 0;
 	}
 	return 1;
