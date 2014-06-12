@@ -1471,6 +1471,52 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Jun 12 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-128.el7]
+- [lib] random32: minor cleanups and kdoc fix (Hannes Frederic Sowa) [1100299]
+- [lib] random32: avoid attempt to late reseed if in the middle of seeding (Hannes Frederic Sowa) [1100299]
+- [lib] random32: use msecs_to_jiffies for reseed timer (Hannes Frederic Sowa) [1100299]
+- [lib] random32: add __init prefix to prandom_start_seed_timer (Hannes Frederic Sowa) [1100299]
+- [lib] random32: add test cases for taus113 implementation (Hannes Frederic Sowa) [1100299]
+- [lib] random32: upgrade taus88 generator to taus113 from errata paper (Hannes Frederic Sowa) [1100299]
+- [lib] random32: move rnd_state to linux/random.h (Hannes Frederic Sowa) [1100299]
+- [lib] random32: add prandom_reseed_late() and call when nonblocking pool becomes initialized (Hannes Frederic Sowa) [1100299]
+- [lib] random32: add periodic reseeding (Hannes Frederic Sowa) [1100299]
+- [lib] random: allow architectures to optionally define random_get_entropy() (Hannes Frederic Sowa) [1100299]
+- [net] packet: use percpu mmap tx frame pending refcount (Daniel Borkmann) [1052366]
+- [net] packet: use reciprocal_divide in fanout_demux_hash (Daniel Borkmann) [1052366]
+- [net] packet: add randomized fanout scheduler (Daniel Borkmann) [1052366]
+- [net] packet: don't unconditionally schedule() in case of MSG_DONTWAIT (Daniel Borkmann) [1052366]
+- [net] packet: improve socket create/bind latency in some cases (Daniel Borkmann) [1052366]
+- [net] vxlan: convert to act as a pernet subsystem (Daniel Borkmann) [1039587]
+- [net] vxlan: do not use vxlan_net before checking event type (Daniel Borkmann) [1039587]
+- [net] vxlan: properly cleanup devs on module unload (Daniel Borkmann) [1039587]
+- [net] vxlan: when lower dev unregisters remove vxlan dev as well (Daniel Borkmann) [1039587]
+- [net] netfilter: x_tables: lightweight process control group matching (Daniel Borkmann) [1005839]
+- [net] sctp: fix and consolidate SCTP checksumming code (Daniel Borkmann) [1054215]
+- [net] checksum: fix warning in skb_checksum (Daniel Borkmann) [1054215]
+- [net] skb_checksum: allow custom update/combine for walking skb (Daniel Borkmann) [1054215]
+- [lib] crc32: reduce number of cases for crc32{, c}_combine (Daniel Borkmann) [1054215]
+- [lib] crc32: conditionally resched when running testcases (Daniel Borkmann) [1054215]
+- [lib] crc32: add test cases for crc32{, c}_combine routines (Daniel Borkmann) [1054215]
+- [lib] crc32: add functionality to combine two crc32{, c}s in GF(2) (Daniel Borkmann) [1054215]
+- [lib] crc32: clean up spacing in test cases (Daniel Borkmann) [1054215]
+- [lib] crc32: update the comments of crc32_{be, le}_generic() (Daniel Borkmann) [1054215]
+- [net] ipvs: sctp: do not recalc sctp csum when ports didn't change (Daniel Borkmann) [1054215]
+- [net] ipvs: sctp: add missing verdict assignments in sctp_conn_schedule (Daniel Borkmann) [1054215]
+- [tools] bpf_exp: free duplicated labels at exit time (Daniel Borkmann) [958035]
+- [tools] bpf_dbg: always close socket in bpf_runnable (Daniel Borkmann) [958035]
+- [net] filter: doc: improve BPF documentation (Daniel Borkmann) [958035]
+- [tools] filter: bpf_asm: add minimal bpf asm tool (Daniel Borkmann) [958035]
+- [tools] filter: bpf_dbg: add minimal bpf debugger (Daniel Borkmann) [958035]
+- [net] sched: cls_bpf: add BPF-based classifier (Daniel Borkmann) [958035]
+- [net] Use netlink_ns_capable to verify the permisions of netlink messages (Jiri Benc) [1094272] {CVE-2014-0181}
+- [net] netlink: Add variants of capable for use on netlink messages (Jiri Benc) [1094272] {CVE-2014-0181}
+- [net] diag: Move the permission check in sock_diag_put_filterinfo to packet_diag_dump (Jiri Benc) [1094272] {CVE-2014-0181}
+- [net] netlink: Rename netlink_capable netlink_allowed (Jiri Benc) [1094272] {CVE-2014-0181}
+- [net] diag: Fix ns_capable check in sock_diag_put_filterinfo (Jiri Benc) [1094272] {CVE-2014-0181}
+- [net] netlink: Fix permission check in netlink_connect() (Jiri Benc) [1094272] {CVE-2014-0181}
+- [net] filter: prevent nla extensions to peek beyond the end of the message (Jiri Benc) [1096781] {CVE-2014-3144 CVE-2014-3145}
+
 * Fri Jun 06 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-127.el7]
 - [net] mac80211: fix crash due to AP powersave TX vs. wakeup race (Jacob Tanenbaum) [1083534] {CVE-2014-2706}
 - [ethernet] qlcnic: Fix ethtool statistics length calculation (Michal Schmidt) [1099634]
