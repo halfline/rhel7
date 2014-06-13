@@ -15,6 +15,7 @@ struct completion;
 struct module;
 struct scsi_cmnd;
 struct scsi_device;
+struct scsi_host_cmd_pool;
 struct scsi_target;
 struct Scsi_Host;
 struct scsi_host_cmd_pool;
@@ -535,11 +536,20 @@ struct scsi_host_template {
 	void			(*rh_reserved3)(void);
 	void			(*rh_reserved4)(void);
 
+#ifdef __GENKSYMS__
 	unsigned int scsi_mq_reserved1;
 	unsigned int scsi_mq_reserved2;
 	void *scsi_mq_reserved3;
 	void *scsi_mq_reserved4;
-
+#else
+	/*
+	 * Additional per-command data allocated for the driver.
+	 */
+	unsigned int cmd_size;
+	unsigned int scsi_mq_reserved2;
+	struct scsi_host_cmd_pool *cmd_pool;
+	void *scsi_mq_reserved4;
+#endif
 };
 
 /*
