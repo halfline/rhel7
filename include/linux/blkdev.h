@@ -105,7 +105,7 @@ struct request {
 #endif
 	union {
 		struct call_single_data csd;
-		struct work_struct mq_flush_work;
+		struct work_struct requeue_work;
 		unsigned long fifo_time;
 	};
 
