@@ -527,6 +527,7 @@ struct request_queue {
 #define QUEUE_FLAG_DEAD        19	/* queue tear-down finished */
 #define QUEUE_FLAG_INIT_DONE   20	/* queue is initialized */
 #define QUEUE_FLAG_UNPRIV_SGIO 21	/* SG_IO free for unprivileged users */
+#define QUEUE_FLAG_NO_SG_MERGE 22	/* don't attempt to merge SG segments*/
 
 #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
 				 (1 << QUEUE_FLAG_STACKABLE)	|	\
