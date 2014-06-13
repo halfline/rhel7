@@ -106,7 +106,6 @@ struct request {
 #endif
 	union {
 		struct call_single_data csd;
-		struct work_struct requeue_work;
 		unsigned long fifo_time;
 	};
 
@@ -500,6 +499,10 @@ struct request_queue {
 
 	struct blk_mq_tag_set	*tag_set;
 	struct list_head	tag_set_list;
+
+	struct list_head	requeue_list;
+	spinlock_t		requeue_lock;
+	struct work_struct	requeue_work;
 };
 
 #define QUEUE_FLAG_QUEUED	1	/* uses generic tag queueing */
