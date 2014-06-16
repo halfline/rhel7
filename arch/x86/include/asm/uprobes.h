@@ -51,6 +51,7 @@ struct arch_uprobe {
 			long	riprel_target;
 #endif
 			u8	fixups;
+			u8	ilen;
 		} 			def;
 	};
 };
