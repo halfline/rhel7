@@ -353,7 +353,6 @@ void intel_ddi_put_crtc_pll(struct drm_crtc *crtc)
 		if (plls->spll_refcount == 0) {
 			DRM_DEBUG_KMS("Disabling SPLL\n");
 			val = I915_READ(SPLL_CTL);
-			WARN_ON(!(val & SPLL_PLL_ENABLE));
 			I915_WRITE(SPLL_CTL, val & ~SPLL_PLL_ENABLE);
 			POSTING_READ(SPLL_CTL);
 		}
@@ -363,7 +362,6 @@ void intel_ddi_put_crtc_pll(struct drm_crtc *crtc)
 		if (plls->wrpll1_refcount == 0) {
 			DRM_DEBUG_KMS("Disabling WRPLL 1\n");
 			val = I915_READ(WRPLL_CTL1);
-			WARN_ON(!(val & WRPLL_PLL_ENABLE));
 			I915_WRITE(WRPLL_CTL1, val & ~WRPLL_PLL_ENABLE);
 			POSTING_READ(WRPLL_CTL1);
 		}
@@ -373,7 +371,6 @@ void intel_ddi_put_crtc_pll(struct drm_crtc *crtc)
 		if (plls->wrpll2_refcount == 0) {
 			DRM_DEBUG_KMS("Disabling WRPLL 2\n");
 			val = I915_READ(WRPLL_CTL2);
-			WARN_ON(!(val & WRPLL_PLL_ENABLE));
 			I915_WRITE(WRPLL_CTL2, val & ~WRPLL_PLL_ENABLE);
 			POSTING_READ(WRPLL_CTL2);
 		}
