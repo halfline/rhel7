@@ -403,13 +403,12 @@ Some of the common approaches to generating a patch are:
 build.  If this is not the case, the patch will be rejected by reviewers and
 maintainers.
 
-[Required] Do not patch unsupported code.
+[Required] Do not enable unsupported functionality
 
-    Currently, we only patch drivers, subsystems, and architectures that we
-actively support.  The reason for this is that in the past, patches to
-unsupported portions of the kernel have resulted in support requests for
-components we do not wish to support.  Even a single support request of this
-type can lead to significant issues for Partner and Product Management.
+    In order to avoid customers requesting support for features that Red Hat is
+not prepared to support, code changes must not inadvertently enable features or
+functionality unless expressly stated in the approved bugzilla for which the
+code change is being made.
 
     Postings of large firmware patches will be rejected by the list server.
 Instead of posting the full firmware patch, a "stub" patch with a valid patch
