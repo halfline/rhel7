@@ -193,7 +193,7 @@ static unsigned long __peek_user(struct task_struct *child, addr_t addr)
 		if (addr == (addr_t) &dummy->regs.psw.mask) {
 			/* Return a clean psw mask. */
 			tmp &= PSW_MASK_USER | PSW_MASK_RI;
-			tmp |= psw_user_bits;
+			tmp |= PSW_USER_BITS;
 		}
 
 	} else if (addr < (addr_t) &dummy->regs.orig_gpr2) {
@@ -318,7 +318,7 @@ static int __poke_user(struct task_struct *child, addr_t addr, addr_t data)
 			unsigned long mask = PSW_MASK_USER;
 
 			mask |= is_ri_task(child) ? PSW_MASK_RI : 0;
-			if ((data ^ psw_user_bits) & ~mask)
+			if ((data ^ PSW_USER_BITS) & ~mask)
 				/* Invalid psw mask. */
 				return -EINVAL;
 			if ((data & PSW_MASK_ASC) == PSW_ASC_HOME)
