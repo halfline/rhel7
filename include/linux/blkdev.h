@@ -106,7 +106,12 @@ struct request {
 #endif
 	union {
 		struct call_single_data csd;
+#ifdef __GENKSYMS__
+		struct work_struct mq_flush_work;
+#else
+		struct work_struct __DEPRECATED__requeue_work_moved_to_request_queue;
 		unsigned long fifo_time;
+#endif
 	};
 
 	struct request_queue *q;
@@ -125,6 +130,9 @@ struct request {
 	struct bio *bio;
 	struct bio *biotail;
 
+#ifdef __GENKSYMS__
+	struct hlist_node hash;	/* merge hash */
+#else
 	/*
 	 * The hash is used inside the scheduler, and killed once the
 	 * request reaches the dispatch list. The ipi_list is only used
@@ -136,6 +144,7 @@ struct request {
 		struct hlist_node hash;	/* merge hash */
 		struct list_head ipi_list;
 	};
+#endif
 
 	/*
 	 * The rb_node is only used inside the io scheduler, requests
@@ -287,7 +296,6 @@ struct queue_limits {
 	unsigned long		seg_boundary_mask;
 
 	unsigned int		max_hw_sectors;
-	unsigned int		chunk_sectors;
 	unsigned int		max_sectors;
 	unsigned int		max_segment_size;
 	unsigned int		physical_block_size;
@@ -313,11 +321,22 @@ struct queue_limits {
 	 * The following padding has been inserted before ABI freeze to
 	 * allow extending the structure while preserving ABI.
 	 */
+#ifdef __GENKSYMS__
 	unsigned int		xcopy_reserved;
 
 	unsigned long		rh_reserved1;
 	unsigned long		rh_reserved2;
 	unsigned long		rh_reserved3;
+#else
+	unsigned int		xcopy_reserved;
+
+	unsigned int		chunk_sectors;
+#if defined(__LP64__)
+	unsigned int		rh_reserved1;
+#endif
+	unsigned long		rh_reserved2;
+	unsigned long		rh_reserved3;
+#endif
 };
 
 struct request_queue {
@@ -352,7 +371,11 @@ struct request_queue {
 	unsigned int		*mq_map;
 
 	/* sw queues */
+#ifdef __GENKSYMS__
+	struct blk_mq_ctx	*queue_ctx;
+#else
 	struct blk_mq_ctx __percpu	*queue_ctx;
+#endif
 	unsigned int		nr_queues;
 
 	/* hw dispatch queues */
@@ -498,12 +521,14 @@ struct request_queue {
 	struct percpu_counter	mq_usage_counter;
 	struct list_head	all_q_node;
 
+#ifndef __GENKSYMS__
 	struct blk_mq_tag_set	*tag_set;
 	struct list_head	tag_set_list;
 
 	struct list_head	requeue_list;
 	spinlock_t		requeue_lock;
 	struct work_struct	requeue_work;
+#endif
 };
 
 #define QUEUE_FLAG_QUEUED	1	/* uses generic tag queueing */
