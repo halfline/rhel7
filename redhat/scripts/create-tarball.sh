@@ -16,5 +16,6 @@ if [ -f ${TARBALL} ]; then
 fi
 
 echo "Creating `basename ${TARBALL}`..."
+trap 'rm -vf ${TARBALL}' INT
 cd ../ &&
   git archive --prefix=${DIR}/ --format=tar ${GITID} | xz ${XZ_THREADS} > ${TARBALL};
