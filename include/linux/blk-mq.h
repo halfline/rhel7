@@ -8,7 +8,11 @@ struct blk_mq_tags;
 struct blk_mq_cpu_notifier {
 	struct list_head list;
 	void *data;
+#ifdef __GENKSYMS__
+	void (*notify)(void *data, unsigned long action, unsigned int cpu);
+#else
 	int (*notify)(void *data, unsigned long action, unsigned int cpu);
+#endif
 };
 
 struct blk_mq_ctxmap {
@@ -24,11 +28,12 @@ struct blk_mq_hw_ctx {
 	} ____cacheline_aligned_in_smp;
 
 	unsigned long		state;		/* BLK_MQ_S_* flags */
-	struct delayed_work	run_work;
+
+#ifdef __GENKSYMS__
+	struct delayed_work	delayed_work;
+#else
 	struct delayed_work	delay_work;
-	cpumask_var_t		cpumask;
-	int			next_cpu;
-	int			next_cpu_batch;
+#endif
 
 	unsigned long		flags;		/* BLK_MQ_F_* flags */
 
@@ -37,12 +42,22 @@ struct blk_mq_hw_ctx {
 
 	void			*driver_data;
 
-	struct blk_mq_ctxmap	ctx_map;
-
 	unsigned int		nr_ctx;
 	struct blk_mq_ctx	**ctxs;
 
+#ifdef __GENKSYMS__
+	unsigned int		nr_ctx_map;
+	unsigned long		*ctx_map;
+
+	struct request		**rqs;
+	struct list_head	page_list;
+#else
 	atomic_t		wait_index;
+	/* DEPRECATED: RHEL kABI padding follows, repurpose? */
+	unsigned long		*padding1;
+	struct request		**padding2;
+	struct list_head	padding3;
+#endif
 
 	struct blk_mq_tags	*tags;
 
@@ -51,15 +66,37 @@ struct blk_mq_hw_ctx {
 #define BLK_MQ_MAX_DISPATCH_ORDER	10
 	unsigned long		dispatched[BLK_MQ_MAX_DISPATCH_ORDER];
 
+	unsigned int		queue_depth;	/* DEPRECATED: RHEL kABI padding, repurpose? */
 	unsigned int		numa_node;
 	unsigned int		cmd_size;	/* per-request extra data */
 
-	atomic_t		nr_active;
-
 	struct blk_mq_cpu_notifier	cpu_notifier;
 	struct kobject		kobj;
+
+#ifndef __GENKSYMS__
+	struct delayed_work	run_work;
+	cpumask_var_t		cpumask;
+	int			next_cpu;
+	int			next_cpu_batch;
+
+	struct blk_mq_ctxmap	ctx_map;
+
+	atomic_t		nr_active;
+#endif
 };
 
+#ifdef __GENKSYMS__
+struct blk_mq_reg {
+	struct blk_mq_ops	*ops;
+	unsigned int		nr_hw_queues;
+	unsigned int		queue_depth;	/* max hw supported */
+	unsigned int		reserved_tags;
+	unsigned int		cmd_size;	/* per-request extra data */
+	int			numa_node;
+	unsigned int		timeout;
+	unsigned int		flags;		/* BLK_MQ_F_* */
+};
+#else
 struct blk_mq_tag_set {
 	struct blk_mq_ops	*ops;
 	unsigned int		nr_hw_queues;
@@ -76,9 +113,14 @@ struct blk_mq_tag_set {
 	struct mutex		tag_list_lock;
 	struct list_head	tag_list;
 };
+#endif
 
 typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *);
 typedef struct blk_mq_hw_ctx *(map_queue_fn)(struct request_queue *, const int);
+#ifdef __GENKSYMS__
+typedef struct blk_mq_hw_ctx *(alloc_hctx_fn)(struct blk_mq_reg *,unsigned int);
+typedef void (free_hctx_fn)(struct blk_mq_hw_ctx *, unsigned int);
+#endif
 typedef int (init_hctx_fn)(struct blk_mq_hw_ctx *, void *, unsigned int);
 typedef void (exit_hctx_fn)(struct blk_mq_hw_ctx *, unsigned int);
 typedef int (init_request_fn)(void *, struct request *, unsigned int,
@@ -104,14 +146,14 @@ struct blk_mq_ops {
 
 	softirq_done_fn		*complete;
 
+#ifdef __GENKSYMS__
 	/*
-	 * Called when the block layer side of a hardware queue has been
-	 * set up, allowing the driver to allocate/init matching structures.
-	 * Ditto for exit/teardown.
+	 * Override for hctx allocations (should probably go)
+	 * DEPRECATED: needed to preserve kABI.
 	 */
-	init_hctx_fn		*init_hctx;
-	exit_hctx_fn		*exit_hctx;
-
+	alloc_hctx_fn		*alloc_hctx;
+	free_hctx_fn		*free_hctx;
+#else
 	/*
 	 * Called for every command allocated by the block layer to allow
 	 * the driver to set up driver specific data.
@@ -119,6 +161,15 @@ struct blk_mq_ops {
 	 */
 	init_request_fn		*init_request;
 	exit_request_fn		*exit_request;
+#endif
+
+	/*
+	 * Called when the block layer side of a hardware queue has been
+	 * set up, allowing the driver to allocate/init matching structures.
+	 * Ditto for exit/teardown.
+	 */
+	init_hctx_fn		*init_hctx;
+	exit_hctx_fn		*exit_hctx;
 };
 
 enum {
