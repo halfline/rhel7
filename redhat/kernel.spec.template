@@ -290,6 +290,7 @@ BuildRequires: hostname, net-tools, bc
 BuildRequires: xmlto, asciidoc
 BuildRequires: openssl
 BuildRequires: hmaccalc
+BuildRequires: python-devel, newt-devel, perl(ExtUtils::Embed)
 %ifarch x86_64
 BuildRequires: pesign >= 0.109-4
 %endif
@@ -297,7 +298,7 @@ BuildRequires: pesign >= 0.109-4
 BuildRequires: sparse >= 0.4.1
 %endif
 %if %{with_perf}
-BuildRequires: elfutils-devel zlib-devel binutils-devel newt-devel python-devel perl(ExtUtils::Embed) bison
+BuildRequires: elfutils-devel zlib-devel binutils-devel bison
 BuildRequires: audit-libs-devel
 %ifnarch s390 s390x
 BuildRequires: numactl-devel
