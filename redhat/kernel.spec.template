@@ -1471,6 +1471,22 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Jul 01 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-129.el7]
+- [drm] nouveau/bios: fix a bit shift error introduced by recent commit (Ulrich Obergfell) [1089936]
+- [ethernet] sfc: PIO:Restrict to 64bit arch and use 64-bit writes (Nikolay Aleksandrov) [1089024]
+- [fs] nfs: Apply NFS_MOUNT_CMP_FLAGMASK to nfs_compare_remount_data() (Scott Mayhew) [1103805]
+- [fs] gfs2: Prevent recovery before the local journal is set (Robert S Peterson) [1079433]
+- [fs] gfs2: Increase the max number of ACLs (Robert S Peterson) [1078231]
+- [fs] gfs2: check NULL return value in gfs2_ok_to_move (Abhijith Das) [1097042]
+- [fs] gfs2: Refresh quota after setting through quotactl (Abhijith Das) [1088740]
+- [kernel] hrtimer: Prevent all reprogramming if hang detected (Prarit Bhargava) [1094732]
+- [tty] Set correct tty name in 'active' sysfs attribute (Denys Vlasenko) [1066403]
+- [ethernet] bnx2x: Fix kernel crash and data miscompare after EEH recovery (Michal Schmidt) [1101808]
+- [ethernet] bnx2x: Adapter not recovery from EEH error injection (Michal Schmidt) [1067154]
+- [powerpc] tm: Disable IRQ in tm_recheckpoint (Larry Woodman) [1088224]
+- [x86] thinkpad: save and restore adaptive keyboard mode for suspend and, resume (Don Zickus) [1094476]
+- [x86] thinkpad: support Thinkpad X1 Carbon 2nd generation's adaptive keyboard (Don Zickus) [1094476]
+
 * Thu Jun 12 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-128.el7]
 - [lib] random32: minor cleanups and kdoc fix (Hannes Frederic Sowa) [1100299]
 - [lib] random32: avoid attempt to late reseed if in the middle of seeding (Hannes Frederic Sowa) [1100299]
