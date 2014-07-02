@@ -1471,6 +1471,17 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Jul 02 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-131.el7]
+- [scsi] pm80xx: Spinlock fix (Rich Bono) [1044636]
+- [scsi] aacraid: Update unsupported card list (Rich Bono) [1080712]
+- [scsi] vmw_pvscsi: Some improvements in pvscsi driver (Ewan Milne) [1075090]
+- [scsi] vmw_pvscsi: Add support for I/O requests coalescing (Ewan Milne) [1075090]
+- [scsi] vmw_pvscsi: Fix pvscsi_abort() function (Ewan Milne) [1075090]
+- [net] sctp: Fix sk_ack_backlog wrap-around problem (Daniel Borkmann) [1112726] {CVE-2014-4667}
+- [net] ipv4/tunnels: fix an oops when using ipip/sit with IPsec (Jiri Pirko) [1108857]
+- [net] filter: let bpf_tell_extensions return SKF_AD_MAX (Jiri Benc) [1079524]
+- [net] filter: introduce SO_BPF_EXTENSIONS (Jiri Benc) [1079524]
+
 * Tue Jul 01 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-130.el7]
 - [scsi] qla2xxx: Update version number to 8.06.00.08.07.0-k3 (Chad Dupuis) [1090378]
 - [scsi] qla2xxx: Reduce the time we wait for a command to complete during SCSI error handling (Chad Dupuis) [1090378]
