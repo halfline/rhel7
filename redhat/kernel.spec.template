@@ -1471,6 +1471,27 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Jul 03 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-132.el7]
+- [net] neigh: set nud_state to NUD_INCOMPLETE when probing router reachability (Hannes Frederic Sowa) [1110193]
+- [net] bridge: Set vlan_features to allow offloads on vlans (Florian Westphal) [1058544]
+- [net] team: fix mtu setting (Jiri Pirko) [1103083]
+- [net] ptp: validate the requested frequency adjustment (Jiri Benc) [1092969]
+- [net] netfilter: ctnetlink: don't add null bindings if no nat requested (Florian Westphal) [1089929]
+- [net] netfilter: ctnetlink: force null nat binding on insert (Florian Westphal) [1089929]
+- [net] netfilter: nf_conntrack: don't release a conntrack with non-zero refcnt (Florian Westphal) [1089929]
+- [net] netfilter: nf_conntrack: fix RCU race in nf_conntrack_find_get (Florian Westphal) [1089929]
+- [net] rtnetlink: Only supply IFLA_VF_PORTS information when RTEXT_FILTER_VF is set (Jiri Pirko) [1092400]
+- [net] rtnetlink: Warn when interface's information won't fit in our packet (Jiri Pirko) [1092400]
+- [net] fib_frontend: fix possible NULL pointer dereference (Jiri Benc) [1091142]
+- [net] team: forbid incorrect fall-through in notifier (Jiri Pirko) [1090495]
+- [net] gre: don't allow to add the same tunnel twice (Florian Westphal) [1086498]
+- [net] sctp: confirm route during forward progress (Daniel Borkmann) [1089629]
+- [net] nf_conntrack: decrement global counter after object release (Jiri Pirko) [1089191]
+- [net] add busy_poll device feature (Jiri Pirko) [1080093]
+- [net] ipv6: reallocate addrconf router for ipv6 address when lo device up (Jiri Benc) [1077053]
+- [net] macvlan: Add support for 'always_on' offload features (Florian Westphal) [928644]
+- [net] macvlan: fix netdev feature propagation from lower device (Florian Westphal) [928644]
+
 * Wed Jul 02 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-131.el7]
 - [scsi] pm80xx: Spinlock fix (Rich Bono) [1044636]
 - [scsi] aacraid: Update unsupported card list (Rich Bono) [1080712]
