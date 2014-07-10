@@ -39,6 +39,7 @@
 #include <linux/mutex.h>
 #include <linux/pci_hotplug.h>
 
+struct acpiphp_context;
 struct acpiphp_bridge;
 struct acpiphp_slot;
 
@@ -67,6 +68,7 @@ struct acpiphp_bridge {
 	struct kref ref;
 	acpi_handle handle;
 
+	struct acpiphp_context *context;
 	/* Ejectable PCI-to-PCI bridge (PCI bridge and PCI function) */
 	struct acpiphp_func *func;
 
@@ -109,6 +111,7 @@ struct acpiphp_slot {
  * typically 8 objects per slot (i.e. for each PCI function)
  */
 struct acpiphp_func {
+	struct acpiphp_context *context;
 	struct acpiphp_slot *slot;	/* parent */
 
 	struct list_head sibling;
@@ -116,6 +119,13 @@ struct acpiphp_func {
 
 	u8		function;	/* pci function# */
 	u32		flags;		/* see below */
+};
+
+struct acpiphp_context {
+	acpi_handle handle;
+	struct acpiphp_func *func;
+	struct acpiphp_bridge *bridge;
+	unsigned int refcount;
 };
 
 /*
