@@ -109,7 +109,6 @@ struct acpiphp_func {
 	struct acpiphp_slot *slot;	/* parent */
 
 	struct list_head sibling;
-	acpi_handle	handle;
 
 	u8		function;	/* pci function# */
 	u32		flags;		/* see below */
@@ -125,6 +124,11 @@ struct acpiphp_context {
 static inline struct acpiphp_context *func_to_context(struct acpiphp_func *func)
 {
 	return container_of(func, struct acpiphp_context, func);
+}
+
+static inline acpi_handle func_to_handle(struct acpiphp_func *func)
+{
+	return func_to_context(func)->handle;
 }
 
 /*
