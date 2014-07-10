@@ -1003,6 +1003,7 @@ void acpiphp_enumerate_slots(struct pci_bus *bus)
 		if (WARN_ON(!context)) {
 			mutex_unlock(&acpiphp_context_lock);
 			put_device(&bus->dev);
+			pci_dev_put(bridge->pci_dev);
 			kfree(bridge);
 			return;
 		}
