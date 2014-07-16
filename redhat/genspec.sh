@@ -8,6 +8,8 @@ RELEASED_KERNEL=$5
 clogf="$SOURCES/changelog"
 # hide [redhat] entries from changelog
 HIDE_REDHAT=1;
+# hide entries for unsupported arches
+HIDE_UNSUPPORTED_ARCH=1;
 # override LC_TIME to avoid date conflicts when building the srpm
 LC_TIME=
 STAMP=$(echo $MARKER | cut -f 1 -d '-' | sed -e "s/v//");
@@ -130,6 +132,11 @@ if [ "x$HIDE_REDHAT" == "x1" ]; then
 	cat $clogf | grep -v -e "^- \[redhat\]" |
 		grep -v "Revert" |
 		sed -e 's!\[Fedora\]!!g' > $clogf.stripped
+	cp $clogf.stripped $clogf
+fi
+
+if [ "x$HIDE_UNSUPPORTED_ARCH" == "x1" ]; then
+	cat $clogf | egrep -v "^- \[(alpha|arc|arm|arm64|avr32|blackfin|c6x|cris|frv|h8300|hexagon|ia64|m32r|m68k|metag|microblaze|mips|mn10300|openrisc|parisc|score|sh|sparc|tile|um|unicore32|xtensa)\]" > $clogf.stripped
 	cp $clogf.stripped $clogf
 fi
 
