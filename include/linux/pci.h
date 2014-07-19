@@ -354,7 +354,7 @@ struct pci_dev {
 	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
 #ifdef CONFIG_PCI_MSI
 	struct list_head msi_list;
-	struct kset *msi_kset;
+	struct kset *msi_kset;		/* obsolete as of RHEL7.1 */
 	const struct attribute_group **msi_irq_groups;
 #endif
 	struct pci_vpd *vpd;
