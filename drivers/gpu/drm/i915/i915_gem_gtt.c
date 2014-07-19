@@ -881,7 +881,7 @@ static int gen6_gmch_probe(struct drm_device *dev,
 			   unsigned long *mappable_end)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	phys_addr_t gtt_bus_addr;
+	phys_addr_t gtt_phys_addr;
 	unsigned int gtt_size;
 	u16 snb_gmch_ctl;
 	int ret;
@@ -907,10 +907,10 @@ static int gen6_gmch_probe(struct drm_device *dev,
 	*gtt_total = (gtt_size / sizeof(gen6_gtt_pte_t)) << PAGE_SHIFT;
 
 	/* For Modern GENs the PTEs and register space are split in the BAR */
-	gtt_bus_addr = pci_resource_start(dev->pdev, 0) +
+	gtt_phys_addr = pci_resource_start(dev->pdev, 0) +
 		(pci_resource_len(dev->pdev, 0) / 2);
 
-	dev_priv->gtt.gsm = ioremap_wc(gtt_bus_addr, gtt_size);
+	dev_priv->gtt.gsm = ioremap_wc(gtt_phys_addr, gtt_size);
 	if (!dev_priv->gtt.gsm) {
 		DRM_ERROR("Failed to map the gtt page table\n");
 		return -ENOMEM;
