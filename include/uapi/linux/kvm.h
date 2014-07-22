@@ -465,7 +465,7 @@ enum {
 struct kvm_ioeventfd {
 	__u64 datamatch;
 	__u64 addr;        /* legal pio/mmio address */
-	__u32 len;         /* 1, 2, 4, or 8 bytes    */
+	__u32 len;         /* 1, 2, 4, or 8 bytes; or 0 to ignore length */
 	__s32 fd;
 	__u32 flags;
 	__u8  pad[36];
@@ -672,6 +672,7 @@ struct kvm_ppc_smmu_info {
 #define KVM_CAP_EXT_EMUL_CPUID 95
 #define KVM_CAP_HYPERV_TIME 96
 #define KVM_CAP_IOAPIC_POLARITY_IGNORED 97
+#define KVM_CAP_IOEVENTFD_NO_LENGTH 100
 
 #ifdef KVM_CAP_IRQ_ROUTING
 
