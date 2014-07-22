@@ -4148,6 +4148,7 @@ int x86_decode_insn(struct x86_emulate_ctxt *ctxt, void *insn, int insn_len)
 	ctxt->_eip = ctxt->eip;
 	ctxt->fetch.start = ctxt->_eip;
 	ctxt->fetch.end = ctxt->fetch.start + insn_len;
+	ctxt->opcode_len = 1;
 	if (insn_len > 0)
 		memcpy(ctxt->fetch.data, insn, insn_len);
 
@@ -4230,7 +4231,7 @@ done_prefixes:
 	opcode = opcode_table[ctxt->b];
 	/* Two-byte opcode? */
 	if (ctxt->b == 0x0f) {
-		ctxt->twobyte = 1;
+		ctxt->opcode_len = 2;
 		ctxt->b = insn_fetch(u8, ctxt);
 		opcode = twobyte_table[ctxt->b];
 	}
@@ -4562,7 +4563,7 @@ special_insn:
 		goto writeback;
 	}
 
-	if (ctxt->twobyte)
+	if (ctxt->opcode_len == 2)
 		goto twobyte_insn;
 
 	switch (ctxt->b) {
