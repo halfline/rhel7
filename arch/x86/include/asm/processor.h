@@ -404,10 +404,12 @@ struct xsave_struct {
 	struct i387_fxsave_struct i387;
 	struct xsave_hdr_struct xsave_hdr;
 	struct ymmh_struct ymmh;
+#ifndef __GENKSYMS__
 	struct lwp_struct lwp;
 	struct bndregs_struct bndregs;
 	struct bndcsr_struct bndcsr;
 	/* new processor state extensions will go here */
+#endif
 } __attribute__ ((packed, aligned (64)));
 
 union thread_xstate {
