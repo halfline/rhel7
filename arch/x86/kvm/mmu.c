@@ -3433,18 +3433,12 @@ out_unlock:
 	return 0;
 }
 
-static void nonpaging_free(struct kvm_vcpu *vcpu)
-{
-	mmu_free_roots(vcpu);
-}
-
 static int nonpaging_init_context(struct kvm_vcpu *vcpu,
 				  struct kvm_mmu *context)
 {
 	context->new_cr3 = nonpaging_new_cr3;
 	context->page_fault = nonpaging_page_fault;
 	context->gva_to_gpa = nonpaging_gva_to_gpa;
-	context->free = nonpaging_free;
 	context->sync_page = nonpaging_sync_page;
 	context->invlpg = nonpaging_invlpg;
 	context->update_pte = nonpaging_update_pte;
@@ -3478,11 +3472,6 @@ static void inject_page_fault(struct kvm_vcpu *vcpu,
 			      struct x86_exception *fault)
 {
 	vcpu->arch.mmu.inject_page_fault(vcpu, fault);
-}
-
-static void paging_free(struct kvm_vcpu *vcpu)
-{
-	nonpaging_free(vcpu);
 }
 
 static bool sync_mmio_spte(struct kvm *kvm, u64 *sptep, gfn_t gfn,
@@ -3692,7 +3681,6 @@ static int paging64_init_context_common(struct kvm_vcpu *vcpu,
 	context->sync_page = paging64_sync_page;
 	context->invlpg = paging64_invlpg;
 	context->update_pte = paging64_update_pte;
-	context->free = paging_free;
 	context->shadow_root_level = level;
 	context->root_hpa = INVALID_PAGE;
 	context->direct_map = false;
@@ -3718,7 +3706,6 @@ static int paging32_init_context(struct kvm_vcpu *vcpu,
 	context->new_cr3 = paging_new_cr3;
 	context->page_fault = paging32_page_fault;
 	context->gva_to_gpa = paging32_gva_to_gpa;
-	context->free = paging_free;
 	context->sync_page = paging32_sync_page;
 	context->invlpg = paging32_invlpg;
 	context->update_pte = paging32_update_pte;
@@ -3741,7 +3728,6 @@ static int init_kvm_tdp_mmu(struct kvm_vcpu *vcpu)
 	context->base_role.word = 0;
 	context->new_cr3 = nonpaging_new_cr3;
 	context->page_fault = tdp_page_fault;
-	context->free = nonpaging_free;
 	context->sync_page = nonpaging_sync_page;
 	context->invlpg = nonpaging_invlpg;
 	context->update_pte = nonpaging_update_pte;
@@ -3821,7 +3807,6 @@ int kvm_init_shadow_ept_mmu(struct kvm_vcpu *vcpu, struct kvm_mmu *context,
 	context->sync_page = ept_sync_page;
 	context->invlpg = ept_invlpg;
 	context->update_pte = ept_update_pte;
-	context->free = paging_free;
 	context->root_level = context->shadow_root_level;
 	context->root_hpa = INVALID_PAGE;
 	context->direct_map = false;
@@ -3899,9 +3884,10 @@ static int init_kvm_mmu(struct kvm_vcpu *vcpu)
 static void destroy_kvm_mmu(struct kvm_vcpu *vcpu)
 {
 	ASSERT(vcpu);
-	if (VALID_PAGE(vcpu->arch.mmu.root_hpa))
-		/* mmu.free() should set root_hpa = INVALID_PAGE */
-		vcpu->arch.mmu.free(vcpu);
+	if (VALID_PAGE(vcpu->arch.mmu.root_hpa)) {
+		mmu_free_roots(vcpu);
+		WARN_ON(VALID_PAGE(vcpu->arch.mmu.root_hpa));
+	}
 }
 
 int kvm_mmu_reset_context(struct kvm_vcpu *vcpu)
