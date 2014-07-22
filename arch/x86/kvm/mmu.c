@@ -2784,7 +2784,7 @@ exit:
 	return ret;
 }
 
-static bool page_fault_can_be_fast(struct kvm_vcpu *vcpu, u32 error_code)
+static bool page_fault_can_be_fast(u32 error_code)
 {
 	/*
 	 * Do not fix the mmio spte with invalid generation number which
@@ -2840,7 +2840,7 @@ static bool fast_page_fault(struct kvm_vcpu *vcpu, gva_t gva, int level,
 	if (!VALID_PAGE(vcpu->arch.mmu.root_hpa))
 		return false;
 
-	if (!page_fault_can_be_fast(vcpu, error_code))
+	if (!page_fault_can_be_fast(error_code))
 		return false;
 
 	walk_shadow_page_lockless_begin(vcpu);
