@@ -71,6 +71,7 @@ MODULE_LICENSE("GPL");
  */
 
 DEFINE_RAW_SPINLOCK(kvm_lock);
+static DEFINE_RAW_SPINLOCK(kvm_count_lock);
 LIST_HEAD(vm_list);
 
 static cpumask_var_t cpus_hardware_enabled;
@@ -2661,10 +2662,10 @@ static void hardware_enable_nolock(void *junk)
 
 static void hardware_enable(void)
 {
-	raw_spin_lock(&kvm_lock);
+	raw_spin_lock(&kvm_count_lock);
 	if (kvm_usage_count)
 		hardware_enable_nolock(NULL);
-	raw_spin_unlock(&kvm_lock);
+	raw_spin_unlock(&kvm_count_lock);
 }
 
 static void hardware_disable_nolock(void *junk)
@@ -2679,10 +2680,10 @@ static void hardware_disable_nolock(void *junk)
 
 static void hardware_disable(void)
 {
-	raw_spin_lock(&kvm_lock);
+	raw_spin_lock(&kvm_count_lock);
 	if (kvm_usage_count)
 		hardware_disable_nolock(NULL);
-	raw_spin_unlock(&kvm_lock);
+	raw_spin_unlock(&kvm_count_lock);
 }
 
 static void hardware_disable_all_nolock(void)
@@ -2701,10 +2702,10 @@ static void hardware_disable_all(void)
 	char event_string[] = "EVENT=terminate";
 	char *envp[] = { event_string, count_string, NULL };
 
-	raw_spin_lock(&kvm_lock);
+	raw_spin_lock(&kvm_count_lock);
 	hardware_disable_all_nolock();
 	count = kvm_usage_count;
-	raw_spin_unlock(&kvm_lock);
+	raw_spin_unlock(&kvm_count_lock);
 
 	sprintf(count_string, "COUNT=%d", count);
 	kobject_uevent_env(&kvm_dev.this_device->kobj, KOBJ_CHANGE, envp);
@@ -2715,7 +2716,7 @@ static int hardware_enable_all(void)
 	int r = 0;
 	int count;
 
-	raw_spin_lock(&kvm_lock);
+	raw_spin_lock(&kvm_count_lock);
 
 	count = ++kvm_usage_count;
 	if (kvm_usage_count == 1) {
@@ -2728,7 +2729,7 @@ static int hardware_enable_all(void)
 		}
 	}
 
-	raw_spin_unlock(&kvm_lock);
+	raw_spin_unlock(&kvm_count_lock);
 
 	if (r == 0) {
 		char count_string[20];
@@ -3099,7 +3100,7 @@ static int kvm_suspend(void)
 static void kvm_resume(void)
 {
 	if (kvm_usage_count) {
-		WARN_ON(raw_spin_is_locked(&kvm_lock));
+		WARN_ON(raw_spin_is_locked(&kvm_count_lock));
 		hardware_enable_nolock(NULL);
 	}
 }
