@@ -1471,6 +1471,17 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Jul 25 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-140.el7]
+- [net] ipv6: addrconf: implement address generation modes (Jiri Pirko) [1107369]
+- [net] gre: add link local route when local addr is any (Jiri Pirko) [1107369]
+- [net] gre6: don't try to add the same route two times (Jiri Pirko) [1107369]
+- [netdrv] bonding: remove no longer relevant vlan warnings (Jiri Pirko) [1048814]
+- [netdrv] bonding: allow to add vlans on top of empty bond (Jiri Pirko) [1048814]
+- [net] netfilter: nf_ct_timestamp: Fix BUG_ON after netns deletion (Jiri Pirko) [1085667]
+- [net] netfilter: nf_nat: fix oops on netns removal (Florian Westphal) [1089581]
+- [net] unix socket code abuses csum_partial (Hannes Frederic Sowa) [1106402]
+- [net] ip_tunnel: Set network header properly for IP_ECN_decapsulate() (Jiri Pirko) [1094419]
+
 * Fri Jul 25 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-139.el7]
 - [fs] GFS2: fix potential NULL pointer dereference (Robert S Peterson) [1095835]
 - [input] synaptics: fix resolution for manually provided min/max (Benjamin Tissoires) [1093449]
