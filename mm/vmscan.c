@@ -1873,8 +1873,11 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
 	 */
 	if (global_reclaim(sc)) {
 		unsigned long free = zone_page_state(zone, NR_FREE_PAGES);
+		unsigned long zonefile =
+			zone_page_state(zone, NR_LRU_BASE + LRU_ACTIVE_FILE) +
+			zone_page_state(zone, NR_LRU_BASE + LRU_INACTIVE_FILE);
 
-		if (unlikely(file + free <= high_wmark_pages(zone))) {
+		if (unlikely(zonefile + free <= high_wmark_pages(zone))) {
 			scan_balance = SCAN_ANON;
 			goto out;
 		}
