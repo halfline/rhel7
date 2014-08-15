@@ -869,13 +869,14 @@ void r100_fence_ring_emit(struct radeon_device *rdev,
 	radeon_ring_write(ring, RADEON_SW_INT_FIRE);
 }
 
-void r100_semaphore_ring_emit(struct radeon_device *rdev,
+bool r100_semaphore_ring_emit(struct radeon_device *rdev,
 			      struct radeon_ring *ring,
 			      struct radeon_semaphore *semaphore,
 			      bool emit_wait)
 {
 	/* Unused on older asics, since we don't have semaphores or multiple rings */
 	BUG();
+	return false;
 }
 
 int r100_copy_blit(struct radeon_device *rdev,
@@ -1049,36 +1050,6 @@ static int r100_cp_init_microcode(struct radeon_device *rdev)
 	return err;
 }
 
-u32 r100_gfx_get_rptr(struct radeon_device *rdev,
-		      struct radeon_ring *ring)
-{
-	u32 rptr;
-
-	if (rdev->wb.enabled)
-		rptr = le32_to_cpu(rdev->wb.wb[ring->rptr_offs/4]);
-	else
-		rptr = RREG32(RADEON_CP_RB_RPTR);
-
-	return rptr;
-}
-
-u32 r100_gfx_get_wptr(struct radeon_device *rdev,
-		      struct radeon_ring *ring)
-{
-	u32 wptr;
-
-	wptr = RREG32(RADEON_CP_RB_WPTR);
-
-	return wptr;
-}
-
-void r100_gfx_set_wptr(struct radeon_device *rdev,
-		       struct radeon_ring *ring)
-{
-	WREG32(RADEON_CP_RB_WPTR, ring->wptr);
-	(void)RREG32(RADEON_CP_RB_WPTR);
-}
-
 static void r100_cp_load_microcode(struct radeon_device *rdev)
 {
 	const __be32 *fw_data;
@@ -1131,6 +1102,7 @@ int r100_cp_init(struct radeon_device *rdev, unsigned ring_size)
 	ring_size = (1 << (rb_bufsz + 1)) * 4;
 	r100_cp_load_microcode(rdev);
 	r = radeon_ring_init(rdev, ring, ring_size, RADEON_WB_CP_RPTR_OFFSET,
+			     RADEON_CP_RB_RPTR, RADEON_CP_RB_WPTR,
 			     RADEON_CP_PACKET2);
 	if (r) {
 		return r;
@@ -1463,7 +1435,7 @@ int r100_cs_packet_parse_vline(struct radeon_cs_parser *p)
 	obj = drm_mode_object_find(p->rdev->ddev, crtc_id, DRM_MODE_OBJECT_CRTC);
 	if (!obj) {
 		DRM_ERROR("cannot find crtc %d\n", crtc_id);
-		return -EINVAL;
+		return -ENOENT;
 	}
 	crtc = obj_to_crtc(obj);
 	radeon_crtc = to_radeon_crtc(crtc);

@@ -29,7 +29,7 @@
 
 #include <core/class.h>
 
-#include <engine/device.h>
+#include "priv.h"
 
 static DEFINE_MUTEX(nv_devices_mutex);
 static LIST_HEAD(nv_devices);
@@ -75,7 +75,9 @@ static const u64 disable_map[] = {
 	[NVDEV_SUBDEV_BAR]	= NV_DEVICE_DISABLE_CORE,
 	[NVDEV_SUBDEV_VOLT]	= NV_DEVICE_DISABLE_CORE,
 	[NVDEV_SUBDEV_THERM]	= NV_DEVICE_DISABLE_CORE,
+	[NVDEV_SUBDEV_PWR]	= NV_DEVICE_DISABLE_CORE,
 	[NVDEV_ENGINE_DMAOBJ]	= NV_DEVICE_DISABLE_CORE,
+	[NVDEV_ENGINE_PERFMON]  = NV_DEVICE_DISABLE_CORE,
 	[NVDEV_ENGINE_FIFO]	= NV_DEVICE_DISABLE_FIFO,
 	[NVDEV_ENGINE_SW]	= NV_DEVICE_DISABLE_FIFO,
 	[NVDEV_ENGINE_GR]	= NV_DEVICE_DISABLE_GRAPH,
@@ -87,7 +89,7 @@ static const u64 disable_map[] = {
 	[NVDEV_ENGINE_PPP]	= NV_DEVICE_DISABLE_PPP,
 	[NVDEV_ENGINE_COPY0]	= NV_DEVICE_DISABLE_COPY0,
 	[NVDEV_ENGINE_COPY1]	= NV_DEVICE_DISABLE_COPY1,
-	[NVDEV_ENGINE_UNK1C1]	= NV_DEVICE_DISABLE_UNK1C1,
+	[NVDEV_ENGINE_VIC]	= NV_DEVICE_DISABLE_VIC,
 	[NVDEV_ENGINE_VENC]	= NV_DEVICE_DISABLE_VENC,
 	[NVDEV_ENGINE_DISP]	= NV_DEVICE_DISABLE_DISP,
 	[NVDEV_SUBDEV_NR]	= 0,
@@ -119,10 +121,12 @@ nouveau_devobj_ctor(struct nouveau_object *parent,
 			return -ENODEV;
 	}
 
-	ret = nouveau_parent_create(parent, nv_object(device), oclass, 0, NULL,
+	ret = nouveau_parent_create(parent, nv_object(device), oclass, 0,
+				    nouveau_control_oclass,
 				    (1ULL << NVDEV_ENGINE_DMAOBJ) |
 				    (1ULL << NVDEV_ENGINE_FIFO) |
-				    (1ULL << NVDEV_ENGINE_DISP), &devobj);
+				    (1ULL << NVDEV_ENGINE_DISP) |
+				    (1ULL << NVDEV_ENGINE_PERFMON), &devobj);
 	*pobject = nv_object(devobj);
 	if (ret)
 		return ret;
@@ -161,7 +165,13 @@ nouveau_devobj_ctor(struct nouveau_object *parent,
 		if ((boot0 & 0x1f000000) > 0) {
 			device->chipset = (boot0 & 0x1ff00000) >> 20;
 			switch (device->chipset & 0x1f0) {
-			case 0x010: device->card_type = NV_10; break;
+			case 0x010: {
+				if (0x461 & (1 << (device->chipset & 0xf)))
+					device->card_type = NV_10;
+				else
+					device->card_type = NV_11;
+				break;
+			}
 			case 0x020: device->card_type = NV_20; break;
 			case 0x030: device->card_type = NV_30; break;
 			case 0x040:
@@ -189,7 +199,8 @@ nouveau_devobj_ctor(struct nouveau_object *parent,
 
 		switch (device->card_type) {
 		case NV_04: ret = nv04_identify(device); break;
-		case NV_10: ret = nv10_identify(device); break;
+		case NV_10:
+		case NV_11: ret = nv10_identify(device); break;
 		case NV_20: ret = nv20_identify(device); break;
 		case NV_30: ret = nv30_identify(device); break;
 		case NV_40: ret = nv40_identify(device); break;
@@ -213,7 +224,7 @@ nouveau_devobj_ctor(struct nouveau_object *parent,
 		nv_info(device, "Family : NV%02X\n", device->card_type);
 
 		/* determine frequency of timing crystal */
-		if ( device->chipset < 0x17 ||
+		if ( device->card_type <= NV_10 || device->chipset < 0x17 ||
 		    (device->chipset >= 0x20 && device->chipset < 0x25))
 			strap &= 0x00000040;
 		else

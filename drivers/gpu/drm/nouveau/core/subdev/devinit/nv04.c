@@ -27,7 +27,12 @@
 #include <subdev/vga.h>
 
 #include "fbmem.h"
-#include "nv04.h"
+#include "priv.h"
+
+struct nv04_devinit_priv {
+	struct nouveau_devinit base;
+	int owner;
+};
 
 static void
 nv04_devinit_meminit(struct nouveau_devinit *devinit)
@@ -163,7 +168,8 @@ setPLL_single(struct nouveau_devinit *devinit, u32 reg,
 		/* downclock -- write new NM first */
 		nv_wr32(devinit, reg, (oldpll & 0xffff0000) | pv->NM1);
 
-	if (chip_version < 0x17 && chip_version != 0x11)
+	if ((chip_version < 0x17 || chip_version == 0x1a) &&
+	    chip_version != 0x11)
 		/* wait a bit on older chips */
 		msleep(64);
 	nv_rd32(devinit, reg);
@@ -387,21 +393,17 @@ int
 nv04_devinit_fini(struct nouveau_object *object, bool suspend)
 {
 	struct nv04_devinit_priv *priv = (void *)object;
-	int ret;
 
 	/* make i2c busses accessible */
 	nv_mask(priv, 0x000200, 0x00000001, 0x00000001);
 
-	ret = nouveau_devinit_fini(&priv->base, suspend);
-	if (ret)
-		return ret;
-
-	/* unslave crtcs */
+	/* unlock extended vga crtc regs, and unslave crtcs */
+	nv_lockvgac(priv, false);
 	if (priv->owner < 0)
 		priv->owner = nv_rdvgaowner(priv);
 	nv_wrvgaowner(priv, 0);
 
-	return 0;
+	return nouveau_devinit_fini(&priv->base, suspend);
 }
 
 int
@@ -429,13 +431,14 @@ nv04_devinit_dtor(struct nouveau_object *object)
 {
 	struct nv04_devinit_priv *priv = (void *)object;
 
-	/* restore vga owner saved at first init */
+	/* restore vga owner saved at first init, and lock crtc regs  */
 	nv_wrvgaowner(priv, priv->owner);
+	nv_lockvgac(priv, true);
 
 	nouveau_devinit_destroy(&priv->base);
 }
 
-int
+static int
 nv04_devinit_ctor(struct nouveau_object *parent, struct nouveau_object *engine,
 		  struct nouveau_oclass *oclass, void *data, u32 size,
 		  struct nouveau_object **pobject)
@@ -448,19 +451,19 @@ nv04_devinit_ctor(struct nouveau_object *parent, struct nouveau_object *engine,
 	if (ret)
 		return ret;
 
+	priv->base.meminit = nv04_devinit_meminit;
+	priv->base.pll_set = nv04_devinit_pll_set;
 	priv->owner = -1;
 	return 0;
 }
 
-struct nouveau_oclass *
-nv04_devinit_oclass = &(struct nouveau_devinit_impl) {
-	.base.handle = NV_SUBDEV(DEVINIT, 0x04),
-	.base.ofuncs = &(struct nouveau_ofuncs) {
+struct nouveau_oclass
+nv04_devinit_oclass = {
+	.handle = NV_SUBDEV(DEVINIT, 0x04),
+	.ofuncs = &(struct nouveau_ofuncs) {
 		.ctor = nv04_devinit_ctor,
 		.dtor = nv04_devinit_dtor,
 		.init = nv04_devinit_init,
 		.fini = nv04_devinit_fini,
 	},
-	.meminit = nv04_devinit_meminit,
-	.pll_set = nv04_devinit_pll_set,
-}.base;
+};

@@ -28,9 +28,9 @@
 #include <subdev/bios/init.h>
 #include <subdev/vga.h>
 
-#include "nv50.h"
+#include "priv.h"
 
-int
+static int
 nv50_devinit_pll_set(struct nouveau_devinit *devinit, u32 type, u32 freq)
 {
 	struct nv50_devinit_priv *priv = (void *)devinit;
@@ -72,19 +72,6 @@ nv50_devinit_pll_set(struct nouveau_devinit *devinit, u32 type, u32 freq)
 	}
 
 	return 0;
-}
-
-static u64
-nv50_devinit_disable(struct nouveau_devinit *devinit)
-{
-	struct nv50_devinit_priv *priv = (void *)devinit;
-	u32 r001540 = nv_rd32(priv, 0x001540);
-	u64 disable = 0ULL;
-
-	if (!(r001540 & 0x40000000))
-		disable |= (1ULL << NVDEV_ENGINE_MPEG);
-
-	return disable;
 }
 
 int
@@ -133,7 +120,7 @@ nv50_devinit_init(struct nouveau_object *object)
 	return 0;
 }
 
-int
+static int
 nv50_devinit_ctor(struct nouveau_object *parent, struct nouveau_object *engine,
 		  struct nouveau_oclass *oclass, void *data, u32 size,
 		  struct nouveau_object **pobject)
@@ -146,18 +133,17 @@ nv50_devinit_ctor(struct nouveau_object *parent, struct nouveau_object *engine,
 	if (ret)
 		return ret;
 
+	priv->base.pll_set = nv50_devinit_pll_set;
 	return 0;
 }
 
-struct nouveau_oclass *
-nv50_devinit_oclass = &(struct nouveau_devinit_impl) {
-	.base.handle = NV_SUBDEV(DEVINIT, 0x50),
-	.base.ofuncs = &(struct nouveau_ofuncs) {
+struct nouveau_oclass
+nv50_devinit_oclass = {
+	.handle = NV_SUBDEV(DEVINIT, 0x50),
+	.ofuncs = &(struct nouveau_ofuncs) {
 		.ctor = nv50_devinit_ctor,
 		.dtor = _nouveau_devinit_dtor,
 		.init = nv50_devinit_init,
 		.fini = _nouveau_devinit_fini,
 	},
-	.pll_set = nv50_devinit_pll_set,
-	.disable = nv50_devinit_disable,
-}.base;
+};

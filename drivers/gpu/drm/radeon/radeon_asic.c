@@ -182,9 +182,9 @@ static struct radeon_asic_ring r100_gfx_ring = {
 	.ring_test = &r100_ring_test,
 	.ib_test = &r100_ib_test,
 	.is_lockup = &r100_gpu_is_lockup,
-	.get_rptr = &r100_gfx_get_rptr,
-	.get_wptr = &r100_gfx_get_wptr,
-	.set_wptr = &r100_gfx_set_wptr,
+	.get_rptr = &radeon_ring_generic_get_rptr,
+	.get_wptr = &radeon_ring_generic_get_wptr,
+	.set_wptr = &radeon_ring_generic_set_wptr,
 };
 
 static struct radeon_asic r100_asic = {
@@ -330,9 +330,9 @@ static struct radeon_asic_ring r300_gfx_ring = {
 	.ring_test = &r100_ring_test,
 	.ib_test = &r100_ib_test,
 	.is_lockup = &r100_gpu_is_lockup,
-	.get_rptr = &r100_gfx_get_rptr,
-	.get_wptr = &r100_gfx_get_wptr,
-	.set_wptr = &r100_gfx_set_wptr,
+	.get_rptr = &radeon_ring_generic_get_rptr,
+	.get_wptr = &radeon_ring_generic_get_wptr,
+	.set_wptr = &radeon_ring_generic_set_wptr,
 };
 
 static struct radeon_asic r300_asic = {
@@ -883,9 +883,9 @@ static struct radeon_asic_ring r600_gfx_ring = {
 	.ring_test = &r600_ring_test,
 	.ib_test = &r600_ib_test,
 	.is_lockup = &r600_gfx_is_lockup,
-	.get_rptr = &r600_gfx_get_rptr,
-	.get_wptr = &r600_gfx_get_wptr,
-	.set_wptr = &r600_gfx_set_wptr,
+	.get_rptr = &radeon_ring_generic_get_rptr,
+	.get_wptr = &radeon_ring_generic_get_wptr,
+	.set_wptr = &radeon_ring_generic_set_wptr,
 };
 
 static struct radeon_asic_ring r600_dma_ring = {
@@ -1267,9 +1267,9 @@ static struct radeon_asic_ring evergreen_gfx_ring = {
 	.ring_test = &r600_ring_test,
 	.ib_test = &r600_ib_test,
 	.is_lockup = &evergreen_gfx_is_lockup,
-	.get_rptr = &r600_gfx_get_rptr,
-	.get_wptr = &r600_gfx_get_wptr,
-	.set_wptr = &r600_gfx_set_wptr,
+	.get_rptr = &radeon_ring_generic_get_rptr,
+	.get_wptr = &radeon_ring_generic_get_wptr,
+	.set_wptr = &radeon_ring_generic_set_wptr,
 };
 
 static struct radeon_asic_ring evergreen_dma_ring = {
@@ -1570,9 +1570,9 @@ static struct radeon_asic_ring cayman_gfx_ring = {
 	.ib_test = &r600_ib_test,
 	.is_lockup = &cayman_gfx_is_lockup,
 	.vm_flush = &cayman_vm_flush,
-	.get_rptr = &cayman_gfx_get_rptr,
-	.get_wptr = &cayman_gfx_get_wptr,
-	.set_wptr = &cayman_gfx_set_wptr,
+	.get_rptr = &radeon_ring_generic_get_rptr,
+	.get_wptr = &radeon_ring_generic_get_wptr,
+	.set_wptr = &radeon_ring_generic_set_wptr,
 };
 
 static struct radeon_asic_ring cayman_dma_ring = {
@@ -1585,9 +1585,9 @@ static struct radeon_asic_ring cayman_dma_ring = {
 	.ib_test = &r600_dma_ib_test,
 	.is_lockup = &cayman_dma_is_lockup,
 	.vm_flush = &cayman_dma_vm_flush,
-	.get_rptr = &cayman_dma_get_rptr,
-	.get_wptr = &cayman_dma_get_wptr,
-	.set_wptr = &cayman_dma_set_wptr
+	.get_rptr = &r600_dma_get_rptr,
+	.get_wptr = &r600_dma_get_wptr,
+	.set_wptr = &r600_dma_set_wptr
 };
 
 static struct radeon_asic_ring cayman_uvd_ring = {
@@ -1622,8 +1622,7 @@ static struct radeon_asic cayman_asic = {
 	.vm = {
 		.init = &cayman_vm_init,
 		.fini = &cayman_vm_fini,
-		.pt_ring_index = R600_RING_TYPE_DMA_INDEX,
-		.set_page = &cayman_vm_set_page,
+		.set_page = &cayman_dma_vm_set_page,
 	},
 	.ring = {
 		[RADEON_RING_TYPE_GFX_INDEX] = &cayman_gfx_ring,
@@ -1723,8 +1722,7 @@ static struct radeon_asic trinity_asic = {
 	.vm = {
 		.init = &cayman_vm_init,
 		.fini = &cayman_vm_fini,
-		.pt_ring_index = R600_RING_TYPE_DMA_INDEX,
-		.set_page = &cayman_vm_set_page,
+		.set_page = &cayman_dma_vm_set_page,
 	},
 	.ring = {
 		[RADEON_RING_TYPE_GFX_INDEX] = &cayman_gfx_ring,
@@ -1815,9 +1813,9 @@ static struct radeon_asic_ring si_gfx_ring = {
 	.ib_test = &r600_ib_test,
 	.is_lockup = &si_gfx_is_lockup,
 	.vm_flush = &si_vm_flush,
-	.get_rptr = &cayman_gfx_get_rptr,
-	.get_wptr = &cayman_gfx_get_wptr,
-	.set_wptr = &cayman_gfx_set_wptr,
+	.get_rptr = &radeon_ring_generic_get_rptr,
+	.get_wptr = &radeon_ring_generic_get_wptr,
+	.set_wptr = &radeon_ring_generic_set_wptr,
 };
 
 static struct radeon_asic_ring si_dma_ring = {
@@ -1830,9 +1828,9 @@ static struct radeon_asic_ring si_dma_ring = {
 	.ib_test = &r600_dma_ib_test,
 	.is_lockup = &si_dma_is_lockup,
 	.vm_flush = &si_dma_vm_flush,
-	.get_rptr = &cayman_dma_get_rptr,
-	.get_wptr = &cayman_dma_get_wptr,
-	.set_wptr = &cayman_dma_set_wptr,
+	.get_rptr = &r600_dma_get_rptr,
+	.get_wptr = &r600_dma_get_wptr,
+	.set_wptr = &r600_dma_set_wptr,
 };
 
 static struct radeon_asic si_asic = {
@@ -1854,8 +1852,7 @@ static struct radeon_asic si_asic = {
 	.vm = {
 		.init = &si_vm_init,
 		.fini = &si_vm_fini,
-		.pt_ring_index = R600_RING_TYPE_DMA_INDEX,
-		.set_page = &si_vm_set_page,
+		.set_page = &si_dma_vm_set_page,
 	},
 	.ring = {
 		[RADEON_RING_TYPE_GFX_INDEX] = &si_gfx_ring,
@@ -1879,7 +1876,7 @@ static struct radeon_asic si_asic = {
 		.hdmi_setmode = &evergreen_hdmi_setmode,
 	},
 	.copy = {
-		.blit = NULL,
+		.blit = &r600_copy_cpdma,
 		.blit_ring_index = RADEON_RING_TYPE_GFX_INDEX,
 		.dma = &si_copy_dma,
 		.dma_ring_index = R600_RING_TYPE_DMA_INDEX,
@@ -1946,9 +1943,9 @@ static struct radeon_asic_ring ci_gfx_ring = {
 	.ib_test = &cik_ib_test,
 	.is_lockup = &cik_gfx_is_lockup,
 	.vm_flush = &cik_vm_flush,
-	.get_rptr = &cik_gfx_get_rptr,
-	.get_wptr = &cik_gfx_get_wptr,
-	.set_wptr = &cik_gfx_set_wptr,
+	.get_rptr = &radeon_ring_generic_get_rptr,
+	.get_wptr = &radeon_ring_generic_get_wptr,
+	.set_wptr = &radeon_ring_generic_set_wptr,
 };
 
 static struct radeon_asic_ring ci_cp_ring = {
@@ -1961,9 +1958,9 @@ static struct radeon_asic_ring ci_cp_ring = {
 	.ib_test = &cik_ib_test,
 	.is_lockup = &cik_gfx_is_lockup,
 	.vm_flush = &cik_vm_flush,
-	.get_rptr = &cik_compute_get_rptr,
-	.get_wptr = &cik_compute_get_wptr,
-	.set_wptr = &cik_compute_set_wptr,
+	.get_rptr = &cik_compute_ring_get_rptr,
+	.get_wptr = &cik_compute_ring_get_wptr,
+	.set_wptr = &cik_compute_ring_set_wptr,
 };
 
 static struct radeon_asic_ring ci_dma_ring = {
@@ -1976,9 +1973,9 @@ static struct radeon_asic_ring ci_dma_ring = {
 	.ib_test = &cik_sdma_ib_test,
 	.is_lockup = &cik_sdma_is_lockup,
 	.vm_flush = &cik_dma_vm_flush,
-	.get_rptr = &cik_sdma_get_rptr,
-	.get_wptr = &cik_sdma_get_wptr,
-	.set_wptr = &cik_sdma_set_wptr,
+	.get_rptr = &r600_dma_get_rptr,
+	.get_wptr = &r600_dma_get_wptr,
+	.set_wptr = &r600_dma_set_wptr,
 };
 
 static struct radeon_asic ci_asic = {
@@ -2000,8 +1997,7 @@ static struct radeon_asic ci_asic = {
 	.vm = {
 		.init = &cik_vm_init,
 		.fini = &cik_vm_fini,
-		.pt_ring_index = R600_RING_TYPE_DMA_INDEX,
-		.set_page = &cik_vm_set_page,
+		.set_page = &cik_sdma_vm_set_page,
 	},
 	.ring = {
 		[RADEON_RING_TYPE_GFX_INDEX] = &ci_gfx_ring,
@@ -2025,7 +2021,7 @@ static struct radeon_asic ci_asic = {
 		.hdmi_setmode = &evergreen_hdmi_setmode,
 	},
 	.copy = {
-		.blit = NULL,
+		.blit = &cik_copy_cpdma,
 		.blit_ring_index = RADEON_RING_TYPE_GFX_INDEX,
 		.dma = &cik_copy_dma,
 		.dma_ring_index = R600_RING_TYPE_DMA_INDEX,
@@ -2102,8 +2098,7 @@ static struct radeon_asic kv_asic = {
 	.vm = {
 		.init = &cik_vm_init,
 		.fini = &cik_vm_fini,
-		.pt_ring_index = R600_RING_TYPE_DMA_INDEX,
-		.set_page = &cik_vm_set_page,
+		.set_page = &cik_sdma_vm_set_page,
 	},
 	.ring = {
 		[RADEON_RING_TYPE_GFX_INDEX] = &ci_gfx_ring,
@@ -2127,7 +2122,7 @@ static struct radeon_asic kv_asic = {
 		.hdmi_setmode = &evergreen_hdmi_setmode,
 	},
 	.copy = {
-		.blit = NULL,
+		.blit = &cik_copy_cpdma,
 		.blit_ring_index = RADEON_RING_TYPE_GFX_INDEX,
 		.dma = &cik_copy_dma,
 		.dma_ring_index = R600_RING_TYPE_DMA_INDEX,
@@ -2446,27 +2441,48 @@ int radeon_asic_init(struct radeon_device *rdev)
 		}
 		break;
 	case CHIP_BONAIRE:
+	case CHIP_HAWAII:
 		rdev->asic = &ci_asic;
 		rdev->num_crtc = 6;
 		rdev->has_uvd = true;
-		rdev->cg_flags =
-			RADEON_CG_SUPPORT_GFX_MGCG |
-			RADEON_CG_SUPPORT_GFX_MGLS |
-			/*RADEON_CG_SUPPORT_GFX_CGCG |*/
-			RADEON_CG_SUPPORT_GFX_CGLS |
-			RADEON_CG_SUPPORT_GFX_CGTS |
-			RADEON_CG_SUPPORT_GFX_CGTS_LS |
-			RADEON_CG_SUPPORT_GFX_CP_LS |
-			RADEON_CG_SUPPORT_MC_LS |
-			RADEON_CG_SUPPORT_MC_MGCG |
-			RADEON_CG_SUPPORT_SDMA_MGCG |
-			RADEON_CG_SUPPORT_SDMA_LS |
-			RADEON_CG_SUPPORT_BIF_LS |
-			RADEON_CG_SUPPORT_VCE_MGCG |
-			RADEON_CG_SUPPORT_UVD_MGCG |
-			RADEON_CG_SUPPORT_HDP_LS |
-			RADEON_CG_SUPPORT_HDP_MGCG;
-		rdev->pg_flags = 0;
+		if (rdev->family == CHIP_BONAIRE) {
+			rdev->cg_flags =
+				RADEON_CG_SUPPORT_GFX_MGCG |
+				RADEON_CG_SUPPORT_GFX_MGLS |
+				/*RADEON_CG_SUPPORT_GFX_CGCG |*/
+				RADEON_CG_SUPPORT_GFX_CGLS |
+				RADEON_CG_SUPPORT_GFX_CGTS |
+				RADEON_CG_SUPPORT_GFX_CGTS_LS |
+				RADEON_CG_SUPPORT_GFX_CP_LS |
+				RADEON_CG_SUPPORT_MC_LS |
+				RADEON_CG_SUPPORT_MC_MGCG |
+				RADEON_CG_SUPPORT_SDMA_MGCG |
+				RADEON_CG_SUPPORT_SDMA_LS |
+				RADEON_CG_SUPPORT_BIF_LS |
+				RADEON_CG_SUPPORT_VCE_MGCG |
+				RADEON_CG_SUPPORT_UVD_MGCG |
+				RADEON_CG_SUPPORT_HDP_LS |
+				RADEON_CG_SUPPORT_HDP_MGCG;
+			rdev->pg_flags = 0;
+		} else {
+			rdev->cg_flags =
+				RADEON_CG_SUPPORT_GFX_MGCG |
+				RADEON_CG_SUPPORT_GFX_MGLS |
+				/*RADEON_CG_SUPPORT_GFX_CGCG |*/
+				RADEON_CG_SUPPORT_GFX_CGLS |
+				RADEON_CG_SUPPORT_GFX_CGTS |
+				RADEON_CG_SUPPORT_GFX_CP_LS |
+				RADEON_CG_SUPPORT_MC_LS |
+				RADEON_CG_SUPPORT_MC_MGCG |
+				RADEON_CG_SUPPORT_SDMA_MGCG |
+				RADEON_CG_SUPPORT_SDMA_LS |
+				RADEON_CG_SUPPORT_BIF_LS |
+				RADEON_CG_SUPPORT_VCE_MGCG |
+				RADEON_CG_SUPPORT_UVD_MGCG |
+				RADEON_CG_SUPPORT_HDP_LS |
+				RADEON_CG_SUPPORT_HDP_MGCG;
+			rdev->pg_flags = 0;
+		}
 		break;
 	case CHIP_KAVERI:
 	case CHIP_KABINI:

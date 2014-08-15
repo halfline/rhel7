@@ -32,6 +32,13 @@
 
 #include <linux/vga_switcheroo.h>
 #include <linux/slab.h>
+#include <linux/pm_runtime.h>
+
+#if defined(CONFIG_VGA_SWITCHEROO)
+bool radeon_is_px(void);
+#else
+static inline bool radeon_is_px(void) { return false; }
+#endif
 
 /**
  * radeon_driver_unload_kms - Main unload function for KMS.
@@ -50,9 +57,14 @@ int radeon_driver_unload_kms(struct drm_device *dev)
 
 	if (rdev == NULL)
 		return 0;
+
 	if (rdev->rmmio == NULL)
 		goto done_free;
+
+	pm_runtime_get_sync(dev->dev);
+
 	radeon_acpi_fini(rdev);
+	
 	radeon_modeset_fini(rdev);
 	radeon_device_fini(rdev);
 
@@ -125,9 +137,21 @@ int radeon_driver_load_kms(struct drm_device *dev, unsigned long flags)
 				"Error during ACPI methods call\n");
 	}
 
+	if ((radeon_runtime_pm == 1) ||
+	    ((radeon_runtime_pm == -1) && radeon_is_px())) {
+		pm_runtime_use_autosuspend(dev->dev);
+		pm_runtime_set_autosuspend_delay(dev->dev, 5000);
+		pm_runtime_set_active(dev->dev);
+		pm_runtime_allow(dev->dev);
+		pm_runtime_mark_last_busy(dev->dev);
+		pm_runtime_put_autosuspend(dev->dev);
+	}
+
 out:
 	if (r)
 		radeon_driver_unload_kms(dev);
+
+
 	return r;
 }
 
@@ -191,7 +215,7 @@ int radeon_info_ioctl(struct drm_device *dev, void *data, struct drm_file *filp)
 
 	switch (info->request) {
 	case RADEON_INFO_DEVICE_ID:
-		*value = dev->pci_device;
+		*value = dev->pdev->device;
 		break;
 	case RADEON_INFO_NUM_GB_PIPES:
 		*value = rdev->num_gb_pipes;
@@ -324,7 +348,7 @@ int radeon_info_ioctl(struct drm_device *dev, void *data, struct drm_file *filp)
 		break;
 	case RADEON_INFO_BACKEND_MAP:
 		if (rdev->family >= CHIP_BONAIRE)
-			return -EINVAL;
+			*value = rdev->config.cik.backend_map;
 		else if (rdev->family >= CHIP_TAHITI)
 			*value = rdev->config.si.backend_map;
 		else if (rdev->family >= CHIP_CAYMAN)
@@ -433,6 +457,15 @@ int radeon_info_ioctl(struct drm_device *dev, void *data, struct drm_file *filp)
 			return -EINVAL;
 		}
 		break;
+	case RADEON_INFO_CIK_MACROTILE_MODE_ARRAY:
+		if (rdev->family >= CHIP_BONAIRE) {
+			value = rdev->config.cik.macrotile_mode_array;
+			value_size = sizeof(uint32_t)*16;
+		} else {
+			DRM_DEBUG_KMS("macrotile mode array is cik+ only!\n");
+			return -EINVAL;
+		}
+		break;
 	case RADEON_INFO_SI_CP_DMA_COMPUTE:
 		*value = 1;
 		break;
@@ -484,8 +517,13 @@ void radeon_driver_lastclose_kms(struct drm_device *dev)
 int radeon_driver_open_kms(struct drm_device *dev, struct drm_file *file_priv)
 {
 	struct radeon_device *rdev = dev->dev_private;
+	int r;
 
 	file_priv->driver_priv = NULL;
+
+	r = pm_runtime_get_sync(dev->dev);
+	if (r < 0)
+		return r;
 
 	/* new gpu have virtual address space support */
 	if (rdev->family >= CHIP_CAYMAN) {
@@ -500,6 +538,10 @@ int radeon_driver_open_kms(struct drm_device *dev, struct drm_file *file_priv)
 
 		radeon_vm_init(rdev, &fpriv->vm);
 
+		r = radeon_bo_reserve(rdev->ring_tmp_bo.bo, false);
+		if (r)
+			return r;
+
 		/* map the ib pool buffer read only into
 		 * virtual address space */
 		bo_va = radeon_vm_bo_add(rdev, &fpriv->vm,
@@ -507,6 +549,8 @@ int radeon_driver_open_kms(struct drm_device *dev, struct drm_file *file_priv)
 		r = radeon_vm_bo_set_addr(rdev, bo_va, RADEON_VA_IB_OFFSET,
 					  RADEON_VM_PAGE_READABLE |
 					  RADEON_VM_PAGE_SNOOPED);
+
+		radeon_bo_unreserve(rdev->ring_tmp_bo.bo);
 		if (r) {
 			radeon_vm_fini(rdev, &fpriv->vm);
 			kfree(fpriv);
@@ -515,6 +559,9 @@ int radeon_driver_open_kms(struct drm_device *dev, struct drm_file *file_priv)
 
 		file_priv->driver_priv = fpriv;
 	}
+
+	pm_runtime_mark_last_busy(dev->dev);
+	pm_runtime_put_autosuspend(dev->dev);
 	return 0;
 }
 

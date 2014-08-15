@@ -217,10 +217,7 @@ int mgag200_driver_load(struct drm_device *dev, unsigned long flags)
 
 	drm_mode_config_init(dev);
 	dev->mode_config.funcs = (void *)&mga_mode_funcs;
-	if (IS_G200_SE(mdev) && mdev->mc.vram_size < (2048*1024))
-		dev->mode_config.preferred_depth = 16;
-	else
-		dev->mode_config.preferred_depth = 24;
+	dev->mode_config.preferred_depth = 24;
 	dev->mode_config.prefer_shadow = 1;
 
 	r = mgag200_modeset_init(mdev);
@@ -310,12 +307,6 @@ int mgag200_dumb_create(struct drm_file *file,
 		return ret;
 
 	args->handle = handle;
-	return 0;
-}
-
-int mgag200_gem_init_object(struct drm_gem_object *obj)
-{
-	BUG();
 	return 0;
 }
 

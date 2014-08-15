@@ -107,13 +107,6 @@ int udl_gem_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 	}
 }
 
-int udl_gem_init_object(struct drm_gem_object *obj)
-{
-	BUG();
-
-	return 0;
-}
-
 static int udl_gem_get_pages(struct udl_gem_object *obj, gfp_t gfpmask)
 {
 	struct page **pages;
@@ -184,10 +177,8 @@ void udl_gem_free_object(struct drm_gem_object *gem_obj)
 	if (obj->vmapping)
 		udl_gem_vunmap(obj);
 
-	if (gem_obj->import_attach) {
+	if (gem_obj->import_attach)
 		drm_prime_gem_destroy(gem_obj, obj->sg);
-		put_device(gem_obj->dev->dev);
-	}
 
 	if (obj->pages)
 		udl_gem_put_pages(obj);
@@ -265,12 +256,9 @@ struct drm_gem_object *udl_gem_prime_import(struct drm_device *dev,
 	int ret;
 
 	/* need to attach */
-	get_device(dev->dev);
 	attach = dma_buf_attach(dma_buf, dev->dev);
-	if (IS_ERR(attach)) {
-		put_device(dev->dev);
+	if (IS_ERR(attach))
 		return ERR_CAST(attach);
-	}
 
 	get_dma_buf(dma_buf);
 
@@ -294,6 +282,6 @@ fail_unmap:
 fail_detach:
 	dma_buf_detach(dma_buf, attach);
 	dma_buf_put(dma_buf);
-	put_device(dev->dev);
+
 	return ERR_PTR(ret);
 }
