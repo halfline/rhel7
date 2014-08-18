@@ -35,19 +35,19 @@
  * |                              |                    | 0x503d,0x5044  |
  * |                              |                    | 0x507b		|
  * | Timer Routines               |       0x6012       |                |
- * | User Space Interactions      |       0x70e1       | 0x7018,0x702e, |
- * |                              |                    | 0x7020,0x7024, |
- * |                              |                    | 0x7039,0x7045, |
- * |                              |                    | 0x7073-0x7075, |
- * |                              |                    | 0x707b,0x708c, |
- * |                              |                    | 0x70a5,0x70a6, |
- * |                              |                    | 0x70a8,0x70ab, |
- * |                              |                    | 0x70ad-0x70ae, |
- * |                              |                    | 0x70d1-0x70db, |
- * |                              |                    | 0x7047,0x703b	|
- * |                              |                    | 0x70de-0x70df, |
- * | Task Management              |       0x803d       | 0x8025-0x8026  |
- * |                              |                    | 0x800b,0x8039  |
+ * | User Space Interactions      |       0x70e2       | 0x7018,0x702e  |
+ * |				  |		       | 0x7020,0x7024  |
+ * |                              |                    | 0x7039,0x7045  |
+ * |                              |                    | 0x7073-0x7075  |
+ * |                              |                    | 0x70a5-0x70a6  |
+ * |                              |                    | 0x70a8,0x70ab  |
+ * |                              |                    | 0x70ad-0x70ae  |
+ * |                              |                    | 0x70d7-0x70db  |
+ * |                              |                    | 0x70de-0x70df  |
+ * | Task Management              |       0x803d       | 0x8000,0x800b  |
+ * |                              |                    | 0x8025,0x8026  |
+ * |                              |                    | 0x8031,0x8032  |
+ * |                              |                    | 0x8039,0x803c  |
  * | AER/EEH                      |       0x9011       |		|
  * | Virtual Port                 |       0xa007       |		|
  * | ISP82XX Specific             |       0xb157       | 0xb002,0xb024  |
