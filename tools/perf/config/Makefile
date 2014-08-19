@@ -325,8 +325,13 @@ ifndef NO_LIBUNWIND
   endif
 
   ifneq ($(feature-libunwind), 1)
-    msg := $(warning No libunwind found, disabling post unwind support. Please install libunwind-dev[el] >= 0.99);
+    msg := $(warning No libunwind found, disabling post unwind support. Please install libunwind-dev[el] >= 1.1);
     NO_LIBUNWIND := 1
+  else
+    ifneq ($(feature-libunwind-debug-frame), 1)
+      msg := $(warning No debug_frame support found in libunwind);
+      CFLAGS += -DNO_LIBUNWIND_DEBUG_FRAME
+    endif
   endif
 endif
 
