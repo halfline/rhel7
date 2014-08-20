@@ -2250,7 +2250,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
 
 	set_disk_ro(sdkp->disk, 0);
 	if (sdp->skip_ms_page_3f) {
-		sd_printk(KERN_NOTICE, sdkp, "Assuming Write Enabled\n");
+		sd_first_printk(KERN_NOTICE, sdkp, "Assuming Write Enabled\n");
 		return;
 	}
 
@@ -2282,7 +2282,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
 	}
 
 	if (!scsi_status_is_good(res)) {
-		sd_printk(KERN_WARNING, sdkp,
+		sd_first_printk(KERN_WARNING, sdkp,
 			  "Test WP failed, assume Write Enabled\n");
 	} else {
 		sdkp->write_prot = ((data.device_specific & 0x80) != 0);
@@ -2350,7 +2350,8 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
 	if (!data.header_length) {
 		modepage = 6;
 		first_len = 0;
-		sd_printk(KERN_ERR, sdkp, "Missing header in MODE_SENSE response\n");
+		sd_first_printk(KERN_ERR, sdkp,
+				"Missing header in MODE_SENSE response\n");
 	}
 
 	/* that went OK, now ask for the proper length */
@@ -2363,7 +2364,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
 	if (len < 3)
 		goto bad_sense;
 	else if (len > SD_BUF_SIZE) {
-		sd_printk(KERN_NOTICE, sdkp, "Truncating mode parameter "
+		sd_first_printk(KERN_NOTICE, sdkp, "Truncating mode parameter "
 			  "data from %d to %d bytes\n", len, SD_BUF_SIZE);
 		len = SD_BUF_SIZE;
 	}
@@ -2386,8 +2387,9 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
 				/* We're interested only in the first 3 bytes.
 				 */
 				if (len - offset <= 2) {
-					sd_printk(KERN_ERR, sdkp, "Incomplete "
-						  "mode parameter data\n");
+					sd_first_printk(KERN_ERR, sdkp,
+						"Incomplete mode parameter "
+							"data\n");
 					goto defaults;
 				} else {
 					modepage = page_code;
@@ -2401,14 +2403,15 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
 				else if (!spf && len - offset > 1)
 					offset += 2 + buffer[offset+1];
 				else {
-					sd_printk(KERN_ERR, sdkp, "Incomplete "
-						  "mode parameter data\n");
+					sd_first_printk(KERN_ERR, sdkp,
+							"Incomplete mode "
+							"parameter data\n");
 					goto defaults;
 				}
 			}
 		}
 
-		sd_printk(KERN_ERR, sdkp, "No Caching mode page found\n");
+		sd_first_printk(KERN_ERR, sdkp, "No Caching mode page found\n");
 		goto defaults;
 
 	Page_found:
@@ -2422,7 +2425,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
 
 		sdkp->DPOFUA = (data.device_specific & 0x10) != 0;
 		if (sdkp->DPOFUA && !sdkp->device->use_10_for_rw) {
-			sd_printk(KERN_NOTICE, sdkp,
+			sd_first_printk(KERN_NOTICE, sdkp,
 				  "Uses READ/WRITE(6), disabling FUA\n");
 			sdkp->DPOFUA = 0;
 		}
@@ -2444,16 +2447,19 @@ bad_sense:
 	    sshdr.sense_key == ILLEGAL_REQUEST &&
 	    sshdr.asc == 0x24 && sshdr.ascq == 0x0)
 		/* Invalid field in CDB */
-		sd_printk(KERN_NOTICE, sdkp, "Cache data unavailable\n");
+		sd_first_printk(KERN_NOTICE, sdkp, "Cache data unavailable\n");
 	else
-		sd_printk(KERN_ERR, sdkp, "Asking for cache data failed\n");
+		sd_first_printk(KERN_ERR, sdkp,
+				"Asking for cache data failed\n");
 
 defaults:
 	if (sdp->wce_default_on) {
-		sd_printk(KERN_NOTICE, sdkp, "Assuming drive cache: write back\n");
+		sd_first_printk(KERN_NOTICE, sdkp,
+				"Assuming drive cache: write back\n");
 		sdkp->WCE = 1;
 	} else {
-		sd_printk(KERN_ERR, sdkp, "Assuming drive cache: write through\n");
+		sd_first_printk(KERN_ERR, sdkp,
+				"Assuming drive cache: write through\n");
 		sdkp->WCE = 0;
 	}
 	sdkp->RCD = 0;
@@ -2482,7 +2488,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
 
 	if (!scsi_status_is_good(res) || !data.header_length ||
 	    data.length < 6) {
-		sd_printk(KERN_WARNING, sdkp,
+		sd_first_printk(KERN_WARNING, sdkp,
 			  "getting Control mode page failed, assume no ATO\n");
 
 		if (scsi_sense_valid(&sshdr))
@@ -2494,7 +2500,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
 	offset = data.header_length + data.block_descriptor_length;
 
 	if ((buffer[offset] & 0x3f) != 0x0a) {
-		sd_printk(KERN_ERR, sdkp, "ATO Got wrong page\n");
+		sd_first_printk(KERN_ERR, sdkp, "ATO Got wrong page\n");
 		return;
 	}
 
