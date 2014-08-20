@@ -207,10 +207,25 @@ struct scsi_device {
 	 * allow extending the structure while preserve ABI.
 	 */
 
+#define SCSI_VPD_PG_LEN                255
+
+#ifndef __GENKSYMS__
+	unsigned char *vpd_pg83;
+	union {
+		int vpd_pg83_len;
+		void *vpd_reserved2;
+	};
+	unsigned char *vpd_pg80;
+	union {
+		int vpd_pg80_len;
+		void *vpd_reserved4;
+	};
+#else
 	void	*vpd_reserved1;
 	void	*vpd_reserved2;
 	void	*vpd_reserved3;
 	void	*vpd_reserved4;
+#endif
 
 	char	vpd_reserved5;
 	char	vpd_reserved6;
@@ -372,6 +387,7 @@ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
 extern int scsi_register_device_handler(struct scsi_device_handler *scsi_dh);
 extern void scsi_remove_device(struct scsi_device *);
 extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
+void scsi_attach_vpd(struct scsi_device *sdev);
 
 extern int scsi_device_get(struct scsi_device *);
 extern void scsi_device_put(struct scsi_device *);
