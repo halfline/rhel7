@@ -44,4 +44,13 @@ config EFI_SIGNATURE_LIST_PARSER
 	  This option provides support for parsing EFI signature lists for
 	  X.509 certificates and turning them into keys.
 
+config PKCS7_MESSAGE_PARSER
+	tristate "PKCS#7 message parser"
+	depends on X509_CERTIFICATE_PARSER
+	select ASN1
+	select OID_REGISTRY
+	help
+	  This option provides support for parsing PKCS#7 format messages for
+	  signature data and provides the ability to verify the signature.
+
 endif # ASYMMETRIC_KEY_TYPE
