@@ -1702,6 +1702,13 @@ static inline int qlcnic_83xx_is_lb_pkt(u64 sts_data, int lro_pkt)
 		return (sts_data & QLC_83XX_NORMAL_LB_PKT) ? 1 : 0;
 }
 
+#define QLCNIC_ENCAP_LENGTH_MASK	0x7f
+
+static inline u8 qlcnic_encap_length(u64 sts_data)
+{
+	return sts_data & QLCNIC_ENCAP_LENGTH_MASK;
+}
+
 static struct qlcnic_rx_buffer *
 qlcnic_83xx_process_rcv(struct qlcnic_adapter *adapter,
 			struct qlcnic_host_sds_ring *sds_ring,
@@ -1751,6 +1758,12 @@ qlcnic_83xx_process_rcv(struct qlcnic_adapter *adapter,
 	}
 
 	skb->protocol = eth_type_trans(skb, netdev);
+
+	if (qlcnic_encap_length(sts_data[1]) &&
+	    skb->ip_summed == CHECKSUM_UNNECESSARY) {
+		skb->encapsulation = 1;
+		adapter->stats.encap_rx_csummed++;
+	}
 
 	if (vid != 0xffff)
 		__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q), vid);
