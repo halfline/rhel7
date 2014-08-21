@@ -47,4 +47,7 @@ config EFI_RUNTIME_MAP
 
 	  See also Documentation/ABI/testing/sysfs-firmware-efi-runtime-map.
 
+config UEFI_CPER
+	def_bool n
+
 endmenu
