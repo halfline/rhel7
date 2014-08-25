@@ -454,6 +454,7 @@ struct perf_event {
 	 * group in tact which avoids us using the other two entries.
 	 */
 	struct list_head		migrate_entry;
+	struct list_head		active_entry;
 #endif
 #endif /* CONFIG_PERF_EVENTS */
 };
