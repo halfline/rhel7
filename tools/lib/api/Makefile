@@ -1,14 +1,15 @@
 include ../../scripts/Makefile.include
+include ../../perf/config/utilities.mak		# QUIET_CLEAN
 
 # guard against environment variables
 LIB_H=
 LIB_OBJS=
 
-LIB_H += debugfs.h
+LIB_H += fs/debugfs.h
 
-LIB_OBJS += $(OUTPUT)debugfs.o
+LIB_OBJS += $(OUTPUT)fs/debugfs.o
 
-LIBFILE = liblk.a
+LIBFILE = libapikfs.a
 
 CFLAGS = -ggdb3 -Wall -Wextra -std=gnu99 -Werror -O6 -D_FORTIFY_SOURCE=2 $(EXTRA_WARNINGS) $(EXTRA_CFLAGS) -fPIC
 EXTLIBS = -lelf -lpthread -lrt -lm
@@ -22,14 +23,17 @@ $(LIBFILE): $(LIB_OBJS)
 
 $(LIB_OBJS): $(LIB_H)
 
-$(OUTPUT)%.o: %.c
+libapi_dirs:
+	$(QUIET_MKDIR)mkdir -p $(OUTPUT)fs/
+
+$(OUTPUT)%.o: %.c libapi_dirs
 	$(QUIET_CC)$(CC) -o $@ -c $(ALL_CFLAGS) $<
-$(OUTPUT)%.s: %.c
+$(OUTPUT)%.s: %.c libapi_dirs
 	$(QUIET_CC)$(CC) -S $(ALL_CFLAGS) $<
-$(OUTPUT)%.o: %.S
+$(OUTPUT)%.o: %.S libapi_dirs
 	$(QUIET_CC)$(CC) -o $@ -c $(ALL_CFLAGS) $<
 
 clean:
-	$(RM) $(LIB_OBJS) $(LIBFILE)
+	$(call QUIET_CLEAN, libapi) $(RM) $(LIB_OBJS) $(LIBFILE)
 
 .PHONY: clean
