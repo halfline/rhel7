@@ -16,6 +16,7 @@
 #include <linux/completion.h>
 #include <linux/kobject.h>
 #include <linux/notifier.h>
+#include <linux/spinlock.h>
 #include <linux/sysfs.h>
 
 #define CPUFREQ_NAME_LEN 16
@@ -134,6 +135,11 @@ struct cpufreq_policy {
 	 *     __cpufreq_governor(data, CPUFREQ_GOV_POLICY_EXIT);
 	 */
 	struct rw_semaphore	rwsem;
+
+	/* Synchronization for frequency transitions */
+	bool			transition_ongoing; /* Tracks transition status */
+	spinlock_t		transition_lock;
+	wait_queue_head_t	transition_wait;
 };
 
 #define CPUFREQ_ADJUST			(0)
@@ -326,6 +332,10 @@ int cpufreq_unregister_driver(struct cpufreq_driver *driver_data);
 void cpufreq_notify_transition(struct cpufreq_policy *policy,
 		struct cpufreq_freqs *freqs, unsigned int state);
 void cpufreq_notify_post_transition(struct cpufreq_policy *policy,
+		struct cpufreq_freqs *freqs, int transition_failed);
+void cpufreq_freq_transition_begin(struct cpufreq_policy *policy,
+		struct cpufreq_freqs *freqs);
+void cpufreq_freq_transition_end(struct cpufreq_policy *policy,
 		struct cpufreq_freqs *freqs, int transition_failed);
 
 static inline void cpufreq_verify_within_limits(struct cpufreq_policy *policy,
