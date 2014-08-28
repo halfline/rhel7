@@ -939,8 +939,11 @@ static int cpufreq_add_policy_cpu(struct cpufreq_policy *policy,
 	up_write(&policy->rwsem);
 
 	if (has_target()) {
-		if ((ret = __cpufreq_governor(policy, CPUFREQ_GOV_START)) ||
-			(ret = __cpufreq_governor(policy, CPUFREQ_GOV_LIMITS))) {
+		ret = __cpufreq_governor(policy, CPUFREQ_GOV_START);
+		if (!ret)
+			ret = __cpufreq_governor(policy, CPUFREQ_GOV_LIMITS);
+
+		if (ret) {
 			pr_err("%s: Failed to start governor\n", __func__);
 			return ret;
 		}
@@ -1393,10 +1396,12 @@ static int __cpufreq_remove_dev_finish(struct device *dev,
 		if (!cpufreq_suspended)
 			cpufreq_policy_free(policy);
 	} else if (has_target()) {
-		if ((ret = __cpufreq_governor(policy, CPUFREQ_GOV_START)) ||
-				(ret = __cpufreq_governor(policy, CPUFREQ_GOV_LIMITS))) {
-			pr_err("%s: Failed to start governor\n",
-			       __func__);
+		ret = __cpufreq_governor(policy, CPUFREQ_GOV_START);
+		if (!ret)
+			ret = __cpufreq_governor(policy, CPUFREQ_GOV_LIMITS);
+
+		if (ret) {
+			pr_err("%s: Failed to start governor\n", __func__);
 			return ret;
 		}
 	}
@@ -2083,7 +2088,7 @@ static int cpufreq_set_policy(struct cpufreq_policy *policy,
 	if (old_gov) {
 		__cpufreq_governor(policy, CPUFREQ_GOV_STOP);
 		up_write(&policy->rwsem);
-		__cpufreq_governor(policy,CPUFREQ_GOV_POLICY_EXIT);
+		__cpufreq_governor(policy, CPUFREQ_GOV_POLICY_EXIT);
 		down_write(&policy->rwsem);
 	}
 
