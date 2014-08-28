@@ -15,7 +15,6 @@
 #include <linux/slab.h>
 #include <linux/cputime.h>
 
-
 static spinlock_t cpufreq_stats_lock;
 
 struct cpufreq_stats {
