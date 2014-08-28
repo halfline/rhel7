@@ -1041,13 +1041,13 @@ static void update_policy_cpu(struct cpufreq_policy *policy, unsigned int cpu)
 			CPUFREQ_UPDATE_POLICY_CPU, policy);
 }
 
-static int __cpufreq_add_dev(struct device *dev, struct subsys_interface *sif,
-			     bool frozen)
+static int __cpufreq_add_dev(struct device *dev, struct subsys_interface *sif)
 {
 	unsigned int j, cpu = dev->id;
 	int ret = -ENOMEM;
 	struct cpufreq_policy *policy;
 	unsigned long flags;
+	bool recover_policy = cpufreq_suspended;
 #ifdef CONFIG_HOTPLUG_CPU
 	struct cpufreq_policy *tpolicy;
 #endif
@@ -1088,9 +1088,9 @@ static int __cpufreq_add_dev(struct device *dev, struct subsys_interface *sif,
 	 * Restore the saved policy when doing light-weight init and fall back
 	 * to the full init if that fails.
 	 */
-	policy = frozen ? cpufreq_policy_restore(cpu) : NULL;
+	policy = recover_policy ? cpufreq_policy_restore(cpu) : NULL;
 	if (!policy) {
-		frozen = false;
+		recover_policy = false;
 		policy = cpufreq_policy_alloc();
 		if (!policy)
 			goto nomem_out;
@@ -1102,7 +1102,7 @@ static int __cpufreq_add_dev(struct device *dev, struct subsys_interface *sif,
 	 * the creation of a brand new one. So we need to perform this update
 	 * by invoking update_policy_cpu().
 	 */
-	if (frozen && cpu != policy->cpu)
+	if (recover_policy && cpu != policy->cpu)
 		update_policy_cpu(policy, cpu);
 	else
 		policy->cpu = cpu;
@@ -1130,7 +1130,7 @@ static int __cpufreq_add_dev(struct device *dev, struct subsys_interface *sif,
 	 */
 	cpumask_and(policy->cpus, policy->cpus, cpu_online_mask);
 
-	if (!frozen) {
+	if (!recover_policy) {
 		policy->user_policy.min = policy->min;
 		policy->user_policy.max = policy->max;
 	}
@@ -1192,7 +1192,7 @@ static int __cpufreq_add_dev(struct device *dev, struct subsys_interface *sif,
 	blocking_notifier_call_chain(&cpufreq_policy_notifier_list,
 				     CPUFREQ_START, policy);
 
-	if (!frozen) {
+	if (!recover_policy) {
 		ret = cpufreq_add_dev_interface(policy, dev);
 		if (ret)
 			goto err_out_unregister;
@@ -1206,7 +1206,7 @@ static int __cpufreq_add_dev(struct device *dev, struct subsys_interface *sif,
 
 	cpufreq_init_policy(policy);
 
-	if (!frozen) {
+	if (!recover_policy) {
 		policy->user_policy.policy = policy->policy;
 		policy->user_policy.governor = policy->governor;
 	}
@@ -1228,7 +1228,7 @@ err_get_freq:
 	if (cpufreq_driver->exit)
 		cpufreq_driver->exit(policy);
 err_set_policy_cpu:
-	if (frozen) {
+	if (recover_policy) {
 		/* Do not leave stale fallback data behind. */
 		per_cpu(cpufreq_cpu_data_fallback, cpu) = NULL;
 		cpufreq_policy_put_kobj(policy);
@@ -1251,7 +1251,7 @@ nomem_out:
  */
 static int cpufreq_add_dev(struct device *dev, struct subsys_interface *sif)
 {
-	return __cpufreq_add_dev(dev, sif, false);
+	return __cpufreq_add_dev(dev, sif);
 }
 
 static int cpufreq_nominate_new_policy_cpu(struct cpufreq_policy *policy,
@@ -1282,8 +1282,7 @@ static int cpufreq_nominate_new_policy_cpu(struct cpufreq_policy *policy,
 }
 
 static int __cpufreq_remove_dev_prepare(struct device *dev,
-					struct subsys_interface *sif,
-					bool frozen)
+					struct subsys_interface *sif)
 {
 	unsigned int cpu = dev->id, cpus;
 	int new_cpu, ret;
@@ -1297,7 +1296,7 @@ static int __cpufreq_remove_dev_prepare(struct device *dev,
 	policy = per_cpu(cpufreq_cpu_data, cpu);
 
 	/* Save the policy somewhere when doing a light-weight tear-down */
-	if (frozen)
+	if (cpufreq_suspended)
 		per_cpu(cpufreq_cpu_data_fallback, cpu) = policy;
 
 	write_unlock_irqrestore(&cpufreq_driver_lock, flags);
@@ -1330,7 +1329,7 @@ static int __cpufreq_remove_dev_prepare(struct device *dev,
 		if (new_cpu >= 0) {
 			update_policy_cpu(policy, new_cpu);
 
-			if (!frozen) {
+			if (!cpufreq_suspended) {
 				pr_debug("%s: policy Kobject moved to cpu: %d from: %d\n",
 					 __func__, new_cpu, cpu);
 			}
@@ -1341,8 +1340,7 @@ static int __cpufreq_remove_dev_prepare(struct device *dev,
 }
 
 static int __cpufreq_remove_dev_finish(struct device *dev,
-				       struct subsys_interface *sif,
-				       bool frozen)
+				       struct subsys_interface *sif)
 {
 	unsigned int cpu = dev->id, cpus;
 	int ret;
@@ -1377,7 +1375,7 @@ static int __cpufreq_remove_dev_finish(struct device *dev,
 			}
 		}
 
-		if (!frozen)
+		if (!cpufreq_suspended)
 			cpufreq_policy_put_kobj(policy);
 
 		/*
@@ -1393,22 +1391,14 @@ static int __cpufreq_remove_dev_finish(struct device *dev,
 		list_del(&policy->policy_list);
 		write_unlock_irqrestore(&cpufreq_driver_lock, flags);
 
-		if (!frozen)
+		if (!cpufreq_suspended)
 			cpufreq_policy_free(policy);
-	} else {
-
-		if (!frozen) {
-			pr_debug("%s: removing link, cpu: %d\n", __func__, cpu);
-			cpufreq_cpu_put(policy);
-		}
-
-		if (has_target()) {
-			if ((ret = __cpufreq_governor(policy, CPUFREQ_GOV_START)) ||
-					(ret = __cpufreq_governor(policy, CPUFREQ_GOV_LIMITS))) {
-				pr_err("%s: Failed to start governor\n",
-				       __func__);
-				return ret;
-			}
+	} else if (has_target()) {
+		if ((ret = __cpufreq_governor(policy, CPUFREQ_GOV_START)) ||
+				(ret = __cpufreq_governor(policy, CPUFREQ_GOV_LIMITS))) {
+			pr_err("%s: Failed to start governor\n",
+			       __func__);
+			return ret;
 		}
 	}
 
@@ -1429,10 +1419,10 @@ static int cpufreq_remove_dev(struct device *dev, struct subsys_interface *sif)
 	if (cpu_is_offline(cpu))
 		return 0;
 
-	ret = __cpufreq_remove_dev_prepare(dev, sif, false);
+	ret = __cpufreq_remove_dev_prepare(dev, sif);
 
 	if (!ret)
-		ret = __cpufreq_remove_dev_finish(dev, sif, false);
+		ret = __cpufreq_remove_dev_finish(dev, sif);
 
 	return ret;
 }
@@ -2187,29 +2177,24 @@ static int cpufreq_cpu_callback(struct notifier_block *nfb,
 {
 	unsigned int cpu = (unsigned long)hcpu;
 	struct device *dev;
-	bool frozen = false;
 
 	dev = get_cpu_device(cpu);
 	if (dev) {
-
-		if (action & CPU_TASKS_FROZEN)
-			frozen = true;
-
 		switch (action & ~CPU_TASKS_FROZEN) {
 		case CPU_ONLINE:
-			__cpufreq_add_dev(dev, NULL, frozen);
+			__cpufreq_add_dev(dev, NULL);
 			break;
 
 		case CPU_DOWN_PREPARE:
-			__cpufreq_remove_dev_prepare(dev, NULL, frozen);
+			__cpufreq_remove_dev_prepare(dev, NULL);
 			break;
 
 		case CPU_POST_DEAD:
-			__cpufreq_remove_dev_finish(dev, NULL, frozen);
+			__cpufreq_remove_dev_finish(dev, NULL);
 			break;
 
 		case CPU_DOWN_FAILED:
-			__cpufreq_add_dev(dev, NULL, frozen);
+			__cpufreq_add_dev(dev, NULL);
 			break;
 		}
 	}
