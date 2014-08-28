@@ -150,6 +150,13 @@ static void ceph_invalidatepage(struct page *page, unsigned long offset)
 	struct ceph_snap_context *snapc = page_snap_context(page);
 
 	inode = page->mapping->host;
+	ci = ceph_inode(inode);
+
+	if (offset != 0) {
+		dout("%p invalidatepage %p idx %lu partial dirty page %lu\n",
+		     inode, page, page->index, offset);
+		return;
+	}
 
 	/*
 	 * We can get non-dirty pages here due to races between
@@ -159,21 +166,15 @@ static void ceph_invalidatepage(struct page *page, unsigned long offset)
 	if (!PageDirty(page))
 		pr_err("%p invalidatepage %p page not dirty\n", inode, page);
 
-	if (offset == 0)
-		ClearPageChecked(page);
+	ClearPageChecked(page);
 
-	ci = ceph_inode(inode);
-	if (offset == 0) {
-		dout("%p invalidatepage %p idx %lu full dirty page %lu\n",
-		     inode, page, page->index, offset);
-		ceph_put_wrbuffer_cap_refs(ci, 1, snapc);
-		ceph_put_snap_context(snapc);
-		page->private = 0;
-		ClearPagePrivate(page);
-	} else {
-		dout("%p invalidatepage %p idx %lu partial dirty page\n",
-		     inode, page, page->index);
-	}
+	dout("%p invalidatepage %p idx %lu full dirty page\n",
+	     inode, page, page->index);
+
+	ceph_put_wrbuffer_cap_refs(ci, 1, snapc);
+	ceph_put_snap_context(snapc);
+	page->private = 0;
+	ClearPagePrivate(page);
 }
 
 /* just a sanity check */
