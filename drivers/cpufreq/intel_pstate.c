@@ -38,10 +38,10 @@
 #define BYT_TURBO_VIDS		0x66d
 
 
-#define FRAC_BITS 6
+#define FRAC_BITS 8
 #define int_tofp(X) ((int64_t)(X) << FRAC_BITS)
 #define fp_toint(X) ((X) >> FRAC_BITS)
-#define FP_ROUNDUP(X) ((X) += 1 << FRAC_BITS)
+
 
 static inline int32_t mul_fp(int32_t x, int32_t y)
 {
@@ -196,7 +196,10 @@ static signed int pid_calc(struct _pid *pid, int32_t busy)
 	pid->last_err = fp_error;
 
 	result = pterm + mul_fp(pid->integral, pid->i_gain) + dterm;
-
+	if (result >= 0)
+		result = result + (1 << (FRAC_BITS-1));
+	else
+		result = result - (1 << (FRAC_BITS-1));
 	return (signed int)fp_toint(result);
 }
 
@@ -563,8 +566,6 @@ static inline void intel_pstate_calc_busy(struct cpudata *cpu)
 	if ((rem << 1) >= int_tofp(sample->mperf))
 		core_pct += 1;
 
-	FP_ROUNDUP(core_pct);
-
 	sample->freq = fp_toint(
 		mul_fp(int_tofp(cpu->pstate.max_pstate * 1000), core_pct));
 
@@ -623,7 +624,7 @@ static inline int32_t intel_pstate_get_scaled_busy(struct cpudata *cpu)
 		core_busy = mul_fp(core_busy, sample_ratio);
 	}
 
-	return FP_ROUNDUP(core_busy);
+	return core_busy;
 }
 
 static inline void intel_pstate_adjust_busy_pstate(struct cpudata *cpu)
