@@ -200,7 +200,6 @@ static int readpage_nounlock(struct file *filp, struct page *page)
 		zero_user_segment(page, err, PAGE_CACHE_SIZE);
 	}
 	SetPageUptodate(page);
-
 out:
 	return err < 0 ? err : 0;
 }
