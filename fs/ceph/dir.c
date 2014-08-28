@@ -183,6 +183,14 @@ more:
 	spin_unlock(&dentry->d_lock);
 	spin_unlock(&parent->d_lock);
 
+	/* make sure a dentry wasn't dropped while we didn't have parent lock */
+	if (!ceph_dir_is_complete(dir)) {
+		dout(" lost dir complete on %p; falling back to mds\n", dir);
+		dput(dentry);
+		err = -EAGAIN;
+		goto out;
+	}
+
 	dout(" %llu (%llu) dentry %p %.*s %p\n", di->offset, filp->f_pos,
 	     dentry, dentry->d_name.len, dentry->d_name.name, dentry->d_inode);
 	filp->f_pos = di->offset;
@@ -200,19 +208,12 @@ more:
 			dput(last);
 		}
 	}
+	filp->f_pos = di->offset + 1;
 	last = dentry;
 
 	if (err < 0)
 		goto out;
 
-	filp->f_pos++;
-
-	/* make sure a dentry wasn't dropped while we didn't have parent lock */
-	if (!ceph_dir_is_complete(dir)) {
-		dout(" lost dir complete on %p; falling back to mds\n", dir);
-		err = -EAGAIN;
-		goto out;
-	}
 
 	spin_lock(&parent->d_lock);
 	p = p->prev;	/* advance to next dentry */
@@ -299,6 +300,8 @@ static int ceph_readdir(struct file *filp, void *dirent, filldir_t filldir)
 		err = __dcache_readdir(filp, dirent, filldir, shared_gen);
 		if (err != -EAGAIN)
 			return err;
+		frag = fpos_frag(filp->f_pos);
+		off = fpos_off(filp->f_pos);
 	} else {
 		spin_unlock(&ci->i_ceph_lock);
 	}
