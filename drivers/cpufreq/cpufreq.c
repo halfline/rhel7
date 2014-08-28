@@ -793,7 +793,6 @@ static int cpufreq_add_dev_symlink(struct cpufreq_policy *policy)
 			continue;
 
 		pr_debug("Adding link for CPU: %u\n", j);
-		cpufreq_cpu_get(policy->cpu);
 		cpu_dev = get_cpu_device(j);
 		ret = sysfs_create_link(&cpu_dev->kobj, &policy->kobj,
 					"cpufreq");
@@ -904,15 +903,10 @@ static int cpufreq_add_policy_cpu(unsigned int cpu, unsigned int sibling,
 	}
 
 	/* Don't touch sysfs links during light-weight init */
-	if (frozen) {
-		/* Drop the extra refcount that we took above */
-		cpufreq_cpu_put(policy);
-		return 0;
-	}
+	if (!frozen)
+		ret = sysfs_create_link(&dev->kobj, &policy->kobj, "cpufreq");
 
-	ret = sysfs_create_link(&dev->kobj, &policy->kobj, "cpufreq");
-	if (ret)
-		cpufreq_cpu_put(policy);
+	cpufreq_cpu_put(policy);
 
 	return ret;
 }
