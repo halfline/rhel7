@@ -873,21 +873,17 @@ static void cpufreq_init_policy(struct cpufreq_policy *policy)
 }
 
 #ifdef CONFIG_HOTPLUG_CPU
-static int cpufreq_add_policy_cpu(unsigned int cpu, unsigned int sibling,
-				  struct device *dev, bool frozen)
+static int cpufreq_add_policy_cpu(struct cpufreq_policy *policy,
+				  unsigned int cpu, struct device *dev,
+				  bool frozen)
 {
-	struct cpufreq_policy *policy;
 	int ret = 0, has_target = !!cpufreq_driver->target;
 	unsigned long flags;
-
-	policy = cpufreq_cpu_get(sibling);
-	if (WARN_ON_ONCE(!policy))
-		return -ENODATA;
 
 	if (has_target)
 		__cpufreq_governor(policy, CPUFREQ_GOV_STOP);
 
-	lock_policy_rwsem_write(sibling);
+	lock_policy_rwsem_write(policy->cpu);
 
 	write_lock_irqsave(&cpufreq_driver_lock, flags);
 
@@ -896,7 +892,7 @@ static int cpufreq_add_policy_cpu(unsigned int cpu, unsigned int sibling,
 	per_cpu(cpufreq_cpu_data, cpu) = policy;
 	write_unlock_irqrestore(&cpufreq_driver_lock, flags);
 
-	unlock_policy_rwsem_write(sibling);
+	unlock_policy_rwsem_write(policy->cpu);
 
 	if (has_target) {
 		__cpufreq_governor(policy, CPUFREQ_GOV_START);
@@ -906,8 +902,6 @@ static int cpufreq_add_policy_cpu(unsigned int cpu, unsigned int sibling,
 	/* Don't touch sysfs links during light-weight init */
 	if (!frozen)
 		ret = sysfs_create_link(&dev->kobj, &policy->kobj, "cpufreq");
-
-	cpufreq_cpu_put(policy);
 
 	return ret;
 }
@@ -994,8 +988,7 @@ static int __cpufreq_add_dev(struct device *dev, struct subsys_interface *sif,
 		struct cpufreq_policy *cp = per_cpu(cpufreq_cpu_data, sibling);
 		if (cp && cpumask_test_cpu(cpu, cp->related_cpus)) {
 			read_unlock_irqrestore(&cpufreq_driver_lock, flags);
-			ret = cpufreq_add_policy_cpu(cpu, sibling, dev,
-						     frozen);
+			ret = cpufreq_add_policy_cpu(cp, cpu, dev, frozen);
 			up_read(&cpufreq_rwsem);
 			return ret;
 		}
