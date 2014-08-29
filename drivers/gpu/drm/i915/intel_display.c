@@ -9966,11 +9966,6 @@ intel_pipe_config_compare(struct drm_device *dev,
 
 	PIPE_CONF_CHECK_I(pixel_multiplier);
 	PIPE_CONF_CHECK_I(has_hdmi_sink);
-	if ((INTEL_INFO(dev)->gen < 8 && !IS_HASWELL(dev)) ||
-	    IS_VALLEYVIEW(dev))
-		PIPE_CONF_CHECK_I(limited_color_range);
-
-	PIPE_CONF_CHECK_I(has_audio);
 
 	PIPE_CONF_CHECK_FLAGS(adjusted_mode.flags,
 			      DRM_MODE_FLAG_INTERLACE);
