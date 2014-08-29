@@ -425,6 +425,10 @@ extern int br_fdb_dump(struct sk_buff *skb,
 		       struct netlink_callback *cb,
 		       struct net_device *dev,
 		       int idx);
+extern int br_fdb_sync_static(struct net_bridge *br,
+			      struct net_bridge_port *p);
+extern void br_fdb_unsync_static(struct net_bridge *br,
+				 struct net_bridge_port *p);
 
 /* br_forward.c */
 extern void br_deliver(const struct net_bridge_port *to,
