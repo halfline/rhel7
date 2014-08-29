@@ -413,7 +413,7 @@ static u32 asle_set_backlight(struct drm_device *dev, u32 bclp)
 	if (bclp > 255)
 		return ASLC_BACKLIGHT_FAILED;
 
-	mutex_lock(&dev->mode_config.mutex);
+	drm_modeset_lock(&dev->mode_config.connection_mutex, NULL);
 	/*
 	 * Could match the OpRegion connector here instead, but we'd also need
 	 * to verify the connector could handle a backlight call.
@@ -443,7 +443,7 @@ static u32 asle_set_backlight(struct drm_device *dev, u32 bclp)
 	iowrite32(DIV_ROUND_UP(bclp * 100, 255) | ASLE_CBLV_VALID, &asle->cblv);
 
 out:
-	mutex_unlock(&dev->mode_config.mutex);
+	drm_modeset_unlock(&dev->mode_config.connection_mutex);
 
 	return ret;
 }
