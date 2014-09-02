@@ -2980,7 +2980,7 @@ struct sk_buff *skb_segment(struct sk_buff *head_skb,
 							    skb_put(nskb, len),
 							    len, 0);
 			SKB_GSO_CB(nskb)->csum_start =
-			    skb_headroom(nskb) + offset;
+			    skb_headroom(nskb) + doffset;
 			continue;
 		}
 
