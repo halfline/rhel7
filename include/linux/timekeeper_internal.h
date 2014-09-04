@@ -69,6 +69,7 @@ struct timekeeper {
 	/* Offset clock monotonic -> clock tai */
 	ktime_t			offs_tai;
 
+	u32			ntp_err_mult;
 };
 
 static inline struct timespec tk_xtime(struct timekeeper *tk)
