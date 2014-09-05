@@ -122,6 +122,10 @@ struct net {
 	struct netns_ipvs	*ipvs;
 	struct sock		*diag_nlsk;
 	atomic_t		rt_genid;
+
+#ifndef __GENKSYMS__
+	unsigned int		dev_unreg_count;
+#endif
 };
 
 /*
