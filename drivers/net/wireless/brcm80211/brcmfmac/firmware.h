@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Broadcom Corporation
+ * Copyright (c) 2013 Broadcom Corporation
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -13,22 +13,24 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+#ifndef BRCMFMAC_FIRMWARE_H
+#define BRCMFMAC_FIRMWARE_H
 
+#define BRCMF_FW_REQUEST		0x000F
+#define  BRCMF_FW_REQUEST_NVRAM		0x0001
+#define BRCMF_FW_REQ_FLAGS		0x00F0
+#define  BRCMF_FW_REQ_NV_OPTIONAL	0x0010
 
-#ifndef FWSIGNAL_H_
-#define FWSIGNAL_H_
+void brcmf_fw_nvram_free(void *nvram);
+/*
+ * Request firmware(s) asynchronously. When the asynchronous request
+ * fails it will not use the callback, but call device_release_driver()
+ * instead which will call the driver .remove() callback.
+ */
+int brcmf_fw_get_firmwares(struct device *dev, u16 flags,
+			   const char *code, const char *nvram,
+			   void (*fw_cb)(struct device *dev,
+					 const struct firmware *fw,
+					 void *nvram_image, u32 nvram_len));
 
-int brcmf_fws_init(struct brcmf_pub *drvr);
-void brcmf_fws_deinit(struct brcmf_pub *drvr);
-bool brcmf_fws_fc_active(struct brcmf_fws_info *fws);
-int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
-		      struct sk_buff *skb);
-int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb);
-
-void brcmf_fws_reset_interface(struct brcmf_if *ifp);
-void brcmf_fws_add_interface(struct brcmf_if *ifp);
-void brcmf_fws_del_interface(struct brcmf_if *ifp);
-void brcmf_fws_bustxfail(struct brcmf_fws_info *fws, struct sk_buff *skb);
-void brcmf_fws_bus_blocked(struct brcmf_pub *drvr, bool flow_blocked);
-
-#endif /* FWSIGNAL_H_ */
+#endif /* BRCMFMAC_FIRMWARE_H */
