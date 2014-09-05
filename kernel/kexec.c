@@ -65,7 +65,9 @@ bool kexec_in_progress = false;
 char __weak kexec_purgatory[0];
 size_t __weak kexec_purgatory_size = 0;
 
+#ifdef CONFIG_KEXEC_FILE
 static int kexec_calculate_store_digests(struct kimage *image);
+#endif
 
 /* Location of the reserved area for the crash kernel */
 struct resource crashk_res = {
@@ -342,6 +344,7 @@ out_free_image:
 	return ret;
 }
 
+#ifdef CONFIG_KEXEC_FILE
 static int copy_file_from_fd(int fd, void **buf, unsigned long *buf_len)
 {
 	struct fd f = fdget(fd);
@@ -613,6 +616,9 @@ out_free_image:
 	kfree(image);
 	return ret;
 }
+#else /* CONFIG_KEXEC_FILE */
+static inline void kimage_file_post_load_cleanup(struct kimage *image) { }
+#endif /* CONFIG_KEXEC_FILE */
 
 static int kimage_is_destination_range(struct kimage *image,
 					unsigned long start,
@@ -1379,6 +1385,7 @@ COMPAT_SYSCALL_DEFINE4(kexec_load, compat_ulong_t, entry,
 }
 #endif
 
+#ifdef CONFIG_KEXEC_FILE
 SYSCALL_DEFINE5(kexec_file_load, int, kernel_fd, int, initrd_fd,
 		unsigned long, cmdline_len, const char __user *, cmdline_ptr,
 		unsigned long, flags)
@@ -1454,6 +1461,8 @@ out:
 	kimage_free(image);
 	return ret;
 }
+
+#endif /* CONFIG_KEXEC_FILE */
 
 void crash_kexec(struct pt_regs *regs)
 {
@@ -1974,6 +1983,7 @@ void vmcoreinfo_append_str(const char *fmt, ...)
 	vmcoreinfo_size += r;
 }
 
+#ifdef CONFIG_KEXEC_FILE
 static int __kexec_add_segment(struct kimage *image, char *buf,
 			       unsigned long bufsz, unsigned long mem,
 			       unsigned long memsz)
@@ -2650,6 +2660,7 @@ int kexec_purgatory_get_set_symbol(struct kimage *image, const char *name,
 
 	return 0;
 }
+#endif /* CONFIG_KEXEC_FILE */
 
 /*
  * provide an empty default implementation here -- architecture
