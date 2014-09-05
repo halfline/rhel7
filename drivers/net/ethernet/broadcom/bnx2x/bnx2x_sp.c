@@ -614,7 +614,7 @@ static int bnx2x_check_mac_add(struct bnx2x *bp,
 
 	/* Check if a requested MAC already exists */
 	list_for_each_entry(pos, &o->head, link)
-		if (!memcmp(data->mac.mac, pos->u.mac.mac, ETH_ALEN) &&
+		if (ether_addr_equal(data->mac.mac, pos->u.mac.mac) &&
 		    (data->mac.is_inner_mac == pos->u.mac.is_inner_mac))
 			return -EEXIST;
 
@@ -647,7 +647,7 @@ static struct bnx2x_vlan_mac_registry_elem *
 	DP(BNX2X_MSG_SP, "Checking MAC %pM for DEL command\n", data->mac.mac);
 
 	list_for_each_entry(pos, &o->head, link)
-		if ((!memcmp(data->mac.mac, pos->u.mac.mac, ETH_ALEN)) &&
+		if (ether_addr_equal(data->mac.mac, pos->u.mac.mac) &&
 		    (data->mac.is_inner_mac == pos->u.mac.is_inner_mac))
 			return pos;
 
