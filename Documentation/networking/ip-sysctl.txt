@@ -1063,6 +1063,11 @@ bindv6only - BOOLEAN
 
 	Default: FALSE (as specified in RFC3493)
 
+mld_qrv - INTEGER
+	Controls the MLD query robustness variable (see RFC3810 9.1).
+	Default: 2 (as specified by RFC3810 9.1)
+	Minimum: 1 (as specified by RFC6636 4.5)
+
 IPv6 Fragmentation:
 
 ip6frag_high_thresh - INTEGER
