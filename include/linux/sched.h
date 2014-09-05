@@ -567,7 +567,6 @@ struct signal_struct {
 	 * Live threads maintain their own counters and add to these
 	 * in __exit_signal, except for the group leader.
 	 */
-	seqlock_t stats_lock;
 	cputime_t utime, stime, cutime, cstime;
 	cputime_t gtime;
 	cputime_t cgtime;
@@ -633,7 +632,11 @@ struct signal_struct {
 					 * (notably. ptrace) */
 
 	/* reserved for Red Hat */
+#ifdef __GENKSYMS__
 	unsigned long rh_reserved1;
+#else
+	seqlock_t stats_lock;
+#endif
 	unsigned long rh_reserved2;
 	unsigned long rh_reserved3;
 	unsigned long rh_reserved4;
