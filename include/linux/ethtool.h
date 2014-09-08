@@ -154,13 +154,23 @@ static inline u32 ethtool_rxfh_indir_default(u32 index, u32 n_rx_rings)
  * @reset: Reset (part of) the device, as specified by a bitmask of
  *	flags from &enum ethtool_reset_flags.  Returns a negative
  *	error code or zero.
+ * @get_rxfh_key_size: Get the size of the RX flow hash key.
+ *	Returns zero if not supported for this specific device.
  * @get_rxfh_indir_size: Get the size of the RX flow hash indirection table.
  *	Returns zero if not supported for this specific device.
  * @get_rxfh_indir: Get the contents of the RX flow hash indirection table.
  *	Will not be called if @get_rxfh_indir_size returns zero.
+ * @get_rxfh: Get the contents of the RX flow hash indirection table and hash
+ *	key.
+ *	Will not be called if @get_rxfh_indir_size and @get_rxfh_key_size
+ *	returns zero.
  *	Returns a negative error code or zero.
  * @set_rxfh_indir: Set the contents of the RX flow hash indirection table.
  *	Will not be called if @get_rxfh_indir_size returns zero.
+ * @set_rxfh: Set the contents of the RX flow hash indirection table and
+ *	hash key.
+ *	Will not be called if @get_rxfh_indir_size and @get_rxfh_key_size
+ *	returns zero.
  *	Returns a negative error code or zero.
  * @get_channels: Get number of channels.
  * @set_channels: Set number of channels.  Returns a negative error code or
@@ -253,9 +263,15 @@ struct ethtool_ops {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
+#ifdef __GENKSYMS__
 	void			(*rh_reserved1)(void);
 	void			(*rh_reserved2)(void);
 	void			(*rh_reserved3)(void);
+#else
+	u32	(*get_rxfh_key_size)(struct net_device *);
+	int	(*get_rxfh)(struct net_device *, u32 *, u8 *);
+	int	(*set_rxfh)(struct net_device *, u32 *, u8 *);
+#endif
 	void			(*rh_reserved4)(void);
 	void			(*rh_reserved5)(void);
 	void			(*rh_reserved6)(void);
