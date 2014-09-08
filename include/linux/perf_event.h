@@ -187,6 +187,11 @@ struct perf_event;
 #define PERF_EVENT_TXN 0x1
 
 /**
+ * pmu::capabilities flags
+ */
+#define PERF_PMU_CAP_NO_INTERRUPT		0x01
+
+/**
  * struct pmu - generic performance monitoring unit
  */
 struct pmu {
@@ -274,6 +279,11 @@ struct pmu {
 
 #ifndef __GENKSYMS__
 	struct module			*module;
+
+	/*
+	 * various common per-pmu feature flags
+	 */
+	int				capabilities;
 #endif
 };
 
