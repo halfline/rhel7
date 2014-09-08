@@ -271,6 +271,10 @@ struct pmu {
 	 * flush branch stack on context-switches (needed in cpu-wide mode)
 	 */
 	void (*flush_branch_stack)	(void);
+
+#ifndef __GENKSYMS__
+	struct module			*module;
+#endif
 };
 
 /**
