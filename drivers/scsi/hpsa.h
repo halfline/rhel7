@@ -137,6 +137,7 @@ struct ctlr_info {
 	u32 lockup_detected;
 	struct delayed_work monitor_ctlr_work;
 	int remove_in_progress;
+	u32 fifo_recently_full;
 	/* Address of h->q[x] is passed to intr handler to know which queue */
 	u8 q[MAX_REPLY_QUEUES];
 	u32 TMFSupportFlags; /* cache what task mgmt funcs are supported. */
