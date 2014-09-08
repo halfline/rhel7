@@ -1342,7 +1342,8 @@ static int be_set_vf_vlan(struct net_device *netdev, int vf, u16 vlan, u8 qos)
 	return status;
 }
 
-static int be_set_vf_tx_rate(struct net_device *netdev, int vf, int rate)
+static int be_set_vf_tx_rate(struct net_device *netdev, int vf,
+			     int max_tx_rate)
 {
 	struct be_adapter *adapter = netdev_priv(netdev);
 	int status = 0;
@@ -1353,18 +1354,18 @@ static int be_set_vf_tx_rate(struct net_device *netdev, int vf, int rate)
 	if (vf >= adapter->num_vfs)
 		return -EINVAL;
 
-	if (rate < 100 || rate > 10000) {
+	if (max_tx_rate < 100 || max_tx_rate > 10000) {
 		dev_err(&adapter->pdev->dev,
-			"tx rate must be between 100 and 10000 Mbps\n");
+			"max tx rate must be between 100 and 10000 Mbps\n");
 		return -EINVAL;
 	}
 
-	status = be_cmd_config_qos(adapter, rate / 10, vf + 1);
+	status = be_cmd_config_qos(adapter, max_tx_rate / 10, vf + 1);
 	if (status)
 		dev_err(&adapter->pdev->dev,
-			"tx rate %d on VF %d failed\n", rate, vf);
+			"max tx rate %d on VF %d failed\n", max_tx_rate, vf);
 	else
-		adapter->vf_cfg[vf].tx_rate = rate;
+		adapter->vf_cfg[vf].tx_rate = max_tx_rate;
 	return status;
 }
 static int be_set_vf_link_state(struct net_device *netdev, int vf,
