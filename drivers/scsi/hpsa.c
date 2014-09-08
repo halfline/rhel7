@@ -6221,6 +6221,7 @@ static int hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id)
 {
 	int i;
 	u32 subsystem_vendor_id, subsystem_device_id;
+	char msg[80];
 
 	subsystem_vendor_id = pdev->subsystem_vendor;
 	subsystem_device_id = pdev->subsystem_device;
@@ -6239,7 +6240,8 @@ static int hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id)
 			return -ENODEV;
 	}
 
-	mark_tech_preview("hpsa: this controller", THIS_MODULE);
+	sprintf(msg, "hpsa: this controller (%#x)", subsystem_device_id);
+	mark_tech_preview(msg, THIS_MODULE);
 
 	return ARRAY_SIZE(products) - 1; /* generic unknown smart array */
 }
