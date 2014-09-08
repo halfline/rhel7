@@ -271,7 +271,8 @@ struct ethtool_ops {
 #else
 	u32	(*get_rxfh_key_size)(struct net_device *);
 	int	(*get_rxfh)(struct net_device *, u32 *indir, u8 *key);
-	int	(*set_rxfh)(struct net_device *, u32 *indir, u8 *key);
+	int	(*set_rxfh)(struct net_device *, const u32 *indir,
+			    const u8 *key);
 #endif
 	void			(*rh_reserved4)(void);
 	void			(*rh_reserved5)(void);
