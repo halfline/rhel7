@@ -715,6 +715,8 @@ void exit_aio(struct mm_struct *mm)
 {
 	struct kioctx *ctx;
 	struct hlist_node *n;
+	struct completion requests_done =
+		COMPLETION_INITIALIZER_ONSTACK(requests_done);
 
 	hlist_for_each_entry_safe(ctx, n, &mm->ioctx_list, list) {
 		if (1 != atomic_read(&ctx->users))
@@ -732,8 +734,10 @@ void exit_aio(struct mm_struct *mm)
 		 * place that uses ->mmap_size, so it's safe.
 		 */
 		ctx->mmap_size = 0;
+		kill_ioctx(mm, ctx, &requests_done);
 
-		kill_ioctx(mm, ctx, NULL);
+		/* Wait until all IO for the context are done. */
+		wait_for_completion(&requests_done);
 	}
 }
 
