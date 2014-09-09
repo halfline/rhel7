@@ -294,7 +294,7 @@ static int aio_setup_ring(struct kioctx *ctx)
 	struct aio_ring *ring;
 	unsigned nr_events = ctx->max_reqs;
 	struct mm_struct *mm = current->mm;
-	unsigned long size, populate;
+	unsigned long size, unused;
 	int nr_pages;
 	int i;
 	struct file *file;
@@ -316,6 +316,20 @@ static int aio_setup_ring(struct kioctx *ctx)
 		return -EAGAIN;
 	}
 
+	ctx->aio_ring_file = file;
+	nr_events = (PAGE_SIZE * nr_pages - sizeof(struct aio_ring))
+			/ sizeof(struct io_event);
+
+	ctx->ring_pages = ctx->internal_pages;
+	if (nr_pages > AIO_RING_PAGES) {
+		ctx->ring_pages = kcalloc(nr_pages, sizeof(struct page *),
+					  GFP_KERNEL);
+		if (!ctx->ring_pages) {
+			put_aio_ring_file(ctx);
+			return -ENOMEM;
+		}
+	}
+
 	for (i = 0; i < nr_pages; i++) {
 		struct page *page;
 		page = find_or_create_page(file->f_inode->i_mapping,
@@ -327,17 +341,14 @@ static int aio_setup_ring(struct kioctx *ctx)
 		SetPageUptodate(page);
 		SetPageDirty(page);
 		unlock_page(page);
-	}
-	ctx->aio_ring_file = file;
-	nr_events = (PAGE_SIZE * nr_pages - sizeof(struct aio_ring))
-			/ sizeof(struct io_event);
 
-	ctx->ring_pages = ctx->internal_pages;
-	if (nr_pages > AIO_RING_PAGES) {
-		ctx->ring_pages = kcalloc(nr_pages, sizeof(struct page *),
-					  GFP_KERNEL);
-		if (!ctx->ring_pages)
-			return -ENOMEM;
+		ctx->ring_pages[i] = page;
+	}
+	ctx->nr_pages = i;
+
+	if (unlikely(i != nr_pages)) {
+		aio_free_ring(ctx);
+		return -EAGAIN;
 	}
 
 	ctx->mmap_size = nr_pages * PAGE_SIZE;
@@ -346,36 +357,15 @@ static int aio_setup_ring(struct kioctx *ctx)
 	down_write(&mm->mmap_sem);
 	ctx->mmap_base = do_mmap_pgoff(ctx->aio_ring_file, 0, ctx->mmap_size,
 				       PROT_READ | PROT_WRITE,
-				       MAP_SHARED | MAP_POPULATE, 0, &populate);
+				       MAP_SHARED, 0, &unused);
+	up_write(&mm->mmap_sem);
 	if (IS_ERR((void *)ctx->mmap_base)) {
-		up_write(&mm->mmap_sem);
 		ctx->mmap_size = 0;
 		aio_free_ring(ctx);
 		return -EAGAIN;
 	}
 
 	pr_debug("mmap address: 0x%08lx\n", ctx->mmap_base);
-
-	/* We must do this while still holding mmap_sem for write, as we
-	 * need to be protected against userspace attempting to mremap()
-	 * or munmap() the ring buffer.
-	 */
-	ctx->nr_pages = get_user_pages(current, mm, ctx->mmap_base, nr_pages,
-				       1, 0, ctx->ring_pages, NULL);
-
-	/* Dropping the reference here is safe as the page cache will hold
-	 * onto the pages for us.  It is also required so that page migration
-	 * can unmap the pages and get the right reference count.
-	 */
-	for (i = 0; i < ctx->nr_pages; i++)
-		put_page(ctx->ring_pages[i]);
-
-	up_write(&mm->mmap_sem);
-
-	if (unlikely(ctx->nr_pages != nr_pages)) {
-		aio_free_ring(ctx);
-		return -EAGAIN;
-	}
 
 	ctx->user_id = ctx->mmap_base;
 	ctx->nr_events = nr_events; /* trusted copy */
