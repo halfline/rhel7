@@ -93,7 +93,10 @@ struct kioctx {
 	struct work_struct	rcu_work;
 
 	struct {
-		atomic_t	reqs_active;
+		atomic_t	reqs_active; /* tracks an io request from the
+					      * time it's allocated until the
+					      * time the corresponding io_event
+					      * is consumed by userspace */
 	} ____cacheline_aligned_in_smp;
 
 	struct {
@@ -113,6 +116,7 @@ struct kioctx {
 
 	struct {
 		unsigned	tail;
+		unsigned	completed_events;
 		spinlock_t	completion_lock;
 	} ____cacheline_aligned_in_smp;
 
@@ -133,6 +137,9 @@ static struct vfsmount *aio_mnt;
 
 static const struct file_operations aio_ring_fops;
 static const struct address_space_operations aio_ctx_aops;
+
+static void user_update_reqs_active(struct kioctx *ctx);
+static void update_reqs_active(struct kioctx *ctx, unsigned head, unsigned tail);
 
 static struct file *aio_private_file(struct kioctx *ctx, loff_t nr_pages)
 {
@@ -513,13 +520,15 @@ static void free_ioctx(struct kioctx *ctx)
 	kunmap_atomic(ring);
 
 	while (atomic_read(&ctx->reqs_active) > 0) {
-		wait_event(ctx->wait,
-				head != ctx->tail ||
-				atomic_read(&ctx->reqs_active) <= 0);
-
+		user_update_reqs_active(ctx);
 		avail = (head <= ctx->tail ? ctx->tail : ctx->nr_events) - head;
 		head += avail;
 		head %= ctx->nr_events;
+		atomic_sub(avail, &ctx->reqs_active);
+
+		wait_event(ctx->wait,
+				head != ctx->tail ||
+				atomic_read(&ctx->reqs_active) <= 0);
 	}
 
 	WARN_ON(atomic_read(&ctx->reqs_active) < 0);
@@ -728,6 +737,65 @@ void exit_aio(struct mm_struct *mm)
 	}
 }
 
+/* update_reqs_active
+ *     Updates the reqs_active counter used for tracking the number of
+ *     outstanding requests and its complement, the number of free slots
+ *     in the completion ring.  This can be called from aio_complete()
+ *     (to optimistically updates reqs_active) or from aio_get_req()
+ *     (the we're out of events case).  It must be called holding
+ *     ctx->completion_lock.
+ */
+static void update_reqs_active(struct kioctx *ctx, unsigned head, unsigned tail)
+{
+	unsigned events_in_ring, completed;
+
+	/* Clamp head since userland can write to it. */
+	head %= ctx->nr_events;
+	if (head <= tail)
+		events_in_ring = tail - head;
+	else
+		events_in_ring = ctx->nr_events - (head - tail);
+
+	completed = ctx->completed_events;
+	if (events_in_ring < completed)
+		completed -= events_in_ring;
+	else
+		completed = 0;
+
+	if (!completed)
+		return;
+
+	ctx->completed_events -= completed;
+	atomic_sub(completed, &ctx->reqs_active);
+}
+
+static void user_update_reqs_active(struct kioctx *ctx)
+{
+	spin_lock_irq(&ctx->completion_lock);
+	if (ctx->completed_events) {
+		struct aio_ring *ring;
+		unsigned head;
+
+		/* Access of ring->head may race with aio_read_events_ring()
+		 * here, but that's okay since whether we read the old version
+		 * or the new version, and either will be valid.  The important
+		 * part is that head cannot pass tail since we prevent
+		 * aio_complete() from updating tail by holding
+		 * ctx->completion_lock.  Even if head is invalid, the check
+		 * against ctx->completed_events below will make sure we do the
+		 * safe/right thing.
+		 */
+		ring = kmap_atomic(ctx->ring_pages[0]);
+		head = ring->head;
+		kunmap_atomic(ring);
+
+		update_reqs_active(ctx, head, ctx->tail);
+	}
+
+	spin_unlock_irq(&ctx->completion_lock);
+}
+
+
 /* aio_get_req
  *	Allocate a slot for an aio request.  Increments the ki_users count
  * of the kioctx so that the kioctx stays around until all requests are
@@ -742,8 +810,11 @@ static inline struct kiocb *aio_get_req(struct kioctx *ctx)
 {
 	struct kiocb *req;
 
-	if (atomic_read(&ctx->reqs_active) >= ctx->nr_events)
-		return NULL;
+	if (atomic_read(&ctx->reqs_active) >= ctx->nr_events - 1) {
+		user_update_reqs_active(ctx);
+		if (atomic_read(&ctx->reqs_active) >= ctx->nr_events - 1)
+			return NULL;
+	}
 
 	if (atomic_inc_return(&ctx->reqs_active) > ctx->nr_events - 1)
 		goto out_put;
@@ -808,8 +879,8 @@ void aio_complete(struct kiocb *iocb, long res, long res2)
 	struct kioctx	*ctx = iocb->ki_ctx;
 	struct aio_ring	*ring;
 	struct io_event	*ev_page, *event;
+	unsigned tail, pos, head;
 	unsigned long	flags;
-	unsigned tail, pos;
 
 	/*
 	 * Special case handling for sync iocbs:
@@ -887,10 +958,20 @@ void aio_complete(struct kiocb *iocb, long res, long res2)
 	ctx->tail = tail;
 
 	ring = kmap_atomic(ctx->ring_pages[0]);
+	head = ring->head;
 	ring->tail = tail;
 	kunmap_atomic(ring);
 	flush_dcache_page(ctx->ring_pages[0]);
 
+	ctx->completed_events++;
+	/*
+	 * It doesn't make sense to call update_reqs_active for this
+	 * particular completion, b/c userspace hasn't had a chance
+	 * to reap it yet.  So only call update_reqs_active if some
+	 * other completion came in earlier.
+	 */
+	if (ctx->completed_events > 1)
+		update_reqs_active(ctx, head, tail);
 	spin_unlock_irqrestore(&ctx->completion_lock, flags);
 
 	pr_debug("added to ring %p at [%u]\n", iocb, tail);
@@ -906,7 +987,6 @@ void aio_complete(struct kiocb *iocb, long res, long res2)
 put_rq:
 	/* everything turned out well, dispose of the aiocb. */
 	aio_put_req(iocb);
-	atomic_dec(&ctx->reqs_active);
 
 	/*
 	 * We have to order our ring_info tail store above and test
