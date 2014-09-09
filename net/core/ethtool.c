@@ -571,7 +571,8 @@ static noinline_for_stack int ethtool_get_rxfh_indir(struct net_device *dev,
 	int ret;
 
 	if (!dev->ethtool_ops->get_rxfh_indir_size ||
-	    !dev->ethtool_ops->get_rxfh_indir)
+	    (!dev->ethtool_ops->get_rxfh_indir &&
+	     !dev->ethtool_ops->get_rxfh))
 		return -EOPNOTSUPP;
 	dev_size = dev->ethtool_ops->get_rxfh_indir_size(dev);
 	if (dev_size == 0)
@@ -597,7 +598,9 @@ static noinline_for_stack int ethtool_get_rxfh_indir(struct net_device *dev,
 	if (!indir)
 		return -ENOMEM;
 
-	ret = dev->ethtool_ops->get_rxfh_indir(dev, indir);
+	ret = dev->ethtool_ops->get_rxfh ?
+		dev->ethtool_ops->get_rxfh(dev, indir, NULL) :
+		dev->ethtool_ops->get_rxfh_indir(dev, indir);
 	if (ret)
 		goto out;
 
@@ -621,8 +624,8 @@ static noinline_for_stack int ethtool_set_rxfh_indir(struct net_device *dev,
 	int ret;
 	u32 ringidx_offset = offsetof(struct ethtool_rxfh_indir, ring_index[0]);
 
-	if (!ops->get_rxfh_indir_size || !ops->set_rxfh_indir ||
-	    !ops->get_rxnfc)
+	if (!ops->get_rxfh_indir_size ||
+	    (!ops->set_rxfh && !ops->set_rxfh_indir) || !ops->get_rxnfc)
 		return -EOPNOTSUPP;
 
 	dev_size = ops->get_rxfh_indir_size(dev);
@@ -658,7 +661,8 @@ static noinline_for_stack int ethtool_set_rxfh_indir(struct net_device *dev,
 			goto out;
 	}
 
-	ret = ops->set_rxfh_indir(dev, indir);
+	ret = ops->set_rxfh ? ops->set_rxfh(dev, indir, NULL) :
+		ops->set_rxfh_indir(dev, indir);
 
 out:
 	kfree(indir);

@@ -5449,6 +5449,15 @@ int register_netdevice(struct net_device *dev)
 	 */
 	dev->mpls_features |= NETIF_F_SG;
 
+	/* Drivers implementing new {get,set}_rxfh() should not implement
+	 * {get,set}_rxfh_indir()
+	 */
+	WARN_ON(dev->ethtool_ops &&
+		((dev->ethtool_ops->get_rxfh &&
+		  dev->ethtool_ops->get_rxfh_indir) ||
+		 (dev->ethtool_ops->set_rxfh &&
+		  dev->ethtool_ops->set_rxfh_indir)));
+
 	ret = call_netdevice_notifiers(NETDEV_POST_INIT, dev);
 	ret = notifier_to_errno(ret);
 	if (ret)
