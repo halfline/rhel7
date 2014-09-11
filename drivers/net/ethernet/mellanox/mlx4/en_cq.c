@@ -129,6 +129,12 @@ int mlx4_en_activate_cq(struct mlx4_en_priv *priv, struct mlx4_en_cq *cq,
 					mlx4_warn(mdev, "Failed assigning an EQ to %s, falling back to legacy EQ's\n",
 						  name);
 				}
+
+#ifdef CONFIG_GENERIC_HARDIRQS
+				cq->irq_desc =
+					irq_to_desc(mlx4_eq_get_irq(mdev->dev,
+								    cq->vector));
+#endif
 			}
 		} else {
 			cq->vector = (cq->ring + 1 + priv->port) %
