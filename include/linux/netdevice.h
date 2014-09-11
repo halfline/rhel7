@@ -1239,7 +1239,12 @@ struct net_device {
 	unsigned char		addr_len;	/* hardware address length	*/
 	unsigned short		neigh_priv_len;
 	unsigned short          dev_id;		/* for shared network cards */
-
+#ifndef __GENKSYMS__
+	unsigned short          dev_port;	/* Used to differentiate
+						 * devices that share the same
+						 * function
+						 */
+#endif
 	spinlock_t		addr_list_lock;
 	struct netdev_hw_addr_list	uc;	/* Unicast mac addresses */
 	struct netdev_hw_addr_list	mc;	/* Multicast mac addresses */
