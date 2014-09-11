@@ -130,16 +130,17 @@ int mlx4_en_activate_cq(struct mlx4_en_priv *priv, struct mlx4_en_cq *cq,
 						  name);
 				}
 
-#ifdef CONFIG_GENERIC_HARDIRQS
-				cq->irq_desc =
-					irq_to_desc(mlx4_eq_get_irq(mdev->dev,
-								    cq->vector));
-#endif
 			}
 		} else {
 			cq->vector = (cq->ring + 1 + priv->port) %
 				mdev->dev->caps.num_comp_vectors;
 		}
+
+#ifdef CONFIG_GENERIC_HARDIRQS
+		cq->irq_desc =
+			irq_to_desc(mlx4_eq_get_irq(mdev->dev,
+						    cq->vector));
+#endif
 	} else {
 		/* For TX we use the same irq per
 		ring we assigned for the RX    */
