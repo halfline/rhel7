@@ -628,8 +628,10 @@ int eeh_reset_pe(struct eeh_pe *pe)
 		eeh_reset_pe_once(pe);
 
 		rc = eeh_ops->wait_state(pe, PCI_BUS_RESET_WAIT_MSEC);
-		if ((rc & flags) == flags)
+		if ((rc & flags) == flags) {
+			eeh_pe_state_clear(pe, EEH_PE_ISOLATED);
 			return 0;
+		}
 
 		if (rc < 0) {
 			pr_err("%s: Unrecoverable slot failure on PHB#%d-PE#%x",
