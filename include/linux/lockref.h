@@ -18,9 +18,17 @@
 
 struct lockref {
 	union {
+#ifdef CONFIG_PPC64
+#ifndef __GENKSYMS__
 #ifdef CONFIG_CMPXCHG_LOCKREF
 		aligned_u64 lock_count;
 #endif
+#endif /* __GENKSYMS__ */
+#else /* CONFIG_PPC64 */
+#ifdef CONFIG_CMPXCHG_LOCKREF
+		aligned_u64 lock_count;
+#endif
+#endif /* CONFIG_PPC64 */
 		struct {
 			spinlock_t lock;
 			unsigned int count;
