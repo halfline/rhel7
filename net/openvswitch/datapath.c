@@ -2055,9 +2055,13 @@ static int __init dp_init(void)
 
 	pr_info("Open vSwitch switching datapath\n");
 
-	err = ovs_flow_init();
+	err = ovs_internal_dev_rtnl_link_register();
 	if (err)
 		goto error;
+
+	err = ovs_flow_init();
+	if (err)
+		goto error_unreg_rtnl_link;
 
 	err = ovs_vport_init();
 	if (err)
@@ -2085,6 +2089,8 @@ error_vport_exit:
 	ovs_vport_exit();
 error_flow_exit:
 	ovs_flow_exit();
+error_unreg_rtnl_link:
+	ovs_internal_dev_rtnl_link_unregister();
 error:
 	return err;
 }
@@ -2097,6 +2103,7 @@ static void dp_cleanup(void)
 	rcu_barrier();
 	ovs_vport_exit();
 	ovs_flow_exit();
+	ovs_internal_dev_rtnl_link_unregister();
 }
 
 module_init(dp_init);
