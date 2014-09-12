@@ -751,6 +751,20 @@ intel_ddi_calculate_wrpll(int clock /* in Hz */,
 	*r2_out = best.r2;
 }
 
+static int link_bw_to_pll_sel(int link_bw)
+{
+	switch (link_bw) {
+	case DP_LINK_BW_1_62:
+		return PORT_CLK_SEL_LCPLL_810;
+	case DP_LINK_BW_2_7:
+		return PORT_CLK_SEL_LCPLL_1350;
+	case DP_LINK_BW_5_4:
+		return PORT_CLK_SEL_LCPLL_2700;
+	default:
+		return -1;
+	}
+}
+
 /*
  * Tries to find a PLL for the CRTC. If it finds, it increases the refcount and
  * stores it in intel_crtc->ddi_pll_sel, so other mode sets won't be able to
@@ -773,17 +787,8 @@ bool intel_ddi_pll_select(struct intel_crtc *intel_crtc)
 	if (type == INTEL_OUTPUT_DISPLAYPORT || type == INTEL_OUTPUT_EDP) {
 		struct intel_dp *intel_dp = enc_to_intel_dp(encoder);
 
-		switch (intel_dp->link_bw) {
-		case DP_LINK_BW_1_62:
-			intel_crtc->ddi_pll_sel = PORT_CLK_SEL_LCPLL_810;
-			break;
-		case DP_LINK_BW_2_7:
-			intel_crtc->ddi_pll_sel = PORT_CLK_SEL_LCPLL_1350;
-			break;
-		case DP_LINK_BW_5_4:
-			intel_crtc->ddi_pll_sel = PORT_CLK_SEL_LCPLL_2700;
-			break;
-		default:
+		intel_crtc->ddi_pll_sel = link_bw_to_pll_sel(intel_dp->link_bw);
+		if (intel_crtc->ddi_pll_sel == -1) {
 			DRM_ERROR("Link bandwidth %d unsupported\n",
 				  intel_dp->link_bw);
 			return false;
