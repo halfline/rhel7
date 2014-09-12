@@ -225,6 +225,7 @@
 #define   CTRL_TE	0x00c00000	/* thread enable */
 #define   CTRL_RUNLATCH	0x1
 #define SPRN_DAWR	0xB4
+#define SPRN_RPR	0xBA	/* Relative Priority Register */
 #define SPRN_CIABR	0xBB
 #define   CIABR_PRIV		0x3
 #define   CIABR_PRIV_USER	1
@@ -273,6 +274,9 @@
 #define SPRN_HSRR1	0x13B	/* Hypervisor Save/Restore 1 */
 #define SPRN_IC		0x350	/* Virtual Instruction Count */
 #define SPRN_VTB	0x351	/* Virtual Time Base */
+#define SPRN_LDBAR	0x352	/* LD Base Address Register */
+#define SPRN_PMMAR	0x356	/* Power Management Memory Activity Register */
+
 /* HFSCR and FSCR bit numbers are the same */
 #define FSCR_TAR_LG	8	/* Enable Target Address Register */
 #define FSCR_EBB_LG	7	/* Enable Event Based Branching */
@@ -430,6 +434,12 @@
 #define HID0_BTCD	(1<<1)		/* Branch target cache disable */
 #define HID0_NOPDST	(1<<1)		/* No-op dst, dstt, etc. instr. */
 #define HID0_NOPTI	(1<<0)		/* No-op dcbt and dcbst instr. */
+/* POWER8 HID0 bits */
+#define HID0_POWER8_4LPARMODE	__MASK(61)
+#define HID0_POWER8_2LPARMODE	__MASK(57)
+#define HID0_POWER8_1TO2LPAR	__MASK(52)
+#define HID0_POWER8_1TO4LPAR	__MASK(51)
+#define HID0_POWER8_DYNLPARDIS	__MASK(48)
 
 #define SPRN_HID1	0x3F1		/* Hardware Implementation Register 1 */
 #ifdef CONFIG_6xx
