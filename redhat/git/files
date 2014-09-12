@@ -21,6 +21,8 @@ kabi_whitelist_s390x
 kabi_whitelist_x86_64
 kernel-3.10.0-ppc64.config
 kernel-3.10.0-ppc64-debug.config
+kernel-3.10.0-ppc64le.config
+kernel-3.10.0-ppc64le-debug.config
 kernel-3.10.0-s390x.config
 kernel-3.10.0-s390x-debug.config
 kernel-3.10.0-s390x-kdump.config
