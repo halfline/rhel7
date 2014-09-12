@@ -823,11 +823,11 @@ skb_set_hash(struct sk_buff *skb, __u32 hash, enum pkt_hash_types type)
 	skb->rxhash = hash;
 }
 
-extern void __skb_get_rxhash(struct sk_buff *skb);
-static inline __u32 skb_get_rxhash(struct sk_buff *skb)
+void __skb_get_hash(struct sk_buff *skb);
+static inline __u32 skb_get_hash(struct sk_buff *skb)
 {
 	if (!skb->l4_rxhash)
-		__skb_get_rxhash(skb);
+		__skb_get_hash(skb);
 
 	return skb->rxhash;
 }
