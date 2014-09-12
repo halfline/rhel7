@@ -524,6 +524,8 @@ struct drm_connector {
 	struct drm_property_blob *edid_blob_ptr;
 	struct drm_object_properties properties;
 
+	struct drm_property_blob *path_blob_ptr;
+
 	uint8_t polled; /* DRM_CONNECTOR_POLL_* */
 
 	/* requested DPMS state */
@@ -801,6 +803,7 @@ struct drm_mode_config {
 	struct drm_property *edid_property;
 	struct drm_property *dpms_property;
 	struct drm_property *plane_type_property;
+	struct drm_property *path_property;
 
 	/* DVI-I properties */
 	struct drm_property *dvi_i_subconnector_property;
@@ -947,6 +950,8 @@ extern void drm_mode_config_init(struct drm_device *dev);
 extern void drm_mode_config_reset(struct drm_device *dev);
 extern void drm_mode_config_cleanup(struct drm_device *dev);
 
+extern int drm_mode_connector_set_path_property(struct drm_connector *connector,
+						char *path);
 extern int drm_mode_connector_update_edid_property(struct drm_connector *connector,
 						struct edid *edid);
 
