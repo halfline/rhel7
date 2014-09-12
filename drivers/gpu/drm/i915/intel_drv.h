@@ -566,6 +566,7 @@ struct intel_digital_port {
 	u32 saved_port_bits;
 	struct intel_dp dp;
 	struct intel_hdmi hdmi;
+	bool (*hpd_pulse)(struct intel_digital_port *, bool);
 };
 
 static inline int
@@ -835,6 +836,7 @@ void intel_edp_psr_enable(struct intel_dp *intel_dp);
 void intel_edp_psr_disable(struct intel_dp *intel_dp);
 void intel_edp_psr_update(struct drm_device *dev);
 void intel_dp_set_drrs_state(struct drm_device *dev, int refresh_rate);
+bool intel_dp_hpd_pulse(struct intel_digital_port *intel_dig_port, bool long_hpd);
 
 /* intel_dsi.c */
 bool intel_dsi_init(struct drm_device *dev);
