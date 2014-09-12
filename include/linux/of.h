@@ -18,7 +18,7 @@
 #include <linux/types.h>
 #include <linux/bitops.h>
 #include <linux/errno.h>
-#include <linux/kref.h>
+#include <linux/kobject.h>
 #include <linux/mod_devicetable.h>
 #include <linux/spinlock.h>
 #include <linux/topology.h>
@@ -37,6 +37,9 @@ struct property {
 	struct property *next;
 	unsigned long _flags;
 	unsigned int unique_id;
+#ifndef __GENKSYMS__
+	struct bin_attribute attr;
+#endif
 };
 
 #if defined(CONFIG_SPARC)
@@ -57,13 +60,16 @@ struct device_node {
 	struct	device_node *next;	/* next device of same type */
 	struct	device_node *allnext;	/* next in list of all nodes */
 	struct	proc_dir_entry *pde;	/* this node's proc directory */
-	struct	kref kref;
+	struct kref kref;
 	unsigned long _flags;
 	void	*data;
 #if defined(CONFIG_SPARC)
 	const char *path_component_name;
 	unsigned int unique_id;
 	struct of_irq_controller *irq_trans;
+#endif
+#ifndef __GENKSYMS__
+	struct	kobject kobj;
 #endif
 };
 
@@ -73,6 +79,8 @@ struct of_phandle_args {
 	int args_count;
 	uint32_t args[MAX_PHANDLE_ARGS];
 };
+
+extern int of_node_add(struct device_node *node);
 
 #ifdef CONFIG_OF_DYNAMIC
 extern struct device_node *of_node_get(struct device_node *node);
@@ -165,6 +173,8 @@ static inline const char *of_node_full_name(const struct device_node *np)
 	return np ? np->full_name : "<no-node>";
 }
 
+#define for_each_of_allnodes(dn) \
+	for (dn = of_allnodes; dn; dn = dn->allnext)
 extern struct device_node *of_find_node_by_name(struct device_node *from,
 	const char *name);
 #define for_each_node_by_name(dn, name) \
