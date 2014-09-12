@@ -181,7 +181,6 @@ union kvmppc_one_reg {
 
 struct kvmppc_ops {
 	struct module *owner;
-	bool is_hv_enabled;
 	int (*get_sregs)(struct kvm_vcpu *vcpu, struct kvm_sregs *sregs);
 	int (*set_sregs)(struct kvm_vcpu *vcpu, struct kvm_sregs *sregs);
 	int (*get_one_reg)(struct kvm_vcpu *vcpu, u64 id,
@@ -229,6 +228,11 @@ struct kvmppc_ops {
 
 extern struct kvmppc_ops *kvmppc_hv_ops;
 extern struct kvmppc_ops *kvmppc_pr_ops;
+
+static inline bool is_kvmppc_hv_enabled(struct kvm *kvm)
+{
+	return kvm->arch.kvm_ops == kvmppc_hv_ops;
+}
 
 /*
  * Cuts out inst bits with ordering according to spec.
