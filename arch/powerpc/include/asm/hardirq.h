@@ -13,6 +13,10 @@ typedef struct {
 #ifdef CONFIG_PPC_DOORBELL
 	unsigned int doorbell_irqs;
 #endif
+#ifndef __GENKSYMS__
+	unsigned int timer_irqs_event;
+	unsigned int timer_irqs_others;
+#endif
 } ____cacheline_aligned irq_cpustat_t;
 
 DECLARE_PER_CPU_SHARED_ALIGNED(irq_cpustat_t, irq_stat);
