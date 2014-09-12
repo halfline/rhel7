@@ -22,6 +22,7 @@
  */
 #include <asm/pgtable-ppc64.h>
 #include <asm/bug.h>
+#include <asm/processor.h>
 
 /*
  * Segment table
@@ -484,6 +485,18 @@ extern void slb_set_size(u16 size);
 
 #ifdef CONFIG_PPC_SUBPAGE_PROT
 /*
+ * RH KABI restrictions limits protptrs to 2 32-bit pointers, but
+ * powerpc64 needs 8 to support 64TB of memory.  Workaround this
+ * by implementing another level of indirection to jump through
+ * to get to the real protptr.  Unfortunately, this will require
+ * allocating memory dynamically instead of statically like the
+ * original structs were.
+ */
+struct protptrs_kabi {
+	unsigned int **protptrs[(TASK_SIZE_USER64 >> 43)];
+};
+
+/*
  * For the sub-page protection option, we extend the PGD with one of
  * these.  Basically we have a 3-level tree, with the top level being
  * the protptrs array.  To optimize speed and memory consumption when
@@ -496,7 +509,12 @@ extern void slb_set_size(u16 size);
  */
 struct subpage_prot_table {
 	unsigned long maxaddr;	/* only addresses < this are protected */
+#ifdef __GENKSYMS__
 	unsigned int **protptrs[2];
+#else
+	struct protptrs_kabi *rh_kabi;
+	void *unused;
+#endif
 	unsigned int *low_prot[4];
 };
 
