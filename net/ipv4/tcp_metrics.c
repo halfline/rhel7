@@ -1087,8 +1087,7 @@ void __init tcp_metrics_init(void)
 	if (ret < 0)
 		goto cleanup;
 	ret = genl_register_family_with_ops(&tcp_metrics_nl_family,
-					    tcp_metrics_nl_ops,
-					    ARRAY_SIZE(tcp_metrics_nl_ops));
+					    tcp_metrics_nl_ops);
 	if (ret < 0)
 		goto cleanup_subsys;
 	return;
