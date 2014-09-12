@@ -400,10 +400,12 @@ static int bpf_jit_build_body(struct sk_filter *fp, u32 *image,
 
 			PPC_LHZ_OFFS(r_A, r_skb, offsetof(struct sk_buff,
 							  vlan_tci));
-			if (filter[i].code == BPF_S_ANC_VLAN_TAG)
+			if (filter[i].code == BPF_S_ANC_VLAN_TAG) {
 				PPC_ANDI(r_A, r_A, ~VLAN_TAG_PRESENT);
-			else
+			} else {
 				PPC_ANDI(r_A, r_A, VLAN_TAG_PRESENT);
+				PPC_SRWI(r_A, r_A, 12);
+			}
 			break;
 		case BPF_S_ANC_QUEUE:
 			BUILD_BUG_ON(FIELD_SIZEOF(struct sk_buff,
