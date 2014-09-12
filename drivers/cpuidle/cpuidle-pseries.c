@@ -1,5 +1,5 @@
 /*
- *  processor_idle - idle state cpuidle driver.
+ *  cpuidle-pseries - idle state cpuidle driver.
  *  Adapted from drivers/idle/intel_idle.c and
  *  drivers/acpi/processor_idle.c
  *
