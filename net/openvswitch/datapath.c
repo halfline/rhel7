@@ -582,7 +582,7 @@ static const struct nla_policy packet_policy[OVS_PACKET_ATTR_MAX + 1] = {
 	[OVS_PACKET_ATTR_ACTIONS] = { .type = NLA_NESTED },
 };
 
-static struct genl_ops dp_packet_genl_ops[] = {
+static const struct genl_ops dp_packet_genl_ops[] = {
 	{ .cmd = OVS_PACKET_CMD_EXECUTE,
 	  .flags = GENL_ADMIN_PERM, /* Requires CAP_NET_ADMIN privilege. */
 	  .policy = packet_policy,
@@ -1037,7 +1037,7 @@ static int ovs_flow_cmd_dump(struct sk_buff *skb, struct netlink_callback *cb)
 	return skb->len;
 }
 
-static struct genl_ops dp_flow_genl_ops[] = {
+static const struct genl_ops dp_flow_genl_ops[] = {
 	{ .cmd = OVS_FLOW_CMD_NEW,
 	  .flags = GENL_ADMIN_PERM, /* Requires CAP_NET_ADMIN privilege. */
 	  .policy = flow_policy,
@@ -1430,7 +1430,7 @@ static int ovs_dp_cmd_dump(struct sk_buff *skb, struct netlink_callback *cb)
 	return skb->len;
 }
 
-static struct genl_ops dp_datapath_genl_ops[] = {
+static const struct genl_ops dp_datapath_genl_ops[] = {
 	{ .cmd = OVS_DP_CMD_NEW,
 	  .flags = GENL_ADMIN_PERM, /* Requires CAP_NET_ADMIN privilege. */
 	  .policy = datapath_policy,
@@ -1791,7 +1791,7 @@ out:
 	return skb->len;
 }
 
-static struct genl_ops dp_vport_genl_ops[] = {
+static const struct genl_ops dp_vport_genl_ops[] = {
 	{ .cmd = OVS_VPORT_CMD_NEW,
 	  .flags = GENL_ADMIN_PERM, /* Requires CAP_NET_ADMIN privilege. */
 	  .policy = vport_policy,
@@ -1817,7 +1817,7 @@ static struct genl_ops dp_vport_genl_ops[] = {
 
 struct genl_family_and_ops {
 	struct genl_family *family;
-	struct genl_ops *ops;
+	const struct genl_ops *ops;
 	int n_ops;
 	struct genl_multicast_group *group;
 };
