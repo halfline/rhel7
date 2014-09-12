@@ -1087,7 +1087,10 @@ EXPORT_PER_CPU_SYMBOL(current_task);
 
 DEFINE_PER_CPU(unsigned long, kernel_stack) =
 	(unsigned long)&init_thread_union - KERNEL_STACK_OFFSET + THREAD_SIZE;
+DEFINE_PER_CPU(unsigned long, __kernel_stack_70__) =
+	(unsigned long)&init_thread_union - KERNEL_STACK_OFFSET + THREAD_SIZE - 8192;
 EXPORT_PER_CPU_SYMBOL(kernel_stack);
+EXPORT_PER_CPU_SYMBOL(__kernel_stack_70__);
 
 DEFINE_PER_CPU(char *, irq_stack_ptr) =
 	init_per_cpu_var(irq_stack_union.irq_stack) + IRQ_STACK_SIZE - 64;
