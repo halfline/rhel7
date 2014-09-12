@@ -526,9 +526,6 @@ static int i915_drm_freeze(struct drm_device *dev)
 			return error;
 		}
 
-		drm_irq_uninstall(dev);
-		dev_priv->enable_hotplug_processing = false;
-
 		intel_disable_gt_powersave(dev);
 
 		/*
@@ -540,6 +537,9 @@ static int i915_drm_freeze(struct drm_device *dev)
 			dev_priv->display.crtc_disable(crtc);
 		}
 		drm_modeset_unlock_all(dev);
+
+		intel_dp_mst_suspend(dev);
+		drm_irq_uninstall(dev);
 
 		intel_modeset_suspend_hw(dev);
 	}
@@ -644,6 +644,15 @@ static int __i915_drm_thaw(struct drm_device *dev, bool restore_gtt_mappings)
 
 		intel_modeset_init_hw(dev);
 
+		{
+			unsigned long irqflags;
+			spin_lock_irqsave(&dev_priv->irq_lock, irqflags);
+			if (dev_priv->display.hpd_irq_setup)
+				dev_priv->display.hpd_irq_setup(dev);
+			spin_unlock_irqrestore(&dev_priv->irq_lock, irqflags);
+		}
+
+		intel_dp_mst_resume(dev);
 		drm_modeset_lock_all(dev);
 		intel_modeset_setup_hw_state(dev, true);
 		drm_modeset_unlock_all(dev);
