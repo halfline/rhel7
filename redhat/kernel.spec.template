@@ -1016,7 +1016,7 @@ BuildKernel %make_target %kernel_image debug
 BuildKernel %make_target %kernel_image kdump
 %endif
 
-%global perf_make make %{?_smp_mflags} -C tools/perf -s V=1 WERROR=0 NO_LIBUNWIND=1 HAVE_CPLUS_DEMANGLE=1 NO_GTK2=1 NO_STRLCPY=1 prefix=%{_prefix}
+%global perf_make make %{?_smp_mflags} -C tools/perf -s V=1 WERROR=0 NO_LIBUNWIND=1 HAVE_CPLUS_DEMANGLE=1 NO_GTK2=1 NO_STRLCPY=1 prefix=%{_prefix} lib=%{_lib}
 %if %{with_perf}
 # perf
 %{perf_make} all
@@ -1177,7 +1177,7 @@ tar xjvf %{SOURCE23} -C $INSTALL_KABI_PATH
 
 %if %{with_perf}
 # perf tool binary and supporting scripts/binaries
-%{perf_make} DESTDIR=$RPM_BUILD_ROOT install-bin
+%{perf_make} DESTDIR=$RPM_BUILD_ROOT install
 # remove the 'trace' symlink.
 rm -f $RPM_BUILD_ROOT/%{_bindir}/trace
 
@@ -1379,6 +1379,7 @@ fi
 %{_bindir}/perf
 %dir %{_libexecdir}/perf-core
 %{_libexecdir}/perf-core/*
+%{_libdir}/traceevent
 %{_mandir}/man[1-8]/perf*
 %{_sysconfdir}/bash_completion.d/perf
 
