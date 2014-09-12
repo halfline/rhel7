@@ -203,6 +203,7 @@ extern void pnv_pci_init_ioda_hub(struct device_node *np);
 extern void pnv_pci_init_ioda2_phb(struct device_node *np);
 extern void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
 					__be64 *startp, __be64 *endp);
+extern void pnv_pci_reset_secondary_bus(struct pci_dev *dev);
 extern int ioda_eeh_phb_reset(struct pci_controller *hose, int option);
 
 #endif /* __POWERNV_PCI_H */
