@@ -109,13 +109,22 @@ struct eeh_dev {
 	int config_addr;		/* Config address		*/
 	int pe_config_addr;		/* PE config address		*/
 	u32 config_space[16];		/* Saved PCI config space	*/
-	u8 pcie_cap;			/* Saved PCIe capability	*/
+#ifdef __GENKSYMS__
+	u8 pcie_cap;			/* Saved PCIe capability        */
+#else
+	u8 kabi_reserved;		/* Preserve alignment for kabi  */
+#endif
 	struct eeh_pe *pe;		/* Associated PE		*/
 	struct list_head list;		/* Form link list in the PE	*/
 	struct pci_controller *phb;	/* Associated PHB		*/
 	struct device_node *dn;		/* Associated device node	*/
 	struct pci_dev *pdev;		/* Associated PCI device	*/
 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
+#ifndef __GENKSYMS__
+	int pcix_cap;			/* Saved PCIx capability	*/
+	int pcie_cap;			/* Saved PCIe capability	*/
+	int aer_cap;			/* Saved AER capability		*/
+#endif
 };
 
 static inline struct device_node *eeh_dev_to_of_node(struct eeh_dev *edev)
