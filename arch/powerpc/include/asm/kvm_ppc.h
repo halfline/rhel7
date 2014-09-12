@@ -180,6 +180,7 @@ union kvmppc_one_reg {
 };
 
 struct kvmppc_ops {
+	struct module *owner;
 	bool is_hv_enabled;
 	int (*get_sregs)(struct kvm_vcpu *vcpu, struct kvm_sregs *sregs);
 	int (*set_sregs)(struct kvm_vcpu *vcpu, struct kvm_sregs *sregs);
@@ -215,7 +216,6 @@ struct kvmppc_ops {
 			      unsigned long npages);
 	int (*init_vm)(struct kvm *kvm);
 	void (*destroy_vm)(struct kvm *kvm);
-	int (*check_processor_compat)(void);
 	int (*get_smmu_info)(struct kvm *kvm, struct kvm_ppc_smmu_info *info);
 	int (*emulate_op)(struct kvm_run *run, struct kvm_vcpu *vcpu,
 			  unsigned int inst, int *advance);
@@ -227,7 +227,8 @@ struct kvmppc_ops {
 
 };
 
-extern struct kvmppc_ops *kvmppc_ops;
+extern struct kvmppc_ops *kvmppc_hv_ops;
+extern struct kvmppc_ops *kvmppc_pr_ops;
 
 /*
  * Cuts out inst bits with ordering according to spec.
@@ -324,7 +325,7 @@ static inline void kvmppc_set_host_ipi(int cpu, u8 host_ipi)
 
 static inline void kvmppc_fast_vcpu_kick(struct kvm_vcpu *vcpu)
 {
-	kvmppc_ops->fast_vcpu_kick(vcpu);
+	vcpu->kvm->arch.kvm_ops->fast_vcpu_kick(vcpu);
 }
 
 #else
