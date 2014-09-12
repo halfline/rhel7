@@ -706,6 +706,7 @@ _GLOBAL(relative_toc)
 	mtlr	r0
 	blr
 
+.balign 8
 p_toc:	.llong	__toc_start + 0x8000 - 0b
 
 /*
