@@ -357,19 +357,23 @@ enum {
 
 	SKB_GSO_GRE = 1 << 6,
 
-	SKB_GSO_GRE_CSUM = 1 << 7,
+	SKB_GSO_IPIP = 1 << 7,
 
-	SKB_GSO_IPIP = 1 << 8,
+	SKB_GSO_SIT = 1 << 8,
 
-	SKB_GSO_SIT = 1 << 9,
+	SKB_GSO_UDP_TUNNEL = 1 << 9,
 
-	SKB_GSO_UDP_TUNNEL = 1 << 10,
+	SKB_GSO_MPLS = 1 << 10,
 
-	SKB_GSO_UDP_TUNNEL_CSUM = 1 << 11,
+	/* GSO_MASK2, see netdev_features.h */
+	SKB_GSO_GRE_CSUM = 1 << 11,
 
-	SKB_GSO_MPLS = 1 << 12,
-
+	SKB_GSO_UDP_TUNNEL_CSUM = 1 << 12,
 };
+
+/* NETIF_F_GSO flags are no longer part of a single range */
+#define SKB_GSO1_MASK (SKB_GSO_GRE_CSUM - 1)
+#define SKB_GSO2_MASK (SKB_GSO_GRE_CSUM|SKB_GSO_UDP_TUNNEL_CSUM)
 
 #if BITS_PER_LONG > 32
 #define NET_SKBUFF_DATA_USES_OFFSET 1

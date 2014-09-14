@@ -42,11 +42,9 @@ enum {
 	NETIF_F_TSO6_BIT,		/* ... TCPv6 segmentation */
 	NETIF_F_FSO_BIT,		/* ... FCoE segmentation */
 	NETIF_F_GSO_GRE_BIT,		/* ... GRE with TSO */
-	NETIF_F_GSO_GRE_CSUM_BIT,	/* ... GRE with csum with TSO */
 	NETIF_F_GSO_IPIP_BIT,		/* ... IPIP tunnel with TSO */
 	NETIF_F_GSO_SIT_BIT,		/* ... SIT tunnel with TSO */
 	NETIF_F_GSO_UDP_TUNNEL_BIT,	/* ... UDP TUNNEL with TSO */
-	NETIF_F_GSO_UDP_TUNNEL_CSUM_BIT,/* ... UDP TUNNEL with TSO & CSUM */
 	NETIF_F_GSO_MPLS_BIT,		/* ... MPLS segmentation */
 	/**/NETIF_F_GSO_LAST =		/* last bit, see GSO_MASK */
 		NETIF_F_GSO_MPLS_BIT,
@@ -65,6 +63,8 @@ enum {
 	NETIF_F_HW_VLAN_STAG_RX_BIT,	/* Receive VLAN STAG HW acceleration */
 	NETIF_F_HW_VLAN_STAG_FILTER_BIT,/* Receive filtering on VLAN STAGs */
 	NETIF_F_BUSY_POLL_BIT,		/* Busy poll */
+	NETIF_F_GSO_GRE_CSUM_BIT,	/* ... GRE with csum with TSO */
+	NETIF_F_GSO_UDP_TUNNEL_CSUM_BIT,/* ... UDP TUNNEL with TSO & CSUM */
 
 	/*
 	 * Add your fresh new feature above and remember to update
@@ -134,8 +134,14 @@ enum {
 		~NETIF_F_NEVER_CHANGE)
 
 /* Segmentation offload feature mask */
-#define NETIF_F_GSO_MASK	(__NETIF_F_BIT(NETIF_F_GSO_LAST + 1) - \
-		__NETIF_F_BIT(NETIF_F_GSO_SHIFT))
+#define NETIF_F_GSO2_MASK (NETIF_F_GSO_GRE_CSUM|NETIF_F_GSO_UDP_TUNNEL_CSUM)
+#define NETIF_F_GSO_MASK	((__NETIF_F_BIT(NETIF_F_GSO_LAST + 1) - \
+				 __NETIF_F_BIT(NETIF_F_GSO_SHIFT)) | \
+				NETIF_F_GSO2_MASK)
+
+#define NETIF_F_GSO2_SHIFT (NETIF_F_GSO_GRE_CSUM_BIT - \
+		(NETIF_F_GSO_LAST + 1 - NETIF_F_GSO_SHIFT))
+
 
 /* List of features with software fallbacks. */
 #define NETIF_F_GSO_SOFTWARE	(NETIF_F_TSO | NETIF_F_TSO_ECN | \
