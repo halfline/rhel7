@@ -1143,8 +1143,6 @@ static int vxlan_udp_encap_recv(struct sock *sk, struct sk_buff *skb)
 	if (!vs)
 		goto drop;
 
-	skb_pop_rcv_encapsulation(skb);
-
 	vs->rcv(vs, skb, vxh->vx_vni);
 	return 0;
 

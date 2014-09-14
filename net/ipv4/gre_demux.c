@@ -124,7 +124,6 @@ static int parse_gre_header(struct sk_buff *skb, struct tnl_ptk_info *tpi,
 			*csum_err = true;
 			return -EINVAL;
 		}
-		skb_pop_rcv_encapsulation(skb);
 		options++;
 	}
 
