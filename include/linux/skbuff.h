@@ -529,6 +529,11 @@ struct sk_buff {
 	__u16			network_header;
 	__u16			mac_header;
 
+#ifndef __GENKSYMS__
+	kmemcheck_bitfield_begin(flags3);
+	/* 16 bit hole */
+	kmemcheck_bitfield_end(flags3);
+#endif
 	/* RHEL SPECIFIC
 	 *
 	 * The following padding has been inserted before ABI freeze to
