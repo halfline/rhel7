@@ -569,7 +569,8 @@ struct sk_buff {
 	kmemcheck_bitfield_begin(flags3);
 	__u8			csum_level:2;
 	__u8			rh_csum_pad:1;
-	/* 13 bit hole */
+	__u8			csum_bad:1;
+	/* 12 bit hole */
 	kmemcheck_bitfield_end(flags3);
 #endif
 	/* RHEL SPECIFIC
@@ -2738,6 +2739,21 @@ static inline void __skb_incr_checksum_unnecessary(struct sk_buff *skb)
 	}
 }
 
+static inline void __skb_mark_checksum_bad(struct sk_buff *skb)
+{
+	/* Mark current checksum as bad (typically called from GRO
+	 * path). In the case that ip_summed is CHECKSUM_NONE
+	 * this must be the first checksum encountered in the packet.
+	 * When ip_summed is CHECKSUM_UNNECESSARY, this is the first
+	 * checksum after the last one validated. For UDP, a zero
+	 * checksum can not be marked as bad.
+	 */
+
+	if (skb->ip_summed == CHECKSUM_NONE ||
+	    skb->ip_summed == CHECKSUM_UNNECESSARY)
+		skb->csum_bad = 1;
+}
+
 /* Check if we need to perform checksum complete validation.
  *
  * Returns true if checksum complete is needed, false otherwise
@@ -2779,6 +2795,9 @@ static inline __sum16 __skb_checksum_validate_complete(struct sk_buff *skb,
 			skb->csum_valid = 1;
 			return 0;
 		}
+	} else if (skb->csum_bad) {
+		/* ip_summed == CHECKSUM_NONE in this case */
+		return 1;
 	}
 
 	skb->csum = psum;
