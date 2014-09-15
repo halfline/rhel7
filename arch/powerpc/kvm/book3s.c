@@ -925,7 +925,7 @@ static int kvmppc_book3s_init(void)
 	r = kvm_init(NULL, sizeof(struct kvm_vcpu), 0, THIS_MODULE);
 	if (r)
 		return r;
-#ifdef CONFIG_KVM_BOOK3S_32
+#ifdef CONFIG_KVM_BOOK3S_32_HANDLER
 	r = kvmppc_book3s_init_pr();
 #endif
 	return r;
@@ -934,7 +934,7 @@ static int kvmppc_book3s_init(void)
 
 static void kvmppc_book3s_exit(void)
 {
-#ifdef CONFIG_KVM_BOOK3S_32
+#ifdef CONFIG_KVM_BOOK3S_32_HANDLER
 	kvmppc_book3s_exit_pr();
 #endif
 	kvm_exit();
@@ -944,7 +944,7 @@ module_init(kvmppc_book3s_init);
 module_exit(kvmppc_book3s_exit);
 
 /* On 32bit this is our one and only kernel module */
-#ifdef CONFIG_KVM_BOOK3S_32
+#ifdef CONFIG_KVM_BOOK3S_32_HANDLER
 MODULE_ALIAS_MISCDEV(KVM_MINOR);
 MODULE_ALIAS("devname:kvm");
 #endif
