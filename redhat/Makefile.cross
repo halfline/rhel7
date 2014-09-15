@@ -1,6 +1,3 @@
-EPEL_RELEASE=epel-release-7-0.1.noarch
-CROSS_EPEL_RPM = http://download.bos.redhat.com/pub/epel/beta/7/x86_64/$(EPEL_RELEASE).rpm
-
 CROSS_RPMFLAGS = $(RPMBUILD) --define "_sourcedir $(SOURCES)" --define "_builddir $(RPM)/BUILD" --define "_srcrpmdir $(RPM)/SRPMS" --define "_rpmdir $(RPM)/RPMS" --define "_specdir $(RPM)/SPECS" --define "dist $(DIST)"
 
 CROSS_PACKAGE_LIST = binutils-powerpc64-linux-gnu binutils-s390x-linux-gnu cross-binutils-common cross-gcc-common gcc-powerpc64-linux-gnu gcc-s390x-linux-gnu glibc-static
@@ -11,10 +8,7 @@ rh-cross-download:
 		exit 1; \
 	fi;
 ifeq ($(shell whoami), root)
-ifneq ($(shell rpm -q epel-release), $(EPEL_RELEASE))
-	rpm -ivh $(CROSS_EPEL_RPM)
-endif
-	@yum -y install $(CROSS_PACKAGE_LIST)
+	@$(REDHAT)/scripts/download_cross.sh $(CROSS_PACKAGE_LIST)
 else
 	@echo "Checking for RHEL7 cross compile packages.  If this fails, run \"make rh-cross-download\" as root."
 	@rpm -q $(CROSS_PACKAGE_LIST)

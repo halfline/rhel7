@@ -582,7 +582,25 @@ and submaintainers when dealing with RHEL.
 
 10. How do I cross compile a patch?  What is required?
 
-Cross compilation for RHEL7 is currently not implemented.
+In order to cross compile patches it is recommended that the latest nightly
+RHEL7 OS is installed.  Users can checkout a system from beaker or install a
+local system manually.  A user must also setup the "optional" repository for
+their RHEL7 install (note, that this is done automatically in a beaker
+install).
+
+After installing the system, a user must install the latest RHEL7 git tree,
+and apply their patches to this git tree.  After doing so, a user must type
+the following command as _root_:
+
+make rh-cross-download
+
+This will automatically install all dependencies for cross compiling.
+
+After this step is complete, a user can execute
+
+make rh-cross-all-builds
+
+which will build i686, s390x, and ppc64.
 
 VIII.  Useful Links
 -------------------
