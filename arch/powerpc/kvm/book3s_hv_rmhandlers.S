@@ -2252,6 +2252,7 @@ machine_check_realmode:
 	bne	2f	/* Continue guest execution. */
 	/* If not, deliver a machine check.  SRR0/1 are already set */
 	li	r10, BOOK3S_INTERRUPT_MACHINE_CHECK
+	ld	r11, VCPU_MSR(r9)
 	bl	kvmppc_msr_interrupt
 2:	b	fast_interrupt_c_return
 
