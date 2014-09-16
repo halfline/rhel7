@@ -1474,6 +1474,14 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Sep 15 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-160.el7]
+- [x86] module: work around kabi module breakage when 16K stacks are enabled (Kyle McMartin) [1108378]
+- [kernel] redhat: bump RHEL_MINOR to 1 (Kyle McMartin) [1108378]
+- [kernel] modules: export check_module_rhelversion (Kyle McMartin) [1108378]
+- [kernel] modules: Add module_ext struct (Prarit Bhargava) [1110315]
+- [kernel] modules: add rhelversion MODULE_INFO tag (Kyle McMartin) [1110315]
+- [x86] expand 64-bit kernel stack to 16K (Johannes Weiner) [1108378]
+
 * Mon Sep 15 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-159.el7]
 - [ethernet] bna: Support TSO and partial checksum with non-accelerated vlans (Ivan Vecera) [1136912]
 - [ethernet] bna: Remove DEFINE_PCI_DEVICE_TABLE macro use (Ivan Vecera) [1136912]
