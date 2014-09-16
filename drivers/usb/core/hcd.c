@@ -2457,11 +2457,13 @@ struct usb_hcd *usb_create_shared_hcd(const struct hc_driver *driver,
 		mutex_init(hcd->bandwidth_mutex);
 		dev_set_drvdata(dev, hcd);
 	} else {
+		mutex_lock(&usb_port_peer_mutex);
 		hcd->bandwidth_mutex = primary_hcd->bandwidth_mutex;
 		hcd->primary_hcd = primary_hcd;
 		primary_hcd->primary_hcd = primary_hcd;
 		hcd->shared_hcd = primary_hcd;
 		primary_hcd->shared_hcd = hcd;
+		mutex_unlock(&usb_port_peer_mutex);
 	}
 
 	kref_init(&hcd->kref);
@@ -2513,18 +2515,25 @@ EXPORT_SYMBOL_GPL(usb_create_hcd);
  * deallocated.
  *
  * Make sure to only deallocate the bandwidth_mutex when the primary HCD is
- * freed.  When hcd_release() is called for the non-primary HCD, set the
- * primary_hcd's shared_hcd pointer to null (since the non-primary HCD will be
- * freed shortly).
+ * freed.  When hcd_release() is called for either hcd in a peer set
+ * invalidate the peer's ->shared_hcd and ->primary_hcd pointers to
+ * block new peering attempts
  */
-static void hcd_release (struct kref *kref)
+static void hcd_release(struct kref *kref)
 {
 	struct usb_hcd *hcd = container_of (kref, struct usb_hcd, kref);
 
+	mutex_lock(&usb_port_peer_mutex);
 	if (usb_hcd_is_primary_hcd(hcd))
 		kfree(hcd->bandwidth_mutex);
-	else
-		hcd->shared_hcd->shared_hcd = NULL;
+	if (hcd->shared_hcd) {
+		struct usb_hcd *peer = hcd->shared_hcd;
+
+		peer->shared_hcd = NULL;
+		if (peer->primary_hcd == hcd)
+			peer->primary_hcd = NULL;
+	}
+	mutex_unlock(&usb_port_peer_mutex);
 	kfree(hcd);
 }
 
@@ -2592,6 +2601,21 @@ static int usb_hcd_request_irqs(struct usb_hcd *hcd,
 	return 0;
 }
 
+/*
+ * Before we free this root hub, flush in-flight peering attempts
+ * and disable peer lookups
+ */
+static void usb_put_invalidate_rhdev(struct usb_hcd *hcd)
+{
+	struct usb_device *rhdev;
+
+	mutex_lock(&usb_port_peer_mutex);
+	rhdev = hcd->self.root_hub;
+	hcd->self.root_hub = NULL;
+	mutex_unlock(&usb_port_peer_mutex);
+	usb_put_dev(rhdev);
+}
+
 /**
  * usb_add_hcd - finish generic HCD structure initialization and register
  * @hcd: the usb_hcd structure to initialize
@@ -2634,7 +2658,9 @@ int usb_add_hcd(struct usb_hcd *hcd,
 		retval = -ENOMEM;
 		goto err_allocate_root_hub;
 	}
+	mutex_lock(&usb_port_peer_mutex);
 	hcd->self.root_hub = rhdev;
+	mutex_unlock(&usb_port_peer_mutex);
 
 	switch (hcd->speed) {
 	case HCD_USB11:
@@ -2749,7 +2775,7 @@ err_hcd_driver_start:
 err_request_irq:
 err_hcd_driver_setup:
 err_set_rh_speed:
-	usb_put_dev(hcd->self.root_hub);
+	usb_put_invalidate_rhdev(hcd);
 err_allocate_root_hub:
 	usb_deregister_bus(&hcd->self);
 err_register_bus:
@@ -2823,9 +2849,10 @@ void usb_remove_hcd(struct usb_hcd *hcd)
 			free_irq(hcd->irq, hcd);
 	}
 
-	usb_put_dev(hcd->self.root_hub);
 	usb_deregister_bus(&hcd->self);
 	hcd_buffer_destroy(hcd);
+
+	usb_put_invalidate_rhdev(hcd);
 }
 EXPORT_SYMBOL_GPL(usb_remove_hcd);
 
