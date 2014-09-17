@@ -1,0 +1,2 @@
+#1-
+0x13996a7d call_usermodehelper_exec vmlinux EXPORT_SYMBOL
