@@ -8,7 +8,8 @@
  */
 #include <linux/vga_switcheroo.h>
 #include <linux/slab.h>
-#include <linux/acpi.h>
+#include <acpi/acpi.h>
+#include <acpi/acpi_bus.h>
 #include <linux/pci.h>
 
 #include "radeon_acpi.h"
