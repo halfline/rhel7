@@ -14,6 +14,8 @@ BUILD_TARGET ?= --scratch $(BUILD_SCRATCH_TARGET)
 
 RHGITURL:=$(shell git config rhg.url || git config remote.origin.url)
 RHGITCOMMIT?=$(shell git log -1 --pretty=format:%H)
+RHELMAJOR:=$(shell git show HEAD:Makefile | grep ^RHEL_MAJOR | sed -e s/RHEL_MAJOR\ =\ //)
+RHELMINOR:=$(shell git show HEAD:Makefile | grep ^RHEL_MINOR | sed -e s/RHEL_MINOR\ =\ //)
 
 # this section is needed in order to make O= to work
 _OUTPUT := ..
@@ -29,7 +31,19 @@ include Makefile.cross
 
 default: rh-help
 
-rh-check-kabi:
+rh-kabi:
+	@for KABIARCH in "ppc64" "x86_64" "s390x"; do \
+		$(REDHAT)/kabi/show-kabi -k $(REDHAT)/kabi/kabi-module/ -m \
+			-a $$KABIARCH > $(REDHAT)/kabi/Module.kabi_$$KABIARCH;\
+		for i in {0..$(RHELMINOR)}; do \
+			mkdir -p $(REDHAT)/kabi/kabi-rhel$(RHELMAJOR)$$i/;\
+			$(REDHAT)/kabi/show-kabi -k $(REDHAT)/kabi/kabi-module/ -s -a $$KABIARCH \
+			-r $(RHELMAJOR).$$i > $(REDHAT)/kabi/kabi-rhel$(RHELMAJOR)$$i/kabi_whitelist_$$KABIARCH;\
+		done;\
+	done;
+	@(cd $(REDHAT)/kabi/ && ln -Tsf kabi-rhel7$(RHELMINOR) kabi-current)
+
+rh-check-kabi: rh-kabi
 	@if [ ! -e $(REDHAT)/../Module.symvers ]; then \
 		echo "ERROR: You must compile the kernel and modules first";\
 		exit 1;\
@@ -99,9 +113,10 @@ sources-rh: $(TARBALL)
 	@(if [ ! -f keys/extra_certificates ]; then \
 		touch keys/extra_certificates; \
 	fi)
-	@cp cpupower.* x509.genkey keys/rhel*.x509 keys/extra_certificates Makefile.common kabi/check-kabi kabi/Module.kabi_{ppc64,s390x,x86_64} kabi/kabi_whitelist_{ppc64,s390x,x86_64} configs/kernel-*.config rhpkg/Makefile scripts/sign-modules keys/*.cer $(SOURCES)/
+	@cp cpupower.* x509.genkey keys/rhel*.x509 keys/extra_certificates Makefile.common kabi/check-kabi kabi/Module.kabi_{ppc64,s390x,x86_64} configs/kernel-*.config rhpkg/Makefile scripts/sign-modules keys/*.cer $(SOURCES)/
+	@(cd kabi && tar cjvf $(SOURCES)/kernel-abi-whitelists.tar.bz2 kabi-rhel7* kabi-current)
 
-rh-sources: setup-source rh-configs sources-rh
+rh-sources: setup-source rh-configs rh-kabi sources-rh
 
 rh-test-patch:
 	@git diff --no-renames HEAD > $(TESTPATCH);
@@ -194,6 +209,7 @@ rh-help:
 	@echo  '  rh-prep	- Setup the redhat/rpm/BUILD/ directory with the kernel source'
 	@echo  '  rh-test-patch - Create a diff against HEAD and put it in linux-kernel-test.patch.'
 	@echo  '                  Then linux-kernel-test.patch will be added to the kernel build'
+	@echo  '  rh-kabi - Merge kabi structure into simple files'
 	@echo  '  rh-check-kabi - Run check-kabi script on a pre-compiled tree.'
 	@echo  '  rh-stub-key	- Use pre generated keys to speed local test builds'
 	@echo  '  rh-cross-download - [x86_64 only] download cross compiler rpms'
