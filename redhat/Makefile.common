@@ -31,6 +31,7 @@ endif
 $(info BUILDID is "$(BUILDID)". Update '$(shell dirname $(REDHAT))/localversion' to change.)
 
 PKGRELEASE:=$(PREBUILD)$(BUILD)$(DIST)$(BUILDID)
+SPECRELEASE:=$(PREBUILD)$(BUILD)%{?dist}$(BUILDID)
 
 TARFILE:=linux-$(KVERSION)-$(PKGRELEASE).tar.xz
 TARBALL:=$(REDHAT)/$(TARFILE)

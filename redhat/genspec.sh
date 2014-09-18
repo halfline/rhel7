@@ -5,6 +5,7 @@ SPECFILE=$2
 PKGRELEASE=$3
 RPMVERSION=$4
 RELEASED_KERNEL=$5
+SPECRELEASE=$6
 clogf="$SOURCES/changelog"
 # hide [redhat] entries from changelog
 HIDE_REDHAT=1;
@@ -162,6 +163,7 @@ test -n "$SPECFILE" &&
 	/%%CHANGELOG%%/d
 	s/%%RPMVERSION%%/$RPMVERSION/
 	s/%%PKGRELEASE%%/$PKGRELEASE/
+	s/%%SPECRELEASE%%/$SPECRELEASE/
 	s/%%RELEASED_KERNEL%%/$RELEASED_KERNEL/" $SPECFILE
 
 rm -f $clogf{,.rev,.stripped};

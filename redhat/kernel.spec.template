@@ -12,7 +12,10 @@ Summary: The Linux kernel
 %define rpmversion %%RPMVERSION%%
 %define pkgrelease %%PKGRELEASE%%
 
-%define pkg_release %{pkgrelease}%{?buildid}
+# allow pkg_release to have configurable %{?dist} tag
+%define specrelease %%SPECRELEASE%%
+
+%define pkg_release %{specrelease}%{?buildid}
 
 # The kernel tarball/base version
 %define rheltarball %{rpmversion}-%{pkgrelease}
