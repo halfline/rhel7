@@ -1,0 +1,2 @@
+#0-
+0x4c971bec	ipmi_smi_msg_received	drivers/char/ipmi/ipmi_msghandler	EXPORT_SYMBOL
