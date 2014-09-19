@@ -119,7 +119,7 @@ struct acpi_dock_ops {
 };
 
 #ifdef CONFIG_ACPI_DOCK
-extern int is_dock_device(acpi_handle handle);
+extern int is_dock_device(struct acpi_device *adev);
 extern int register_hotplug_dock_device(acpi_handle handle,
 					const struct acpi_dock_ops *ops,
 					void *context,
@@ -127,7 +127,7 @@ extern int register_hotplug_dock_device(acpi_handle handle,
 					void (*release)(void *));
 extern void unregister_hotplug_dock_device(acpi_handle handle);
 #else
-static inline int is_dock_device(acpi_handle handle)
+static inline int is_dock_device(struct acpi_device *adev)
 {
 	return 0;
 }
