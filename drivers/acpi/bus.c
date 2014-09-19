@@ -610,7 +610,6 @@ static int __init acpi_bus_init(void)
 {
 	int result;
 	acpi_status status;
-	extern acpi_status acpi_os_initialize1(void);
 
 	acpi_os_initialize1();
 
