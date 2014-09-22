@@ -663,7 +663,7 @@ static int audit_get_feature(struct sk_buff *skb)
 
 	seq = nlmsg_hdr(skb)->nlmsg_seq;
 
-	audit_send_reply(NETLINK_CB(skb).portid, seq, AUDIT_GET, 0, 0,
+	audit_send_reply(NETLINK_CB(skb).portid, seq, AUDIT_GET_FEATURE, 0, 0,
 			 &af, sizeof(af));
 
 	return 0;
