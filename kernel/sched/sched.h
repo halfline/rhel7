@@ -382,6 +382,10 @@ struct root_domain {
 	 */
 	cpumask_var_t rto_mask;
 	struct cpupri cpupri;
+#ifndef __GENKSYMS__
+	/* Indicate more than one runnable task for any CPU */
+	bool overload;
+#endif
 };
 
 extern struct root_domain def_root_domain;
@@ -1116,15 +1120,20 @@ static inline void inc_nr_running(struct rq *rq)
 {
 	rq->nr_running++;
 
-#ifdef CONFIG_NO_HZ_FULL
 	if (rq->nr_running == 2) {
+#ifdef CONFIG_SMP
+		if (!rq->rd->overload)
+			rq->rd->overload = true;
+#endif
+
+#ifdef CONFIG_NO_HZ_FULL
 		if (tick_nohz_full_cpu(rq->cpu)) {
 			/* Order rq->nr_running write against the IPI */
 			smp_wmb();
 			smp_send_reschedule(rq->cpu);
 		}
-       }
 #endif
+	}
 }
 
 static inline void dec_nr_running(struct rq *rq)
