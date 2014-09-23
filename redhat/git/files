@@ -16,9 +16,6 @@ sign-modules
 Module.kabi_ppc64
 Module.kabi_s390x
 Module.kabi_x86_64
-kabi_whitelist_ppc64
-kabi_whitelist_s390x
-kabi_whitelist_x86_64
 kernel-3.10.0-ppc64.config
 kernel-3.10.0-ppc64-debug.config
 kernel-3.10.0-ppc64le.config

@@ -1,3 +1,10 @@
 *.bz2
 configs/kernel*.config
 configs/*-merged
+
+kabi/Module.kabi_ppc64
+kabi/Module.kabi_s390x
+kabi/Module.kabi_x86_64
+kabi/kabi-current
+kabi/kabi-rhel7?
+kabi/kabi-rhel7?/*
