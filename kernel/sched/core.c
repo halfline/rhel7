@@ -3086,6 +3086,12 @@ pick_next_task(struct rq *rq)
 		p = fair_sched_class.pick_next_task(rq);
 		if (likely(p))
 			return p;
+
+		/* assumes fair_sched_class->next == idle_sched_class */
+		else
+			p = idle_sched_class.pick_next_task(rq);
+
+		return p;
 	}
 
 	for_each_class(class) {
