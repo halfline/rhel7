@@ -88,6 +88,10 @@ rh-stub-key:
 $(TARBALL):
 	@scripts/create-tarball.sh $(GITID) $(TARBALL) linux-$(KVERSION)-$(PKGRELEASE)
 
+.PHONY: $(KABI_TARBALL)
+$(KABI_TARBALL):
+	@(cd kabi && tar cjvf $(SOURCES)/kernel-abi-whitelists.tar.bz2 kabi-rhel7* kabi-current)
+
 setup-source: rh-clean-sources
 	@cp $(REDHAT)/$(SPECFILE).template $(SOURCES)/$(SPECFILE)
 	@$(REDHAT)/genspec.sh $(SOURCES) $(SOURCES)/$(SPECFILE) $(PKGRELEASE) $(RPMVERSION) $(RELEASED_KERNEL) $(SPECRELEASE)
@@ -168,7 +172,7 @@ $(REDHAT)/rpm/SOURCES/kernel.spec:
 	@echo "rh-sources"
 	@$(MAKE) rh-sources
 
-rh-dist-git: $(REDHAT)/rpm/SOURCES/kernel.spec $(TARBALL)
+rh-dist-git: $(REDHAT)/rpm/SOURCES/kernel.spec $(TARBALL) $(KABI_TARBALL)
 ifeq ("$(RHDISTGIT_BRANCH)", "")
  $(error RHDISTGIT_BRANCH unset)
 endif
