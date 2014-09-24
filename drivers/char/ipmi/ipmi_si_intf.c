@@ -252,6 +252,9 @@ struct smi_info {
 	/* Used to gracefully stop the timer without race conditions. */
 	atomic_t            stop_operation;
 
+	/* Are we waiting for the events, pretimeouts, received msgs? */
+	atomic_t            need_watch;
+
 	/*
 	 * The driver will disable interrupts when it gets into a
 	 * situation where it cannot handle messages due to lack of
@@ -854,6 +857,19 @@ static enum si_sm_result smi_event_handler(struct smi_info *smi_info,
 	return si_sm_result;
 }
 
+static void check_start_timer_thread(struct smi_info *smi_info)
+{
+	if (smi_info->si_state == SI_NORMAL && smi_info->curr_msg == NULL) {
+		smi_mod_timer(smi_info, jiffies + SI_TIMEOUT_JIFFIES);
+
+		if (smi_info->thread)
+			wake_up_process(smi_info->thread);
+
+		start_next_msg(smi_info);
+		smi_event_handler(smi_info, 0);
+	}
+}
+
 static void sender(void                *send_info,
 		   struct ipmi_smi_msg *msg,
 		   int                 priority)
@@ -907,15 +923,7 @@ static void sender(void                *send_info,
 	else
 		list_add_tail(&msg->link, &smi_info->xmit_msgs);
 
-	if (smi_info->si_state == SI_NORMAL && smi_info->curr_msg == NULL) {
-		smi_mod_timer(smi_info, jiffies + SI_TIMEOUT_JIFFIES);
-
-		if (smi_info->thread)
-			wake_up_process(smi_info->thread);
-
-		start_next_msg(smi_info);
-		smi_event_handler(smi_info, 0);
-	}
+	check_start_timer_thread(smi_info);
 	spin_unlock_irqrestore(&smi_info->si_lock, flags);
 }
 
@@ -1015,9 +1023,15 @@ static int ipmi_thread(void *data)
 			; /* do nothing */
 		else if (smi_result == SI_SM_CALL_WITH_DELAY && busy_wait)
 			schedule();
-		else if (smi_result == SI_SM_IDLE)
-			schedule_timeout_interruptible(100);
-		else
+		else if (smi_result == SI_SM_IDLE) {
+			if (atomic_read(&smi_info->need_watch)) {
+				schedule_timeout_interruptible(100);
+			} else {
+				/* Wait to be woken up when we are needed. */
+				__set_current_state(TASK_INTERRUPTIBLE);
+				schedule();
+			}
+		} else
 			schedule_timeout_interruptible(1);
 	}
 	return 0;
@@ -1051,6 +1065,17 @@ static void request_events(void *send_info)
 		return;
 
 	atomic_set(&smi_info->req_events, 1);
+}
+
+static void set_need_watch(void *send_info, int enable)
+{
+	struct smi_info *smi_info = send_info;
+	unsigned long flags;
+
+	atomic_set(&smi_info->need_watch, enable);
+	spin_lock_irqsave(&smi_info->si_lock, flags);
+	check_start_timer_thread(smi_info);
+	spin_unlock_irqrestore(&smi_info->si_lock, flags);
 }
 
 static int initialized;
@@ -3206,6 +3231,7 @@ static int try_smi_init(struct smi_info *new_smi)
 {
 	int rv = 0;
 	int i;
+	struct ipmi_shadow_smi_handlers *shadow_handlers;
 
 	printk(KERN_INFO PFX "Trying %s-specified %s state"
 	       " machine at %s address 0x%lx, slave address 0x%x,"
@@ -3286,6 +3312,7 @@ static int try_smi_init(struct smi_info *new_smi)
 
 	new_smi->interrupt_disabled = 1;
 	atomic_set(&new_smi->stop_operation, 0);
+	atomic_set(&new_smi->need_watch, 0);
 	new_smi->intf_num = smi_num;
 	smi_num++;
 
@@ -3339,6 +3366,11 @@ static int try_smi_init(struct smi_info *new_smi)
 			rv);
 		goto out_err_stop_timer;
 	}
+
+	/* RHEL7-only - Init ipmi_shadow_smi_handlers
+	 */
+	shadow_handlers = ipmi_get_shadow_smi_handlers();
+	shadow_handlers->set_need_watch = set_need_watch;
 
 	rv = ipmi_smi_add_proc_entry(new_smi->intf, "type",
 				     &smi_type_proc_ops,
@@ -3423,10 +3455,21 @@ static int init_ipmi_si(void)
 	int  rv;
 	struct smi_info *e;
 	enum ipmi_addr_src type = SI_INVALID;
+	struct ipmi_shadow_smi_handlers *shadow_handlers;
 
 	if (initialized)
 		return 0;
 	initialized = 1;
+
+	/* RHEL7-only - Init ipmi_shadow_smi_handlers
+	 * The instance of struct ipmi_shadow_smi_handlers is located in
+	 * ipmi_msghandler.c. Locating it in this file would cause a
+	 * module dependency loop, because ipmi_msghandler would then
+	 * depend on ipmi_si, which already depends on ipmi_msghandler.
+	 */
+	shadow_handlers = ipmi_get_shadow_smi_handlers();
+	shadow_handlers->handlers = &handlers;
+	shadow_handlers->set_need_watch = set_need_watch;
 
 	if (si_tryplatform) {
 		rv = platform_driver_register(&ipmi_driver);
