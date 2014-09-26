@@ -1483,6 +1483,43 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Sep 26 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-171.el7]
+- [scsi] bnx2fc: Improve stats update mechanism (Neil Horman) [1096023]
+- [security] have cap_dentry_init_security return error (Jeff Layton) [1070910]
+- [mfd] lpc_ich: Change Avoton to iTCO v3 (Prarit Bhargava) [1084134]
+- [watchdog] itco_wdt: Add support for v3 silicon (Prarit Bhargava) [1084134]
+- [mfd] lpc_ich: Add support for iTCO v3 (Prarit Bhargava) [1084134]
+- [mfd] lpc_ich: Remove lpc_ich_cfg struct use (Prarit Bhargava) [1084134]
+- [mfd] lpc_ich: Fix ACPI enable bitmask (Prarit Bhargava) [1084134]
+- [mfd] lpc_ich: Only configure watchdog or GPIO when present (Prarit Bhargava) [1084134]
+- [mfd] lpc_ich: Add support for Intel Avoton GPIOs (Prarit Bhargava) [1084134]
+- [mfd] lpc_ich: Convert ICH GPIOs IDs to enum (Prarit Bhargava) [1084134]
+- [net] ceph: do not hard code max auth ticket len (Ilya Dryomov) [1142285] {CVE-2014-6416}
+- [net] ceph: add process_one_ticket() helper (Ilya Dryomov) [1142285] {CVE-2014-6416}
+- [net] ceph: gracefully handle large reply messages from the mon (Ilya Dryomov) [1142285] {CVE-2014-6416}
+- [powercap] intel_rapl: add new CPU IDs (Steve Best) [1142597]
+- [powercap] intel_rapl: spell out SoC names (Steve Best) [1142597]
+- [powercap] intel_rapl: add support for ValleyView Soc (Steve Best) [1142597]
+- [x86] smpboot: initialize secondary CPU only if master CPU will wait for it (Igor Mammedov) [968147]
+- [x86] smpboot: Log error on secondary CPU wakeup failure at ERR level (Igor Mammedov) [968147]
+- [x86] smpboot: Fix list/memory corruption on CPU hotplug (Igor Mammedov) [968147]
+- [acpi] processor: do not mark present at boot but not onlined CPU as onlined (Igor Mammedov) [968147]
+- [tools] thermal: Introduce tmon, a tool for thermal subsystem (Neil Horman) [1085101]
+- [thermal] intel_powerclamp: add newer cpu ids (Steve Best) [1141895]
+- [mm] swapfile: do not skip lowest_bit in scan_swap_map() scan loop (Seth Jennings) [1128277]
+- [dma] ioatdma: disable RAID on non-Atom platforms and reenable unaligned copies (Prarit Bhargava) [1069441]
+- [security] selinux: make the netif cache namespace aware (Paul Moore) [1112815]
+- [kernel] sched: Fix clock_gettime(CLOCK_[PROCESS/THREAD]_CPUTIME_ID) monotonicity (Seth Jennings) [1113932]
+- [kernel] hashtable: add hash_for_each_possible_rcu_notrace() (Steve Best) [1123126]
+- [media] media-device: fix an information leakage (Jacob Tanenbaum) [1109777] {CVE-2014-1739}
+- [fs] vfs: fix ref count leak in path_mountpoint() (Ian Kent) [1122376] {CVE-2014-5045}
+- [kernel] ptrace: get_dumpable() incorrect tests (Jacob Tanenbaum) [1111606] {CVE-2013-2929}
+- [fs] fanotify/compat: fix sys_fanotify_mark (Jan Stancek) [1119318]
+- [target] rd: Refactor rd_build_device_space + rd_release_device_space (Denys Vlasenko) [1108755] {CVE-2014-4027}
+- [ipc] fix compat msgrcv with negative msgtyp (Mateusz Guzik) [1042807]
+- [Documentation] fix incorrect formula to calculate CommitLimit value (Petr Oros) [1060570]
+- [acpi] apci_pad: in power_saving_thread(), call schedule() when need_resched is true (Tony Camuso) [1092076]
+
 * Wed Sep 24 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-170.el7]
 - [powerpc] Enable IOMMU and VFIO for ppc64 (David Gibson) [1123145 1123133 1123367]
 - [virt] kvm/ppc: book3s_32/pr - Access HTAB in big endian (David Gibson) [1123145 1123133 1123367]
