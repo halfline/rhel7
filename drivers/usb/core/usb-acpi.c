@@ -127,9 +127,10 @@ out:
  */
 #define USB_ACPI_LOCATION_VALID (1 << 31)
 
-static int usb_acpi_find_device(struct device *dev, acpi_handle *handle)
+static struct acpi_device *usb_acpi_find_companion(struct device *dev)
 {
 	struct usb_device *udev;
+	struct acpi_device *adev;
 	acpi_handle *parent_handle;
 
 	/*
@@ -148,18 +149,16 @@ static int usb_acpi_find_device(struct device *dev, acpi_handle *handle)
 	if (is_usb_device(dev)) {
 		udev = to_usb_device(dev);
 		if (udev->parent)
-			return -ENODEV;
+			return NULL;
 
 		/* root hub is only child (_ADR=0) under its parent, the HC */
-		parent_handle = DEVICE_ACPI_HANDLE(dev->parent);
-		*handle = acpi_get_child(parent_handle, 0);
-		if (!*handle)
-			return -ENODEV;
-		return 0;
+		adev = ACPI_COMPANION(dev->parent);
+		return acpi_find_child_device(adev, 0, false);
 	} else if (is_usb_port(dev)) {
 		struct usb_port *port_dev = to_usb_port(dev);
 		int port1 = port_dev->portnum;
 		struct acpi_pld_info *pld;
+		acpi_handle *handle;
 		acpi_status status;
 
 		/* Get the struct usb_device point of port's hub */
@@ -175,35 +174,36 @@ static int usb_acpi_find_device(struct device *dev, acpi_handle *handle)
 			int raw;
 
 			raw = usb_hcd_find_raw_port_number(hcd, port1);
-			*handle = acpi_get_child(DEVICE_ACPI_HANDLE(&udev->dev),
-				raw);
-			if (!*handle)
-				return -ENODEV;
+			adev = acpi_find_child_device(ACPI_COMPANION(&udev->dev),
+					raw, false);
+			if (!adev)
+				return NULL;
 		} else {
 			parent_handle =
 				usb_get_hub_port_acpi_handle(udev->parent,
 				udev->portnum);
 			if (!parent_handle)
-				return -ENODEV;
+				return NULL;
 
-			*handle = acpi_get_child(parent_handle,	port1);
-			if (!*handle)
-				return -ENODEV;
+			acpi_bus_get_device(parent_handle, &adev);
+			adev = acpi_find_child_device(adev, port1, false);
+			if (!adev)
+				return NULL;
 		}
+		handle = adev->handle;
 		status = acpi_get_physical_device_location(handle, &pld);
 		if (ACPI_FAILURE(status) || !pld)
-			return 0;
+			return adev;
 
 		port_dev->location = USB_ACPI_LOCATION_VALID
 			| pld->group_token << 8 | pld->group_position;
 		port_dev->connect_type = usb_acpi_get_connect_type(handle, pld);
 		ACPI_FREE(pld);
 
-		return 0;
-	} else
-		return -ENODEV;
+		return adev;
+	}
 
-	return 0;
+	return NULL;
 }
 
 static bool usb_acpi_bus_match(struct device *dev)
@@ -214,7 +214,7 @@ static bool usb_acpi_bus_match(struct device *dev)
 static struct acpi_bus_type usb_acpi_bus = {
 	.name = "USB",
 	.match = usb_acpi_bus_match,
-	.find_device = usb_acpi_find_device,
+	.find_companion = usb_acpi_find_companion,
 };
 
 int usb_acpi_register(void)
