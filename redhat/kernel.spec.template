@@ -1483,6 +1483,16 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Oct 03 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-179.el7]
+- [drm] i915: don't crash if unable to setup stolen (Rob Clark) [1128939]
+- [fs] nfs: Don't reset pg_moreio in __nfs_pageio_add_request (Steve Dickson) [1120728]
+- [fs] nfs: Remove 2 unused variables (Steve Dickson) [1120728]
+- [fs] nfs: handle multiple reqs in nfs_wb_page_cancel (Steve Dickson) [1120728]
+- [fs] nfs: nfs_page should take a ref on the head req (Steve Dickson) [1120728]
+- [fs] nfsv4: test SECINFO RPC_AUTH_GSS pseudoflavors for support (Steve Dickson) [1120728]
+- [fs] nfs: Return -EPERM if no supported or matching SECINFO flavor (Steve Dickson) [1120728]
+- [fs] nfs: check the return of nfs4_negotiate_security in nfs4_submount (Steve Dickson) [1120728]
+
 * Fri Oct 03 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-178.el7]
 - [crypto] drbg: fix maximum value checks on 32 bit systems (Herbert Xu) [1138311]
 - [crypto] drbg: remove configuration of fixed values (Herbert Xu) [1138311]
