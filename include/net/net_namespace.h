@@ -126,7 +126,6 @@ struct net {
 #ifndef __GENKSYMS__
 	unsigned int		dev_unreg_count;
 	atomic_t		fnhe_genid;
-	atomic_t		rt6_genid;
 #endif
 };
 
@@ -350,26 +349,12 @@ static inline void rt_genid_bump_ipv4(struct net *net)
 	atomic_inc(&net->rt_genid);
 }
 
-#if IS_ENABLED(CONFIG_IPV6)
-static inline int rt_genid_ipv6(struct net *net)
-{
-	return atomic_read(&net->rt6_genid);
-}
-
+extern void (*__fib6_flush_trees)(struct net *net);
 static inline void rt_genid_bump_ipv6(struct net *net)
 {
-	atomic_inc(&net->rt6_genid);
+	if (__fib6_flush_trees)
+		__fib6_flush_trees(net);
 }
-#else
-static inline int rt_genid_ipv6(struct net *net)
-{
-	return 0;
-}
-
-static inline void rt_genid_bump_ipv6(struct net *net)
-{
-}
-#endif
 
 /* For callers who don't really care about whether it's IPv4 or IPv6 */
 static inline void rt_genid_bump_all(struct net *net)

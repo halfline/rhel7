@@ -119,6 +119,10 @@ struct rt6_info {
 	struct inet6_dev		*rt6i_idev;
 	unsigned long			_rt6i_peer;
 
+	/* RHEL specific:
+	 * this field is not used any more since commit
+	 * "ipv6: remove rt6i_genid"
+	 */
 	u32				rt6i_genid;
 
 	/* more non-fragment space at head required */
