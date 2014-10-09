@@ -1484,6 +1484,52 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Oct 09 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-185.el7]
+- [fs] udf: Avoid infinite loop when processing indirect ICBs (Jacob Tanenbaum) [1142322] {CVE-2014-6410}
+- [fs] eliminate BUG() call when there's an unexpected lock on file close (Frank Sorenson) [1148130]
+- [hid] fix off by one error in various _report_fixup routines (Jacob Tanenbaum) [1141394] {CVE-2014-3184}
+- [hid] logitech-dj: fix OOB array access (Jacob Tanenbaum) [1141212] {CVE-2014-3182}
+- [hid] picolcd: fix memory corruption via OOB write (Jacob Tanenbaum) [1141409] {CVE-2014-3186}
+- [usb] serial/whiteheat: fix memory corruption flaw (Jacob Tanenbaum) [1141404] {CVE-2014-3185}
+- [hid] fix OOB write in magicmouse driver (Jacob Tanenbaum) [1141177] {CVE-2014-3181}
+- [x86] uv/nmi: Fix UV NMI handler when KDB not configured (George Beshers) [1138519]
+- [x86] uv/nmi: Fix Sparse warnings (George Beshers) [1138519]
+- [kernel] debug: Fix no KDB config problem (George Beshers) [1138519]
+- [x86] uv: Add call to KGDB/KDB from NMI handler (George Beshers) [1138519]
+- [kernel] debug: Add support for external NMI handler to call KGDB/KDB (George Beshers) [1138519]
+- [x86] uv: Add kdump to UV NMI handler (George Beshers) [1138519]
+- [x86] uv: Add summary of cpu activity to UV NMI handler (George Beshers) [1138519]
+- [x86] uv: Update UV support for external NMI signals (George Beshers) [1138519]
+- [x86] uv: Move NMI support (George Beshers) [1138519]
+- [infiniband] ipath: Add P_Key change event support (Doug Ledford) [1085961]
+- [infiniband] qib: Additional Intel branding changes (Doug Ledford) [1085961]
+- [infiniband] ipath: Use time_before()/_after() (Doug Ledford) [1085961]
+- [infiniband] ipath: Translate legacy diagpkt into newer extended diagpkt (Doug Ledford) [1085961]
+- [infiniband] qib: Fix port in pkey change event (Doug Ledford) [1085961]
+- [infiniband] qib: Use pci_enable_msix_range() instead of pci_enable_msix() (Doug Ledford) [1085961]
+- [infiniband] qib: Cleanup qib_register_observer() (Doug Ledford) [1085961]
+- [infiniband] qib: Change SDMA progression mode depending on single- or multi-rail (Doug Ledford) [1085961]
+- [infiniband] qib: Remove duplicate check in get_a_ctxt() (Doug Ledford) [1085961]
+- [infiniband] qib: Fix memory leak of recv context when driver fails to initialize (Doug Ledford) [1085961]
+- [infiniband] qib: fixup indentation in qib_ib_rcv() (Doug Ledford) [1085961]
+- [infiniband] qib: add missing braces in do_qib_user_sdma_queue_create() (Doug Ledford) [1085961]
+- [infiniband] qib: Modify software pma counters to use percpu variables (Doug Ledford) [1085961]
+- [infiniband] qib: Add percpu counter replacing qib_devdata int_counter (Doug Ledford) [1085961]
+- [infiniband] qib: Fix debugfs ordering issue with multiple HCAs (Doug Ledford) [1085961]
+- [infiniband] ipath: Fix potential buffer overrun in sending diag packet routine (Doug Ledford) [1085961]
+- [infiniband] qib: Fix potential buffer overrun in sending diag packet routine (Doug Ledford) [1085961]
+- [infiniband] qib: Add missing serdes init sequence (Doug Ledford) [1085961]
+- [infiniband] qib: Fix QP check when looping back to/from QP1 (Doug Ledford) [1085961]
+- [kernel] audit: drop arch from __audit_syscall_entry() interface (Richard Guy Briggs) [1053921]
+- [kernel] audit: fix build error when asm/syscall.h does not exist (Richard Guy Briggs) [1053921]
+- [kernel] audit: add arch field to seccomp event log (Richard Guy Briggs) [1053921]
+- [kernel] audit: __audit_syscall_entry - ignore arch arg and call syscall_get_arch() directly (Richard Guy Briggs) [1053921]
+- [kernel] audit: audit_syscall_entry() should not require the arch (Richard Guy Briggs) [1053921]
+- [kernel] audit: implement syscall_get_arch for all arches (Richard Guy Briggs) [1053921]
+- [kernel] syscall.h: fix doc text for syscall_get_arch() (Richard Guy Briggs) [1053921]
+- [kernel] audit: use uapi/linux/audit.h for AUDIT_ARCH declarations (Richard Guy Briggs) [1053921]
+- [kernel] syscall_get_arch: remove useless function arguments (Richard Guy Briggs) [1053921]
+
 * Wed Oct 08 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-184.el7]
 - [scsi] cxgb4i: Fix ipv6 build failure caught with randconfig (Sai Vemuri) [1126539]
 - [scsi] cxgb4i: remove spurious use of rcu (Sai Vemuri) [1126539]
