@@ -311,6 +311,22 @@ S:	Maintained
 F:	mm/memory-failure.c
 F:	mm/hwpoison-inject.c
 
+Hyper-V CORE AND DRIVERS
+M:	Jason Wang <jasowang@redhat.com>
+M:	Vitaly Kuznetsov <vkuznets@redhat.com>
+S:	Maintained
+F:	arch/x86/include/asm/mshyperv.h
+F:	arch/x86/include/uapi/asm/hyperv.h
+F:	arch/x86/kernel/cpu/mshyperv.c
+F:	drivers/hid/hid-hyperv.c
+F:	drivers/hv/
+F:	drivers/input/serio/hyperv-keyboard.c
+F:	drivers/net/hyperv/
+F:	drivers/scsi/storvsc_drv.c
+F:	drivers/video/hyperv_fb.c
+F:	include/linux/hyperv.h
+F:	tools/hv/
+
 IBM IBMVETH ETHERNET DRIVER (ibmveth)
 M:	Brad Peters <bpeters@redhat.com>
 S:	Maintained
