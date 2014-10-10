@@ -298,7 +298,7 @@ xfs_file_aio_read(
 		if (inode->i_mapping->nrpages) {
 			ret = filemap_write_and_wait_range(
 							VFS_I(ip)->i_mapping,
-							pos, -1);
+							pos, pos + size - 1);
 			if (ret) {
 				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
 				return ret;
@@ -310,7 +310,8 @@ xfs_file_aio_read(
 			 * happen on XFS. Warn if it does fail.
 			 */
 			ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
-						pos >> PAGE_CACHE_SHIFT, -1);
+					pos >> PAGE_CACHE_SHIFT,
+					(pos + size - 1) >> PAGE_CACHE_SHIFT);
 			WARN_ON_ONCE(ret);
 			ret = 0;
 		}
@@ -690,7 +691,7 @@ xfs_file_dio_aio_write(
 
 	if (mapping->nrpages) {
 		ret = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
-						    pos, -1);
+						    pos, pos + count - 1);
 		if (ret)
 			goto out;
 		/*
@@ -699,7 +700,8 @@ xfs_file_dio_aio_write(
 		 * happen on XFS. Warn if it does fail.
 		 */
 		ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
-						pos >> PAGE_CACHE_SHIFT, -1);
+					pos >> PAGE_CACHE_SHIFT,
+					(pos + count - 1) >> PAGE_CACHE_SHIFT);
 		WARN_ON_ONCE(ret);
 		ret = 0;
 	}
