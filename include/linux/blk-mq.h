@@ -115,7 +115,12 @@ struct blk_mq_tag_set {
 };
 #endif
 
+#ifdef __GENKSYMS__
+/* This thing was never covered by kabi */
 typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *);
+#else
+typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *, bool);
+#endif
 typedef struct blk_mq_hw_ctx *(map_queue_fn)(struct request_queue *, const int);
 #ifdef __GENKSYMS__
 typedef struct blk_mq_hw_ctx *(alloc_hctx_fn)(struct blk_mq_reg *,unsigned int);
