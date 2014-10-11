@@ -531,6 +531,7 @@ struct request_queue {
 	struct list_head	requeue_list;
 	spinlock_t		requeue_lock;
 	struct work_struct	requeue_work;
+	int			mq_freeze_depth;
 #endif
 };
 
