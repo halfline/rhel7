@@ -1484,6 +1484,24 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Oct 17 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-189.el7]
+- [scsi] lpfc: driver release 10.2.8021.1 for RHEL7 (Rob Evers) [1149846]
+- [scsi] lpfc: 10.4.8000.0: Fixed crash from page fault caused by use after rport delete (Rob Evers) [1149846]
+- [scsi] lpfc: 10.4.8000.0: Fix locking issues with abort data paths (Rob Evers) [1149846]
+- [scsi] lpfc: 10.4.8000.0: Fix race between LOGO/PLOGI handling causing NULL pointer (Rob Evers) [1149846]
+- [scsi] lpfc: 10.4.8000.0: Fix IP Reset processing - wait for RDY before proceeding (Rob Evers) [1149846]
+- [scsi] lpfc: 10.4.8000.0: Fix quarantined XRI recovery qualifier state in link bounce (Rob Evers) [1149846]
+- [scsi] lpfc: 10.4.8000.0: Fix discovery timeout during nameserver login (Rob Evers) [1149846]
+- [net] ipv6: mld: answer mldv2 queries with mldv1 reports in mldv1 fallback (Daniel Borkmann) [1143429]
+- [net] team: avoid race condition in scheduling delayed work (Jiri Pirko) [1149239]
+- [net] fix UDP tunnel GSO of frag_list GRO packets (Jiri Benc) [1119392]
+- [net] vxlan: fix incorrect initializer in union vxlan_addr (Daniel Borkmann) [1130643]
+- [net] vxlan: fix crash when interface is created with no group (Daniel Borkmann) [1130643]
+- [net] vxlan: fix nonfunctional neigh_reduce() (Daniel Borkmann) [1130643]
+- [net] vxlan: fix potential NULL dereference in arp_reduce() (Daniel Borkmann) [1130643]
+- [net] vxlan: remove unused port variable in vxlan_udp_encap_recv() (Daniel Borkmann) [1130643]
+- [net] vxlan: remove extra newline after function definition (Daniel Borkmann) [1130643]
+
 * Mon Oct 13 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-188.el7]
 - [kernel] workqueue: Add quiescent state between work items (Jiri Pirko) [1149250]
 - [crypto] qat: Enable interrupts from all 32 bundles (Nikolay Aleksandrov) [1091130]
