@@ -387,6 +387,9 @@ struct address_space_operations {
 	int (*swap_activate)(struct swap_info_struct *sis, struct file *file,
 				sector_t *span);
 	void (*swap_deactivate)(struct file *file);
+#ifndef __GENKSYMS__
+	void (*invalidatepage_range) (struct page *, unsigned int, unsigned int);
+#endif
 };
 
 extern const struct address_space_operations empty_aops;
@@ -1821,8 +1824,8 @@ struct file_system_type {
 #define FS_HAS_SUBTYPE		4
 #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
 #define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */
-
 #define FS_HAS_RM_XQUOTA	256	/* KABI: fs has the rm_xquota quota op */
+#define FS_HAS_INVALIDATE_RANGE	512	/* FS has new ->invalidatepage with length arg */
 #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
 	struct dentry *(*mount) (struct file_system_type *, int,
 		       const char *, void *);
@@ -1842,6 +1845,13 @@ struct file_system_type {
 };
 
 #define sb_has_rm_xquota(sb)	((sb)->s_type->fs_flags & FS_HAS_RM_XQUOTA)
+
+/*
+ * the fs address space operations contain a new invalidatepage_rang () op
+ * which supports a length parameter
+ */
+#define inode_has_invalidate_range(inode) \
+	((inode)->i_sb->s_type->fs_flags & FS_HAS_INVALIDATE_RANGE)
 
 #define MODULE_ALIAS_FS(NAME) MODULE_ALIAS("fs-" NAME)
 

@@ -75,8 +75,10 @@ unlock:
  * is underway against any of the blocks which are outside the truncation
  * point.  Because the caller is about to free (and possibly reuse) those
  * blocks on-disk.
+ *
+ * XXX old ->invalidatepage method, no length arg
  */
-void do_invalidatepage(struct page *page, unsigned long offset)
+void _do_invalidatepage(struct page *page, unsigned long offset)
 {
 	void (*invalidatepage)(struct page *, unsigned long);
 	invalidatepage = page->mapping->a_ops->invalidatepage;
@@ -86,6 +88,31 @@ void do_invalidatepage(struct page *page, unsigned long offset)
 #endif
 	if (invalidatepage)
 		(*invalidatepage)(page, offset);
+}
+
+void do_invalidatepage(struct page *page, unsigned long offset)
+{
+
+	if (inode_has_invalidate_range(page->mapping->host))
+		do_invalidatepage_range(page, (unsigned int) offset,
+					PAGE_CACHE_SIZE - offset);
+	else
+		_do_invalidatepage(page, offset);
+}
+
+/* XXX new ->invalidatepage_range method, new length arg */
+void do_invalidatepage_range(struct page *page, unsigned int offset,
+			     unsigned int length)
+{
+	void (*invalidatepage_range)(struct page *, unsigned int, unsigned int);
+
+	invalidatepage_range = page->mapping->a_ops->invalidatepage_range;
+#ifdef CONFIG_BLOCK
+	if (!invalidatepage_range)
+		invalidatepage_range = block_invalidatepage_range;
+#endif
+	if (invalidatepage_range)
+		(*invalidatepage_range)(page, offset, length);
 }
 
 static inline void truncate_partial_page(struct page *page, unsigned partial)
