@@ -1484,6 +1484,14 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Oct 21 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-191.el7]
+- [fs] fuse: ignore entry-timeout LOOKUP_REVAL (Carlos Maiolino) [1124880]
+- [fs] fuse: Timeout comparison fix (Carlos Maiolino) [1128802]
+- [fs] lockd: Try to reconnect if statd has moved (Benjamin Coddington) [1120850]
+- [fs] sunrpc: Don't wake tasks during connection abort (Benjamin Coddington) [1120850]
+- [fs] nfsd4: fix corruption of NFSv4 read data ("J. Bruce Fields") [1148055]
+- [fs] gfs2: revert "GFS2: d_splice_alias() can't return error" (Robert S Peterson) [1141899]
+
 * Mon Oct 20 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-190.el7]
 - [scsi] mpt3sas: Use pci_enable_msix_exact() instead of pci_enable_msix() (Tomas Henzl) [1088524]
 - [scsi] mpt2sas: Use pci_enable_msix_exact() instead of pci_enable_msix() (Tomas Henzl) [1088524]
