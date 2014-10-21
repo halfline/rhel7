@@ -540,33 +540,6 @@ EXPORT_SYMBOL_GPL(ip_set_name_byindex);
  */
 
 /*
- * Find set by name, reference it once. The reference makes sure the
- * thing pointed to, does not go away under our feet.
- *
- * The nfnl mutex is used in the function.
- */
-ip_set_id_t
-ip_set_nfnl_get(const char *name)
-{
-	ip_set_id_t i, index = IPSET_INVALID_ID;
-	struct ip_set *s;
-
-	nfnl_lock(NFNL_SUBSYS_IPSET);
-	for (i = 0; i < ip_set_max; i++) {
-		s = nfnl_set(i);
-		if (s != NULL && STREQ(s->name, name)) {
-			__ip_set_get(s);
-			index = i;
-			break;
-		}
-	}
-	nfnl_unlock(NFNL_SUBSYS_IPSET);
-
-	return index;
-}
-EXPORT_SYMBOL_GPL(ip_set_nfnl_get);
-
-/*
  * Find set by index, reference it once. The reference makes sure the
  * thing pointed to, does not go away under our feet.
  *
