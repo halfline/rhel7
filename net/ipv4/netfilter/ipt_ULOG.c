@@ -394,6 +394,7 @@ static struct xt_target ulog_tg_reg __read_mostly = {
 
 static struct nf_logger ipt_ulog_logger __read_mostly = {
 	.name		= "ipt_ULOG",
+	.type		= NF_LOG_TYPE_ULOG,
 	.logfn		= ipt_logfn,
 	.me		= THIS_MODULE,
 };
@@ -473,8 +474,11 @@ static int __init ulog_tg_init(void)
 	if (ret < 0)
 		goto out_target;
 
-	if (nflog)
-		nf_log_register(NFPROTO_IPV4, &ipt_ulog_logger);
+	if (nflog) {
+		ret = nf_log_register(NFPROTO_IPV4, &ipt_ulog_logger);
+		if (ret < 0)
+			return ret;
+	}
 
 	return 0;
 
