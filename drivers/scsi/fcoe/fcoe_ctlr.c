@@ -170,20 +170,24 @@ static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
 {
 	struct fcoe_ctlr *fip = new->fip;
 	struct fcoe_ctlr_device *ctlr_dev;
-	struct fcoe_fcf_device temp, *fcf_dev;
-	int rc = 0;
+	struct fcoe_fcf_device *temp, *fcf_dev;
+	int rc = -ENOMEM;
 
 	LIBFCOE_FIP_DBG(fip, "New FCF fab %16.16llx mac %pM\n",
 			new->fabric_name, new->fcf_mac);
 
-	temp.fabric_name = new->fabric_name;
-	temp.switch_name = new->switch_name;
-	temp.fc_map = new->fc_map;
-	temp.vfid = new->vfid;
-	memcpy(temp.mac, new->fcf_mac, ETH_ALEN);
-	temp.priority = new->pri;
-	temp.fka_period = new->fka_period;
-	temp.selected = 0; /* default to unselected */
+	temp = kzalloc(sizeof(*temp), GFP_KERNEL);
+	if (!temp)
+		goto out;
+
+	temp->fabric_name = new->fabric_name;
+	temp->switch_name = new->switch_name;
+	temp->fc_map = new->fc_map;
+	temp->vfid = new->vfid;
+	memcpy(temp->mac, new->fcf_mac, ETH_ALEN);
+	temp->priority = new->pri;
+	temp->fka_period = new->fka_period;
+	temp->selected = 0; /* default to unselected */
 
 	/*
 	 * If ctlr_dev doesn't exist then it means we're a libfcoe user
@@ -195,7 +199,7 @@ static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
 	ctlr_dev = fcoe_ctlr_to_ctlr_dev(fip);
 	if (ctlr_dev) {
 		mutex_lock(&ctlr_dev->lock);
-		fcf_dev = fcoe_fcf_device_add(ctlr_dev, &temp);
+		fcf_dev = fcoe_fcf_device_add(ctlr_dev, temp);
 		if (unlikely(!fcf_dev)) {
 			rc = -ENOMEM;
 			mutex_unlock(&ctlr_dev->lock);
@@ -221,8 +225,10 @@ static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
 
 	list_add(&new->list, &fip->fcfs);
 	fip->fcf_count++;
+	rc = 0;
 
 out:
+	kfree(temp);
 	return rc;
 }
 
