@@ -196,13 +196,13 @@ static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
 	 * case we want to add the fcoe_fcf to the fcoe_ctlr list, but we
 	 * don't want to make sysfs changes.
 	 */
+
 	ctlr_dev = fcoe_ctlr_to_ctlr_dev(fip);
 	if (ctlr_dev) {
 		mutex_lock(&ctlr_dev->lock);
 		fcf_dev = fcoe_fcf_device_add(ctlr_dev, temp);
 		if (unlikely(!fcf_dev)) {
 			rc = -ENOMEM;
-			mutex_unlock(&ctlr_dev->lock);
 			goto out;
 		}
 
