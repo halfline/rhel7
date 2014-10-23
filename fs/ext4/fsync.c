@@ -137,10 +137,6 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
 		goto out;
 	}
 
-	ret = ext4_flush_unwritten_io(inode);
-	if (ret < 0)
-		goto out;
-
 	if (!journal) {
 		ret = __sync_inode(inode, datasync);
 		if (!ret && !hlist_empty(&inode->i_dentry))
