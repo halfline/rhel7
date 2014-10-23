@@ -3687,12 +3687,6 @@ void ext4_truncate(struct inode *inode)
 			return;
 	}
 
-	/*
-	 * finish any pending end_io work so we won't run the risk of
-	 * converting any truncated blocks to initialized later
-	 */
-	ext4_flush_unwritten_io(inode);
-
 	/* If we zero-out tail of the page, we have to create jinode for jbd2 */
 	if (inode->i_size & (inode->i_sb->s_blocksize - 1)) {
 		if (ext4_inode_attach_jinode(inode) < 0)
