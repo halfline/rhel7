@@ -34,7 +34,7 @@ default: rh-help
 rh-kabi:
 	@for KABIARCH in "ppc64" "x86_64" "s390x"; do \
 		$(REDHAT)/kabi/show-kabi -k $(REDHAT)/kabi/kabi-module/ -m \
-			-a $$KABIARCH > $(REDHAT)/kabi/Module.kabi_$$KABIARCH;\
+			-a $$KABIARCH -r $(RHELMAJOR).$(RHELMINOR) > $(REDHAT)/kabi/Module.kabi_$$KABIARCH;\
 		for i in {0..$(RHELMINOR)}; do \
 			mkdir -p $(REDHAT)/kabi/kabi-rhel$(RHELMAJOR)$$i/;\
 			$(REDHAT)/kabi/show-kabi -k $(REDHAT)/kabi/kabi-module/ -s -a $$KABIARCH \
