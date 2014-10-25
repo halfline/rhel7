@@ -116,7 +116,7 @@ static struct sk_buff *ipv6_gso_segment(struct sk_buff *skb,
 
 	tunnel = SKB_GSO_CB(skb)->encap_level > 0;
 	if (tunnel)
-		features = skb->dev->hw_enc_features & netif_skb_features(skb);
+		features &= skb->dev->hw_enc_features;
 	SKB_GSO_CB(skb)->encap_level += sizeof(*ipv6h);
 
 	ipv6h = ipv6_hdr(skb);
