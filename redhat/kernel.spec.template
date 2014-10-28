@@ -1484,6 +1484,26 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Oct 28 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-196.el7]
+- [ethernet] mlx5: Add ConnectX-4 to list of supported devices (Amir Vadai) [1149439]
+- [fs] cifs: NULL pointer dereference in SMB2_tcon (Jacob Tanenbaum) [1147529] {CVE-2014-7145}
+- [x86] build: Add arch/x86/purgatory/ make generated files to gitignore (Prarit Bhargava) [1155577]
+- [acpi] acpica: Add "Windows 2013" string to _OSI support (Lenny Szubowicz) [1087674]
+- [pci] Export MSI message relevant functions (Myron Stowe) [1123366]
+- [cpufreq] store_scaling_governor requires policy->rwsem to be held for duration of changing governors (Prarit Bhargava) [1089255]
+- [edac] sb_edac: avoid INTERNAL ERROR message in EDAC with unspecified channel (Seth Jennings) [1056990]
+- [kernel] module: lock around setting of MODULE_STATE_UNFORMED (Prarit Bhargava) [1127741]
+- [acpi] Add container online uevent to acpi_bus_attach (Prarit Bhargava) [1140572]
+- [scsi] fcoe: Convert uses of compare_ether_addr to ether_addr_equal (Neil Horman) [1087099]
+- [scsi] fcoe: Fix missing mutex_unlock in fcoe_sysfs_fcf_add error path (Neil Horman) [1087099]
+- [scsi] fcoe: Make fcoe_sysfs optional / fix fnic NULL exception (Neil Horman) [1087099]
+- [scsi] fcoe: fix build error (Neil Horman) [1087099]
+- [scsi] fcoe: convert bus code to use bus_groups (Neil Horman) [1087099]
+- [scsi] fcoe: Reduce fcoe_sysfs_fcf_add() stack usage (Neil Horman) [1087099]
+- [scsi] fcoe: Add missing newlines in debug messages (Neil Horman) [1087099]
+- [scsi] fcoe: Declare fcoe_ctlr_mode_set() static (Neil Horman) [1087099]
+- [fs] gfs2: Hash the negative dentry during inode lookup (Robert S Peterson) [1123986]
+
 * Mon Oct 27 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-195.el7]
 - [block] fix blk_abort_request on blk-mq (Jeff Moyer) [1146660]
 - [block] blk-timeout: fix blk_add_timer (Jeff Moyer) [1146660]
