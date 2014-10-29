@@ -362,6 +362,11 @@ M:	Neil Horman <nhorman@redhat.com>
 S:	Maintained
 F:	drivers/i2c/busses/i2c-ismt.c
 
+Lenovo Hardware Support
+M:	Adrian Huang <ahuang@redhat.com>
+S:	Maintained
+F:	drivers/gpu/drm/ast/
+
 LSI 3ware SAS/SATA-RAID Linux Drive (3w-sas)
 M:	Tomas Henzl <thenzl@redhat.com>
 S:	Maintained
