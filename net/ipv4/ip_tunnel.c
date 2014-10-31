@@ -740,12 +740,15 @@ int ip_tunnel_ioctl(struct net_device *dev, struct ip_tunnel_parm *p, int cmd)
 
 		t = ip_tunnel_find(itn, p, itn->fb_tunnel_dev->type);
 
-		if (!t && (cmd == SIOCADDTUNNEL)) {
-			t = ip_tunnel_create(net, itn, p);
-			if (IS_ERR(t)) {
-				err = PTR_ERR(t);
+		if (cmd == SIOCADDTUNNEL) {
+			if (!t) {
+				t = ip_tunnel_create(net, itn, p);
+				err = PTR_RET(t);
 				break;
 			}
+
+			err = -EEXIST;
+			break;
 		}
 		if (dev != itn->fb_tunnel_dev && cmd == SIOCCHGTUNNEL) {
 			if (t != NULL) {
