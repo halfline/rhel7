@@ -870,6 +870,7 @@ static void rh_check_supported(void)
 		switch (boot_cpu_data.x86_model) {
 		case 77: /* Atom Avoton */
 		case 70: /* Crystal Well */
+		case 69: /* Haswell ULT */
 			break;
 		default:
 			if (boot_cpu_data.x86_model > 63) {
