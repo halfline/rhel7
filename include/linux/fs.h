@@ -790,8 +790,14 @@ struct file {
 	 * Must not be taken from IRQ context.
 	 */
 	spinlock_t		f_lock;
+#ifdef __GENKSYMS__
 #ifdef CONFIG_SMP
 	int			f_sb_list_cpu;
+#endif
+#else
+#ifdef CONFIG_SMP
+	int			f_sb_list_cpu_deprecated;
+#endif
 #endif
 	atomic_long_t		f_count;
 	unsigned int 		f_flags;
@@ -1272,10 +1278,18 @@ struct super_block {
 
 	struct list_head	s_inodes;	/* all inodes */
 	struct hlist_bl_head	s_anon;		/* anonymous dentries for (nfs) exporting */
+#ifdef __GENKSYMS__
 #ifdef CONFIG_SMP
 	struct list_head __percpu *s_files;
 #else
 	struct list_head	s_files;
+#endif
+#else
+#ifdef CONFIG_SMP
+	struct list_head __percpu *s_files_deprecated;
+#else
+	struct list_head	s_files_deprecated;
+#endif
 #endif
 	struct list_head	s_mounts;	/* list of mounts; _not_ for fs use */
 	/* s_dentry_lru, s_nr_dentry_unused protected by dcache.c lru locks */
