@@ -794,7 +794,8 @@ static int nvme_split_flush_data(struct nvme_queue *nvmeq, struct bio *bio)
 	if (!bp)
 		return -ENOMEM;
 
-	bp->b1.bi_rw &= ~REQ_FLUSH;
+	bp->b1.bi_phys_segments = 0;
+	bp->b2.bi_rw &= ~REQ_FLUSH;
 
 	if (!waitqueue_active(&nvmeq->sq_full))
 		add_wait_queue(&nvmeq->sq_full, &nvmeq->sq_cong_wait);
