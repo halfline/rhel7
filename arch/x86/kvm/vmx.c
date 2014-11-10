@@ -3995,7 +3995,7 @@ static int alloc_apic_access_page(struct kvm *kvm)
 	int r = 0;
 
 	mutex_lock(&kvm->slots_lock);
-	if (kvm->arch.apic_access_page)
+	if (kvm->arch.apic_access_page_done)
 		goto out;
 	kvm_userspace_mem.slot = APIC_ACCESS_PAGE_PRIVATE_MEMSLOT;
 	kvm_userspace_mem.flags = 0;
@@ -4011,7 +4011,12 @@ static int alloc_apic_access_page(struct kvm *kvm)
 		goto out;
 	}
 
-	kvm->arch.apic_access_page = page;
+	/*
+	 * Do not pin the page in memory, so that memory hot-unplug
+	 * is able to migrate it.
+	 */
+	put_page(page);
+	kvm->arch.apic_access_page_done = true;
 out:
 	mutex_unlock(&kvm->slots_lock);
 	return r;
