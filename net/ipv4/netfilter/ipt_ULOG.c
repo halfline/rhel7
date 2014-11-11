@@ -476,12 +476,16 @@ static int __init ulog_tg_init(void)
 
 	if (nflog) {
 		ret = nf_log_register(NFPROTO_IPV4, &ipt_ulog_logger);
-		if (ret < 0)
-			return ret;
+		if (ret < 0) {
+			pr_warn("ULOG: fail to register logger.\n");
+			goto out_register;
+		}
 	}
 
 	return 0;
 
+out_register:
+	xt_unregister_target(&ulog_tg_reg);
 out_target:
 	unregister_pernet_subsys(&ulog_tg_net_ops);
 out_pernet:
