@@ -1484,6 +1484,18 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Nov 12 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-203.el7]
+- [fs] GFS2: If we use up our block reservation, request more next time (Robert S Peterson) [1142238]
+- [fs] GFS2: Only increase rs_sizehint (Robert S Peterson) [1142238]
+- [fs] GFS2: Set of distributed preferences for rgrps (Robert S Peterson) [1142238]
+- [fs] autofs: fix symlinks aren't checked for expiry (Ian Kent) [1116182]
+- [fs] GFS2: fix regression in dir_double_exhash (Robert S Peterson) [1160229]
+- [fs] gfs2_atomic_open(): skip lookups on hashed dentry (Robert S Peterson) [1158150]
+- [fs] splice: perform generic write checks (Eric Sandeen) [1155907]
+- [fs] fs: seq_file: fallback to vmalloc allocation (Ian Kent) [1095623]
+- [fs] fs: /proc/stat: convert to single_open_size() (Ian Kent) [1095623]
+- [fs] fs: seq_file: always clear m->count when we free m->buf (Ian Kent) [1095623]
+
 * Wed Nov 12 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-202.el7]
 - [ethernet] mlx4: Use PTYS register to set ethtool settings (Speed) (Amir Vadai) [1060221]
 - [ethernet] mlx4: Use PTYS register to query ethtool settings (Amir Vadai) [1060221]
