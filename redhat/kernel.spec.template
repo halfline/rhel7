@@ -1484,6 +1484,24 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Nov 14 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-204.el7]
+- [net] ip6_gre: Return an error when adding an existing tunnel (Alexander Duyck) [1151886 1152368]
+- [net] ip6_tunnel: Return an error when adding an existing tunnel (Alexander Duyck) [1151886 1152368]
+- [net] ip_tunnel: Don't allow to add the same tunnel multiple times (Alexander Duyck) [1151886 1152368]
+- [net] gre: Use inner mac length when computing tunnel length (Alexander Duyck) [1151886 1152368]
+- [net] gre: enable offloads for GRE (Alexander Duyck) [1151886 1152368]
+- [net] ipv4: fix a potential use after free in gre_offload.c (Alexander Duyck) [1151886 1152368]
+- [net] ipv4: fix a potential use after free in ip_tunnel_core.c (Alexander Duyck) [1151886 1152368]
+- [net] gro: fix aggregation for skb using frag_list (Alexander Duyck) [1154239]
+- [net] gro: make sure skb->cb[] initial content has not to be zero (Alexander Duyck) [1154239]
+- [net] bridge: notify user space after fdb update (Alexander Duyck) [1109605]
+- [net] bridge: Fix the way to find old local fdb entries in br_fdb_changeaddr (Alexander Duyck) [1109605]
+- [net] handle encapsulation offloads when computing segment lengths (Jiri Benc) [1144571]
+- [net] gso: make skb_gso_segment error handling more robust (Jiri Benc) [1144571]
+- [net] gso: use feature flag argument in all protocol gso handlers (Jiri Benc) [1144571]
+- [net] udp_offload: Use IS_ERR_OR_NULL (Jiri Benc) [1144571]
+- [net] ipv4: Use IS_ERR_OR_NULL (Jiri Benc) [1144571]
+
 * Wed Nov 12 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-203.el7]
 - [fs] GFS2: If we use up our block reservation, request more next time (Robert S Peterson) [1142238]
 - [fs] GFS2: Only increase rs_sizehint (Robert S Peterson) [1142238]
