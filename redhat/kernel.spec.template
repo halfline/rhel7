@@ -1484,6 +1484,28 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Sat Nov 15 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-205.el7]
+- [mm] shmem: fix splicing from a hole while it's punched (Denys Vlasenko) [1118245] {CVE-2014-4171}
+- [mm] shmem: fix faulting into a hole, not taking i_mutex (Denys Vlasenko) [1118245] {CVE-2014-4171}
+- [mm] shmem: fix faulting into a hole while it's punched (Denys Vlasenko) [1118245] {CVE-2014-4171}
+- [virt] kvm: detect LVTT changes under APICv (Radim Krcmar) [1151174]
+- [virt] kvm: detect SPIV changes under APICv (Radim Krcmar) [1151174]
+- [virt] kvm: recalculate_apic_map after enabling apic (Radim Krcmar) [1151174]
+- [virt] kvm: trace kvm_ple_window grow/shrink (Radim Krcmar) [1163296]
+- [virt] kvm/vmx: dynamise PLE window (Radim Krcmar) [1163296]
+- [virt] kvm/vmx: make PLE window per-VCPU (Radim Krcmar) [1163296]
+- [virt] kvm: introduce sched_in to kvm_x86_ops (Radim Krcmar) [1163296]
+- [virt] kvm: add kvm_arch_sched_in (Radim Krcmar) [1163296]
+- [kernel] uprobes: Don't assume that arch_uprobe->insn/ixol is u8[MAX_UINSN_BYTES] (Steve Best) [1159365]
+- [drm] qxl: don't create too large primary surface (Dave Airlie) [1158233]
+- [powerpc] pseries: Quieten ibm, pcie-link-speed-stats warning (Steve Best) [1162287]
+- [md] dm-thin: fix potential for infinite loop in pool_io_hints (Mike Snitzer) [1156164]
+- [virt] hyperv/vmbus: Increase the limit on the number of pfns we can handle (Jason Wang) [1160130]
+- [virt] kvm: update masterclock values on TSC writes (Marcelo Tosatti) [1158039]
+- [virt] kvm: emulate MOVNTDQ (Paolo Bonzini) [1117542]
+- [crypto] af_alg: properly label AF_ALG socket (Ondrej Kozina) [1161148]
+- [powerpc] vphn: NUMA node code expects big-endian (Steve Best) [1154673]
+
 * Fri Nov 14 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-204.el7]
 - [net] ip6_gre: Return an error when adding an existing tunnel (Alexander Duyck) [1151886 1152368]
 - [net] ip6_tunnel: Return an error when adding an existing tunnel (Alexander Duyck) [1151886 1152368]
