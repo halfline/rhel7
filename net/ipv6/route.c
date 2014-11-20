@@ -2829,15 +2829,6 @@ static int ip6_route_dev_notify(struct notifier_block *this,
 
 #ifdef CONFIG_PROC_FS
 
-struct rt6_proc_arg
-{
-	char *buffer;
-	int offset;
-	int length;
-	int skip;
-	int len;
-};
-
 static const struct file_operations ipv6_route_proc_fops = {
 	.owner		= THIS_MODULE,
 	.open		= ipv6_route_open,
