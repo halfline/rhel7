@@ -311,6 +311,9 @@ extern void			fib6_gc_cleanup(void);
 
 extern int			fib6_init(void);
 
+extern int			ipv6_route_open(struct inode *inode,
+						struct file *file);
+
 #ifdef CONFIG_IPV6_MULTIPLE_TABLES
 extern int			fib6_rules_init(void);
 extern void			fib6_rules_cleanup(void);
