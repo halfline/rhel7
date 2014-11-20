@@ -152,6 +152,7 @@ rh-release: rh-clean-sources
 	@$(REDHAT)/scripts/update_changelog.sh $(KVERSION) $(shell echo $$[$(BUILD) + 1]) $(REDHAT) "$(STAMP_VERSION)-$(PREBUILD)$(shell echo $$[$(BUILD) + 1])$(DIST)$(BUILDID)"
 	@git commit -s ../Makefile Makefile.common kernel.spec.template -m "[redhat] kernel-$(STAMP_VERSION)-$(PREBUILD)$(shell echo $$[$(BUILD) + 1])$(DIST)$(BUILDID)"
 	@make rh-configs
+	@make rh-kabi
 	@make sources-rh
 rh-release-tag:
 	@git tag -a -m "kernel-$(STAMP_VERSION)-$(PKGRELEASE)" kernel-$(STAMP_VERSION)-$(PKGRELEASE)
