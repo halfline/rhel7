@@ -1494,13 +1494,11 @@ void bond_alb_monitor(struct work_struct *work)
 	struct list_head *iter;
 	struct slave *slave;
 
-	if (!rtnl_trylock())
-		goto re_arm;
+	read_lock(&bond->lock);
 
 	if (!bond_has_slaves(bond)) {
 		bond_info->tx_rebalance_counter = 0;
 		bond_info->lp_counter = 0;
-		rtnl_unlock();
 		goto re_arm;
 	}
 
@@ -1549,6 +1547,16 @@ void bond_alb_monitor(struct work_struct *work)
 		if (bond_info->primary_is_promisc &&
 		    (++bond_info->rlb_promisc_timeout_counter >= RLB_PROMISC_TIMEOUT)) {
 
+			/*
+			 * dev_set_promiscuity requires rtnl and
+			 * nothing else.  Avoid race with bond_close.
+			 */
+			read_unlock(&bond->lock);
+			if (!rtnl_trylock()) {
+				read_lock(&bond->lock);
+				goto re_arm;
+			}
+
 			bond_info->rlb_promisc_timeout_counter = 0;
 
 			/* If the primary was set to promiscuous mode
@@ -1557,6 +1565,9 @@ void bond_alb_monitor(struct work_struct *work)
 			 */
 			dev_set_promiscuity(bond->curr_active_slave->dev, -1);
 			bond_info->primary_is_promisc = 0;
+
+			rtnl_unlock();
+			read_lock(&bond->lock);
 		}
 
 		if (bond_info->rlb_rebalance) {
@@ -1579,9 +1590,10 @@ void bond_alb_monitor(struct work_struct *work)
 		}
 	}
 
-	rtnl_unlock();
 re_arm:
 	queue_delayed_work(bond->wq, &bond->alb_work, alb_delta_in_ticks);
+
+	read_unlock(&bond->lock);
 }
 
 /* assumption: called before the slave is attached to the bond
