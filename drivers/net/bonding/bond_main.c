@@ -1348,8 +1348,6 @@ done:
 static void bond_setup_by_slave(struct net_device *bond_dev,
 				struct net_device *slave_dev)
 {
-	struct bonding *bond = netdev_priv(bond_dev);
-
 	bond_dev->header_ops	    = slave_dev->header_ops;
 
 	bond_dev->type		    = slave_dev->type;
@@ -1358,7 +1356,6 @@ static void bond_setup_by_slave(struct net_device *bond_dev,
 
 	memcpy(bond_dev->broadcast, slave_dev->broadcast,
 		slave_dev->addr_len);
-	bond->setup_by_slave = 1;
 }
 
 /* On bonding slaves other than the currently active slave, suppress
@@ -3153,7 +3150,7 @@ static int bond_slave_netdev_event(unsigned long event,
 
 	switch (event) {
 	case NETDEV_UNREGISTER:
-		if (bond->setup_by_slave)
+		if (bond_dev->type != ARPHRD_ETHER)
 			bond_release_and_destroy(bond_dev, slave_dev);
 		else
 			bond_release(bond_dev, slave_dev);
