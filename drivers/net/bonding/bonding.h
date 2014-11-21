@@ -23,6 +23,8 @@
 #include <linux/netpoll.h>
 #include <linux/inetdevice.h>
 #include <linux/etherdevice.h>
+#include <linux/reciprocal_div.h>
+
 #include "bond_3ad.h"
 #include "bond_alb.h"
 
@@ -168,6 +170,7 @@ struct bond_params {
 	int resend_igmp;
 	int lp_interval;
 	int packets_per_slave;
+	struct reciprocal_value reciprocal_packets_per_slave;
 };
 
 struct bond_parm_tbl {

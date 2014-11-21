@@ -19,7 +19,6 @@
 #include <linux/if_ether.h>
 #include <net/netlink.h>
 #include <net/rtnetlink.h>
-#include <linux/reciprocal_div.h>
 #include "bonding.h"
 
 static const struct nla_policy bond_policy[IFLA_BOND_MAX + 1] = {
@@ -416,9 +415,6 @@ static int bond_fill_info(struct sk_buff *skb,
 		goto nla_put_failure;
 
 	packets_per_slave = bond->params.packets_per_slave;
-	if (packets_per_slave > 1)
-		packets_per_slave = reciprocal_value(packets_per_slave);
-
 	if (nla_put_u32(skb, IFLA_BOND_PACKETS_PER_SLAVE,
 			packets_per_slave))
 		goto nla_put_failure;
