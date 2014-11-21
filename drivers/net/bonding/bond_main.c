@@ -1843,9 +1843,7 @@ static int bond_info_query(struct net_device *bond_dev, struct ifbond *info)
 	info->bond_mode = bond->params.mode;
 	info->miimon = bond->params.miimon;
 
-	read_lock(&bond->lock);
 	info->num_slaves = bond->slave_cnt;
-	read_unlock(&bond->lock);
 
 	return 0;
 }
@@ -1857,7 +1855,6 @@ static int bond_slave_info_query(struct net_device *bond_dev, struct ifslave *in
 	int i = 0, res = -ENODEV;
 	struct slave *slave;
 
-	read_lock(&bond->lock);
 	bond_for_each_slave(bond, slave, iter) {
 		if (i++ == (int)info->slave_id) {
 			res = 0;
@@ -1868,7 +1865,6 @@ static int bond_slave_info_query(struct net_device *bond_dev, struct ifslave *in
 			break;
 		}
 	}
-	read_unlock(&bond->lock);
 
 	return res;
 }
