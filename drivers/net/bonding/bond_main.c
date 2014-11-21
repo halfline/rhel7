@@ -1719,9 +1719,9 @@ static int __bond_release_one(struct net_device *bond_dev,
 		/* Sync against bond_3ad_rx_indication and
 		 * bond_3ad_state_machine_handler
 		 */
-		write_lock_bh(&bond->curr_slave_lock);
+		spin_lock_bh(&bond->mode_lock);
 		bond_3ad_unbind_slave(slave);
-		write_unlock_bh(&bond->curr_slave_lock);
+		spin_unlock_bh(&bond->mode_lock);
 	}
 
 	netdev_info(bond_dev, "Releasing %s interface %s\n",
@@ -3876,8 +3876,7 @@ void bond_setup(struct net_device *bond_dev)
 {
 	struct bonding *bond = netdev_priv(bond_dev);
 
-	/* initialize rwlocks */
-	rwlock_init(&bond->curr_slave_lock);
+	spin_lock_init(&bond->mode_lock);
 	INIT_LIST_HEAD(&bond->slave_list);
 	bond->params = bonding_defaults;
 
