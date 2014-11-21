@@ -381,6 +381,12 @@ static inline bool bond_is_active_slave(struct slave *slave)
 	return !bond_slave_state(slave);
 }
 
+static inline bool bond_slave_can_tx(struct slave *slave)
+{
+	return bond_slave_is_up(slave) && slave->link == BOND_LINK_UP &&
+	       bond_is_active_slave(slave);
+}
+
 #define BOND_PRI_RESELECT_ALWAYS	0
 #define BOND_PRI_RESELECT_BETTER	1
 #define BOND_PRI_RESELECT_FAILURE	2
@@ -497,15 +503,6 @@ static inline __be32 bond_confirm_addr(struct net_device *dev, __be32 dst, __be3
 
 	rcu_read_unlock();
 	return addr;
-}
-
-static inline bool slave_can_tx(struct slave *slave)
-{
-	if (bond_slave_is_up(slave) && slave->link == BOND_LINK_UP &&
-	    bond_is_active_slave(slave))
-		return true;
-	else
-		return false;
 }
 
 struct bond_net {
