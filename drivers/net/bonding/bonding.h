@@ -305,12 +305,18 @@ static inline bool bond_is_lb(const struct bonding *bond)
 
 static inline void bond_set_active_slave(struct slave *slave)
 {
-	slave->backup = 0;
+	if (slave->backup) {
+		slave->backup = 0;
+		rtmsg_ifinfo(RTM_NEWLINK, slave->dev, 0, GFP_ATOMIC);
+	}
 }
 
 static inline void bond_set_backup_slave(struct slave *slave)
 {
-	slave->backup = 1;
+	if (!slave->backup) {
+		slave->backup = 1;
+		rtmsg_ifinfo(RTM_NEWLINK, slave->dev, 0, GFP_ATOMIC);
+	}
 }
 
 static inline void bond_set_slave_state(struct slave *slave,
@@ -321,7 +327,7 @@ static inline void bond_set_slave_state(struct slave *slave,
 
 	slave->backup = slave_state;
 	if (notify) {
-		rtmsg_ifinfo(RTM_NEWLINK, slave->dev, 0, GFP_KERNEL);
+		rtmsg_ifinfo(RTM_NEWLINK, slave->dev, 0, GFP_ATOMIC);
 		slave->should_notify = 0;
 	} else {
 		if (slave->should_notify)
@@ -351,7 +357,7 @@ static inline void bond_slave_state_notify(struct bonding *bond)
 
 	bond_for_each_slave(bond, tmp, iter) {
 		if (tmp->should_notify) {
-			rtmsg_ifinfo(RTM_NEWLINK, tmp->dev, 0, GFP_KERNEL);
+			rtmsg_ifinfo(RTM_NEWLINK, tmp->dev, 0, GFP_ATOMIC);
 			tmp->should_notify = 0;
 		}
 	}
