@@ -1084,13 +1084,11 @@ static void bond_netpoll_cleanup(struct net_device *bond_dev)
 /*---------------------------------- IOCTL ----------------------------------*/
 
 static netdev_features_t bond_fix_features(struct net_device *dev,
-	netdev_features_t features)
+					   netdev_features_t features)
 {
-	struct slave *slave;
 	struct bonding *bond = netdev_priv(dev);
 	netdev_features_t mask;
-
-	read_lock(&bond->lock);
+	struct slave *slave;
 
 	mask = features;
 	features &= ~NETIF_F_ONE_FOR_ALL;
@@ -1103,7 +1101,6 @@ static netdev_features_t bond_fix_features(struct net_device *dev,
 	}
 	features = netdev_add_tso_features(features, mask);
 
-	read_unlock(&bond->lock);
 	return features;
 }
 
