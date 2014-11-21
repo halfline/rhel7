@@ -80,7 +80,7 @@
  * @pos:	current slave
  * @iter:	list_head * iterator
  *
- * Caller must hold bond->lock
+ * Caller must hold RTNL
  */
 #define bond_for_each_slave(bond, pos, iter) iter = &(bond)->slave_list; \
 	list_for_each_entry(pos, &(bond)->slave_list, list)
@@ -183,11 +183,8 @@ struct slave {
 /*
  * Here are the locking policies for the two bonding locks:
  *
- * 1) Get bond->lock when reading/writing slave list.
+ * 1) Get rcu_read_lock when reading or RTNL when writing slave list.
  * 2) Get bond->curr_slave_lock when reading/writing bond->curr_active_slave.
- *    (It is unnecessary when the write-lock is put with bond->lock.)
- * 3) When we lock with bond->curr_slave_lock, we must lock with bond->lock
- *    beforehand.
  */
 struct bonding {
 	struct   net_device *dev; /* first - useful for panic debug */
@@ -199,7 +196,6 @@ struct bonding {
 	s32      slave_cnt; /* never change this value outside the attach/detach wrappers */
 	int     (*recv_probe)(const struct sk_buff *, struct bonding *,
 			      struct slave *);
-	rwlock_t lock;
 	rwlock_t curr_slave_lock;
 	u8	 send_peer_notif;
 	u8       igmp_retrans;

@@ -3132,7 +3132,6 @@ static int bond_open(struct net_device *bond_dev)
 	struct slave *slave;
 
 	/* reset slave->backup and slave->inactive */
-	read_lock(&bond->lock);
 	if (bond_has_slaves(bond)) {
 		read_lock(&bond->curr_slave_lock);
 		bond_for_each_slave(bond, slave, iter) {
@@ -3147,7 +3146,6 @@ static int bond_open(struct net_device *bond_dev)
 		}
 		read_unlock(&bond->curr_slave_lock);
 	}
-	read_unlock(&bond->lock);
 
 	bond_work_init_all(bond);
 
@@ -3202,7 +3200,6 @@ static struct rtnl_link_stats64 *bond_get_stats(struct net_device *bond_dev,
 
 	memset(stats, 0, sizeof(*stats));
 
-	read_lock_bh(&bond->lock);
 	bond_for_each_slave(bond, slave, iter) {
 		const struct rtnl_link_stats64 *sstats =
 			dev_get_stats(slave->dev, &temp);
@@ -3233,7 +3230,6 @@ static struct rtnl_link_stats64 *bond_get_stats(struct net_device *bond_dev,
 		stats->tx_heartbeat_errors += sstats->tx_heartbeat_errors;
 		stats->tx_window_errors += sstats->tx_window_errors;
 	}
-	read_unlock_bh(&bond->lock);
 
 	return stats;
 }
@@ -3273,13 +3269,11 @@ static int bond_do_ioctl(struct net_device *bond_dev, struct ifreq *ifr, int cmd
 
 		if (mii->reg_num == 1) {
 			mii->val_out = 0;
-			read_lock(&bond->lock);
 			read_lock(&bond->curr_slave_lock);
 			if (netif_carrier_ok(bond->dev))
 				mii->val_out = BMSR_LSTATUS;
 
 			read_unlock(&bond->curr_slave_lock);
-			read_unlock(&bond->lock);
 		}
 
 		return 0;
@@ -3455,21 +3449,6 @@ static int bond_change_mtu(struct net_device *bond_dev, int new_mtu)
 
 	netdev_dbg(bond_dev, "bond=%p, new_mtu=%d\n", bond, new_mtu);
 
-	/* Can't hold bond->lock with bh disabled here since
-	 * some base drivers panic. On the other hand we can't
-	 * hold bond->lock without bh disabled because we'll
-	 * deadlock. The only solution is to rely on the fact
-	 * that we're under rtnl_lock here, and the slaves
-	 * list won't change. This doesn't solve the problem
-	 * of setting the slave's MTU while it is
-	 * transmitting, but the assumption is that the base
-	 * driver can handle that.
-	 *
-	 * TODO: figure out a way to safely iterate the slaves
-	 * list, but without holding a lock around the actual
-	 * call to the base driver.
-	 */
-
 	bond_for_each_slave(bond, slave, iter) {
 		netdev_dbg(bond_dev, "s %p c_m %p\n",
 			   slave, slave->dev->netdev_ops->ndo_change_mtu);
@@ -3543,21 +3522,6 @@ static int bond_set_mac_address(struct net_device *bond_dev, void *addr)
 
 	if (!is_valid_ether_addr(sa->sa_data))
 		return -EADDRNOTAVAIL;
-
-	/* Can't hold bond->lock with bh disabled here since
-	 * some base drivers panic. On the other hand we can't
-	 * hold bond->lock without bh disabled because we'll
-	 * deadlock. The only solution is to rely on the fact
-	 * that we're under rtnl_lock here, and the slaves
-	 * list won't change. This doesn't solve the problem
-	 * of setting the slave's hw address while it is
-	 * transmitting, but the assumption is that the base
-	 * driver can handle that.
-	 *
-	 * TODO: figure out a way to safely iterate the slaves
-	 * list, but without holding a lock around the actual
-	 * call to the base driver.
-	 */
 
 	bond_for_each_slave(bond, slave, iter) {
 		netdev_dbg(bond_dev, "slave %p %s\n", slave, slave->dev->name);
@@ -3883,7 +3847,6 @@ static int bond_ethtool_get_settings(struct net_device *bond_dev,
 	 * the true receive or transmit bandwidth (not all modes are symmetric)
 	 * this is an accurate maximum.
 	 */
-	read_lock(&bond->lock);
 	bond_for_each_slave(bond, slave, iter) {
 		if (bond_slave_can_tx(slave)) {
 			if (slave->speed != SPEED_UNKNOWN)
@@ -3894,7 +3857,6 @@ static int bond_ethtool_get_settings(struct net_device *bond_dev,
 		}
 	}
 	ethtool_cmd_speed_set(ecmd, speed ? : SPEED_UNKNOWN);
-	read_unlock(&bond->lock);
 
 	return 0;
 }
@@ -3957,7 +3919,6 @@ void bond_setup(struct net_device *bond_dev)
 	struct bonding *bond = netdev_priv(bond_dev);
 
 	/* initialize rwlocks */
-	rwlock_init(&bond->lock);
 	rwlock_init(&bond->curr_slave_lock);
 	INIT_LIST_HEAD(&bond->slave_list);
 	bond->params = bonding_defaults;
