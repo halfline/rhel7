@@ -4261,6 +4261,7 @@ static int cxgb4_inet6addr_handler(struct notifier_block *this,
 	int ret = NOTIFY_DONE;
 	int cnt;
 	struct bonding *bond = netdev_priv(ifa->idev->dev);
+	struct list_head *iter;
 	struct slave *slave;
 	struct pci_dev *first_pdev = NULL;
 
@@ -4273,7 +4274,7 @@ static int cxgb4_inet6addr_handler(struct notifier_block *this,
 		 * in all of them only once.
 		 */
 		read_lock(&bond->lock);
-		bond_for_each_slave(bond, slave, cnt) {
+		bond_for_each_slave(bond, slave, iter) {
 			if (!first_pdev) {
 				ret = clip_add(slave->dev, ifa, event);
 				/* If clip_add is success then only initialize
