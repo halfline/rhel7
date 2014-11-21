@@ -273,6 +273,11 @@ struct netdev_upper {
 #define bond_slave_get_rtnl(dev) \
 	((struct slave *) rtnl_dereference(dev->rx_handler_data))
 
+struct bond_vlan_tag {
+	__be16		vlan_proto;
+	unsigned short	vlan_id;
+};
+
 /**
  * Returns NULL if the net_device does not belong to any of the bond's slaves
  *
