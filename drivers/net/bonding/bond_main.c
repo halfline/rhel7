@@ -1616,11 +1616,9 @@ int bond_enslave(struct net_device *bond_dev, struct net_device *slave_dev)
 	bond_set_carrier(bond);
 
 	if (USES_PRIMARY(bond->params.mode)) {
-		read_lock(&bond->lock);
 		write_lock_bh(&bond->curr_slave_lock);
 		bond_select_active_slave(bond);
 		write_unlock_bh(&bond->curr_slave_lock);
-		read_unlock(&bond->lock);
 	}
 
 	pr_info("%s: enslaving %s as a%s interface with a%s link.\n",
@@ -1643,19 +1641,13 @@ err_detach:
 		bond_hw_addr_flush(bond_dev, slave_dev);
 
 	vlan_vids_del_by_dev(slave_dev, bond_dev);
-	write_lock_bh(&bond->lock);
 	if (bond->primary_slave == new_slave)
 		bond->primary_slave = NULL;
 	if (bond->curr_active_slave == new_slave) {
-		bond_change_active_slave(bond, NULL);
-		write_unlock_bh(&bond->lock);
-		read_lock(&bond->lock);
 		write_lock_bh(&bond->curr_slave_lock);
+		bond_change_active_slave(bond, NULL);
 		bond_select_active_slave(bond);
 		write_unlock_bh(&bond->curr_slave_lock);
-		read_unlock(&bond->lock);
-	} else {
-		write_unlock_bh(&bond->lock);
 	}
 	slave_disable_netpoll(new_slave);
 
@@ -1720,19 +1712,15 @@ static int __bond_release_one(struct net_device *bond_dev,
 	}
 
 	block_netpoll_tx();
-	write_lock_bh(&bond->lock);
 
 	slave = bond_get_slave_by_dev(bond, slave_dev);
 	if (!slave) {
 		/* not a slave of this bond */
 		pr_info("%s: %s not enslaved\n",
 			bond_dev->name, slave_dev->name);
-		write_unlock_bh(&bond->lock);
 		unblock_netpoll_tx();
 		return -EINVAL;
 	}
-
-	write_unlock_bh(&bond->lock);
 
 	/* release the slave from its bond */
 	bond_detach_slave(bond, slave);
@@ -1752,6 +1740,7 @@ static int __bond_release_one(struct net_device *bond_dev,
 		 */
 		bond_3ad_unbind_slave(slave);
 	}
+	write_unlock_bh(&bond->lock);
 
 	pr_info("%s: releasing %s interface %s\n",
 		bond_dev->name,
@@ -1774,8 +1763,11 @@ static int __bond_release_one(struct net_device *bond_dev,
 	if (bond->primary_slave == slave)
 		bond->primary_slave = NULL;
 
-	if (oldcurrent == slave)
+	if (oldcurrent == slave) {
+		write_lock_bh(&bond->curr_slave_lock);
 		bond_change_active_slave(bond, NULL);
+		write_unlock_bh(&bond->curr_slave_lock);
+	}
 
 	if (bond_is_lb(bond)) {
 		/* Must be called only after the slave has been
@@ -1783,9 +1775,7 @@ static int __bond_release_one(struct net_device *bond_dev,
 		 * has been cleared (if our_slave == old_current),
 		 * but before a new active slave is selected.
 		 */
-		write_unlock_bh(&bond->lock);
 		bond_alb_deinit_slave(bond, slave);
-		write_lock_bh(&bond->lock);
 	}
 
 	if (all) {
@@ -1796,15 +1786,11 @@ static int __bond_release_one(struct net_device *bond_dev,
 		 * is no concern that another slave add/remove event
 		 * will interfere.
 		 */
-		write_unlock_bh(&bond->lock);
-		read_lock(&bond->lock);
 		write_lock_bh(&bond->curr_slave_lock);
 
 		bond_select_active_slave(bond);
 
 		write_unlock_bh(&bond->curr_slave_lock);
-		read_unlock(&bond->lock);
-		write_lock_bh(&bond->lock);
 	}
 
 	if (!bond_has_slaves(bond)) {
@@ -1812,7 +1798,6 @@ static int __bond_release_one(struct net_device *bond_dev,
 		eth_hw_addr_random(bond_dev);
 	}
 
-	write_unlock_bh(&bond->lock);
 	unblock_netpoll_tx();
 	synchronize_rcu();
 
