@@ -180,8 +180,6 @@ struct bond_parm_tbl {
 	int mode;
 };
 
-#define BOND_MAX_MODENAME_LEN 20
-
 struct slave {
 	struct net_device *dev; /* first - useful for panic debug */
 	struct list_head list;
