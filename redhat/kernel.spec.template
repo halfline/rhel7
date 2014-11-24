@@ -1484,6 +1484,9 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Nov 24 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-210.el7]
+- [misc] kabi: revert two kabi additions that need updated ppc64 sums (Jarod Wilson)
+
 * Mon Nov 24 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-209.el7]
 - [fs] xfs: write failure beyond EOF truncates too much data (Brian Foster) [1032968]
 - [fs] xfs: xfs_vm_write_end truncates too much on failure (Brian Foster) [1032968]
