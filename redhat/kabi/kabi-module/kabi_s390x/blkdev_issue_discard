@@ -1,2 +1,2 @@
 #1-
-0xcf4642fd blkdev_issue_discard vmlinux EXPORT_SYMBOL
+0xcf4642fd	blkdev_issue_discard	vmlinux	EXPORT_SYMBOL

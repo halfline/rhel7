@@ -1,2 +1,2 @@
 #1-
-0x537208c4 blkdev_issue_discard vmlinux EXPORT_SYMBOL
+0x537208c4	blkdev_issue_discard	vmlinux	EXPORT_SYMBOL

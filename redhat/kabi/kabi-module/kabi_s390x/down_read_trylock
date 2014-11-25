@@ -1,2 +1,2 @@
 #1-
-0x75d22842 down_read_trylock vmlinux EXPORT_SYMBOL
+0x75d22842	down_read_trylock	vmlinux	EXPORT_SYMBOL

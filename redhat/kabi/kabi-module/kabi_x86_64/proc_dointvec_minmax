@@ -1,2 +1,2 @@
 #1-
-0xd0298b8b proc_dointvec_minmax vmlinux EXPORT_SYMBOL
+0xd0298b8b	proc_dointvec_minmax	vmlinux	EXPORT_SYMBOL

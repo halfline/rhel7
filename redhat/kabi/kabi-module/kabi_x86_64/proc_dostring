@@ -1,2 +1,2 @@
 #1-
-0xf82cfd1a proc_dostring vmlinux EXPORT_SYMBOL
+0xf82cfd1a	proc_dostring	vmlinux	EXPORT_SYMBOL

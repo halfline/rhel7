@@ -1,2 +1,2 @@
 #1-
-0x86663310 scsi_is_sdev_device vmlinux EXPORT_SYMBOL
+0x86663310	scsi_is_sdev_device	vmlinux	EXPORT_SYMBOL

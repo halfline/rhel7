@@ -1,2 +1,2 @@
 #1-
-0x602e32cc clear_page_dirty_for_io vmlinux EXPORT_SYMBOL
+0x602e32cc	clear_page_dirty_for_io	vmlinux	EXPORT_SYMBOL

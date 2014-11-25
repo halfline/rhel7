@@ -1,2 +1,2 @@
 #1-
-0x73e390ad proc_mkdir vmlinux EXPORT_SYMBOL
+0x73e390ad	proc_mkdir	vmlinux	EXPORT_SYMBOL

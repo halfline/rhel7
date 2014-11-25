@@ -1,2 +1,2 @@
 #1-
-0xf11543ff find_first_zero_bit vmlinux EXPORT_SYMBOL
+0xf11543ff	find_first_zero_bit	vmlinux	EXPORT_SYMBOL

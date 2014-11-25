@@ -1,2 +1,2 @@
 #1-
-0xd4df235d __tracepoint_module_get vmlinux EXPORT_SYMBOL
+0xd4df235d	__tracepoint_module_get	vmlinux	EXPORT_SYMBOL

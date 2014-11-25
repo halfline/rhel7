@@ -1,2 +1,2 @@
 #1-
-0x17b75f21 skb_recv_datagram vmlinux EXPORT_SYMBOL
+0x17b75f21	skb_recv_datagram	vmlinux	EXPORT_SYMBOL

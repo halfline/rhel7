@@ -1,2 +1,2 @@
 #1-
-0xd1969cf5 proc_dostring vmlinux EXPORT_SYMBOL
+0xd1969cf5	proc_dostring	vmlinux	EXPORT_SYMBOL

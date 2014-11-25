@@ -1,2 +1,2 @@
 #1-
-0xe85b5e75 call_usermodehelper_exec vmlinux EXPORT_SYMBOL
+0xe85b5e75	call_usermodehelper_exec	vmlinux	EXPORT_SYMBOL

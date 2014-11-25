@@ -1,2 +1,2 @@
 #1-
-0xca03281c proc_dointvec vmlinux EXPORT_SYMBOL
+0xca03281c	proc_dointvec	vmlinux	EXPORT_SYMBOL

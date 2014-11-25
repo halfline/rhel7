@@ -1,2 +1,2 @@
 #1-
-0x35225ea3 down_write_trylock vmlinux EXPORT_SYMBOL
+0x35225ea3	down_write_trylock	vmlinux	EXPORT_SYMBOL

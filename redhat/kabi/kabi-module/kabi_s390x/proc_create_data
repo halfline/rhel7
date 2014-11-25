@@ -1,2 +1,2 @@
 #1-
-0xf8ca2b5a proc_create_data vmlinux EXPORT_SYMBOL
+0xf8ca2b5a	proc_create_data	vmlinux	EXPORT_SYMBOL

@@ -1,2 +1,2 @@
 #1-
-0xb0aa81eb clear_page_dirty_for_io vmlinux EXPORT_SYMBOL
+0xb0aa81eb	clear_page_dirty_for_io	vmlinux	EXPORT_SYMBOL

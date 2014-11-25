@@ -1,2 +1,2 @@
 #1-
-0xf969cfe0 proc_mkdir vmlinux EXPORT_SYMBOL
+0xf969cfe0	proc_mkdir	vmlinux	EXPORT_SYMBOL
