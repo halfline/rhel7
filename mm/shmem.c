@@ -171,7 +171,7 @@ static const struct super_operations shmem_ops;
 static const struct address_space_operations shmem_aops;
 static const struct file_operations shmem_file_operations;
 static const struct inode_operations shmem_inode_operations;
-static const struct inode_operations shmem_dir_inode_operations;
+static const struct inode_operations_wrapper shmem_dir_inode_operations;
 static const struct inode_operations shmem_special_inode_operations;
 static const struct vm_operations_struct shmem_vm_ops;
 
@@ -1404,8 +1404,9 @@ static struct inode *shmem_get_inode(struct super_block *sb, const struct inode 
 			inc_nlink(inode);
 			/* Some things misbehave if size == 0 on a directory */
 			inode->i_size = 2 * BOGO_DIRENT_SIZE;
-			inode->i_op = &shmem_dir_inode_operations;
+			inode->i_op = &shmem_dir_inode_operations.ops;
 			inode->i_fop = &simple_dir_operations;
+			inode->i_flags |= S_IOPS_WRAPPER;
 			break;
 		case S_IFLNK:
 			/*
@@ -2145,6 +2146,11 @@ static int shmem_rename2(struct inode *old_dir, struct dentry *old_dentry, struc
 	return 0;
 }
 
+static int shmem_rename(struct inode *old_dir, struct dentry *old_dentry, struct inode *new_dir, struct dentry *new_dentry)
+{
+	return shmem_rename2(old_dir, old_dentry, new_dir, new_dentry, 0);
+}
+
 static int shmem_symlink(struct inode *dir, struct dentry *dentry, const char *symname)
 {
 	int error;
@@ -2794,7 +2800,8 @@ static const struct inode_operations shmem_inode_operations = {
 #endif
 };
 
-static const struct inode_operations shmem_dir_inode_operations = {
+static const struct inode_operations_wrapper shmem_dir_inode_operations = {
+	.ops = {
 #ifdef CONFIG_TMPFS
 	.create		= shmem_create,
 	.lookup		= simple_lookup,
@@ -2804,7 +2811,7 @@ static const struct inode_operations shmem_dir_inode_operations = {
 	.mkdir		= shmem_mkdir,
 	.rmdir		= shmem_rmdir,
 	.mknod		= shmem_mknod,
-	.rename2	= shmem_rename2,
+	.rename		= shmem_rename,
 #endif
 #ifdef CONFIG_TMPFS_XATTR
 	.setxattr	= shmem_setxattr,
@@ -2814,6 +2821,10 @@ static const struct inode_operations shmem_dir_inode_operations = {
 #endif
 #ifdef CONFIG_TMPFS_POSIX_ACL
 	.setattr	= shmem_setattr,
+#endif
+	},
+#ifdef CONFIG_TMPFS
+	.rename2	= shmem_rename2,
 #endif
 };
 

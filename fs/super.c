@@ -36,6 +36,7 @@
 #include <linux/lockdep.h>
 #include "internal.h"
 
+const unsigned super_block_wrapper_version = 0;
 
 LIST_HEAD(super_blocks);
 DEFINE_SPINLOCK(sb_lock);
@@ -137,7 +138,7 @@ static void destroy_super(struct super_block *s)
  */
 static struct super_block *alloc_super(struct file_system_type *type, int flags)
 {
-	struct super_block *s = kzalloc(sizeof(struct super_block),  GFP_USER);
+	struct super_block *s = kzalloc(sizeof(struct super_block_wrapper),  GFP_USER);
 	static const struct super_operations default_op;
 	int i;
 

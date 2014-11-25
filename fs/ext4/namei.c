@@ -2392,7 +2392,7 @@ retry:
 	if (IS_ERR(inode))
 		goto out_stop;
 
-	inode->i_op = &ext4_dir_inode_operations;
+	inode->i_op = &ext4_dir_inode_operations.ops;
 	inode->i_fop = &ext4_dir_operations;
 	err = ext4_init_new_dir(handle, dir, inode);
 	if (err)
@@ -3484,10 +3484,17 @@ static int ext4_rename2(struct inode *old_dir, struct dentry *old_dentry,
 	return ext4_rename(old_dir, old_dentry, new_dir, new_dentry, flags);
 }
 
+static int ext4_rename_old(struct inode *old_dir, struct dentry *old_dentry,
+			   struct inode *new_dir, struct dentry *new_dentry)
+{
+	return ext4_rename(old_dir, old_dentry, new_dir, new_dentry, 0);
+}
+
 /*
  * directories can handle most operations...
  */
-const struct inode_operations ext4_dir_inode_operations = {
+const struct inode_operations_wrapper ext4_dir_inode_operations = {
+	.ops = {
 	.create		= ext4_create,
 	.lookup		= ext4_lookup,
 	.link		= ext4_link,
@@ -3496,7 +3503,7 @@ const struct inode_operations ext4_dir_inode_operations = {
 	.mkdir		= ext4_mkdir,
 	.rmdir		= ext4_rmdir,
 	.mknod		= ext4_mknod,
-	.rename2	= ext4_rename2,
+	.rename		= ext4_rename_old,
 	.setattr	= ext4_setattr,
 	.setxattr	= generic_setxattr,
 	.getxattr	= generic_getxattr,
@@ -3504,6 +3511,8 @@ const struct inode_operations ext4_dir_inode_operations = {
 	.removexattr	= generic_removexattr,
 	.get_acl	= ext4_get_acl,
 	.fiemap         = ext4_fiemap,
+	},
+	.rename2	= ext4_rename2,
 };
 
 const struct inode_operations ext4_special_inode_operations = {

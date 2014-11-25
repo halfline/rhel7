@@ -3993,6 +3993,7 @@ int vfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 	struct inode *target = new_dentry->d_inode;
 	bool new_is_dir = false;
 	unsigned max_links = new_dir->i_sb->s_max_links;
+	iop_rename2_t rename2;
 
 	if (source == target)
 		return 0;
@@ -4014,10 +4015,11 @@ int vfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 	if (error)
 		return error;
 
-	if (!old_dir->i_op->rename && !old_dir->i_op->rename2)
+	rename2 = get_rename2_iop(old_dir);
+	if (!old_dir->i_op->rename && !rename2)
 		return -EPERM;
 
-	if (flags && !old_dir->i_op->rename2)
+	if (flags && !rename2)
 		return -EINVAL;
 
 	/*
@@ -4073,13 +4075,13 @@ int vfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 		if (error)
 			goto out;
 	}
-	if (!old_dir->i_op->rename2) {
+	if (!rename2) {
 		error = old_dir->i_op->rename(old_dir, old_dentry,
 					      new_dir, new_dentry);
 	} else {
 		WARN_ON(old_dir->i_op->rename != NULL);
-		error = old_dir->i_op->rename2(old_dir, old_dentry,
-					       new_dir, new_dentry, flags);
+		error = rename2(old_dir, old_dentry,
+				new_dir, new_dentry, flags);
 	}
 	if (error)
 		goto out;

@@ -607,6 +607,8 @@ static int ovl_fill_super(struct super_block *sb, void *data, int silent)
 	struct ovl_entry *oe;
 	struct ovl_fs *ufs;
 	struct kstatfs statfs;
+	const int *upper_stack_depth, *lower_stack_depth;
+	int *overlay_stack_depth;
 	int err;
 
 	err = -ENOMEM;
@@ -677,11 +679,19 @@ static int ovl_fill_super(struct super_block *sb, void *data, int silent)
 	}
 	ufs->lower_namelen = statfs.f_namelen;
 
-	sb->s_stack_depth = max(upperpath.mnt->mnt_sb->s_stack_depth,
-				lowerpath.mnt->mnt_sb->s_stack_depth) + 1;
+	upper_stack_depth = get_s_stack_depth(upperpath.mnt->mnt_sb);
+	lower_stack_depth = get_s_stack_depth(lowerpath.mnt->mnt_sb);
+	overlay_stack_depth = get_s_stack_depth(sb);
+	err = -EOPNOTSUPP;
+	if (!upper_stack_depth || !lower_stack_depth || !overlay_stack_depth) {
+		pr_err("overlayfs: superblock missing extension wrapper (old kernel?)\n");
+		goto out_put_workpath;
+	}
+
+	*overlay_stack_depth = max(*upper_stack_depth, *lower_stack_depth) + 1;
 
 	err = -EINVAL;
-	if (sb->s_stack_depth > FILESYSTEM_MAX_STACK_DEPTH) {
+	if (*overlay_stack_depth > FILESYSTEM_MAX_STACK_DEPTH) {
 		pr_err("overlayfs: maximum fs stacking depth exceeded\n");
 		goto out_put_workpath;
 	}

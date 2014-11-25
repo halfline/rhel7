@@ -876,9 +876,10 @@ int vfs_open(const struct path *path, struct file *filp,
 	     const struct cred *cred)
 {
 	struct inode *inode = path->dentry->d_inode;
+	iop_dentry_open_t dentry_open = get_dentry_open_iop(inode);
 
-	if (inode->i_op->dentry_open)
-		return inode->i_op->dentry_open(path->dentry, filp, cred);
+	if (dentry_open)
+		return dentry_open(path->dentry, filp, cred);
 	else {
 		filp->f_path = *path;
 		return do_dentry_open(filp, NULL, cred);

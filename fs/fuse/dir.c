@@ -848,6 +848,14 @@ static int fuse_rename2(struct inode *olddir, struct dentry *oldent,
 	return err;
 }
 
+static int fuse_rename(struct inode *olddir, struct dentry *oldent,
+		       struct inode *newdir, struct dentry *newent)
+{
+	return fuse_rename_common(olddir, oldent, newdir, newent, 0,
+				  FUSE_RENAME,
+				  sizeof(struct fuse_rename_in));
+}
+
 static int fuse_link(struct dentry *entry, struct inode *newdir,
 		     struct dentry *newent)
 {
@@ -1930,13 +1938,14 @@ static int fuse_removexattr(struct dentry *entry, const char *name)
 	return err;
 }
 
-static const struct inode_operations fuse_dir_inode_operations = {
+static const struct inode_operations_wrapper fuse_dir_inode_operations = {
+	.ops = {
 	.lookup		= fuse_lookup,
 	.mkdir		= fuse_mkdir,
 	.symlink	= fuse_symlink,
 	.unlink		= fuse_unlink,
 	.rmdir		= fuse_rmdir,
-	.rename2	= fuse_rename2,
+	.rename		= fuse_rename,
 	.link		= fuse_link,
 	.setattr	= fuse_setattr,
 	.create		= fuse_create,
@@ -1948,6 +1957,8 @@ static const struct inode_operations fuse_dir_inode_operations = {
 	.getxattr	= fuse_getxattr,
 	.listxattr	= fuse_listxattr,
 	.removexattr	= fuse_removexattr,
+	},
+	.rename2	= fuse_rename2,
 };
 
 static const struct file_operations fuse_dir_operations = {
@@ -1990,8 +2001,9 @@ void fuse_init_common(struct inode *inode)
 
 void fuse_init_dir(struct inode *inode)
 {
-	inode->i_op = &fuse_dir_inode_operations;
+	inode->i_op = &fuse_dir_inode_operations.ops;
 	inode->i_fop = &fuse_dir_operations;
+	inode->i_flags |= S_IOPS_WRAPPER;
 }
 
 void fuse_init_symlink(struct inode *inode)

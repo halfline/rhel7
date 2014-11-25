@@ -65,7 +65,7 @@ struct btrfs_iget_args {
 	struct btrfs_root *root;
 };
 
-static const struct inode_operations btrfs_dir_inode_operations;
+static const struct inode_operations_wrapper btrfs_dir_inode_operations;
 static const struct inode_operations btrfs_symlink_inode_operations;
 static const struct inode_operations btrfs_dir_ro_inode_operations;
 static const struct inode_operations btrfs_special_inode_operations;
@@ -3514,10 +3514,12 @@ cache_acl:
 		break;
 	case S_IFDIR:
 		inode->i_fop = &btrfs_dir_file_operations;
-		if (root == root->fs_info->tree_root)
+		if (root == root->fs_info->tree_root) {
 			inode->i_op = &btrfs_dir_ro_inode_operations;
-		else
-			inode->i_op = &btrfs_dir_inode_operations;
+		} else {
+			inode->i_op = &btrfs_dir_inode_operations.ops;
+			inode->i_flags |= S_IOPS_WRAPPER;
+		}
 		break;
 	case S_IFLNK:
 		inode->i_op = &btrfs_symlink_inode_operations;
@@ -6048,7 +6050,7 @@ static int btrfs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
 	if (err)
 		goto out_fail;
 
-	inode->i_op = &btrfs_dir_inode_operations;
+	inode->i_op = &btrfs_dir_inode_operations.ops;
 	inode->i_fop = &btrfs_dir_file_operations;
 
 	btrfs_i_size_write(inode, 0);
@@ -8051,7 +8053,7 @@ int btrfs_create_subvol_root(struct btrfs_trans_handle *trans,
 				&index);
 	if (IS_ERR(inode))
 		return PTR_ERR(inode);
-	inode->i_op = &btrfs_dir_inode_operations;
+	inode->i_op = &btrfs_dir_inode_operations.ops;
 	inode->i_fop = &btrfs_dir_file_operations;
 
 	set_nlink(inode, 1);
@@ -8967,7 +8969,8 @@ static int btrfs_permission(struct inode *inode, int mask)
 	return generic_permission(inode, mask);
 }
 
-static const struct inode_operations btrfs_dir_inode_operations = {
+static const struct inode_operations_wrapper btrfs_dir_inode_operations = {
+	.ops = {
 	.getattr	= btrfs_getattr,
 	.lookup		= btrfs_lookup,
 	.create		= btrfs_create,
@@ -8975,7 +8978,7 @@ static const struct inode_operations btrfs_dir_inode_operations = {
 	.link		= btrfs_link,
 	.mkdir		= btrfs_mkdir,
 	.rmdir		= btrfs_rmdir,
-	.rename2	= btrfs_rename2,
+	.rename		= btrfs_rename,
 	.symlink	= btrfs_symlink,
 	.setattr	= btrfs_setattr,
 	.mknod		= btrfs_mknod,
@@ -8986,6 +8989,8 @@ static const struct inode_operations btrfs_dir_inode_operations = {
 	.permission	= btrfs_permission,
 	.get_acl	= btrfs_get_acl,
 	.update_time	= btrfs_update_time,
+	},
+	.rename2	= btrfs_rename2,
 };
 static const struct inode_operations btrfs_dir_ro_inode_operations = {
 	.lookup		= btrfs_lookup,

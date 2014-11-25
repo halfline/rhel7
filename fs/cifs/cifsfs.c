@@ -818,6 +818,12 @@ static int cifs_setlease(struct file *file, long arg, struct file_lock **lease)
 		return -EAGAIN;
 }
 
+static int cifs_rename(struct inode *old_dir, struct dentry *old,
+		       struct inode *new_dir, struct dentry *new)
+{
+	return cifs_rename2(old_dir, old, new_dir, new, 0);
+}
+
 struct file_system_type cifs_fs_type = {
 	.owner = THIS_MODULE,
 	.name = "cifs",
@@ -826,7 +832,8 @@ struct file_system_type cifs_fs_type = {
 	/*  .fs_flags */
 };
 MODULE_ALIAS_FS("cifs");
-const struct inode_operations cifs_dir_inode_ops = {
+const struct inode_operations_wrapper cifs_dir_inode_ops = {
+	.ops = {
 	.create = cifs_create,
 	.atomic_open = cifs_atomic_open,
 	.lookup = cifs_lookup,
@@ -835,7 +842,7 @@ const struct inode_operations cifs_dir_inode_ops = {
 	.link = cifs_hardlink,
 	.mkdir = cifs_mkdir,
 	.rmdir = cifs_rmdir,
-	.rename2 = cifs_rename2,
+	.rename = cifs_rename,
 	.permission = cifs_permission,
 /*	revalidate:cifs_revalidate,   */
 	.setattr = cifs_setattr,
@@ -847,6 +854,8 @@ const struct inode_operations cifs_dir_inode_ops = {
 	.listxattr = cifs_listxattr,
 	.removexattr = cifs_removexattr,
 #endif
+	},
+	.rename2 = cifs_rename2,
 };
 
 const struct inode_operations cifs_file_inode_ops = {
