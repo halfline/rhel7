@@ -347,9 +347,10 @@ Source18: check-kabi
 
 Source20: Module.kabi_x86_64
 Source21: Module.kabi_ppc64
-Source22: Module.kabi_s390x
+Source22: Module.kabi_ppc64le
+Source23: Module.kabi_s390x
 
-Source23: kernel-abi-whitelists.tar.bz2
+Source25: kernel-abi-whitelists.tar.bz2
 
 Source50: kernel-%{version}-x86_64.config
 Source51: kernel-%{version}-x86_64-debug.config
@@ -1172,7 +1173,7 @@ INSTALL_KABI_PATH=$RPM_BUILD_ROOT/lib/modules/
 mkdir -p $INSTALL_KABI_PATH
 
 # install kabi releases directories
-tar xjvf %{SOURCE23} -C $INSTALL_KABI_PATH
+tar xjvf %{SOURCE25} -C $INSTALL_KABI_PATH
 %endif  # with_kernel_abi_whitelists
 
 %if %{with_perf}

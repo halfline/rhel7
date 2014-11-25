@@ -14,6 +14,7 @@ cpupower.config
 cpupower.service
 sign-modules
 Module.kabi_ppc64
+Module.kabi_ppc64le
 Module.kabi_s390x
 Module.kabi_x86_64
 kernel-3.10.0-ppc64.config
