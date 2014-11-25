@@ -4079,7 +4079,7 @@ int vfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 		error = old_dir->i_op->rename(old_dir, old_dentry,
 					      new_dir, new_dentry);
 	} else {
-		WARN_ON(old_dir->i_op->rename != NULL);
+		//WARN_ON(old_dir->i_op->rename != NULL);
 		error = rename2(old_dir, old_dentry,
 				new_dir, new_dentry, flags);
 	}
