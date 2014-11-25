@@ -32,7 +32,7 @@ include Makefile.cross
 default: rh-help
 
 rh-kabi:
-	@for KABIARCH in "ppc64" "x86_64" "s390x"; do \
+	@for KABIARCH in "ppc64" "ppc64le" "x86_64" "s390x"; do \
 		$(REDHAT)/kabi/show-kabi -k $(REDHAT)/kabi/kabi-module/ -m \
 			-a $$KABIARCH -r $(RHELMAJOR).$(RHELMINOR) > $(REDHAT)/kabi/Module.kabi_$$KABIARCH;\
 		for i in {0..$(RHELMINOR)}; do \
@@ -117,7 +117,7 @@ sources-rh: $(TARBALL)
 	@(if [ ! -f keys/extra_certificates ]; then \
 		touch keys/extra_certificates; \
 	fi)
-	@cp cpupower.* x509.genkey keys/rhel*.x509 keys/extra_certificates Makefile.common kabi/check-kabi kabi/Module.kabi_{ppc64,s390x,x86_64} configs/kernel-*.config rhpkg/Makefile scripts/sign-modules keys/*.cer $(SOURCES)/
+	@cp cpupower.* x509.genkey keys/rhel*.x509 keys/extra_certificates Makefile.common kabi/check-kabi kabi/Module.kabi_{ppc64,ppc64le,s390x,x86_64} configs/kernel-*.config rhpkg/Makefile scripts/sign-modules keys/*.cer $(SOURCES)/
 	@(cd kabi && tar cjvf $(SOURCES)/kernel-abi-whitelists.tar.bz2 kabi-rhel7* kabi-current)
 
 rh-sources: setup-source rh-configs rh-kabi sources-rh
