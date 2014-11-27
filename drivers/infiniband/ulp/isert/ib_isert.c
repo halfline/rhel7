@@ -216,7 +216,17 @@ isert_create_device_ib_res(struct isert_device *device)
 {
 	struct ib_device *ib_dev = device->ib_device;
 	struct isert_cq_desc *cq_desc;
+	struct ib_device_attr dev_attr;
 	int ret = 0, i, j;
+	int max_rx_cqe, max_tx_cqe;
+
+	memset(&dev_attr, 0, sizeof(struct ib_device_attr));
+	ret = isert_query_device(ib_dev, &dev_attr);
+	if (ret)
+		return ret;
+
+	max_rx_cqe = min(ISER_MAX_RX_CQ_LEN, dev_attr.max_cqe);
+	max_tx_cqe = min(ISER_MAX_TX_CQ_LEN, dev_attr.max_cqe);
 
 	device->cqs_used = min_t(int, num_online_cpus(),
 				 device->ib_device->num_comp_vectors);
@@ -248,7 +258,7 @@ isert_create_device_ib_res(struct isert_device *device)
 						isert_cq_rx_callback,
 						isert_cq_event_callback,
 						(void *)&cq_desc[i],
-						ISER_MAX_RX_CQ_LEN, i);
+						max_rx_cqe, i);
 		if (IS_ERR(device->dev_rx_cq[i])) {
 			ret = PTR_ERR(device->dev_rx_cq[i]);
 			device->dev_rx_cq[i] = NULL;
@@ -260,7 +270,7 @@ isert_create_device_ib_res(struct isert_device *device)
 						isert_cq_tx_callback,
 						isert_cq_event_callback,
 						(void *)&cq_desc[i],
-						ISER_MAX_TX_CQ_LEN, i);
+						max_tx_cqe, i);
 		if (IS_ERR(device->dev_tx_cq[i])) {
 			ret = PTR_ERR(device->dev_tx_cq[i]);
 			device->dev_tx_cq[i] = NULL;
