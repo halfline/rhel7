@@ -1484,6 +1484,12 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Dec 01 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-212.el7]
+- [fs] fsnotify: next_i is freed during fsnotify_unmount_inodes (Eric Sandeen) [1124997]
+- [fs] btrfs: fix regression of btrfs device replace (Eric Sandeen) [1162983]
+- [fs] ext4: don't count external journal blocks as overhead (Eric Sandeen) [1164366]
+- [fs] Fix oops when creating symlinks on smb3 (Sachin Prabhu) [1161429]
+
 * Wed Nov 26 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-211.el7]
 - [net] sctp: fix memory leak in auth key management (Daniel Borkmann) [1160928]
 - [net] sctp: fix NULL pointer dereference in af->from_addr_param on malformed packet (Daniel Borkmann) [1154002] {CVE-2014-7841}
