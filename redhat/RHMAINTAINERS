@@ -633,6 +633,21 @@ M:	Nikolay Aleksandrov <naleksan@redhat.com>
 S:	Maintained
 F:	drivers/net/sfc/
 
+SGI SPECIFIC
+M:	George Beshers <gbeshers@redhat.com>
+M:	Frank Ramsay <framsay@redhat.com>
+M: 	Russ Anderson <randerso@redhat.com>
+S:	Maintained
+F:	drivers/char/uv_mmtimer.c
+F:	drivers/misc/sgi-gru/
+F:	drivers/misc/sgi-xp/
+F:	arch/ia64/include/asm/machvec_uv.h
+F:	arch/ia64/include/asm/uv/
+F:	arch/ia64/uv/
+F:	arch/x86/include/asm/uv/
+F:	arch/x86/kernel/apic/x2apic_uv_x.c
+F:	arch/x86/platform/uv/
+
 SKGE 10/100/1000 GIGABIT ETHERNET DRIVER
 M:	Michal Schmidt <mschmidt@redhat.com>
 S:	Maintained
