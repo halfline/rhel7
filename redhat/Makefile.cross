@@ -1,6 +1,6 @@
 CROSS_RPMFLAGS = $(RPMBUILD) --define "_sourcedir $(SOURCES)" --define "_builddir $(RPM)/BUILD" --define "_srcrpmdir $(RPM)/SRPMS" --define "_rpmdir $(RPM)/RPMS" --define "_specdir $(RPM)/SPECS" --define "dist $(DIST)"
 
-CROSS_PACKAGE_LIST = binutils-powerpc64-linux-gnu binutils-s390x-linux-gnu cross-binutils-common cross-gcc-common gcc-powerpc64-linux-gnu gcc-s390x-linux-gnu glibc-static
+CROSS_PACKAGE_LIST = binutils-powerpc64-linux-gnu binutils-s390x-linux-gnu cross-binutils-common cross-gcc-common gcc-powerpc64-linux-gnu gcc-s390x-linux-gnu glibc-static ncurses-devel numactl-devel diffstat
 
 rh-cross-download:
 	@if [ "$(ARCHCONFIG)" != "X86_64" ]; then \
