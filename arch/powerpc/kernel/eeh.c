@@ -839,11 +839,8 @@ int eeh_init(void)
 		pr_warning("%s: Platform EEH operation not found\n",
 			__func__);
 		return -EEXIST;
-	} else if ((ret = eeh_ops->init())) {
-		pr_warning("%s: Failed to call platform init function (%d)\n",
-			__func__, ret);
+	} else if ((ret = eeh_ops->init()))
 		return ret;
-	}
 
 	/* Initialize EEH event */
 	ret = eeh_event_init();
