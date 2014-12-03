@@ -34,6 +34,8 @@
 #include <linux/netdev_features.h>
 #include <net/flow_keys.h>
 
+#include <linux/rh_kabi.h>
+
 /* A. Checksumming of received packets by device.
  *
  * CHECKSUM_NONE:
@@ -537,11 +539,9 @@ struct sk_buff {
 	__u8			head_frag:1;
 	/* Indicates the inner headers are valid in the skbuff. */
 	__u8			encapsulation:1;
-#ifndef __GENKSYMS__
-	__u8			encap_hdr_csum:1;
-	__u8			csum_valid:1;
-	__u8			csum_complete_sw:1;
-#endif
+	RH_KABI_EXTEND(__u8			encap_hdr_csum:1)
+	RH_KABI_EXTEND(__u8			csum_valid:1)
+	RH_KABI_EXTEND(__u8			csum_complete_sw:1)
 	/* 3/5 bit hole (depending on ndisc_nodetype presence) */
 	kmemcheck_bitfield_end(flags2);
 
@@ -568,15 +568,13 @@ struct sk_buff {
 	__u16			network_header;
 	__u16			mac_header;
 
-#ifndef __GENKSYMS__
-	kmemcheck_bitfield_begin(flags3);
-	kmemcheck_bitfield_begin(flags3);
-	__u8			csum_level:2;
-	__u8			rh_csum_pad:1;
-	__u8			csum_bad:1;
+	RH_KABI_EXTEND(kmemcheck_bitfield_begin(flags3))
+	RH_KABI_EXTEND(__u8	csum_level:2)
+	RH_KABI_EXTEND(__u8	rh_csum_pad:1)
+	RH_KABI_EXTEND(__u8	csum_bad:1)
 	/* 12 bit hole */
-	kmemcheck_bitfield_end(flags3);
-#endif
+	RH_KABI_EXTEND(kmemcheck_bitfield_end(flags3))
+
 	/* RHEL SPECIFIC
 	 *
 	 * The following padding has been inserted before ABI freeze to

@@ -33,6 +33,8 @@
 
 #include <linux/pci_ids.h>
 
+#include <linux/rh_kabi.h>
+
 /*
  * The PCI interface treats multi-function devices as independent
  * devices.  The slot/function address of each device is encoded
@@ -382,9 +384,7 @@ struct pci_dev {
  * going forward.  This structure will never be under KABI restrictions.
  */
 struct pci_dev_rh {
-#ifndef __GENKSYMS__
-	u8		dma_alias_devfn;/* devfn of DMA alias, if any */
-#endif
+	RH_KABI_EXTEND(u8		dma_alias_devfn) /* devfn of DMA alias, if any */
 };
 
 static inline struct pci_dev *pci_physfn(struct pci_dev *dev)

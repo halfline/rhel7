@@ -2,7 +2,7 @@
 #define _LINUX_SCHED_H
 
 #include <uapi/linux/sched.h>
-
+#include <linux/rh_kabi.h>
 
 struct sched_param {
 	int sched_priority;
@@ -632,14 +632,10 @@ struct signal_struct {
 					 * (notably. ptrace) */
 
 	/* reserved for Red Hat */
-#ifdef __GENKSYMS__
-	unsigned long rh_reserved1;
-#else
-	seqlock_t stats_lock;
-#endif
-	unsigned long rh_reserved2;
-	unsigned long rh_reserved3;
-	unsigned long rh_reserved4;
+	RH_KABI_USE(1, seqlock_t stats_lock)
+	RH_KABI_RESERVE(2)
+	RH_KABI_RESERVE(3)
+	RH_KABI_RESERVE(4)
 };
 
 /*
@@ -1087,10 +1083,10 @@ struct sched_entity {
 #endif
 
 	/* reserved for Red Hat */
-	unsigned long rh_reserved1;
-	unsigned long rh_reserved2;
-	unsigned long rh_reserved3;
-	unsigned long rh_reserved4;
+	RH_KABI_RESERVE(1)
+	RH_KABI_RESERVE(2)
+	RH_KABI_RESERVE(3)
+	RH_KABI_RESERVE(4)
 };
 
 struct sched_rt_entity {
@@ -1547,22 +1543,18 @@ struct task_struct {
 #endif
 
 	/* reserved for Red Hat */
-#ifndef __GENKSYMS__
 #ifdef CONFIG_DETECT_HUNG_TASK
-/* hung task detection */
-	unsigned long last_switch_count;
-#endif
-	unsigned long atomic_flags;
+	RH_KABI_USE(1, unsigned long last_switch_count)
 #else
-	unsigned long rh_reserved1;
-	unsigned long rh_reserved2;
+	RH_KABI_RESERVE(1)
 #endif
-	unsigned long rh_reserved3;
-	unsigned long rh_reserved4;
-	unsigned long rh_reserved5;
-	unsigned long rh_reserved6;
-	unsigned long rh_reserved7;
-	unsigned long rh_reserved8;
+	RH_KABI_USE(2, unsigned long atomic_flags)
+	RH_KABI_RESERVE(3)
+	RH_KABI_RESERVE(4)
+	RH_KABI_RESERVE(5)
+	RH_KABI_RESERVE(6)
+	RH_KABI_RESERVE(7)
+	RH_KABI_RESERVE(8)
 };
 
 /* Future-safe accessor for struct task_struct's cpus_allowed. */

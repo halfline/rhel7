@@ -54,6 +54,8 @@ struct perf_guest_info_callbacks {
 #include <linux/perf_regs.h>
 #include <asm/local.h>
 
+#include <linux/rh_kabi.h>
+
 struct perf_callchain_entry {
 	__u64				nr;
 	__u64				ip[PERF_MAX_STACK_DEPTH];
@@ -277,14 +279,12 @@ struct pmu {
 	 */
 	void (*flush_branch_stack)	(void);
 
-#ifndef __GENKSYMS__
-	struct module			*module;
+	RH_KABI_EXTEND(struct module *module)
 
 	/*
 	 * various common per-pmu feature flags
 	 */
-	int				capabilities;
-#endif
+	RH_KABI_EXTEND(int	capabilities)
 };
 
 /**
@@ -461,15 +461,13 @@ struct perf_event {
 	int				cgrp_defer_enabled;
 #endif
 
-#ifndef __GENKSYMS__
 	/*
 	 * We need storage to track the entries in perf_pmu_migrate_context; we
 	 * cannot use the event_entry because of RCU and we want to keep the
 	 * group in tact which avoids us using the other two entries.
 	 */
-	struct list_head		migrate_entry;
-	struct list_head		active_entry;
-#endif
+	RH_KABI_EXTEND(struct list_head		migrate_entry)
+	RH_KABI_EXTEND(struct list_head		active_entry)
 #endif /* CONFIG_PERF_EVENTS */
 };
 
@@ -619,12 +617,10 @@ struct perf_sample_data {
 	u64				stack_user_size;
 	u64				weight;
 
-#ifndef __GENKSYMS__
 	/*
 	 * Transaction flags for abort events:
 	 */
-	u64				txn;
-#endif
+	RH_KABI_EXTEND(u64				txn)
 };
 
 static inline void perf_sample_data_init(struct perf_sample_data *data,

@@ -14,18 +14,13 @@
 #include <linux/irqflags.h>
 #include <linux/llist.h>
 
+#include <linux/rh_kabi.h>
+
 extern void cpu_idle(void);
 
 typedef void (*smp_call_func_t)(void *info);
 struct call_single_data {
-#ifdef __GENKSYMS__
-	struct list_head list;
-#else
-	union {
-		struct list_head list;
-		struct llist_node llist;
-	};
-#endif
+	RH_KABI_REPLACE(struct list_head list, struct llist_node llist)
 	smp_call_func_t func;
 	void *info;
 	u16 flags;

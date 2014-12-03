@@ -28,6 +28,8 @@
 #include <linux/uidgid.h>
 #include <asm/device.h>
 
+#include <linux/rh_kabi.h>
+
 struct device;
 struct device_private;
 struct device_driver;
@@ -638,11 +640,9 @@ struct acpi_device;
 
 struct acpi_dev_node {
 #ifdef CONFIG_ACPI
-	#ifndef __GENKSYMS__
-	struct acpi_device *companion;
-	#else
-	void	*handle;
-	#endif
+	RH_KABI_REPLACE_P(void	*handle,
+		          struct acpi_device *companion)
+
 #endif
 };
 

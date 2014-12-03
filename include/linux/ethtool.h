@@ -14,6 +14,7 @@
 
 #include <linux/compat.h>
 #include <uapi/linux/ethtool.h>
+#include <linux/rh_kabi.h>
 
 #ifdef CONFIG_COMPAT
 
@@ -264,28 +265,21 @@ struct ethtool_ops {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-#ifdef __GENKSYMS__
-	void			(*rh_reserved1)(void);
-	void			(*rh_reserved2)(void);
-	void			(*rh_reserved3)(void);
-#else
-	u32	(*get_rxfh_key_size)(struct net_device *);
-	int	(*get_rxfh)(struct net_device *, u32 *indir, u8 *key);
-	int	(*set_rxfh)(struct net_device *, const u32 *indir,
-			    const u8 *key);
-#endif
-	void			(*rh_reserved4)(void);
-	void			(*rh_reserved5)(void);
-	void			(*rh_reserved6)(void);
-	void			(*rh_reserved7)(void);
-	void			(*rh_reserved8)(void);
-	void			(*rh_reserved9)(void);
-	void			(*rh_reserved10)(void);
-	void			(*rh_reserved11)(void);
-	void			(*rh_reserved12)(void);
-	void			(*rh_reserved13)(void);
-	void			(*rh_reserved14)(void);
-	void			(*rh_reserved15)(void);
-	void			(*rh_reserved16)(void);
+	RH_KABI_USE_P(1, u32	(*get_rxfh_key_size)(struct net_device *))
+	RH_KABI_USE_P(2, int	(*get_rxfh)(struct net_device *, u32 *indir, u8 *key))
+	RH_KABI_USE_P(3, int	(*set_rxfh)(struct net_device *, const u32 *indir, const u8 *key))
+	RH_KABI_RESERVE_P(4)
+	RH_KABI_RESERVE_P(5)
+	RH_KABI_RESERVE_P(6)
+	RH_KABI_RESERVE_P(7)
+	RH_KABI_RESERVE_P(8)
+	RH_KABI_RESERVE_P(9)
+	RH_KABI_RESERVE_P(10)
+	RH_KABI_RESERVE_P(11)
+	RH_KABI_RESERVE_P(12)
+	RH_KABI_RESERVE_P(13)
+	RH_KABI_RESERVE_P(14)
+	RH_KABI_RESERVE_P(15)
+	RH_KABI_RESERVE_P(16)
 };
 #endif /* _LINUX_ETHTOOL_H */

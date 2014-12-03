@@ -51,6 +51,8 @@
 #include <linux/neighbour.h>
 #include <uapi/linux/netdevice.h>
 
+#include <linux/rh_kabi.h>
+
 struct netpoll_info;
 struct device;
 struct phy_device;
@@ -1105,22 +1107,22 @@ struct net_device_ops {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-	void			(*rh_reserved1)(void);
-	void			(*rh_reserved2)(void);
-	void			(*rh_reserved3)(void);
-	void			(*rh_reserved4)(void);
-	void			(*rh_reserved5)(void);
-	void			(*rh_reserved6)(void);
-	void			(*rh_reserved7)(void);
-	void			(*rh_reserved8)(void);
-	void			(*rh_reserved9)(void);
-	void			(*rh_reserved10)(void);
-	void			(*rh_reserved11)(void);
-	void			(*rh_reserved12)(void);
-	void			(*rh_reserved13)(void);
-	void			(*rh_reserved14)(void);
-	void			(*rh_reserved15)(void);
-	void			(*rh_reserved16)(void);
+	RH_KABI_RESERVE_P(1)
+	RH_KABI_RESERVE_P(2)
+	RH_KABI_RESERVE_P(3)
+	RH_KABI_RESERVE_P(4)
+	RH_KABI_RESERVE_P(5)
+	RH_KABI_RESERVE_P(6)
+	RH_KABI_RESERVE_P(7)
+	RH_KABI_RESERVE_P(8)
+	RH_KABI_RESERVE_P(9)
+	RH_KABI_RESERVE_P(10)
+	RH_KABI_RESERVE_P(11)
+	RH_KABI_RESERVE_P(12)
+	RH_KABI_RESERVE_P(13)
+	RH_KABI_RESERVE_P(14)
+	RH_KABI_RESERVE_P(15)
+	RH_KABI_RESERVE_P(16)
 };
 
 /*
@@ -1239,12 +1241,11 @@ struct net_device {
 	unsigned char		addr_len;	/* hardware address length	*/
 	unsigned short		neigh_priv_len;
 	unsigned short          dev_id;		/* for shared network cards */
-#ifndef __GENKSYMS__
-	unsigned short          dev_port;	/* Used to differentiate
+
+	RH_KABI_FILL_HOLE(unsigned short dev_port) /* Used to differentiate
 						 * devices that share the same
 						 * function
 						 */
-#endif
 	spinlock_t		addr_list_lock;
 	struct netdev_hw_addr_list	uc;	/* Unicast mac addresses */
 	struct netdev_hw_addr_list	mc;	/* Multicast mac addresses */
@@ -1446,22 +1447,22 @@ struct net_device {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-	void			(*rh_reserved1)(void);
-	void			(*rh_reserved2)(void);
-	void			(*rh_reserved3)(void);
-	void			(*rh_reserved4)(void);
-	void			(*rh_reserved5)(void);
-	void			(*rh_reserved6)(void);
-	void			(*rh_reserved7)(void);
-	void			(*rh_reserved8)(void);
-	void			(*rh_reserved9)(void);
-	void			(*rh_reserved10)(void);
-	void			(*rh_reserved11)(void);
-	void			(*rh_reserved12)(void);
-	void			(*rh_reserved13)(void);
-	void			(*rh_reserved14)(void);
-	void			(*rh_reserved15)(void);
-	void			(*rh_reserved16)(void);
+	RH_KABI_RESERVE_P(1)
+	RH_KABI_RESERVE_P(2)
+	RH_KABI_RESERVE_P(3)
+	RH_KABI_RESERVE_P(4)
+	RH_KABI_RESERVE_P(5)
+	RH_KABI_RESERVE_P(6)
+	RH_KABI_RESERVE_P(7)
+	RH_KABI_RESERVE_P(8)
+	RH_KABI_RESERVE_P(9)
+	RH_KABI_RESERVE_P(10)
+	RH_KABI_RESERVE_P(11)
+	RH_KABI_RESERVE_P(12)
+	RH_KABI_RESERVE_P(13)
+	RH_KABI_RESERVE_P(14)
+	RH_KABI_RESERVE_P(15)
+	RH_KABI_RESERVE_P(16)
 };
 #define to_net_dev(d) container_of(d, struct net_device, dev)
 

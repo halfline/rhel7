@@ -13,6 +13,8 @@
 #include <linux/page-flags.h>
 #include <asm/page.h>
 
+#include <linux/rh_kabi.h>
+
 struct notifier_block;
 
 struct bio;
@@ -220,10 +222,8 @@ struct swap_info_struct {
 					 * swap_lock. If both locks need hold,
 					 * hold swap_lock first.
 					 */
-#ifndef __GENKSYMS__
-	struct plist_node list;		/* entry in swap_active_head */
-	struct plist_node avail_list;	/* entry in swap_avail_head */
-#endif
+	RH_KABI_EXTEND(struct plist_node list)		/* entry in swap_active_head */
+	RH_KABI_EXTEND(struct plist_node avail_list)	/* entry in swap_avail_head */
 };
 
 /* linux/mm/workingset.c */

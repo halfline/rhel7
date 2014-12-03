@@ -27,6 +27,8 @@
 #include <asm/byteorder.h>
 #include <asm/errno.h>
 
+#include <linux/rh_kabi.h>
+
 typedef u32 phandle;
 typedef u32 ihandle;
 
@@ -37,9 +39,7 @@ struct property {
 	struct property *next;
 	unsigned long _flags;
 	unsigned int unique_id;
-#ifndef __GENKSYMS__
-	struct bin_attribute attr;
-#endif
+	RH_KABI_EXTEND(struct bin_attribute attr)
 };
 
 #if defined(CONFIG_SPARC)
@@ -68,9 +68,7 @@ struct device_node {
 	unsigned int unique_id;
 	struct of_irq_controller *irq_trans;
 #endif
-#ifndef __GENKSYMS__
-	struct	kobject kobj;
-#endif
+	RH_KABI_EXTEND(struct	kobject kobj)
 };
 
 #define MAX_PHANDLE_ARGS 8

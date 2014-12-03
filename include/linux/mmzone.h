@@ -19,6 +19,8 @@
 #include <linux/atomic.h>
 #include <asm/page.h>
 
+#include <linux/rh_kabi.h>
+
 /* Free memory management - zoned buddy allocator.  */
 #ifndef CONFIG_FORCE_MAX_ZONEORDER
 #define MAX_ORDER 11
@@ -502,14 +504,14 @@ struct zone {
 	const char		*name;
 
 	/* reserved for Red Hat */
-	unsigned long rh_reserved1;
-	unsigned long rh_reserved2;
-	unsigned long rh_reserved3;
-	unsigned long rh_reserved4;
-	unsigned long rh_reserved5;
-	unsigned long rh_reserved6;
-	unsigned long rh_reserved7;
-	unsigned long rh_reserved8;
+	RH_KABI_RESERVE(1)
+	RH_KABI_RESERVE(2)
+	RH_KABI_RESERVE(3)
+	RH_KABI_RESERVE(4)
+	RH_KABI_RESERVE(5)
+	RH_KABI_RESERVE(6)
+	RH_KABI_RESERVE(7)
+	RH_KABI_RESERVE(8)
 
 } ____cacheline_internodealigned_in_smp;
 
@@ -784,10 +786,10 @@ typedef struct pglist_data {
 #endif
 
 	/* reserved for Red Hat */
-	unsigned long rh_reserved1;
-	unsigned long rh_reserved2;
-	unsigned long rh_reserved3;
-	unsigned long rh_reserved4;
+	RH_KABI_RESERVE(1)
+	RH_KABI_RESERVE(2)
+	RH_KABI_RESERVE(3)
+	RH_KABI_RESERVE(4)
 
 } pg_data_t;
 
