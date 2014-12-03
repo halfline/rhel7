@@ -1,6 +1,8 @@
 #ifndef INT_BLK_MQ_H
 #define INT_BLK_MQ_H
 
+#include <linux/rh_kabi.h>
+
 struct blk_mq_tag_set;
 
 struct blk_mq_ctx {
@@ -12,11 +14,8 @@ struct blk_mq_ctx {
 	unsigned int		cpu;
 	unsigned int		index_hw;
 
-#ifdef __GENKSYMS__
-	unsigned int		ipi_redirect;
-#else
-	unsigned int		last_tag ____cacheline_aligned_in_smp;
-#endif
+	RH_KABI_REPLACE(unsigned int ipi_redirect,
+		        unsigned int last_tag ____cacheline_aligned_in_smp)
 
 	/* incremented at dispatch time */
 	unsigned long		rq_dispatched[2];
