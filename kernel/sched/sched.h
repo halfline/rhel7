@@ -8,6 +8,8 @@
 #include <linux/tick.h>
 #include <linux/slab.h>
 
+#include <linux/rh_kabi.h>
+
 #include "cpupri.h"
 #include "cpuacct.h"
 
@@ -382,10 +384,8 @@ struct root_domain {
 	 */
 	cpumask_var_t rto_mask;
 	struct cpupri cpupri;
-#ifndef __GENKSYMS__
 	/* Indicate more than one runnable task for any CPU */
-	bool overload;
-#endif
+	RH_KABI_EXTEND(bool overload)
 };
 
 extern struct root_domain def_root_domain;
