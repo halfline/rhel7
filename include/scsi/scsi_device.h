@@ -8,6 +8,8 @@
 #include <scsi/scsi.h>
 #include <linux/atomic.h>
 
+#include <linux/rh_kabi.h>
+
 struct device;
 struct request_queue;
 struct scsi_cmnd;
@@ -210,24 +212,10 @@ struct scsi_device {
 
 #define SCSI_VPD_PG_LEN                255
 
-#ifndef __GENKSYMS__
-	unsigned char *vpd_pg83;
-	union {
-		int vpd_pg83_len;
-		void *vpd_reserved2;
-	};
-	unsigned char *vpd_pg80;
-	union {
-		int vpd_pg80_len;
-		void *vpd_reserved4;
-	};
-#else
-	void	*vpd_reserved1;
-	void	*vpd_reserved2;
-	void	*vpd_reserved3;
-	void	*vpd_reserved4;
-#endif
-
+	RH_KABI_REPLACE_P(void *vpd_reserved1, unsigned char *vpd_pg83)
+	RH_KABI_REPLACE(void *vpd_reserved2, int vpd_pg83_len)
+	RH_KABI_REPLACE_P(void *vpd_reserved3, unsigned char *vpd_pg80)
+	RH_KABI_REPLACE(void *vpd_reserved4, int vpd_pg80_len)
 	char	vpd_reserved5;
 	char	vpd_reserved6;
 	char	vpd_reserved7;
@@ -235,12 +223,12 @@ struct scsi_device {
 
 	spinlock_t	vpd_reserved9;
 
-	void			(*rh_reserved1)(void);
-	void			(*rh_reserved2)(void);
-	void			(*rh_reserved3)(void);
-	void			(*rh_reserved4)(void);
-	void			(*rh_reserved5)(void);
-	void			(*rh_reserved6)(void);
+	RH_KABI_RESERVE_P(1)
+	RH_KABI_RESERVE_P(2)
+	RH_KABI_RESERVE_P(3)
+	RH_KABI_RESERVE_P(4)
+	RH_KABI_RESERVE_P(5)
+	RH_KABI_RESERVE_P(6)
 
 	atomic_t scsi_mq_reserved1;
 	atomic_t scsi_mq_reserved2;
@@ -358,10 +346,10 @@ struct scsi_target {
 	 * The following padding has been inserted before ABI freeze to
 	 * allow extending the structure while preserve ABI.
 	 */
-	void			(*rh_reserved1)(void);
-	void			(*rh_reserved2)(void);
-	void			(*rh_reserved3)(void);
-	void			(*rh_reserved4)(void);
+	RH_KABI_RESERVE_P(1)
+	RH_KABI_RESERVE_P(2)
+	RH_KABI_RESERVE_P(3)
+	RH_KABI_RESERVE_P(4)
 
 	atomic_t		scsi_mq_reserved1;
 	atomic_t		scsi_mq_reserved2;
