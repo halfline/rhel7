@@ -24,6 +24,8 @@
 
 #include <asm/scatterlist.h>
 
+#include <linux/rh_kabi.h>
+
 struct module;
 struct scsi_ioctl_command;
 
@@ -106,12 +108,8 @@ struct request {
 #endif
 	union {
 		struct call_single_data csd;
-#ifdef __GENKSYMS__
-		struct work_struct mq_flush_work;
-#else
-		struct work_struct __DEPRECATED__requeue_work_moved_to_request_queue;
-		unsigned long fifo_time;
-#endif
+		RH_KABI_REPLACE(struct work_struct mq_flush_work,
+			        unsigned long fifo_time)
 	};
 
 	struct request_queue *q;
@@ -322,22 +320,10 @@ struct queue_limits {
 	 * The following padding has been inserted before ABI freeze to
 	 * allow extending the structure while preserving ABI.
 	 */
-#ifdef __GENKSYMS__
 	unsigned int		xcopy_reserved;
-
-	unsigned long		rh_reserved1;
-	unsigned long		rh_reserved2;
-	unsigned long		rh_reserved3;
-#else
-	unsigned int		xcopy_reserved;
-
-	unsigned int		chunk_sectors;
-#if defined(__LP64__)
-	unsigned int		rh_reserved1;
-#endif
-	unsigned long		rh_reserved2;
-	unsigned long		rh_reserved3;
-#endif
+	RH_KABI_USE(1, unsigned int chunk_sectors)
+	RH_KABI_RESERVE(2)
+	RH_KABI_RESERVE(3)
 };
 
 struct request_queue {
@@ -372,11 +358,9 @@ struct request_queue {
 	unsigned int		*mq_map;
 
 	/* sw queues */
-#ifdef __GENKSYMS__
-	struct blk_mq_ctx	*queue_ctx;
-#else
-	struct blk_mq_ctx __percpu	*queue_ctx;
-#endif
+	RH_KABI_REPLACE_P(struct blk_mq_ctx	*queue_ctx,
+		          struct blk_mq_ctx __percpu	*queue_ctx)
+
 	unsigned int		nr_queues;
 
 	/* hw dispatch queues */
@@ -522,17 +506,15 @@ struct request_queue {
 	struct percpu_counter	mq_usage_counter;
 	struct list_head	all_q_node;
 
-#ifndef __GENKSYMS__
-	unprep_rq_fn		*unprep_rq_fn;
+	RH_KABI_EXTEND(unprep_rq_fn		*unprep_rq_fn)
 
-	struct blk_mq_tag_set	*tag_set;
-	struct list_head	tag_set_list;
+	RH_KABI_EXTEND(struct blk_mq_tag_set	*tag_set)
+	RH_KABI_EXTEND(struct list_head		tag_set_list)
 
-	struct list_head	requeue_list;
-	spinlock_t		requeue_lock;
-	struct work_struct	requeue_work;
-	int			mq_freeze_depth;
-#endif
+	RH_KABI_EXTEND(struct list_head		requeue_list)
+	RH_KABI_EXTEND(spinlock_t			requeue_lock)
+	RH_KABI_EXTEND(struct work_struct		requeue_work)
+	RH_KABI_EXTEND(int				mq_freeze_depth)
 };
 
 #define QUEUE_FLAG_QUEUED	1	/* uses generic tag queueing */

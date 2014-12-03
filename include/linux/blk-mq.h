@@ -2,17 +2,15 @@
 #define BLK_MQ_H
 
 #include <linux/blkdev.h>
+#include <linux/rh_kabi.h>
 
 struct blk_mq_tags;
 
 struct blk_mq_cpu_notifier {
 	struct list_head list;
 	void *data;
-#ifdef __GENKSYMS__
-	void (*notify)(void *data, unsigned long action, unsigned int cpu);
-#else
-	int (*notify)(void *data, unsigned long action, unsigned int cpu);
-#endif
+	RH_KABI_REPLACE_P(void (*notify)(void *data, unsigned long action, unsigned int cpu),
+			  int (*notify)(void *data, unsigned long action, unsigned int cpu))
 };
 
 struct blk_mq_ctxmap {
@@ -29,11 +27,8 @@ struct blk_mq_hw_ctx {
 
 	unsigned long		state;		/* BLK_MQ_S_* flags */
 
-#ifdef __GENKSYMS__
-	struct delayed_work	delayed_work;
-#else
-	struct delayed_work	delay_work;
-#endif
+	RH_KABI_REPLACE(struct delayed_work	delayed_work,
+		        struct delayed_work	delay_work)
 
 	unsigned long		flags;		/* BLK_MQ_F_* flags */
 
@@ -45,19 +40,17 @@ struct blk_mq_hw_ctx {
 	unsigned int		nr_ctx;
 	struct blk_mq_ctx	**ctxs;
 
-#ifdef __GENKSYMS__
-	unsigned int		nr_ctx_map;
-	unsigned long		*ctx_map;
+	RH_KABI_REPLACE(unsigned int		nr_ctx_map,
+			atomic_t		wait_index)
 
-	struct request		**rqs;
-	struct list_head	page_list;
-#else
-	atomic_t		wait_index;
-	/* DEPRECATED: RHEL kABI padding follows, repurpose? */
-	unsigned long		*padding1;
-	struct request		**padding2;
-	struct list_head	padding3;
-#endif
+	RH_KABI_REPLACE_P(unsigned long		*ctx_map,
+		          unsigned long		*padding1)
+
+	RH_KABI_REPLACE_P(struct request		**rqs,
+		          struct request		**padding2)
+
+	RH_KABI_REPLACE(struct list_head		page_list,
+		        struct list_head		padding3)
 
 	struct blk_mq_tags	*tags;
 
@@ -73,16 +66,14 @@ struct blk_mq_hw_ctx {
 	struct blk_mq_cpu_notifier	cpu_notifier;
 	struct kobject		kobj;
 
-#ifndef __GENKSYMS__
-	struct delayed_work	run_work;
-	cpumask_var_t		cpumask;
-	int			next_cpu;
-	int			next_cpu_batch;
+	RH_KABI_EXTEND(struct delayed_work	run_work)
+	RH_KABI_EXTEND(cpumask_var_t		cpumask)
+	RH_KABI_EXTEND(int			next_cpu)
+	RH_KABI_EXTEND(int			next_cpu_batch)
 
-	struct blk_mq_ctxmap	ctx_map;
+	RH_KABI_EXTEND(struct blk_mq_ctxmap	ctx_map)
 
-	atomic_t		nr_active;
-#endif
+	RH_KABI_EXTEND(atomic_t		nr_active)
 };
 
 #ifdef __GENKSYMS__
@@ -115,12 +106,10 @@ struct blk_mq_tag_set {
 };
 #endif
 
-#ifdef __GENKSYMS__
 /* This thing was never covered by kabi */
-typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *);
-#else
-typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *, bool);
-#endif
+RH_KABI_REPLACE_P(typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *),
+	           typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *, bool))
+
 typedef struct blk_mq_hw_ctx *(map_queue_fn)(struct request_queue *, const int);
 #ifdef __GENKSYMS__
 typedef struct blk_mq_hw_ctx *(alloc_hctx_fn)(struct blk_mq_reg *,unsigned int);
@@ -151,11 +140,7 @@ struct blk_mq_ops {
 	/*
 	 * Called on request timeout
 	 */
-#ifdef __GENKSYMS__
-	rq_timed_out_fn		*timeout;
-#else
-	timeout_fn		*timeout;
-#endif
+	RH_KABI_REPLACE_P(rq_timed_out_fn *timeout, timeout_fn *timeout)
 
 	softirq_done_fn		*complete;
 
