@@ -30,6 +30,8 @@ struct mm_struct;
 #include <linux/err.h>
 #include <linux/irqflags.h>
 
+#include <linux/rh_kabi.h>
+
 /*
  * We handle most unaligned accesses in hardware.  On the other hand
  * unaligned DMA can be quite expensive on some Nehalem processors.
@@ -404,12 +406,10 @@ struct xsave_struct {
 	struct i387_fxsave_struct i387;
 	struct xsave_hdr_struct xsave_hdr;
 	struct ymmh_struct ymmh;
-#ifndef __GENKSYMS__
-	struct lwp_struct lwp;
-	struct bndregs_struct bndregs;
-	struct bndcsr_struct bndcsr;
+	RH_KABI_EXTEND(struct lwp_struct lwp)
+	RH_KABI_EXTEND(struct bndregs_struct bndregs)
+	RH_KABI_EXTEND(struct bndcsr_struct bndcsr)
 	/* new processor state extensions will go here */
-#endif
 } __attribute__ ((packed, aligned (64)));
 
 union thread_xstate {
