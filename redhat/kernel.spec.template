@@ -1484,6 +1484,22 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Dec 03 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-213.el7]
+- [scsi] ipr: don't log error messages when applications issues illegal requests (Gustavo Duarte) [1163019]
+- [net] macvlan: Allow setting multicast filter on all macvlan types (Vlad Yasevich) [848197]
+- [block] genhd: fix leftover might_sleep() in blk_free_devt() (Jeff Moyer) [1167728]
+- [ethernet] mlx4: Add VXLAN ndo calls to the PF net device ops too (Florian Westphal) [1168212]
+- [powerpc] xmon: le - Fix endiannes issue in RTAS call from xmon (Steve Best) [1160650]
+- [mm] thp: close race between split and zap huge pages (Seth Jennings) [1165268]
+- [mm] thp: close race between mremap() and split_huge_page() (Seth Jennings) [1165268]
+- [mmc] rtsx: Change default tx phase (Don Zickus) [1106204]
+- [mfd] rtsx: Copyright modifications (Don Zickus) [1106204]
+- [mfd] rtsx: Configure to enter a deeper power-saving mode in S3 (Don Zickus) [1106204]
+- [mfd] rtsx: Move some actions from rtsx_pci_init_hw to individual extra_init_hw (Don Zickus) [1106204]
+- [mfd] rtsx: Add shutdown callback in rtsx_pci_driver (Don Zickus) [1106204]
+- [mfd] rtsx: Read vendor setting from config space (Don Zickus) [1106204]
+- [mfd] rtsx: Add support for RTL8411B (Don Zickus) [1106204]
+
 * Mon Dec 01 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-212.el7]
 - [fs] fsnotify: next_i is freed during fsnotify_unmount_inodes (Eric Sandeen) [1124997]
 - [fs] btrfs: fix regression of btrfs device replace (Eric Sandeen) [1162983]
