@@ -47,6 +47,8 @@
 #include <linux/rcupdate.h>
 #include <linux/interrupt.h>
 
+#include <linux/rh_kabi.h>
+
 #define PFX "IPMI message handler: "
 
 #define IPMI_DRIVER_VERSION "39.2"
@@ -444,15 +446,13 @@ struct ipmi_smi {
 	 */
 	int run_to_completion;
 
-#ifndef __GENKSYMS__
 	/*
 	 * More events that were queued because no one was there to receive
 	 * them.
 	 */
-	atomic_t         event_waiters;
-	unsigned int     ticks_to_req_ev;
-	int              last_needs_timer;
-#endif
+	RH_KABI_EXTEND(atomic_t         event_waiters)
+	RH_KABI_EXTEND(unsigned int     ticks_to_req_ev)
+	RH_KABI_EXTEND(int              last_needs_timer)
 };
 #define to_si_intf_from_dev(device) container_of(device, struct ipmi_smi, dev)
 
