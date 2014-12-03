@@ -17,6 +17,8 @@
 #include <net/neighbour.h>
 #include <asm/processor.h>
 
+#include <linux/rh_kabi.h>
+
 #define DST_GC_MIN	(HZ/10)
 #define DST_GC_INC	(HZ/2)
 #define DST_GC_MAX	(120*HZ)
@@ -45,11 +47,8 @@ struct dst_entry {
 	void			*__pad1;
 #endif
 	int			(*input)(struct sk_buff *);
-#ifdef __GENKSYMS__
-	int			(*output)(struct sk_buff *);
-#else
-	int			(*output)(struct sock *sk, struct sk_buff *skb);
-#endif
+	RH_KABI_REPLACE_P(int			(*output)(struct sk_buff *),
+		          int			(*output)(struct sock *sk, struct sk_buff *skb))
 
 	unsigned short		flags;
 #define DST_HOST		0x0001

@@ -24,6 +24,8 @@
 
 #include <linux/interrupt.h>
 
+#include <linux/rh_kabi.h>
+
 #ifdef CONFIG_XFRM_STATISTICS
 #include <net/snmp.h>
 #endif
@@ -333,11 +335,8 @@ struct xfrm_state_afinfo {
 						const xfrm_address_t *saddr);
 	int			(*tmpl_sort)(struct xfrm_tmpl **dst, struct xfrm_tmpl **src, int n);
 	int			(*state_sort)(struct xfrm_state **dst, struct xfrm_state **src, int n);
-#ifdef __GENKSYMS__
-	int			(*output)(struct sk_buff *skb);
-#else
-	int			(*output)(struct sock *sk, struct sk_buff *skb);
-#endif
+	RH_KABI_REPLACE_P(int			(*output)(struct sk_buff *skb),
+		          int			(*output)(struct sock *sk, struct sk_buff *skb))
 	int			(*output_finish)(struct sk_buff *skb);
 	int			(*extract_input)(struct xfrm_state *x,
 						 struct sk_buff *skb);

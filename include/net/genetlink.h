@@ -5,6 +5,8 @@
 #include <net/netlink.h>
 #include <net/net_namespace.h>
 
+#include <linux/rh_kabi.h>
+
 #define GENLMSG_DEFAULT_SIZE (NLMSG_DEFAULT_SIZE - GENL_HDRLEN)
 
 /**
@@ -64,10 +66,10 @@ struct genl_family {
 
 	/* Reserved slots. For Red Hat usage only, modules are required to
 	 * set them to zero. */
-	unsigned long		rh_reserved1;
-	unsigned long		rh_reserved2;
-	unsigned long		rh_reserved3;
-	unsigned long		rh_reserved4;
+	RH_KABI_RESERVE(1)
+	RH_KABI_RESERVE(2)
+	RH_KABI_RESERVE(3)
+	RH_KABI_RESERVE(4)
 };
 
 /**

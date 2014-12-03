@@ -25,6 +25,8 @@
 #include <net/netns/nftables.h>
 #include <net/netns/xfrm.h>
 
+#include <linux/rh_kabi.h>
+
 struct user_namespace;
 struct proc_dir_entry;
 struct net_device;
@@ -123,10 +125,8 @@ struct net {
 	struct sock		*diag_nlsk;
 	atomic_t		rt_genid;
 
-#ifndef __GENKSYMS__
-	unsigned int		dev_unreg_count;
-	atomic_t		fnhe_genid;
-#endif
+	RH_KABI_EXTEND(unsigned int		dev_unreg_count)
+	RH_KABI_EXTEND(atomic_t		fnhe_genid)
 };
 
 /*
