@@ -13,6 +13,7 @@
 #include <asm/bug.h>
 #include <asm-generic/module.h>
 
+#include <linux/rh_kabi.h>
 
 #ifndef __powerpc64__
 /*
@@ -53,10 +54,8 @@ struct mod_arch_specific {
 	struct list_head bug_list;
 	struct bug_entry *bug_table;
 	unsigned int num_bugs;
-#ifndef __GENKSYMS__
 #ifdef __powerpc64__
-	bool toc_fixed;			/* Have we fixed up .TOC.? */
-#endif
+	RH_KABI_EXTEND(bool toc_fixed)			/* Have we fixed up .TOC.? */
 #endif
 };
 

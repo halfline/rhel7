@@ -26,6 +26,8 @@
 #include <linux/string.h>
 #include <linux/time.h>
 
+#include <linux/rh_kabi.h>
+
 struct pci_dev;
 struct pci_bus;
 struct device_node;
@@ -116,22 +118,22 @@ struct eeh_dev {
 	int config_addr;		/* Config address		*/
 	int pe_config_addr;		/* PE config address		*/
 	u32 config_space[16];		/* Saved PCI config space	*/
-#ifdef __GENKSYMS__
-	u8 pcie_cap;			/* Saved PCIe capability        */
-#else
-	u8 kabi_reserved;		/* Preserve alignment for kabi  */
-#endif
+	/*
+	 * This changes pcie_cap from a u8 to an int.  However, there is no
+	 * space for the extra 8 bits.  Instead, reserve the current space
+	 * and extend the struct at the end.
+	 */
+	RH_KABI_CHANGE_TYPE(u8 pcie_cap,	/* Saved PCIe capability        */
+			    u8 kabi_reserved)   /* Preserve alignment for kabi  */
 	struct eeh_pe *pe;		/* Associated PE		*/
 	struct list_head list;		/* Form link list in the PE	*/
 	struct pci_controller *phb;	/* Associated PHB		*/
 	struct device_node *dn;		/* Associated device node	*/
 	struct pci_dev *pdev;		/* Associated PCI device	*/
 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
-#ifndef __GENKSYMS__
-	int pcix_cap;			/* Saved PCIx capability	*/
-	int pcie_cap;			/* Saved PCIe capability	*/
-	int aer_cap;			/* Saved AER capability		*/
-#endif
+	RH_KABI_EXTEND(int pcix_cap)	/* Saved PCIx capability	*/
+	RH_KABI_EXTEND(int pcie_cap)	/* Saved PCIe capability	*/
+	RH_KABI_EXTEND(int aer_cap)	/* Saved AER capability		*/
 };
 
 static inline struct device_node *eeh_dev_to_of_node(struct eeh_dev *edev)

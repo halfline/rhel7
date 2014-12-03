@@ -24,6 +24,8 @@
 #include <asm/bug.h>
 #include <asm/processor.h>
 
+#include <linux/rh_kabi.h>
+
 /*
  * Segment table
  */
@@ -509,12 +511,7 @@ struct protptrs_kabi {
  */
 struct subpage_prot_table {
 	unsigned long maxaddr;	/* only addresses < this are protected */
-#ifdef __GENKSYMS__
-	unsigned int **protptrs[2];
-#else
-	struct protptrs_kabi *rh_kabi;
-	void *unused;
-#endif
+	RH_KABI_REPLACE(unsigned int **protptrs[2], struct protptrs_kabi *rh_kabi)
 	unsigned int *low_prot[4];
 };
 
