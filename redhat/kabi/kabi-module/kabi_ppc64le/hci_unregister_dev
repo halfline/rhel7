@@ -1,0 +1,2 @@
+#1-
+0xe81ecfbe	hci_unregister_dev	net/bluetooth/bluetooth	EXPORT_SYMBOL
