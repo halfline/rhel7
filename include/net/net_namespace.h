@@ -125,8 +125,9 @@ struct net {
 	struct sock		*diag_nlsk;
 	atomic_t		rt_genid;
 
-	RH_KABI_EXTEND(unsigned int		dev_unreg_count)
+	RH_KABI_EXTEND(unsigned int	dev_unreg_count)
 	RH_KABI_EXTEND(atomic_t		fnhe_genid)
+	RH_KABI_EXTEND(int		sysctl_ip_no_pmtu_disc)
 };
 
 /*
