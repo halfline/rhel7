@@ -20,7 +20,6 @@
 #include <net/route.h>
 #include <net/ipv6.h>
 #include <net/ip6_fib.h>
-#include <net/ip6_route.h>
 #include <net/flow.h>
 
 #include <linux/interrupt.h>
@@ -1781,17 +1780,6 @@ static inline int xfrm_tunnel_check(struct sk_buff *skb, struct xfrm_state *x,
 		return -EINVAL;
 
 	return 0;
-}
-
-static inline int xfrm_skb_dst_mtu(struct sk_buff *skb)
-{
-	struct sock *sk = skb->sk;
-
-	if (sk && sk->sk_family == AF_INET6)
-		return ip6_skb_dst_mtu(skb);
-	else if (sk && sk->sk_family == AF_INET)
-		return ip_skb_dst_mtu(skb);
-	return dst_mtu(skb_dst(skb));
 }
 
 #endif	/* _NET_XFRM_H */
