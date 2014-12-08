@@ -128,6 +128,7 @@ struct net {
 	RH_KABI_EXTEND(unsigned int	dev_unreg_count)
 	RH_KABI_EXTEND(atomic_t		fnhe_genid)
 	RH_KABI_EXTEND(int		sysctl_ip_no_pmtu_disc)
+	RH_KABI_EXTEND(int		sysctl_ip_fwd_use_pmtu)
 };
 
 /*
