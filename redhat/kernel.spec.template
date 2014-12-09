@@ -1225,6 +1225,11 @@ popd
 make %{?cross_opts} DESTDIR=$RPM_BUILD_ROOT bootwrapper_install WRAPPER_OBJDIR=%{_libdir}/kernel-wrapper WRAPPER_DTSDIR=%{_libdir}/kernel-wrapper/dts
 %endif
 
+%if %{with_doc}
+# Red Hat UEFI Secure Boot CA cert, which can be used to authenticate the kernel
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/doc/kernel-keys/%{rpmversion}-%{pkgrelease}
+install -m 0644 %{SOURCE13} $RPM_BUILD_ROOT%{_datadir}/doc/kernel-keys/%{rpmversion}-%{pkgrelease}/kernel-signing-ca.cer
+%endif
 
 ###
 ### clean
@@ -1366,6 +1371,9 @@ fi
 %dir %{_datadir}/doc/kernel-doc-%{rpmversion}/Documentation
 %dir %{_datadir}/doc/kernel-doc-%{rpmversion}
 %{_datadir}/man/man9/*
+%{_datadir}/doc/kernel-keys/%{rpmversion}-%{pkgrelease}/kernel-signing-ca.cer
+%dir %{_datadir}/doc/kernel-keys/%{rpmversion}-%{pkgrelease}
+%dir %{_datadir}/doc/kernel-keys
 %endif
 
 %if %{with_kernel_abi_whitelists}
