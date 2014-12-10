@@ -120,7 +120,8 @@ struct symbol_conf {
 			event_group,
 			demangle,
 			demangle_kernel,
-			filter_relative;
+			filter_relative,
+			show_hist_headers;
 	const char	*vmlinux_name,
 			*kallsyms_name,
 			*source_prefix,

@@ -35,6 +35,7 @@ struct symbol_conf symbol_conf = {
 	.demangle		= true,
 	.demangle_kernel	= false,
 	.cumulate_callchain	= true,
+	.show_hist_headers	= true,
 	.symfs			= "",
 };
 
