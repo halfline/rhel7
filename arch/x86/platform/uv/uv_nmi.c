@@ -151,7 +151,7 @@ module_param_named(retry_count, uv_nmi_retry_count, int, 0644);
  *  "kdb"	- enter KDB (default)
  *  "kgdb"	- enter KGDB
  */
-static char uv_nmi_action[8] = "kdb";
+static char uv_nmi_action[8] = "kdump";
 module_param_string(action, uv_nmi_action, sizeof(uv_nmi_action), 0644);
 
 static inline bool uv_nmi_action_is(const char *action)
