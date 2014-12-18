@@ -1215,7 +1215,7 @@ void intel_edp_panel_vdd_on(struct intel_dp *intel_dp)
 	if (is_edp(intel_dp)) {
 		bool vdd = _edp_panel_vdd_on(intel_dp);
 
-		WARN(!vdd, "eDP VDD already requested on\n");
+		I915_STATE_WARN(!vdd, "eDP VDD already requested on\n");
 	}
 }
 
@@ -1273,7 +1273,7 @@ static void edp_panel_vdd_off(struct intel_dp *intel_dp, bool sync)
 	if (!is_edp(intel_dp))
 		return;
 
-	WARN(!intel_dp->want_panel_vdd, "eDP VDD not forced on");
+	I915_STATE_WARN(!intel_dp->want_panel_vdd, "eDP VDD not forced on");
 
 	intel_dp->want_panel_vdd = false;
 

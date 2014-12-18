@@ -48,6 +48,7 @@ struct i915_params i915 __read_mostly = {
 	.disable_display = 0,
 	.enable_cmd_parser = 1,
 	.disable_vtd_wa = 0,
+	.verbose_state_checks = 0,
 };
 
 module_param_named(modeset, i915.modeset, int, 0400);
@@ -156,3 +157,7 @@ MODULE_PARM_DESC(disable_vtd_wa, "Disable all VT-d workarounds (default: false)"
 module_param_named(enable_cmd_parser, i915.enable_cmd_parser, int, 0600);
 MODULE_PARM_DESC(enable_cmd_parser,
 		 "Enable command parsing (1=enabled [default], 0=disabled)");
+
+module_param_named(verbose_state_checks, i915.verbose_state_checks, bool, 0600);
+MODULE_PARM_DESC(verbose_state_checks,
+	"Enable verbose logs (ie. WARN_ON()) in case of unexpected hw state conditions.");
