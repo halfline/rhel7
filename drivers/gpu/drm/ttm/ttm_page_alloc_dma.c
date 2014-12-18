@@ -1015,7 +1015,8 @@ static int ttm_dma_pool_mm_shrink(struct shrinker *shrink,
 	if (list_empty(&_manager->pools))
 		return 0;
 
-	mutex_lock(&_manager->lock);
+	if (!mutex_trylock(&_manager->lock))
+		return 0;
 	if (!_manager->npools)
 		goto out;
 	pool_offset = ++start_pool % _manager->npools;
