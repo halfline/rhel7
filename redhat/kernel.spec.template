@@ -1493,6 +1493,19 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Dec 18 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-219.el7]
+- [mm] vmstat: on-demand vmstat workers V8 (Larry Woodman) [1157802]
+- [mm] vmstat: use this_cpu() to avoid irqon/off sequence in refresh_cpu_vm_stats (Larry Woodman) [1157802]
+- [mm] vmstat: create fold_diff (Larry Woodman) [1157802]
+- [mm] vmstat: create separate function to fold per cpu diffs into local counters (Larry Woodman) [1157802]
+- [block] blk-mq: Fix uninitialized kobject at CPU hotplugging (Jeff Moyer) [1169232]
+- [kernel] audit: AUDIT_FEATURE_CHANGE message format missing delimiting space (Richard Guy Briggs) [1165469]
+- [fs] NFSv4.1: nfs41_clear_delegation_stateid shouldn't trust NFS_DELEGATED_STATE (Steve Dickson) [1166845]
+- [fs] NFSv4: Fix races between nfs_remove_bad_delegation() and delegation return (Steve Dickson) [1166845]
+- [fs] NFS: Don't try to reclaim delegation open state if recovery failed (Steve Dickson) [1166845]
+- [fs] NFSv4: Ensure that we call FREE_STATEID when NFSv4.x stateids are revoked (Steve Dickson) [1166845]
+- [fs] NFSv4: Ensure that we remove NFSv4.0 delegations when state has expired (Steve Dickson) [1166845]
+
 * Wed Dec 17 2014 Jarod Wilson <jarod@redhat.com> [3.10.0-218.el7]
 - [scsi] cxgb4i: Don't block unload/cxgb4 unload when remote closes TCP connection (Sai Vemuri) [1169941]
 - [kernel] kthread: partial revert of 81c98869faa5 ("kthread: ensure locality of task_struct allocations") (Gustavo Duarte) [953583]
