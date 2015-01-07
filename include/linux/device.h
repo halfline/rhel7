@@ -183,9 +183,12 @@ extern int bus_unregister_notifier(struct bus_type *bus,
 /* All 4 notifers below get called with the target struct device *
  * as an argument. Note that those functions are likely to be called
  * with the device lock held in the core, so be careful.
+ *
+ * RHEL7 - Note that the following notifier values differ from upstream.
+ * This was due to KABI and upstream commit 599bad38cf71.
  */
 #define BUS_NOTIFY_ADD_DEVICE		0x00000001 /* device added */
-#define BUS_NOTIFY_DEL_DEVICE		0x00000002 /* device removed */
+#define BUS_NOTIFY_DEL_DEVICE		0x00000002 /* device to be removed */
 #define BUS_NOTIFY_BIND_DRIVER		0x00000003 /* driver about to be
 						      bound */
 #define BUS_NOTIFY_BOUND_DRIVER		0x00000004 /* driver bound to device */
@@ -193,6 +196,8 @@ extern int bus_unregister_notifier(struct bus_type *bus,
 						      unbound */
 #define BUS_NOTIFY_UNBOUND_DRIVER	0x00000006 /* driver is unbound
 						      from the device */
+#define BUS_NOTIFY_REMOVED_DEVICE	0x00000007 /* device removed */
+
 
 extern struct kset *bus_get_kset(struct bus_type *bus);
 extern struct klist *bus_get_device_klist(struct bus_type *bus);
