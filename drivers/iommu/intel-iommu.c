@@ -4270,6 +4270,11 @@ static int intel_iommu_attach_device(struct iommu_domain *domain,
 				domain_remove_one_dev_info(old_domain, dev);
 			else
 				domain_remove_dev_info(old_domain);
+
+			if (!(old_domain->flags & DOMAIN_FLAG_VIRTUAL_MACHINE) &&
+			    !(old_domain->flags & DOMAIN_FLAG_STATIC_IDENTITY) &&
+			    list_empty(&old_domain->devices))
+				domain_exit(old_domain);
 		}
 	}
 
