@@ -28,6 +28,8 @@
  * RH_KABI_REPLACE_P - replacement of _orig pointer with _new pointer.  Pointers
  *                     don't work with anonymous unions and their sizes don't
  *                     change, so just do a straightforward replacement.
+ * RH_KABI_DEPRECATE - mark the element as deprecated and make it unusable
+ *		       by modules while preserving kABI checksums
  *
  * RH_KABI_EXTEND - simple macro for adding a new element to a struct while
  *                  preserving the kabi agreement (by wrapping with GENKSYMS).
@@ -47,6 +49,7 @@
 # define _RH_KABI_REPLACE(_orig, _new)		_orig
 # define _RH_KABI_CHANGE_TYPE(_orig, _new)	_orig
 # define _RH_KABI_REPLACE_P(_orig, _new)	_orig
+# define _RH_KABI_DEPRECATE(_type, _orig)	_type _orig
 
 # define RH_KABI_EXTEND(_new)
 # define RH_KABI_FILL_HOLE(_new)
@@ -65,6 +68,8 @@
 	}
 # define _RH_KABI_REPLACE_P(_orig, _new)	_new
 
+# define _RH_KABI_DEPRECATE(_type, _orig)	_type rh_reserved_##_orig
+
 # define RH_KABI_EXTEND(_new)         		_new;
 
 /* Warning, only use if a hole exists for _all_ arches. Use pahole to verify */
@@ -76,6 +81,7 @@
 #define RH_KABI_REPLACE(_orig, _new)		_RH_KABI_REPLACE(_orig, _new);
 #define RH_KABI_CHANGE_TYPE(_orig, _new)	_RH_KABI_CHANGE_TYPE(_orig, _new);
 #define RH_KABI_REPLACE_P(_orig, _new)		_RH_KABI_REPLACE_P(_orig, _new);
+#define RH_KABI_DEPRECATE(_type, _orig)		_RH_KABI_DEPRECATE(_type, _orig);
 
 /*
  * We tried to standardize on Red Hat reserved names.  These wrappers leverage
