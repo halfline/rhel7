@@ -148,6 +148,7 @@ struct opal_sg_list {
 #define OPAL_DUMP_RESEND			91
 #define OPAL_DUMP_INFO2				94
 #define OPAL_CONFIG_CPU_IDLE_STATE		99
+#define OPAL_SLW_SET_REG			100
 #define OPAL_REGISTER_DUMP_REGION		101
 #define OPAL_UNREGISTER_DUMP_REGION		102
 
@@ -158,6 +159,7 @@ struct opal_sg_list {
  */
 #define OPAL_PM_NAP_ENABLED	0x00010000
 #define OPAL_PM_SLEEP_ENABLED	0x00020000
+#define OPAL_PM_WINKLE_ENABLED	0x00040000
 #define OPAL_PM_SLEEP_ENABLED_ER1	0x00080000
 
 #ifndef __ASSEMBLY__
@@ -743,6 +745,7 @@ int64_t opal_read_nvram(uint64_t buffer, uint64_t size, uint64_t offset);
 int64_t opal_write_nvram(uint64_t buffer, uint64_t size, uint64_t offset);
 int64_t opal_handle_interrupt(uint64_t isn, __be64 *outstanding_event_mask);
 int64_t opal_poll_events(__be64 *outstanding_event_mask);
+int64_t opal_slw_set_reg(uint64_t cpu_pir, uint64_t sprn, uint64_t val);
 int64_t opal_pci_set_hub_tce_memory(uint64_t hub_id, uint64_t tce_mem_addr,
 				    uint64_t tce_mem_size);
 int64_t opal_pci_set_phb_tce_memory(uint64_t phb_id, uint64_t tce_mem_addr,
