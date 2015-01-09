@@ -133,6 +133,7 @@ enum cmd_flags_table {
 	ICF_ATTACHED_TO_RQUEUE			= 0x00000040,
 	ICF_OOO_CMDSN				= 0x00000080,
 	IFC_SENDTARGETS_ALL			= 0x00000100,
+	IFC_SENDTARGETS_SINGLE			= 0x00000200,
 };
 
 /* struct iscsi_cmd->i_state */
