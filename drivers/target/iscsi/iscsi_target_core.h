@@ -132,6 +132,7 @@ enum cmd_flags_table {
 	ICF_CONTIG_MEMORY			= 0x00000020,
 	ICF_ATTACHED_TO_RQUEUE			= 0x00000040,
 	ICF_OOO_CMDSN				= 0x00000080,
+	IFC_SENDTARGETS_ALL			= 0x00000100,
 };
 
 /* struct iscsi_cmd->i_state */
@@ -428,6 +429,8 @@ struct iscsi_cmd {
 	u32			tx_size;
 	/* Buffer used for various purposes */
 	void			*buf_ptr;
+	/* Used by SendTargets=[iqn.,eui.] discovery */
+	void			*text_in_ptr;
 	/* See include/linux/dma-mapping.h */
 	enum dma_data_direction	data_direction;
 	/* iSCSI PDU Header + CRC */
