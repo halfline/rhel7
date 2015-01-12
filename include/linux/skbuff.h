@@ -509,12 +509,14 @@ struct sk_buff {
 	/* These two members must be first. */
 	struct sk_buff		*next;
 	struct sk_buff		*prev;
-
+#ifdef __GENKSYMS__
+	ktime_t		tstamp;
+#else
 	union {
 		ktime_t		tstamp;
 		struct skb_mstamp skb_mstamp;
 	};
-
+#endif
 	struct sock		*sk;
 	struct net_device	*dev;
 
@@ -2631,6 +2633,7 @@ extern void skb_init(void);
 
 static inline ktime_t skb_get_ktime(const struct sk_buff *skb)
 {
+	BUILD_BUG_ON(sizeof(skb->tstamp) != sizeof(struct skb_mstamp));
 	return skb->tstamp;
 }
 
