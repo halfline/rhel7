@@ -994,7 +994,7 @@ static void tcp_queue_skb(struct sock *sk, struct sk_buff *skb)
 
 	/* Advance write_seq and place onto the write_queue. */
 	tp->write_seq = TCP_SKB_CB(skb)->end_seq;
-	skb_header_release(skb);
+	__skb_header_release(skb);
 	tcp_add_write_queue_tail(sk, skb);
 	sk->sk_wmem_queued += skb->truesize;
 	sk_mem_charge(sk, skb->truesize);
@@ -1151,7 +1151,7 @@ int tcp_fragment(struct sock *sk, struct sk_buff *skb, u32 len,
 	}
 
 	/* Link BUFF into the send queue. */
-	skb_header_release(buff);
+	__skb_header_release(buff);
 	tcp_insert_write_queue_after(skb, buff, sk);
 
 	return 0;
@@ -1654,7 +1654,7 @@ static int tso_fragment(struct sock *sk, struct sk_buff *skb, unsigned int len,
 	tcp_set_skb_tso_segs(sk, buff, mss_now);
 
 	/* Link BUFF into the send queue. */
-	skb_header_release(buff);
+	__skb_header_release(buff);
 	tcp_insert_write_queue_after(skb, buff, sk);
 
 	return 0;
@@ -2757,7 +2757,7 @@ int tcp_send_synack(struct sock *sk)
 			if (nskb == NULL)
 				return -ENOMEM;
 			tcp_unlink_write_queue(skb, sk);
-			skb_header_release(nskb);
+			__skb_header_release(nskb);
 			__tcp_add_write_queue_head(sk, nskb);
 			sk_wmem_free_skb(sk, skb);
 			sk->sk_wmem_queued += nskb->truesize;
@@ -2932,7 +2932,7 @@ static void tcp_connect_queue_skb(struct sock *sk, struct sk_buff *skb)
 	struct tcp_skb_cb *tcb = TCP_SKB_CB(skb);
 
 	tcb->end_seq += skb->len;
-	skb_header_release(skb);
+	__skb_header_release(skb);
 	__tcp_add_write_queue_tail(sk, skb);
 	sk->sk_wmem_queued += skb->truesize;
 	sk_mem_charge(sk, skb->truesize);
