@@ -260,6 +260,9 @@ enum
 	LINUX_MIB_TCPFASTOPENCOOKIEREQD,	/* TCPFastOpenCookieReqd */
 	LINUX_MIB_TCPSPURIOUS_RTX_HOSTQUEUES, /* TCPSpuriousRtxHostQueues */
 	LINUX_MIB_BUSYPOLLRXPACKETS,		/* BusyPollRxPackets */
+#ifndef __GENKSYMS__
+	LINUX_MIB_TCPAUTOCORKING,		/* TCPAutoCorking */
+#endif
 	__LINUX_MIB_MAX
 };
 
