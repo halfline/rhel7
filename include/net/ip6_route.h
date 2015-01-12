@@ -51,6 +51,12 @@ static inline unsigned int rt6_flags2srcprefs(int flags)
 	return (flags >> 3) & 7;
 }
 
+static inline bool rt6_need_strict(const struct in6_addr *daddr)
+{
+	return ipv6_addr_type(daddr) &
+		(IPV6_ADDR_MULTICAST | IPV6_ADDR_LINKLOCAL | IPV6_ADDR_LOOPBACK);
+}
+
 extern void rt6_bind_peer(struct rt6_info *rt, int create);
 
 static inline struct inet_peer *__rt6_get_peer(struct rt6_info *rt, int create)
