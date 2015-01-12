@@ -51,6 +51,12 @@ enum
 	IPSTATS_MIB_INBCASTOCTETS,		/* InBcastOctets */
 	IPSTATS_MIB_OUTBCASTOCTETS,		/* OutBcastOctets */
 	IPSTATS_MIB_CSUMERRORS,			/* InCsumErrors */
+#ifndef __GENKSYMS__
+	IPSTATS_MIB_NOECTPKTS,			/* InNoECTPkts */
+	IPSTATS_MIB_ECT1PKTS,			/* InECT1Pkts */
+	IPSTATS_MIB_ECT0PKTS,			/* InECT0Pkts */
+	IPSTATS_MIB_CEPKTS,			/* InCEPkts */
+#endif
 	__IPSTATS_MIB_MAX
 };
 
