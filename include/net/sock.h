@@ -791,11 +791,6 @@ static inline int sk_stream_wspace(const struct sock *sk)
 
 extern void sk_stream_write_space(struct sock *sk);
 
-static inline bool sk_stream_memory_free(const struct sock *sk)
-{
-	return sk->sk_wmem_queued < sk->sk_sndbuf;
-}
-
 /* OOB backlog add */
 static inline void __sk_add_backlog(struct sock *sk, struct sk_buff *skb)
 {
@@ -995,6 +990,10 @@ struct proto {
 	unsigned int		inuse_idx;
 #endif
 
+#ifndef __GENKSYMS__
+	bool			(*stream_memory_free)(const struct sock *sk);
+#endif
+
 	/* Memory pressure */
 	void			(*enter_memory_pressure)(struct sock *sk);
 	atomic_long_t		*memory_allocated;	/* Current allocated memory. */
@@ -1133,10 +1132,21 @@ static inline struct cg_proto *parent_cg_proto(struct proto *proto,
 }
 #endif
 
+static inline bool sk_stream_memory_free(const struct sock *sk)
+{
+	if (sk->sk_wmem_queued >= sk->sk_sndbuf)
+		return false;
+
+	return sk->sk_prot->stream_memory_free ?
+		sk->sk_prot->stream_memory_free(sk) : true;
+}
+
 static inline bool sk_stream_is_writeable(const struct sock *sk)
 {
-	return sk_stream_wspace(sk) >= sk_stream_min_wspace(sk);
+	return sk_stream_wspace(sk) >= sk_stream_min_wspace(sk) &&
+	       sk_stream_memory_free(sk);
 }
+
 
 static inline bool sk_has_memory_pressure(const struct sock *sk)
 {

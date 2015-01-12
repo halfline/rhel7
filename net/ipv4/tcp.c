@@ -2532,6 +2532,10 @@ static int do_tcp_setsockopt(struct sock *sk, int level,
 		else
 			tp->tsoffset = val - tcp_time_stamp;
 		break;
+	case TCP_NOTSENT_LOWAT:
+		tp->notsent_lowat = val;
+		sk->sk_write_space(sk);
+		break;
 	default:
 		err = -ENOPROTOOPT;
 		break;
@@ -2747,6 +2751,9 @@ static int do_tcp_getsockopt(struct sock *sk, int level,
 		break;
 	case TCP_TIMESTAMP:
 		val = tcp_time_stamp + tp->tsoffset;
+		break;
+	case TCP_NOTSENT_LOWAT:
+		val = tp->notsent_lowat;
 		break;
 	default:
 		return -ENOPROTOOPT;
