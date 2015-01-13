@@ -170,6 +170,7 @@ ext4_file_write(struct kiocb *iocb, const struct iovec *iov,
 {
 	struct inode *inode = file_inode(iocb->ki_filp);
 	ssize_t ret;
+	int overwrite = 0;
 
 	/*
 	 * If we have encountered a bitmap-format file, the size limit
@@ -190,6 +191,7 @@ ext4_file_write(struct kiocb *iocb, const struct iovec *iov,
 		}
 	}
 
+	iocb->private = &overwrite; /* RHEL7 only - prevent DIO race */
 	if (unlikely(iocb->ki_filp->f_flags & O_DIRECT))
 		ret = ext4_file_dio_write(iocb, iov, nr_segs, pos);
 	else
