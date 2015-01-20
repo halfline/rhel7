@@ -11,7 +11,9 @@
 #include <linux/vmalloc.h>
 #include <linux/slab.h>
 #include <linux/cred.h>
+#ifndef __GENKSYMS__
 #include <linux/mm.h>
+#endif
 
 #include <asm/uaccess.h>
 #include <asm/page.h>
