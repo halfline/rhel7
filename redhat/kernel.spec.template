@@ -387,6 +387,7 @@ input and output, etc.
 %package doc
 Summary: Various documentation bits found in the kernel source
 Group: Documentation
+AutoReqProv: no
 %description doc
 This package contains documentation files from the kernel
 source. Various bits of information about the Linux kernel and the
