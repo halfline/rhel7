@@ -1492,6 +1492,11 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Jan 22 2015 Jarod Wilson <jarod@redhat.com> [3.10.0-225.el7]
+- [net] team: avoid possible underflow of count_pending value for notify_peers and mcast_rejoin (Jiri Pirko) [1176697]
+- [fs] seq_file: don't include mm.h in genksyms calculation (Ian Kent) [1183280]
+- [scsi] Avoid crashing if device uses DIX but adapter does not support it (Ewan Milne) [1093012]
+
 * Mon Jan 19 2015 Jarod Wilson <jarod@redhat.com> [3.10.0-224.el7]
 - [fs] xfs: catch invalid negative blknos in _xfs_buf_find() (Eric Sandeen) [1164128]
 - [fs] proc: make proc_fd_permission() thread-friendly (Carlos Maiolino) [1171242]
