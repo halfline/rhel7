@@ -1492,6 +1492,16 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Jan 27 2015 Jarod Wilson <jarod@redhat.com> [3.10.0-227.el7]
+- [fs] ext4: fix overwrite race condition (Jacob Tanenbaum) [1152607] {CVE-2014-8086}
+- [media] ttusb-dec: buffer overflow in ioctl (Alexander Gordeev) [1167116] {CVE-2014-8884}
+- [drm] i915: demote opregion excessive timeout WARN_ONCE to DRM_INFO_ONCE (Rob Clark) [1145627]
+- [drm] i915: further quiet i915 (Rob Clark) [1163074]
+- [scsi] megaraid_sas: endianness related bug fixes and code optimization (Tomas Henzl) [1179748]
+- [s390] crypto: kernel oops at insmod of the z90crypt device driver (Hendrik Brueckner) [1172136]
+- [drm] mgag200: Add command line option to specify preferred depth (Dave Airlie) [1044555]
+- [drm] mgag200: Consolidate depth/bpp handling (Dave Airlie) [1044555]
+
 * Sun Jan 25 2015 Jarod Wilson <jarod@redhat.com> [3.10.0-226.el7]
 - [md] dm-cache: fix problematic dual use of a single migration count variable (Mike Snitzer) [1182665]
 - [md] dm-cache: share cache-metadata object across inactive and active DM tables (Mike Snitzer) [1182665]
