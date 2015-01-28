@@ -1313,8 +1313,6 @@ static int show_numa_map(struct seq_file *m, void *v, int is_pid)
 	if (!md->pages)
 		goto out;
 
-	seq_printf(m, " kernelpagesize_kB=%lu", vma_kernel_pagesize(vma) >> 10);
-
 	if (md->anon)
 		seq_printf(m, " anon=%lu", md->anon);
 
@@ -1339,6 +1337,8 @@ static int show_numa_map(struct seq_file *m, void *v, int is_pid)
 	for_each_node_state(n, N_MEMORY)
 		if (md->node[n])
 			seq_printf(m, " N%d=%lu", n, md->node[n]);
+
+	seq_printf(m, " kernelpagesize_kB=%lu", vma_kernel_pagesize(vma) >> 10);
 out:
 	seq_putc(m, '\n');
 
