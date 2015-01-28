@@ -16,6 +16,11 @@ struct hlist_head;
 struct fib_table;
 struct sock;
 
+struct local_ports {
+	seqlock_t	lock;
+	int		range[2];
+};
+
 struct netns_ipv4 {
 #ifdef CONFIG_SYSCTL
 	struct ctl_table_header	*forw_hdr;
@@ -61,6 +66,8 @@ struct netns_ipv4 {
 	int sysctl_icmp_ratelimit;
 	int sysctl_icmp_ratemask;
 	int sysctl_icmp_errors_use_inbound_ifaddr;
+
+	struct local_ports sysctl_local_ports;
 
 	int sysctl_tcp_ecn;
 
