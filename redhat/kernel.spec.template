@@ -1492,6 +1492,9 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Jan 29 2015 Jarod Wilson <jarod@redhat.com> [3.10.0-229.el7]
+- [net] rtnetlink: allow to register ops without ops->setup set (Jiri Benc) [1186492]
+
 * Thu Jan 29 2015 Jarod Wilson <jarod@redhat.com> [3.10.0-228.el7]
 - [fs] NFSv4.1: Fix an Oops in nfs41_walk_client_list (Steve Dickson) [1185784]
 - [misc] redhat: don't suppress Revert patches from changelog (Jarod Wilson) [1187353]
