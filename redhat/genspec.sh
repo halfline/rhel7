@@ -131,7 +131,6 @@ cp $clogf.stripped $clogf
 
 if [ "x$HIDE_REDHAT" == "x1" ]; then
 	cat $clogf | grep -v -e "^- \[redhat\]" |
-		grep -v "Revert" |
 		sed -e 's!\[Fedora\]!!g' > $clogf.stripped
 	cp $clogf.stripped $clogf
 fi
