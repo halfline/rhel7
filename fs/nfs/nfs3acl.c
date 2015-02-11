@@ -6,6 +6,7 @@
 #include <linux/posix_acl_xattr.h>
 #include <linux/nfsacl.h>
 
+#include "nfs3_fs.h"
 #include "internal.h"
 
 #define NFSDBG_FACILITY	NFSDBG_PROC

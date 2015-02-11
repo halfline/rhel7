@@ -443,22 +443,6 @@ static inline struct rpc_cred *nfs_file_cred(struct file *file)
 }
 
 /*
- * linux/fs/nfs/xattr.c
- */
-#ifdef CONFIG_NFS_V3_ACL
-extern ssize_t nfs3_listxattr(struct dentry *, char *, size_t);
-extern ssize_t nfs3_getxattr(struct dentry *, const char *, void *, size_t);
-extern int nfs3_setxattr(struct dentry *, const char *,
-			const void *, size_t, int);
-extern int nfs3_removexattr (struct dentry *, const char *name);
-#else
-# define nfs3_listxattr NULL
-# define nfs3_getxattr NULL
-# define nfs3_setxattr NULL
-# define nfs3_removexattr NULL
-#endif
-
-/*
  * linux/fs/nfs/direct.c
  */
 extern ssize_t nfs_direct_IO(int, struct kiocb *, const struct iovec *, loff_t,
@@ -548,30 +532,6 @@ extern int  nfs_readpages(struct file *, struct address_space *,
 		struct list_head *, unsigned);
 extern int  nfs_readpage_async(struct nfs_open_context *, struct inode *,
 			       struct page *);
-
-/*
- * linux/fs/nfs3proc.c
- */
-#ifdef CONFIG_NFS_V3_ACL
-extern struct posix_acl *nfs3_proc_getacl(struct inode *inode, int type);
-extern int nfs3_proc_setacl(struct inode *inode, int type,
-			    struct posix_acl *acl);
-extern int nfs3_proc_set_default_acl(struct inode *dir, struct inode *inode,
-		umode_t mode);
-extern void nfs3_forget_cached_acls(struct inode *inode);
-#else
-static inline int nfs3_proc_set_default_acl(struct inode *dir,
-					    struct inode *inode,
-					    umode_t mode)
-{
-	return 0;
-}
-
-static inline void nfs3_forget_cached_acls(struct inode *inode)
-{
-}
-#endif /* CONFIG_NFS_V3_ACL */
-
 /*
  * inline functions
  */
