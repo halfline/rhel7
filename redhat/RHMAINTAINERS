@@ -53,7 +53,7 @@ Red Hat Maintainers List (try to look for most precise areas first)
 		-----------------------------------
 
 Kernel Maintainer
-M:	Jarod Wilson <jarod@redhat.com>
+M:	Rafael Aquini <aquini@redhat.com>
 S:	Maintained
 F:	redhat/
 
