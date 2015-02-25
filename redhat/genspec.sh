@@ -18,8 +18,7 @@ RPM_VERSION="$RPMVERSION-$PKGRELEASE";
 
 echo >$clogf
 
-priorhash=$(git rev-list --tags="kernel-${RPMVERSION}-*" --branches=master --max-count=1)
-lasttag=$(git describe --tags $priorhash)
+lasttag=$(git describe --match="kernel-${RPMVERSION}-*" --abbrev=0)
 echo "Gathering new log entries since $lasttag"
 git format-patch --first-parent --no-renames -k --stdout ${lasttag}.. | awk '
 BEGIN{TYPE="PATCHJUNK"; }
