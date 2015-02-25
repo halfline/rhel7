@@ -1,18 +1,19 @@
 #!/bin/bash
-if [ -z "$1" -o -z "$2" -o -z "$3" ]; then
-	echo "$(basename $0) <kversion> <version> <redhat path>" >&2;
+if [ -z "$1" ]; then
+	echo "$(basename $0) <redhat path>" >&2;
 	exit 1;
 fi
 
-KVERSION="$1";
-RELEASE="$2";
-NEW_RELEASE="$[RELEASE + 1]";
-RHPATH="$3";
+RHPATH="$1";
 
 if [ -s "$RHPATH/linux-kernel-test.patch" ]; then
 	echo "linux-kernel-test.patch is not empty, aborting" >&2;
 	exit 1;
 fi
+
+RELEASE=$(sed -n -e 's/^BUILD:=\(.*\)/\1/p' $RHPATH/Makefile.common);
+NEW_RELEASE="$[RELEASE + 1]";
+
 sed -i -e "s/BUILD:=$RELEASE/BUILD:=$NEW_RELEASE/" $RHPATH/Makefile.common;
 
 # update top Makefile

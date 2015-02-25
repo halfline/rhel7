@@ -143,15 +143,16 @@ rh-prep: rh-sources
 rh-perf: rh-sources
 	$(RPMBUILD) --define "_sourcedir $(SOURCES)" --define "_builddir $(RPM)/BUILD" --define "_srcrpmdir $(RPM)/SRPMS" --define "_rpmdir $(RPM)/RPMS" --define "_specdir $(RPM)/SPECS" --define "dist $(DIST)" --without up --without smp --without kdump --without debug --without doc --without headers --without  --without doc --without debuginfo --target $(MACH) -bb $(RPM)/SOURCES/kernel.spec
 
-# unless you know what you're doing, you don't want to use the next two ones
-rh-release: rh-clean-sources
-	@$(REDHAT)/scripts/new_release.sh $(KVERSION) $(BUILD) $(REDHAT)
-	@$(MAKE) setup-source
-	@$(REDHAT)/scripts/update_changelog.sh $(KVERSION) $(shell echo $$[$(BUILD) + 1]) $(REDHAT) "$(STAMP_VERSION)-$(PREBUILD)$(shell echo $$[$(BUILD) + 1])$(DIST)$(BUILDID)"
-	@git commit -s ../Makefile Makefile.common kernel.spec.template -m "[redhat] kernel-$(STAMP_VERSION)-$(PREBUILD)$(shell echo $$[$(BUILD) + 1])$(DIST)$(BUILDID)"
+# unless you know what you're doing, you don't want to use the next three ones
+rh-release-finish: setup-source
+	@$(REDHAT)/scripts/update_changelog.sh $(KVERSION) $(BUILD) $(REDHAT) "$(STAMP_VERSION)-$(PREBUILD)$(BUILD)$(DIST)$(BUILDID)"
+	@git commit -s ../Makefile Makefile.common kernel.spec.template -m "[redhat] kernel-$(STAMP_VERSION)-$(PREBUILD)$(BUILD)$(DIST)$(BUILDID)"
 	@$(MAKE) rh-configs
 	@$(MAKE) rh-kabi
 	@$(MAKE) sources-rh
+rh-release: rh-clean-sources
+	@$(REDHAT)/scripts/new_release.sh $(REDHAT)
+	@$(MAKE) rh-release-finish
 rh-release-tag:
 	@git tag -a -m "kernel-$(STAMP_VERSION)-$(PKGRELEASE)" kernel-$(STAMP_VERSION)-$(PKGRELEASE)
 
