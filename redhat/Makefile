@@ -146,12 +146,12 @@ rh-perf: rh-sources
 # unless you know what you're doing, you don't want to use the next two ones
 rh-release: rh-clean-sources
 	@$(REDHAT)/scripts/new_release.sh $(KVERSION) $(BUILD) $(REDHAT)
-	@make setup-source
+	@$(MAKE) setup-source
 	@$(REDHAT)/scripts/update_changelog.sh $(KVERSION) $(shell echo $$[$(BUILD) + 1]) $(REDHAT) "$(STAMP_VERSION)-$(PREBUILD)$(shell echo $$[$(BUILD) + 1])$(DIST)$(BUILDID)"
 	@git commit -s ../Makefile Makefile.common kernel.spec.template -m "[redhat] kernel-$(STAMP_VERSION)-$(PREBUILD)$(shell echo $$[$(BUILD) + 1])$(DIST)$(BUILDID)"
-	@make rh-configs
-	@make rh-kabi
-	@make sources-rh
+	@$(MAKE) rh-configs
+	@$(MAKE) rh-kabi
+	@$(MAKE) sources-rh
 rh-release-tag:
 	@git tag -a -m "kernel-$(STAMP_VERSION)-$(PKGRELEASE)" kernel-$(STAMP_VERSION)-$(PKGRELEASE)
 
