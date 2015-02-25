@@ -3,8 +3,8 @@ include Makefile.rhpkg
 include Makefile.test
 
 LANG=C
-BUILD_DEFAULT_TARGET = rhel-7.0-kernel-test
-BUILD_SCRATCH_TARGET = rhel-7.0-kernel-test
+BUILD_DEFAULT_TARGET = rhel-${RHELMAJOR}.${RHELMINOR}-test-pesign
+BUILD_SCRATCH_TARGET = rhel-${RHELMAJOR}.${RHELMINOR}-test-pesign
 
 #ifeq ($(shell git diff --quiet HEAD && git describe --exact-match 2>/dev/null && echo ok),)
 BUILD_TARGET ?= --scratch $(BUILD_SCRATCH_TARGET)
@@ -14,8 +14,6 @@ BUILD_TARGET ?= --scratch $(BUILD_SCRATCH_TARGET)
 
 RHGITURL:=$(shell git config rhg.url || git config remote.origin.url)
 RHGITCOMMIT?=$(shell git log -1 --pretty=format:%H)
-RHELMAJOR:=$(shell git show HEAD:Makefile | grep ^RHEL_MAJOR | sed -e s/RHEL_MAJOR\ =\ //)
-RHELMINOR:=$(shell git show HEAD:Makefile | grep ^RHEL_MINOR | sed -e s/RHEL_MINOR\ =\ //)
 
 # this section is needed in order to make O= to work
 _OUTPUT := ..
