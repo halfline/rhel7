@@ -34,11 +34,11 @@ fi
 # extracting the BZs to create the "Resolves" line
 cat $tmp |
 	grep ^- |
-        sed -n -e "s/.*\[\([0-9\ ]\+\)\].*/\1/p" |
-        tr ' ' '\n' |
-        sort -u |
-        tr '\n' ',' |
-        sed -e "s/^/Resolves: rhbz#/; s/,\$//; s/,/, rhbz#/g;" >>$tmp;
+	sed -n -e "s/.*\[\([0-9\ ]\+\)\].*/\1/p" |
+	tr ' ' '\n' |
+	sort -u |
+	tr '\n' ',' |
+	sed -e "s/^/Resolves: rhbz#/; s/,\$//; s/,/, rhbz#/g;" >>$tmp;
 
 echo -e "kernel-$version\n"
 cat $tmp;
