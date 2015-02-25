@@ -1,13 +1,11 @@
 #!/bin/bash
-if [ -z "$1" -o -z "$2" -o -z "$3" ]; then
-	echo "$(basename $0) <kversion> <version> <redhat path> <last changelog entry> <full version>" >&2;
+if [  -z "$1" -o -z "$2" ]; then
+	echo "$(basename $0) <redhat path> <full version>" >&2;
 	exit 1;
 fi
 
-KVERSION="$1";
-RELEASE="$2";
-RHPATH="$3";
-FULL_VERSION="$4";
+RHPATH="$1";
+FULL_VERSION="$2";
 
 tmp=$(mktemp);
 NAME="$(git config user.name)";

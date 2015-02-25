@@ -145,7 +145,7 @@ rh-perf: rh-sources
 
 # unless you know what you're doing, you don't want to use the next three ones
 rh-release-finish: setup-source
-	@$(REDHAT)/scripts/update_changelog.sh $(KVERSION) $(BUILD) $(REDHAT) "$(STAMP_VERSION)-$(PREBUILD)$(BUILD)$(DIST)$(BUILDID)"
+	@$(REDHAT)/scripts/update_changelog.sh $(REDHAT) "$(STAMP_VERSION)-$(PREBUILD)$(BUILD)$(DIST)$(BUILDID)"
 	@git commit -s ../Makefile Makefile.common kernel.spec.template -m "[redhat] kernel-$(STAMP_VERSION)-$(PREBUILD)$(BUILD)$(DIST)$(BUILDID)"
 	@$(MAKE) rh-configs
 	@$(MAKE) rh-kabi
