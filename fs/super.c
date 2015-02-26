@@ -69,9 +69,6 @@ static int prune_super(struct shrinker *shrink, struct shrink_control *sc)
 	if (sc->nr_to_scan && !(sc->gfp_mask & __GFP_FS))
 		return -1;
 
-	if (!grab_super_passive(sb))
-		return -1;
-
 	if (sb->s_op && sb->s_op->nr_cached_objects)
 		fs_objects = sb->s_op->nr_cached_objects(sb);
 
@@ -106,7 +103,6 @@ static int prune_super(struct shrinker *shrink, struct shrink_control *sc)
 	}
 
 	total_objects = (total_objects / 100) * sysctl_vfs_cache_pressure;
-	drop_super(sb);
 	return total_objects;
 }
 
