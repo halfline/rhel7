@@ -33,6 +33,7 @@
 #include <asm/page.h>
 #include <asm/current.h>
 #include <asm/apicdef.h>
+#include <asm/delay.h>
 #include <linux/atomic.h>
 #include <linux/jump_label.h>
 #include "kvm_cache_regs.h"
@@ -1015,6 +1016,52 @@ static void update_divide_count(struct kvm_lapic *apic)
 				   apic->divide_count);
 }
 
+/*
+ * On APICv, this test will cause a busy wait
+ * during a higher-priority task.
+ */
+
+static bool lapic_timer_int_injected(struct kvm_vcpu *vcpu)
+{
+	struct kvm_lapic *apic = vcpu->arch.apic;
+	u32 reg = kvm_apic_get_reg(apic, APIC_LVTT);
+
+	if (kvm_apic_hw_enabled(apic)) {
+		int vec = reg & APIC_VECTOR_MASK;
+		void *bitmap = apic->regs + APIC_ISR;
+
+		if (kvm_x86_ops->deliver_posted_interrupt)
+			bitmap = apic->regs + APIC_IRR;
+
+		if (apic_test_vector(vec, bitmap))
+			return true;
+	}
+	return false;
+}
+
+void wait_lapic_expire(struct kvm_vcpu *vcpu)
+{
+	struct kvm_lapic *apic = vcpu->arch.apic;
+	u64 guest_tsc, tsc_deadline;
+
+	if (!kvm_vcpu_has_lapic(vcpu))
+		return;
+
+	if (apic->lapic_timer.expired_tscdeadline == 0)
+		return;
+
+	if (!lapic_timer_int_injected(vcpu))
+		return;
+
+	tsc_deadline = apic->lapic_timer.expired_tscdeadline;
+	apic->lapic_timer.expired_tscdeadline = 0;
+	guest_tsc = kvm_x86_ops->read_l1_tsc(vcpu, native_read_tsc());
+
+	/* __delay is delay_tsc whenever the hardware has TSC, thus always.  */
+	if (guest_tsc < tsc_deadline)
+		__delay(tsc_deadline - guest_tsc);
+}
+
 static void start_apic_timer(struct kvm_lapic *apic)
 {
 	ktime_t now;
@@ -1063,6 +1110,7 @@ static void start_apic_timer(struct kvm_lapic *apic)
 		/* lapic timer in tsc deadline mode */
 		u64 guest_tsc, tscdeadline = apic->lapic_timer.tscdeadline;
 		u64 ns = 0;
+		ktime_t expire;
 		struct kvm_vcpu *vcpu = apic->vcpu;
 		unsigned long this_tsc_khz = vcpu->arch.virtual_tsc_khz;
 		unsigned long flags;
@@ -1078,8 +1126,10 @@ static void start_apic_timer(struct kvm_lapic *apic)
 			ns = (tscdeadline - guest_tsc) * 1000000ULL;
 			do_div(ns, this_tsc_khz);
 		}
+		expire = ktime_add_ns(now, ns);
+		expire = ktime_sub_ns(expire, lapic_timer_advance_ns);
 		hrtimer_start(&apic->lapic_timer.timer,
-			ktime_add_ns(now, ns), HRTIMER_MODE_ABS);
+			      expire, HRTIMER_MODE_ABS);
 
 		local_irq_restore(flags);
 	}
@@ -1537,6 +1587,9 @@ static enum hrtimer_restart apic_timer_fn(struct hrtimer *data)
 
 	if (waitqueue_active(q))
 		wake_up_interruptible(q);
+
+	if (apic_lvtt_tscdeadline(apic))
+		ktimer->expired_tscdeadline = ktimer->tscdeadline;
 
 	if (lapic_is_periodic(apic)) {
 		hrtimer_add_expires_ns(&ktimer->timer, ktimer->period);
