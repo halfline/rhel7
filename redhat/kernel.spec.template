@@ -1492,6 +1492,25 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Feb 27 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-230.el7]
+- [net] sctp: fix slab corruption from use after free on INIT collisions (Daniel Borkmann) [1183959] {CVE-2015-1421}
+- [net] ipv6: Fixed support for blackhole and prohibit routes (Hannes Frederic Sowa) [1129731]
+- [kernel] audit: replace getname()/putname() hacks with reference counters (Paul Moore) [1155208]
+- [kernel] audit: fix filename matching in __audit_inode() and __audit_inode_child() (Paul Moore) [1155208]
+- [kernel] audit: enable filename recording via getname_kernel() (Paul Moore) [1155208]
+- [fs] namei: simpler calling conventions for filename_mountpoint() (Paul Moore) [1155208]
+- [fs] namei: create proper filename objects using getname_kernel() (Paul Moore) [1155208]
+- [fs] namei: rework getname_kernel to handle up to PATH_MAX sized filenames (Paul Moore) [1155208]
+- [fs] namei: cut down the number of do_path_lookup() callers (Paul Moore) [1155208]
+- [fs] execve: use 'struct filename *' for executable name passing (Paul Moore) [1155208]
+- [x86] ioapic: kcrash: Prevent crash_kexec() from deadlocking on ioapic_lock (Baoquan He) [1182424]
+- [md] dm-thin: don't allow messages to be sent to a pool target in READ_ONLY or FAIL mode (Mike Snitzer) [1184592]
+- [kernel] workqueue: fix subtle pool management issue which can stall whole worker_pool (Eric Sandeen) [1165535]
+- [platform] thinkpad_acpi: support new BIOS version string pattern (Benjamin Tissoires) [1194830]
+- [virt] storvsc: ring buffer failures may result in I/O freeze (Vitaly Kuznetsov) [1171409]
+- [kernel] audit: restore AUDIT_LOGINUID unset ABI (Richard Guy Briggs) [1120491]
+- [crypto] testmgr: mark rfc4106(gcm(aes)) as fips_allowed (Jarod Wilson) [1185400]
+
 * Thu Jan 29 2015 Jarod Wilson <jarod@redhat.com> [3.10.0-229.el7]
 - [net] rtnetlink: allow to register ops without ops->setup set (Jiri Benc) [1186492]
 
