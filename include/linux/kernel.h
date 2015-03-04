@@ -469,7 +469,7 @@ extern enum system_states {
 #define TAINT_CRAP			10
 #define TAINT_FIRMWARE_WORKAROUND	11
 #define TAINT_OOT_MODULE		12
-#define TAINT_13			13
+#define TAINT_UNSIGNED_MODULE		13
 #define TAINT_14			14
 #define TAINT_15			15
 #define TAINT_16			16
