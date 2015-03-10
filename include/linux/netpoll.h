@@ -98,7 +98,7 @@ static inline bool netpoll_rx_on(struct sk_buff *skb)
 {
 	struct netpoll_info *npinfo = rcu_dereference_bh(skb->dev->npinfo);
 
-	return npinfo && (netpoll_rx_processing(npinfo) || npinfo->rx_flags);
+	return npinfo && netpoll_rx_processing(npinfo);
 }
 
 static inline bool netpoll_rx(struct sk_buff *skb)
