@@ -3153,10 +3153,6 @@ int netif_rx(struct sk_buff *skb)
 {
 	int ret;
 
-	/* if netpoll wants it, pretend we never saw it */
-	if (netpoll_rx(skb))
-		return NET_RX_DROP;
-
 	net_timestamp_check(netdev_tstamp_prequeue, skb);
 
 	trace_netif_rx(skb);
@@ -3415,10 +3411,6 @@ static int __netif_receive_skb_core(struct sk_buff *skb, bool pfmemalloc)
 
 	trace_netif_receive_skb(skb);
 
-	/* if we've gotten here through NAPI, check netpoll */
-	if (netpoll_receive_skb(skb))
-		goto out;
-
 	orig_dev = skb->dev;
 
 	skb_reset_network_header(skb);
@@ -3545,7 +3537,6 @@ drop:
 
 unlock:
 	rcu_read_unlock();
-out:
 	return ret;
 }
 
@@ -3778,7 +3769,7 @@ static enum gro_result dev_gro_receive(struct napi_struct *napi, struct sk_buff 
 	enum gro_result ret;
 	int grow;
 
-	if (!(skb->dev->features & NETIF_F_GRO) || netpoll_rx_on(skb))
+	if (!(skb->dev->features & NETIF_F_GRO))
 		goto normal;
 
 	if (skb_is_gso(skb) || skb_has_frag_list(skb) || skb->csum_bad)
