@@ -31,15 +31,14 @@
 #include <linux/thermal.h>
 #include <acpi/acpi_bus.h>
 #include <acpi/acpi_drivers.h>
-
-#define ACPI_FAN_CLASS			"fan"
+#include <linux/platform_device.h>
 
 MODULE_AUTHOR("Paul Diefenbaugh");
 MODULE_DESCRIPTION("ACPI Fan Driver");
 MODULE_LICENSE("GPL");
 
-static int acpi_fan_add(struct acpi_device *device);
-static int acpi_fan_remove(struct acpi_device *device);
+static int acpi_fan_probe(struct platform_device *pdev);
+static int acpi_fan_remove(struct platform_device *pdev);
 
 static const struct acpi_device_id fan_device_ids[] = {
 	{"PNP0C0B", 0},
@@ -61,15 +60,14 @@ static struct dev_pm_ops acpi_fan_pm = {
 #define FAN_PM_OPS_PTR NULL
 #endif
 
-static struct acpi_driver acpi_fan_driver = {
-	.name = "fan",
-	.class = ACPI_FAN_CLASS,
-	.ids = fan_device_ids,
-	.ops = {
-		.add = acpi_fan_add,
-		.remove = acpi_fan_remove,
-		},
-	.drv.pm = FAN_PM_OPS_PTR,
+static struct platform_driver acpi_fan_driver = {
+	.probe = acpi_fan_probe,
+	.remove = acpi_fan_remove,
+	.driver = {
+		.name = "acpi-fan",
+		.acpi_match_table = fan_device_ids,
+		.pm = FAN_PM_OPS_PTR,
+	},
 };
 
 /* thermal cooling device callbacks */
@@ -126,17 +124,15 @@ static const struct thermal_cooling_device_ops fan_cooling_ops = {
  * --------------------------------------------------------------------------
 */
 
-static int acpi_fan_add(struct acpi_device *device)
+static int acpi_fan_probe(struct platform_device *pdev)
 {
 	int result = 0;
 	struct thermal_cooling_device *cdev;
-
-	strcpy(acpi_device_name(device), "Fan");
-	strcpy(acpi_device_class(device), ACPI_FAN_CLASS);
+	struct acpi_device *device = ACPI_COMPANION(&pdev->dev);
 
 	result = acpi_device_update_power(device, NULL);
 	if (result) {
-		dev_err(&device->dev, "Setting initial power state\n");
+		dev_err(&pdev->dev, "Setting initial power state\n");
 		goto end;
 	}
 
@@ -147,18 +143,18 @@ static int acpi_fan_add(struct acpi_device *device)
 		goto end;
 	}
 
-	dev_dbg(&device->dev, "registered as cooling_device%d\n", cdev->id);
+	dev_dbg(&pdev->dev, "registered as cooling_device%d\n", cdev->id);
 
-	device->driver_data = cdev;
-	result = sysfs_create_link(&device->dev.kobj,
+	platform_set_drvdata(pdev, cdev);
+	result = sysfs_create_link(&pdev->dev.kobj,
 				   &cdev->device.kobj,
 				   "thermal_cooling");
 	if (result)
-		dev_err(&device->dev, "Failed to create sysfs link "
+		dev_err(&pdev->dev, "Failed to create sysfs link "
 			"'thermal_cooling'\n");
 
 	result = sysfs_create_link(&cdev->device.kobj,
-				   &device->dev.kobj,
+				   &pdev->dev.kobj,
 				   "device");
 	if (result)
 		dev_err(&device->dev, "Failed to create sysfs link 'device'\n");
@@ -171,11 +167,11 @@ static int acpi_fan_add(struct acpi_device *device)
 	return result;
 }
 
-static int acpi_fan_remove(struct acpi_device *device)
+static int acpi_fan_remove(struct platform_device *pdev)
 {
-	struct thermal_cooling_device *cdev = acpi_driver_data(device);
+	struct thermal_cooling_device *cdev = platform_get_drvdata(pdev);
 
-	sysfs_remove_link(&device->dev.kobj, "thermal_cooling");
+	sysfs_remove_link(&pdev->dev.kobj, "thermal_cooling");
 	sysfs_remove_link(&cdev->device.kobj, "device");
 	thermal_cooling_device_unregister(cdev);
 
@@ -185,7 +181,7 @@ static int acpi_fan_remove(struct acpi_device *device)
 #ifdef CONFIG_PM_SLEEP
 static int acpi_fan_suspend(struct device *dev)
 {
-	acpi_device_set_power(to_acpi_device(dev), ACPI_STATE_D0);
+	acpi_device_set_power(ACPI_COMPANION(dev), ACPI_STATE_D0);
 
 	return AE_OK;
 }
@@ -194,7 +190,7 @@ static int acpi_fan_resume(struct device *dev)
 {
 	int result;
 
-	result = acpi_device_update_power(to_acpi_device(dev), NULL);
+	result = acpi_device_update_power(ACPI_COMPANION(dev), NULL);
 	if (result)
 		dev_err(dev, "Error updating fan power state\n");
 
@@ -202,4 +198,4 @@ static int acpi_fan_resume(struct device *dev)
 }
 #endif
 
-module_acpi_driver(acpi_fan_driver);
+module_platform_driver(acpi_fan_driver);
