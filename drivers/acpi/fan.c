@@ -33,10 +33,6 @@
 #include <acpi/acpi_drivers.h>
 
 #define ACPI_FAN_CLASS			"fan"
-#define ACPI_FAN_FILE_STATE		"state"
-
-#define _COMPONENT		ACPI_FAN_COMPONENT
-ACPI_MODULE_NAME("fan");
 
 MODULE_AUTHOR("Paul Diefenbaugh");
 MODULE_DESCRIPTION("ACPI Fan Driver");
