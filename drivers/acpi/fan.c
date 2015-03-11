@@ -135,9 +135,6 @@ static int acpi_fan_add(struct acpi_device *device)
 	int result = 0;
 	struct thermal_cooling_device *cdev;
 
-	if (!device)
-		return -EINVAL;
-
 	strcpy(acpi_device_name(device), "Fan");
 	strcpy(acpi_device_class(device), ACPI_FAN_CLASS);
 
@@ -180,14 +177,7 @@ static int acpi_fan_add(struct acpi_device *device)
 
 static int acpi_fan_remove(struct acpi_device *device)
 {
-	struct thermal_cooling_device *cdev;
-
-	if (!device)
-		return -EINVAL;
-
-	cdev =  acpi_driver_data(device);
-	if (!cdev)
-		return -EINVAL;
+	struct thermal_cooling_device *cdev = acpi_driver_data(device);
 
 	sysfs_remove_link(&device->dev.kobj, "thermal_cooling");
 	sysfs_remove_link(&cdev->device.kobj, "device");
@@ -199,9 +189,6 @@ static int acpi_fan_remove(struct acpi_device *device)
 #ifdef CONFIG_PM_SLEEP
 static int acpi_fan_suspend(struct device *dev)
 {
-	if (!dev)
-		return -EINVAL;
-
 	acpi_bus_set_power(to_acpi_device(dev)->handle, ACPI_STATE_D0);
 
 	return AE_OK;
@@ -210,9 +197,6 @@ static int acpi_fan_suspend(struct device *dev)
 static int acpi_fan_resume(struct device *dev)
 {
 	int result;
-
-	if (!dev)
-		return -EINVAL;
 
 	result = acpi_bus_update_power(to_acpi_device(dev)->handle, NULL);
 	if (result)
