@@ -187,7 +187,7 @@ static void macvlan_broadcast(struct sk_buff *skb,
 				mode == MACVLAN_MODE_BRIDGE) ?:
 			      netif_rx_ni(nskb);
 			macvlan_count_rx(vlan, skb->len + ETH_HLEN,
-					 err == NET_RX_SUCCESS, 1);
+					 err == NET_RX_SUCCESS, true);
 		}
 	}
 }
@@ -323,7 +323,7 @@ static rx_handler_result_t macvlan_handle_frame(struct sk_buff **pskb)
 	ret = netif_rx(skb);
 
 out:
-	macvlan_count_rx(vlan, len, ret == NET_RX_SUCCESS, 0);
+	macvlan_count_rx(vlan, len, ret == NET_RX_SUCCESS, false);
 	return RX_HANDLER_CONSUMED;
 }
 
