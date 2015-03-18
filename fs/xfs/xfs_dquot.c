@@ -832,52 +832,6 @@ restart:
 	return (0);
 }
 
-
-STATIC void
-xfs_qm_dqput_final(
-	struct xfs_dquot	*dqp)
-{
-	struct xfs_quotainfo	*qi = dqp->q_mount->m_quotainfo;
-	struct xfs_dquot	*gdqp;
-	struct xfs_dquot	*pdqp;
-
-	trace_xfs_dqput_free(dqp);
-
-	mutex_lock(&qi->qi_lru_lock);
-	if (list_empty(&dqp->q_lru)) {
-		list_add_tail(&dqp->q_lru, &qi->qi_lru_list);
-		qi->qi_lru_count++;
-		XFS_STATS_INC(xs_qm_dquot_unused);
-	}
-	mutex_unlock(&qi->qi_lru_lock);
-
-	/*
-	 * If we just added a udquot to the freelist, then we want to release
-	 * the gdquot/pdquot reference that it (probably) has. Otherwise it'll
-	 * keep the gdquot/pdquot from getting reclaimed.
-	 */
-	gdqp = dqp->q_gdquot;
-	if (gdqp) {
-		xfs_dqlock(gdqp);
-		dqp->q_gdquot = NULL;
-	}
-
-	pdqp = dqp->q_pdquot;
-	if (pdqp) {
-		xfs_dqlock(pdqp);
-		dqp->q_pdquot = NULL;
-	}
-	xfs_dqunlock(dqp);
-
-	/*
-	 * If we had a group/project quota hint, release it now.
-	 */
-	if (gdqp)
-		xfs_qm_dqput(gdqp);
-	if (pdqp)
-		xfs_qm_dqput(pdqp);
-}
-
 /*
  * Release a reference to the dquot (decrement ref-count) and unlock it.
  *
@@ -893,10 +847,20 @@ xfs_qm_dqput(
 
 	trace_xfs_dqput(dqp);
 
-	if (--dqp->q_nrefs > 0)
-		xfs_dqunlock(dqp);
-	else
-		xfs_qm_dqput_final(dqp);
+	if (--dqp->q_nrefs == 0) {
+		struct xfs_quotainfo	*qi = dqp->q_mount->m_quotainfo;
+		trace_xfs_dqput_free(dqp);
+
+		mutex_lock(&qi->qi_lru_lock);
+		if (list_empty(&dqp->q_lru)) {
+			list_add_tail(&dqp->q_lru, &qi->qi_lru_list);
+			qi->qi_lru_count++;
+			XFS_STATS_INC(xs_qm_dquot_unused);
+		}
+		mutex_unlock(&qi->qi_lru_lock);
+
+	}
+	xfs_dqunlock(dqp);
 }
 
 /*
