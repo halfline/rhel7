@@ -180,7 +180,7 @@ xfs_file_fsync(
 		return error;
 
 	if (XFS_FORCED_SHUTDOWN(mp))
-		return -XFS_ERROR(EIO);
+		return -EIO;
 
 	xfs_iflags_clear(ip, XFS_ITRUNCATED);
 
@@ -266,7 +266,7 @@ xfs_file_aio_read(
 		if ((pos | size) & target->bt_logical_sectormask) {
 			if (pos == i_size_read(inode))
 				return 0;
-			return -XFS_ERROR(EINVAL);
+			return -EINVAL;
 		}
 	}
 
@@ -655,7 +655,7 @@ xfs_file_dio_aio_write(
 
 	/* DIO must be aligned to device logical sector size */
 	if ((pos | count) & target->bt_logical_sectormask)
-		return -XFS_ERROR(EINVAL);
+		return -EINVAL;
 
 	/* "unaligned" here means not aligned to a filesystem block */
 	if ((pos & mp->m_blockmask) || ((pos + count) & mp->m_blockmask))
@@ -1382,7 +1382,7 @@ xfs_seek_hole(
 	int			error;
 
 	if (XFS_FORCED_SHUTDOWN(mp))
-		return -XFS_ERROR(EIO);
+		return -EIO;
 
 	lock = xfs_ilock_data_map_shared(ip);
 
