@@ -5406,6 +5406,7 @@ xfs_bmap_shift_extents(
 	int				whichfork = XFS_DATA_FORK;
 	int				logflags;
 	xfs_filblks_t			blockcount = 0;
+	int				total_extents;
 
 	if (unlikely(XFS_TEST_ERROR(
 	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
@@ -5422,7 +5423,6 @@ xfs_bmap_shift_extents(
 	ASSERT(current_ext != NULL);
 
 	ifp = XFS_IFORK_PTR(ip, whichfork);
-
 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
 		/* Read in all the extents */
 		error = xfs_iread_extents(tp, ip, whichfork);
@@ -5449,7 +5449,6 @@ xfs_bmap_shift_extents(
 
 	/* We are going to change core inode */
 	logflags = XFS_ILOG_CORE;
-
 	if (ifp->if_flags & XFS_IFBROOT) {
 		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
 		cur->bc_private.b.firstblock = *firstblock;
@@ -5460,8 +5459,14 @@ xfs_bmap_shift_extents(
 		logflags |= XFS_ILOG_DEXT;
 	}
 
-	while (nexts++ < num_exts &&
-	       *current_ext <  XFS_IFORK_NEXTENTS(ip, whichfork)) {
+	/*
+	 * There may be delalloc extents in the data fork before the range we
+	 * are collapsing out, so we cannot
+	 * use the count of real extents here. Instead we have to calculate it
+	 * from the incore fork.
+	 */
+	total_extents = ifp->if_bytes / sizeof(xfs_bmbt_rec_t);
+	while (nexts++ < num_exts && *current_ext < total_extents) {
 
 		gotp = xfs_iext_get_ext(ifp, *current_ext);
 		xfs_bmbt_get_all(gotp, &got);
@@ -5549,10 +5554,11 @@ xfs_bmap_shift_extents(
 		}
 
 		(*current_ext)++;
+		total_extents = ifp->if_bytes / sizeof(xfs_bmbt_rec_t);
 	}
 
 	/* Check if we are done */
-	if (*current_ext ==  XFS_IFORK_NEXTENTS(ip, whichfork))
+	if (*current_ext == total_extents)
 		*done = 1;
 
 del_cursor:
@@ -5561,6 +5567,5 @@ del_cursor:
 			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
 
 	xfs_trans_log_inode(tp, ip, logflags);
-
 	return error;
 }
