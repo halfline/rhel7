@@ -89,8 +89,10 @@ xfs_dir2_sf_getdents(
 	xfs_dir2_dataptr_t	dot_offset;
 	xfs_dir2_dataptr_t	dotdot_offset;
 	xfs_ino_t		ino;
+	struct xfs_da_geometry	*geo;
 
 	mp = dp->i_mount;
+	geo = mp->m_dir_geo;
 
 	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
 	/*
@@ -111,7 +113,7 @@ xfs_dir2_sf_getdents(
 	/*
 	 * If the block number in the offset is out of range, we're done.
 	 */
-	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk)
+	if (xfs_dir2_dataptr_to_db(geo, *offset) > mp->m_dirdatablk)
 		return 0;
 
 	/*
@@ -120,9 +122,9 @@ xfs_dir2_sf_getdents(
 	 * XXX(hch): the second argument is sometimes 0 and sometimes
 	 * mp->m_dirdatablk.
 	 */
-	dot_offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
+	dot_offset = xfs_dir2_db_off_to_dataptr(geo, mp->m_dirdatablk,
 						dp->d_ops->data_dot_offset);
-	dotdot_offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
+	dotdot_offset = xfs_dir2_db_off_to_dataptr(geo, mp->m_dirdatablk,
 						dp->d_ops->data_dotdot_offset);
 
 	/*
@@ -153,7 +155,7 @@ xfs_dir2_sf_getdents(
 	for (i = 0; i < sfp->count; i++) {
 		__uint8_t filetype;
 
-		off = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
+		off = xfs_dir2_db_off_to_dataptr(geo, mp->m_dirdatablk,
 				xfs_dir2_sf_get_offset(sfep));
 
 		if (*offset > off) {
@@ -172,7 +174,7 @@ xfs_dir2_sf_getdents(
 		sfep = dp->d_ops->sf_nextentry(sfp, sfep);
 	}
 
-	*offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk + 1, 0) &
+	*offset = xfs_dir2_db_off_to_dataptr(geo, mp->m_dirdatablk + 1, 0) &
 			0x7fffffff;
 	return 0;
 }
@@ -198,12 +200,14 @@ xfs_dir2_block_getdents(
 	char			*ptr;		/* current data entry */
 	int			wantoff;	/* starting block offset */
 	xfs_off_t		cook;
+	struct xfs_da_geometry	*geo;
 
 	mp = dp->i_mount;
+	geo = mp->m_dir_geo;
 	/*
 	 * If the block number in the offset is out of range, we're done.
 	 */
-	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk)
+	if (xfs_dir2_dataptr_to_db(geo, *offset) > mp->m_dirdatablk)
 		return 0;
 
 	error = xfs_dir3_block_read(NULL, dp, &bp);
@@ -214,7 +218,7 @@ xfs_dir2_block_getdents(
 	 * Extract the byte offset we start at from the seek pointer.
 	 * We'll skip entries before this.
 	 */
-	wantoff = xfs_dir2_dataptr_to_off(mp, *offset);
+	wantoff = xfs_dir2_dataptr_to_off(geo, *offset);
 	hdr = bp->b_addr;
 	xfs_dir3_data_check(dp, bp);
 	/*
@@ -252,7 +256,7 @@ xfs_dir2_block_getdents(
 		if ((char *)dep - (char *)hdr < wantoff)
 			continue;
 
-		cook = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
+		cook = xfs_dir2_db_off_to_dataptr(geo, mp->m_dirdatablk,
 					    (char *)dep - (char *)hdr);
 		filetype = dp->d_ops->data_get_ftype(dep);
 
@@ -272,7 +276,7 @@ xfs_dir2_block_getdents(
 	 * Reached the end of the block.
 	 * Set the offset to a non-existent block 1 and return.
 	 */
-	*offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk + 1, 0) &
+	*offset = xfs_dir2_db_off_to_dataptr(geo, mp->m_dirdatablk + 1, 0) &
 			0x7fffffff;
 	xfs_trans_brelse(NULL, bp);
 	return 0;
@@ -308,6 +312,7 @@ xfs_dir2_leaf_readbuf(
 	int			length;
 	int			i;
 	int			j;
+	struct xfs_da_geometry	*geo = mp->m_dir_geo;
 
 	/*
 	 * If we have a buffer, we need to release it and
@@ -350,14 +355,14 @@ xfs_dir2_leaf_readbuf(
 	 * run out of data blocks, get some more mappings.
 	 */
 	if (1 + mip->ra_want > mip->map_blocks &&
-	    mip->map_off < xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET)) {
+	    mip->map_off < xfs_dir2_byte_to_da(geo, XFS_DIR2_LEAF_OFFSET)) {
 		/*
 		 * Get more bmaps, fill in after the ones
 		 * we already have in the table.
 		 */
 		mip->nmap = mip->map_size - mip->map_valid;
 		error = xfs_bmapi_read(dp, mip->map_off,
-				xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET) -
+				xfs_dir2_byte_to_da(geo, XFS_DIR2_LEAF_OFFSET) -
 								mip->map_off,
 				&map[mip->map_valid], &mip->nmap, 0);
 
@@ -378,7 +383,7 @@ xfs_dir2_leaf_readbuf(
 			i = mip->map_valid + mip->nmap - 1;
 			mip->map_off = map[i].br_startoff + map[i].br_blockcount;
 		} else
-			mip->map_off = xfs_dir2_byte_to_da(mp,
+			mip->map_off = xfs_dir2_byte_to_da(geo,
 							XFS_DIR2_LEAF_OFFSET);
 
 		/*
@@ -404,14 +409,14 @@ xfs_dir2_leaf_readbuf(
 	 * No valid mappings, so no more data blocks.
 	 */
 	if (!mip->map_valid) {
-		*curoff = xfs_dir2_da_to_byte(mp->m_dir_geo, mip->map_off);
+		*curoff = xfs_dir2_da_to_byte(geo, mip->map_off);
 		goto out;
 	}
 
 	/*
 	 * Read the directory block starting at the first mapping.
 	 */
-	mip->curdb = xfs_dir2_da_to_db(mp->m_dir_geo, map->br_startoff);
+	mip->curdb = xfs_dir2_da_to_db(geo, map->br_startoff);
 	error = xfs_dir3_data_read(NULL, dp, map->br_startoff,
 			map->br_blockcount >= mp->m_dirblkfsbs ?
 			    XFS_FSB_TO_DADDR(mp, map->br_startblock) : -1, &bp);
@@ -514,6 +519,7 @@ xfs_dir2_leaf_getdents(
 	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
 	char			*ptr = NULL;	/* pointer to current data */
 	struct xfs_dir2_leaf_map_info *map_info;
+	struct xfs_da_geometry	*geo;
 
 	/*
 	 * If the offset is at or past the largest allowed value,
@@ -523,6 +529,7 @@ xfs_dir2_leaf_getdents(
 		return 0;
 
 	mp = dp->i_mount;
+	geo = mp->m_dir_geo;
 
 	/*
 	 * Set up to bmap a number of blocks based on the caller's
@@ -546,8 +553,8 @@ xfs_dir2_leaf_getdents(
 	 * Force this conversion through db so we truncate the offset
 	 * down to get the start of the data block.
 	 */
-	map_info->map_off = xfs_dir2_db_to_da(mp->m_dir_geo,
-					      xfs_dir2_byte_to_db(mp, curoff));
+	map_info->map_off = xfs_dir2_db_to_da(geo,
+					      xfs_dir2_byte_to_db(geo, curoff));
 
 	/*
 	 * Loop over directory entries until we reach the end offset.
@@ -581,7 +588,7 @@ xfs_dir2_leaf_getdents(
 			 * Make sure we're in the right block.
 			 */
 			else if (curoff > newoff)
-				ASSERT(xfs_dir2_byte_to_db(mp, curoff) ==
+				ASSERT(xfs_dir2_byte_to_db(geo, curoff) ==
 				       map_info->curdb);
 			hdr = bp->b_addr;
 			xfs_dir3_data_check(dp, bp);
@@ -618,8 +625,8 @@ xfs_dir2_leaf_getdents(
 				 * Now set our real offset.
 				 */
 				curoff =
-					xfs_dir2_db_off_to_byte(mp->m_dir_geo,
-					    xfs_dir2_byte_to_db(mp, curoff),
+					xfs_dir2_db_off_to_byte(geo,
+					    xfs_dir2_byte_to_db(geo, curoff),
 					    (char *)ptr - (char *)hdr);
 				if (ptr >= (char *)hdr + mp->m_dirblksize) {
 					continue;
