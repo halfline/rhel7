@@ -38,7 +38,6 @@
 #include "xfs_symlink.h"
 #include "xfs_da_btree.h"
 #include "xfs_dir2_priv.h"
-#include "xfs_dinode.h"
 
 #include <linux/capability.h>
 #include <linux/xattr.h>
