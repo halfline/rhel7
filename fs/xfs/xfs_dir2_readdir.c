@@ -113,18 +113,18 @@ xfs_dir2_sf_getdents(
 	/*
 	 * If the block number in the offset is out of range, we're done.
 	 */
-	if (xfs_dir2_dataptr_to_db(geo, *offset) > mp->m_dirdatablk)
+	if (xfs_dir2_dataptr_to_db(geo, *offset) > geo->datablk)
 		return 0;
 
 	/*
 	 * Precalculate offsets for . and .. as we will always need them.
 	 *
 	 * XXX(hch): the second argument is sometimes 0 and sometimes
-	 * mp->m_dirdatablk.
+	 * geo->datablk
 	 */
-	dot_offset = xfs_dir2_db_off_to_dataptr(geo, mp->m_dirdatablk,
+	dot_offset = xfs_dir2_db_off_to_dataptr(geo, geo->datablk,
 						dp->d_ops->data_dot_offset);
-	dotdot_offset = xfs_dir2_db_off_to_dataptr(geo, mp->m_dirdatablk,
+	dotdot_offset = xfs_dir2_db_off_to_dataptr(geo, geo->datablk,
 						dp->d_ops->data_dotdot_offset);
 
 	/*
@@ -155,7 +155,7 @@ xfs_dir2_sf_getdents(
 	for (i = 0; i < sfp->count; i++) {
 		__uint8_t filetype;
 
-		off = xfs_dir2_db_off_to_dataptr(geo, mp->m_dirdatablk,
+		off = xfs_dir2_db_off_to_dataptr(geo, geo->datablk,
 				xfs_dir2_sf_get_offset(sfep));
 
 		if (*offset > off) {
@@ -174,7 +174,7 @@ xfs_dir2_sf_getdents(
 		sfep = dp->d_ops->sf_nextentry(sfp, sfep);
 	}
 
-	*offset = xfs_dir2_db_off_to_dataptr(geo, mp->m_dirdatablk + 1, 0) &
+	*offset = xfs_dir2_db_off_to_dataptr(geo, geo->datablk + 1, 0) &
 			0x7fffffff;
 	return 0;
 }
@@ -207,7 +207,7 @@ xfs_dir2_block_getdents(
 	/*
 	 * If the block number in the offset is out of range, we're done.
 	 */
-	if (xfs_dir2_dataptr_to_db(geo, *offset) > mp->m_dirdatablk)
+	if (xfs_dir2_dataptr_to_db(geo, *offset) > geo->datablk)
 		return 0;
 
 	error = xfs_dir3_block_read(NULL, dp, &bp);
@@ -256,7 +256,7 @@ xfs_dir2_block_getdents(
 		if ((char *)dep - (char *)hdr < wantoff)
 			continue;
 
-		cook = xfs_dir2_db_off_to_dataptr(geo, mp->m_dirdatablk,
+		cook = xfs_dir2_db_off_to_dataptr(geo, geo->datablk,
 					    (char *)dep - (char *)hdr);
 		filetype = dp->d_ops->data_get_ftype(dep);
 
@@ -276,7 +276,7 @@ xfs_dir2_block_getdents(
 	 * Reached the end of the block.
 	 * Set the offset to a non-existent block 1 and return.
 	 */
-	*offset = xfs_dir2_db_off_to_dataptr(geo, mp->m_dirdatablk + 1, 0) &
+	*offset = xfs_dir2_db_off_to_dataptr(geo, geo->datablk + 1, 0) &
 			0x7fffffff;
 	xfs_trans_brelse(NULL, bp);
 	return 0;
