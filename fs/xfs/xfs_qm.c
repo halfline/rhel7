@@ -1326,7 +1326,7 @@ xfs_qm_quotacheck(
 		}
 	} else
 		xfs_notice(mp, "Quotacheck: Done.");
-	return (error);
+	return error;
 }
 
 /*
@@ -1886,7 +1886,7 @@ xfs_qm_vop_chown_reserve(
 				-((xfs_qcnt_t)delblks), 0, blkflags);
 	}
 
-	return (0);
+	return 0;
 }
 
 int
