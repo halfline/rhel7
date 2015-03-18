@@ -131,6 +131,11 @@ rh-all-rpms: rh-sources
 rh-srpm: rh-sources
 	$(RPMBUILD) --define "_sourcedir $(SOURCES)" --define "_builddir $(RPM)/BUILD" --define "_srcrpmdir $(RPM)/SRPMS" --define "_rpmdir $(RPM)/RPMS" --define "_specdir $(RPM)/SPECS" --define "dist $(DIST)" --nodeps -bs $(RPM)/SOURCES/kernel.spec
 
+rh-srpm-gcov:
+	make rh-sources BUILDID=".gcov"
+	sed -i 's/%define with_gcov.*/%define with_gcov 1/' $(RPM)/SOURCES/kernel.spec
+	$(RPMBUILD) --define "_sourcedir $(SOURCES)" --define "_builddir $(RPM)/BUILD" --define "_srcrpmdir $(RPM)/SRPMS" --define "_rpmdir $(RPM)/RPMS" --define "_specdir $(RPM)/SPECS" --define "dist $(DIST)" --nodeps -bs $(RPM)/SOURCES/kernel.spec
+
 rh-rpms: rh-sources
 	$(RPMBUILD) --define "_sourcedir $(SOURCES)" --define "_builddir $(RPM)/BUILD" --define "_srcrpmdir $(RPM)/SRPMS" --define "_rpmdir $(RPM)/RPMS" --define "_specdir $(RPM)/SPECS" --define "dist $(DIST)" --target $(MACH) --target noarch -bb $(RPM)/SOURCES/kernel.spec
 
@@ -193,6 +198,7 @@ rh-help:
 	@echo  ' All RPM/SRPM files will be put under the redhat/rpm/ directory'
 	@echo  ''
 	@echo  '  rh-srpm	- Create a source RPM and put it into the redhat/rpm/SRPMS/ directory'
+	@echo  '  rh-srpm-gcov	- Create a source RPM with gcov enabled and put it into the redhat/rpm/SRPMS/ directory'
 	@echo  '  rh-brew	- Create a kernel SRPM and then call brew to build the created SRPM'
 	@echo  '  rh-koji	- Create a kernel SRPM and then call koji to build the created SRPM'
 	@echo  '  rhg-brew	- Pass HEAD of the current git branch to brew to build an RPM set.'

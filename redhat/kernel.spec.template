@@ -75,6 +75,14 @@ Summary: The Linux kernel
 # See also 'make debug' and 'make release'. RHEL only ever does 1.
 %define debugbuildsenabled 1
 
+%define with_gcov %{?_with_gcov: 1} %{?!_with_gcov: 0}
+
+# turn off debug kernel and kabichk for gcov builds
+%if %{with_gcov}
+%define with_debug 0
+%define with_kabichk 0
+%endif
+
 %define make_target bzImage
 
 # Kernel Version Release + Arch -> KVRA
@@ -526,6 +534,14 @@ This package provides debug information for package kernel-tools.
 
 %endif # with_tools
 
+%if %{with_gcov}
+%package gcov
+Summary: gcov graph and source files for coverage data collection.
+Group: Development/System
+%description gcov
+kernel-gcov includes the gcov graph and source files for gcov coverage collection.
+%endif
+
 %package -n kernel-abi-whitelists
 Summary: The Red Hat Enterprise Linux kernel ABI symbol whitelists
 Group: System Environment/Kernel
@@ -701,6 +717,14 @@ done
 rm -f kernel-%{version}-*debug.config
 %endif
 
+# enable GCOV kernel config options if gcov is on
+%if %{with_gcov}
+for i in *.config
+do
+  sed -i 's/# CONFIG_GCOV_KERNEL is not set/CONFIG_GCOV_KERNEL=y\nCONFIG_GCOV_PROFILE_ALL=y\n/' $i
+done
+%endif
+
 # now run oldconfig over all the config files
 for i in *.config
 do
@@ -800,10 +824,10 @@ BuildKernel() {
 %endif
 
     make -s %{?cross_opts} ARCH=$Arch oldnoconfig >/dev/null
-    make -s %{?cross_opts} ARCH=$Arch V=1 %{?_smp_mflags} KCFLAGS="%{?kcflags}" $MakeTarget %{?sparse_mflags}
+    make -s %{?cross_opts} ARCH=$Arch V=1 %{?_smp_mflags} KCFLAGS="%{?kcflags}" WITH_GCOV="%{?with_gcov}" $MakeTarget %{?sparse_mflags}
 
     if [ "$Flavour" != "kdump" ]; then
-        make -s %{?cross_opts} ARCH=$Arch V=1 %{?_smp_mflags} KCFLAGS="%{?kcflags}" modules %{?sparse_mflags} || exit 1
+        make -s %{?cross_opts} ARCH=$Arch V=1 %{?_smp_mflags} KCFLAGS="%{?kcflags}" WITH_GCOV="%{?with_gcov}" modules %{?sparse_mflags} || exit 1
     fi
 
     # Start installing the results
@@ -841,6 +865,13 @@ BuildKernel() {
         # Override $(mod-fw) because we don't want it to install any firmware
         # we'll get it from the linux-firmware package and we don't want conflicts
         make -s %{?cross_opts} ARCH=$Arch INSTALL_MOD_PATH=$RPM_BUILD_ROOT modules_install KERNELRELEASE=$KernelVer mod-fw=
+%if %{with_gcov}
+	# install gcov-needed files to $BUILDROOT/$BUILD/...:
+	#   gcov_info->filename is absolute path
+	#   gcno references to sources can use absolute paths (e.g. in out-of-tree builds)
+	#   sysfs symlink targets (set up at compile time) use absolute paths to BUILD dir
+	find . \( -name '*.gcno' -o -name '*.[chS]' \) -exec install -D '{}' "$RPM_BUILD_ROOT/$(pwd)/{}" \;
+%endif
     fi
 %ifarch %{vdso_arches}
     make -s %{?cross_opts} ARCH=$Arch INSTALL_MOD_PATH=$RPM_BUILD_ROOT vdso_install KERNELRELEASE=$KernelVer
@@ -1447,6 +1478,14 @@ fi
 %endif
 
 %endif # with_tools
+
+%if %{with_gcov}
+%ifarch x86_64 s390x ppc64 ppc64le
+%files gcov
+%defattr(-,root,root)
+%{_builddir}
+%endif
+%endif
 
 # This is %%{image_install_path} on an arch where that includes ELF files,
 # or empty otherwise.

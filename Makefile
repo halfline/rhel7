@@ -381,9 +381,11 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks
 
+ifneq ($(WITH_GCOV),1)
 ifeq ($(KBUILD_EXTMOD),)
 ifneq (,$(filter $(ARCH), x86 x86_64))
 KBUILD_CFLAGS   += $(call cc-ifversion, -eq, 0408, -Werror)
+endif
 endif
 endif
 
