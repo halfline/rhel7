@@ -1152,9 +1152,11 @@ xfs_create(
 	if (error)
 		goto out_trans_cancel;
 
-	error = xfs_dir_canenter(tp, dp, name, resblks);
-	if (error)
-		goto out_trans_cancel;
+	if (!resblks) {
+		error = xfs_dir_canenter(tp, dp, name);
+		if (error)
+			goto out_trans_cancel;
+	}
 
 	/*
 	 * A newly created regular or special file just has one directory
@@ -1312,9 +1314,11 @@ xfs_link(
 		goto error_return;
 	}
 
-	error = xfs_dir_canenter(tp, tdp, target_name, resblks);
-	if (error)
-		goto error_return;
+	if (!resblks) {
+		error = xfs_dir_canenter(tp, tdp, target_name);
+		if (error)
+			goto error_return;
+	}
 
 	xfs_bmap_init(&free_list, &first_block);
 
@@ -2644,9 +2648,11 @@ xfs_rename(
 		 * If there's no space reservation, check the entry will
 		 * fit before actually inserting it.
 		 */
-		error = xfs_dir_canenter(tp, target_dp, target_name, spaceres);
-		if (error)
-			goto error_return;
+		if (!spaceres) {
+			error = xfs_dir_canenter(tp, target_dp, target_name);
+			if (error)
+				goto error_return;
+		}
 		/*
 		 * If target does not exist and the rename crosses
 		 * directories, adjust the target directory link count
