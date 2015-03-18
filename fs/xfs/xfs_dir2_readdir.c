@@ -696,7 +696,7 @@ xfs_readdir(
 
 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
 		rval = xfs_dir2_sf_getdents(dp, dirent, offset, filldir);
-	else if ((rval = xfs_dir2_isblock(NULL, dp, &v)))
+	else if ((rval = xfs_dir2_isblock(dp, &v)))
 		;
 	else if (v)
 		rval = xfs_dir2_block_getdents(dp, dirent, offset, filldir);
