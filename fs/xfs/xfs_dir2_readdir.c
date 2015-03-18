@@ -681,7 +681,7 @@ xfs_readdir(
 	xfs_off_t		*offset,
 	filldir_t		filldir)
 {
-	struct xfs_da_args	args = {0};
+	struct xfs_da_args	args = { NULL };
 	int			rval;
 	int			v;
 
