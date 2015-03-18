@@ -540,7 +540,7 @@ xfs_dir2_leaf_getdents(
 	 * Inside the loop we keep the main offset value as a byte offset
 	 * in the directory file.
 	 */
-	curoff = xfs_dir2_dataptr_to_byte(mp, *offset);
+	curoff = xfs_dir2_dataptr_to_byte(*offset);
 
 	/*
 	 * Force this conversion through db so we truncate the offset
@@ -645,7 +645,7 @@ xfs_dir2_leaf_getdents(
 		filetype = dp->d_ops->data_get_ftype(dep);
 
 		if (filldir(dirent, (char *)dep->name, dep->namelen,
-			    xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff,
+			    xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff,
 			    be64_to_cpu(dep->inumber),
 			    xfs_dir3_get_dtype(mp, filetype)))
 			break;
@@ -662,10 +662,10 @@ xfs_dir2_leaf_getdents(
 	/*
 	 * All done.  Set output offset value to current offset.
 	 */
-	if (curoff > xfs_dir2_dataptr_to_byte(mp, XFS_DIR2_MAX_DATAPTR))
+	if (curoff > xfs_dir2_dataptr_to_byte(XFS_DIR2_MAX_DATAPTR))
 		*offset = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
 	else
-		*offset = xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff;
+		*offset = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
 	kmem_free(map_info);
 	if (bp)
 		xfs_trans_brelse(NULL, bp);
