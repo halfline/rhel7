@@ -847,8 +847,6 @@ xfs_ialloc(
 		error = xfs_filestream_associate(pip, ip);
 		if (error < 0)
 			return -error;
-		if (!error)
-			xfs_iflags_set(ip, XFS_IFILESTREAM);
 	}
 
 	*ipp = ip;
