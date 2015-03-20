@@ -227,6 +227,7 @@ _xfs_buf_alloc(
 	INIT_LIST_HEAD(&bp->b_list);
 	RB_CLEAR_NODE(&bp->b_rbnode);
 	sema_init(&bp->b_sema, 0); /* held, no waiters */
+	spin_lock_init(&bp->b_lock);
 	XB_SET_OWNER(bp);
 	bp->b_target = target;
 	bp->b_flags = flags;
@@ -1038,6 +1039,13 @@ xfs_buf_ioend(
 
 	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
 
+	/*
+	 * Pull in IO completion errors now. We are guaranteed to be running
+	 * single threaded, so we don't need the lock to read b_io_error.
+	 */
+	if (!bp->b_error && bp->b_io_error)
+		xfs_buf_ioerror(bp, bp->b_io_error);
+
 	/* Only validate buffers that were read without errors */
 	if (read && !bp->b_error && bp->b_ops) {
 		ASSERT(!bp->b_iodone);
@@ -1222,8 +1230,12 @@ xfs_buf_bio_end_io(
 	 * don't overwrite existing errors - otherwise we can lose errors on
 	 * buffers that require multiple bios to complete.
 	 */
-	if (!bp->b_error)
-		xfs_buf_ioerror(bp, error);
+	if (error) {
+		spin_lock(&bp->b_lock);
+		if (!bp->b_io_error)
+			bp->b_io_error = error;
+		spin_unlock(&bp->b_lock);
+	}
 
 	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
 		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
@@ -1408,6 +1420,9 @@ xfs_buf_iorequest(
 
 	if (bp->b_flags & XBF_WRITE)
 		xfs_buf_wait_unpin(bp);
+
+	/* clear the internal error state to avoid spurious errors */
+	bp->b_io_error = 0;
 
 	/*
 	 * Take references to the buffer. For XBF_ASYNC buffers, holding a

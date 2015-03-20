@@ -155,6 +155,8 @@ typedef struct xfs_buf {
 	 */
 	struct list_head	b_lru;		/* lru list */
 	xfs_buf_flags_t		b_lru_flags;	/* internal lru status flags */
+	spinlock_t		b_lock;		/* internal state lock */
+	int			b_io_error;	/* internal IO error state */
 	wait_queue_head_t	b_waiters;	/* unpin waiters */
 	struct list_head	b_list;
 	struct xfs_perag	*b_pag;		/* contains rbtree root */
