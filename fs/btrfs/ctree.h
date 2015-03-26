@@ -1814,9 +1814,7 @@ struct btrfs_root {
 
 	u64 highest_objectid;
 
-#ifdef CONFIG_BTRFS_FS_RUN_SANITY_TESTS
 	u64 alloc_bytenr;
-#endif
 
 	u64 defrag_trans_start;
 	struct btrfs_key defrag_progress;
@@ -4133,5 +4131,14 @@ void btrfs_test_destroy_inode(struct inode *inode);
 int btrfs_verify_qgroup_counts(struct btrfs_fs_info *fs_info, u64 qgroupid,
 			       u64 rfer, u64 excl);
 #endif
+
+static inline int btrfs_test_is_dummy_root(struct btrfs_root *root)
+{
+#ifdef CONFIG_BTRFS_FS_RUN_SANITY_TESTS
+	if (unlikely(test_bit(BTRFS_ROOT_DUMMY_ROOT, &root->state)))
+		return 1;
+#endif
+	return 0;
+}
 
 #endif
