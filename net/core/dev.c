@@ -2624,7 +2624,8 @@ static inline int __dev_xmit_skb(struct sk_buff *skb, struct Qdisc *q,
 
 		qdisc_bstats_update(q, skb);
 
-		if (sch_direct_xmit(skb, q, dev, txq, root_lock)) {
+		skb = validate_xmit_skb(skb, dev);
+		if (skb && sch_direct_xmit(skb, q, dev, txq, root_lock)) {
 			if (unlikely(contended)) {
 				spin_unlock(&q->busylock);
 				contended = false;
@@ -2760,6 +2761,10 @@ int dev_queue_xmit(struct sk_buff *skb)
 			if (__this_cpu_read(xmit_recursion) > RECURSION_LIMIT)
 				goto recursion_alert;
 
+			skb = validate_xmit_skb(skb, dev);
+			if (!skb)
+				goto drop;
+
 			HARD_TX_LOCK(dev, txq, cpu);
 
 			if (!netif_xmit_stopped(txq)) {
@@ -2785,9 +2790,10 @@ recursion_alert:
 	}
 
 	rc = -ENETDOWN;
+drop:
 	rcu_read_unlock_bh();
 
-	kfree_skb(skb);
+	kfree_skb_list(skb);
 	return rc;
 out:
 	rcu_read_unlock_bh();
