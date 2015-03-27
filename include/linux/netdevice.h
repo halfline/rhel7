@@ -2975,11 +2975,8 @@ extern int __init dev_proc_init(void);
 static inline netdev_tx_t __netdev_start_xmit(const struct net_device_ops *ops,
 					      struct sk_buff *skb, struct net_device *dev)
 {
-	netdev_tx_t ret;
-
-	ret = ops->ndo_start_xmit(skb, dev);
-
-	return ret;
+	skb->xmit_more = 0;
+	return ops->ndo_start_xmit(skb, dev);
 }
 
 static inline netdev_tx_t netdev_start_xmit(struct sk_buff *skb, struct net_device *dev)

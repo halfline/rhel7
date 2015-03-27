@@ -485,7 +485,8 @@ static inline u32 skb_mstamp_us_delta(const struct skb_mstamp *t1,
  *	@wifi_acked_valid: wifi_acked was set
  *	@wifi_acked: whether frame was acked on wifi or not
  *	@no_fcs:  Request NIC to treat last 4 bytes as Ethernet FCS
-  *	@napi_id: id of the NAPI struct this skb came from
+ *	@xmit_more: More SKBs are pending for this queue
+ *	@napi_id: id of the NAPI struct this skb came from
  *	@secmark: security marking
  *	@mark: Generic packet mark
  *	@dropcount: total number of sk_receive_queue overflows
@@ -598,6 +599,7 @@ struct sk_buff {
 	RH_KABI_EXTEND(__u8			encap_hdr_csum:1)
 	RH_KABI_EXTEND(__u8			csum_valid:1)
 	RH_KABI_EXTEND(__u8			csum_complete_sw:1)
+	RH_KABI_EXTEND(__u8			xmit_more:1;)
 	/* 3/5 bit hole (depending on ndisc_nodetype presence) */
 	kmemcheck_bitfield_end(flags2);
 

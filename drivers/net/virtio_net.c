@@ -802,7 +802,6 @@ static netdev_tx_t start_xmit(struct sk_buff *skb, struct net_device *dev)
 		kfree_skb(skb);
 		return NETDEV_TX_OK;
 	}
-	virtqueue_kick(sq->vq);
 
 	/* Don't wait up for transmitted skbs to be freed. */
 	skb_orphan(skb);
@@ -821,6 +820,9 @@ static netdev_tx_t start_xmit(struct sk_buff *skb, struct net_device *dev)
 			}
 		}
 	}
+
+	if (!skb->xmit_more)
+		virtqueue_kick(sq->vq);
 
 	return NETDEV_TX_OK;
 }
