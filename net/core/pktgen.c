@@ -198,6 +198,7 @@
 #define F_QUEUE_MAP_RND (1<<13)	/* queue map Random */
 #define F_QUEUE_MAP_CPU (1<<14)	/* queue map mirrors smp_processor_id() */
 #define F_NODE          (1<<15)	/* Node memory alloc*/
+#define F_NO_TIMESTAMP  (1<<17)	/* Don't timestamp packets (default TS) */
 
 /* Thread control flag bits */
 #define T_STOP        (1<<0)	/* Stop run */
@@ -630,6 +631,9 @@ static int pktgen_if_show(struct seq_file *seq, void *v)
 
 	if (pkt_dev->flags & F_UDPDST_RND)
 		seq_printf(seq, "UDPDST_RND  ");
+
+	if (pkt_dev->flags & F_NO_TIMESTAMP)
+		seq_puts(seq, "NO_TIMESTAMP  ");
 
 	if (pkt_dev->flags & F_MPLS_RND)
 		seq_printf(seq,  "MPLS_RND  ");
@@ -1228,12 +1232,21 @@ static ssize_t pktgen_if_write(struct file *file,
 		else if (strcmp(f, "!NODE_ALLOC") == 0)
 			pkt_dev->flags &= ~F_NODE;
 
+		else if (strcmp(f, "NO_TIMESTAMP") == 0)
+			pkt_dev->flags |= F_NO_TIMESTAMP;
+
 		else {
 			sprintf(pg_result,
 				"Flag -:%s:- unknown\nAvailable flags, (prepend ! to un-set flag):\n%s",
 				f,
 				"IPSRC_RND, IPDST_RND, UDPSRC_RND, UDPDST_RND, "
-				"MACSRC_RND, MACDST_RND, TXSIZE_RND, IPV6, MPLS_RND, VID_RND, SVID_RND, FLOW_SEQ, IPSEC, NODE_ALLOC\n");
+				"MACSRC_RND, MACDST_RND, TXSIZE_RND, IPV6, "
+				"MPLS_RND, VID_RND, SVID_RND, FLOW_SEQ, "
+				"NO_TIMESTAMP, "
+#ifdef CONFIG_XFRM
+				"IPSEC, "
+#endif
+				"NODE_ALLOC\n");
 			return count;
 		}
 		sprintf(pg_result, "OK: flags=0x%x", pkt_dev->flags);
@@ -2629,9 +2642,14 @@ static void pktgen_finalize_skb(struct pktgen_dev *pkt_dev, struct sk_buff *skb,
 	pgh->pgh_magic = htonl(PKTGEN_MAGIC);
 	pgh->seq_num = htonl(pkt_dev->seq_num);
 
-	do_gettimeofday(&timestamp);
-	pgh->tv_sec = htonl(timestamp.tv_sec);
-	pgh->tv_usec = htonl(timestamp.tv_usec);
+	if (pkt_dev->flags & F_NO_TIMESTAMP) {
+		pgh->tv_sec = 0;
+		pgh->tv_usec = 0;
+	} else {
+		do_gettimeofday(&timestamp);
+		pgh->tv_sec = htonl(timestamp.tv_sec);
+		pgh->tv_usec = htonl(timestamp.tv_usec);
+	}
 }
 
 static struct sk_buff *fill_packet_ipv4(struct net_device *odev,
