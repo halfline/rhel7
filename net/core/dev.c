@@ -2566,10 +2566,8 @@ int dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev,
 			dev_queue_xmit_nit(skb, dev);
 
 		skb_len = skb->len;
-		rc = netdev_start_xmit(skb, dev);
+		rc = netdev_start_xmit(skb, dev, txq);
 		trace_net_dev_xmit(skb, rc, dev, skb_len);
-		if (rc == NETDEV_TX_OK)
-			txq_trans_update(txq);
 		return rc;
 	}
 
@@ -2584,7 +2582,7 @@ gso:
 			dev_queue_xmit_nit(nskb, dev);
 
 		skb_len = nskb->len;
-		rc = netdev_start_xmit(nskb, dev);
+		rc = netdev_start_xmit(nskb, dev, txq);
 		trace_net_dev_xmit(nskb, rc, dev, skb_len);
 		if (unlikely(rc != NETDEV_TX_OK)) {
 			if (rc & ~NETDEV_TX_MASK)
@@ -2593,7 +2591,6 @@ gso:
 			skb->next = nskb;
 			return rc;
 		}
-		txq_trans_update(txq);
 		if (unlikely(netif_xmit_stopped(txq) && skb->next))
 			return NETDEV_TX_BUSY;
 	} while (skb->next);
