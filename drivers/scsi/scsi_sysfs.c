@@ -590,6 +590,41 @@ sdev_rd_attr (vendor, "%.8s\n");
 sdev_rd_attr (model, "%.16s\n");
 sdev_rd_attr (rev, "%.4s\n");
 
+static ssize_t
+sdev_show_unpriv_sgio (struct device *dev, struct device_attribute *attr, char *buf)
+{
+	struct scsi_device *sdev;
+	int bit;
+
+	sdev = to_scsi_device(dev);
+	bit = test_bit(QUEUE_FLAG_UNPRIV_SGIO, &sdev->request_queue->queue_flags);
+	return snprintf(buf, 20, "%d\n", bit);
+}
+
+static ssize_t
+sdev_store_unpriv_sgio (struct device *dev, struct device_attribute *attr,
+			const char *buf, size_t count)
+{
+	struct scsi_device *sdev;
+	struct request_queue *q;
+	int val;
+
+	if (!capable(CAP_SYS_ADMIN))
+		return -EPERM;
+
+	sdev = to_scsi_device(dev);
+	q = sdev->request_queue;
+	sscanf (buf, "%d\n", &val);
+	spin_lock_irq(q->queue_lock);
+	if (val)
+		queue_flag_set(QUEUE_FLAG_UNPRIV_SGIO, q);
+	else
+		queue_flag_clear(QUEUE_FLAG_UNPRIV_SGIO, q);
+	spin_unlock_irq(q->queue_lock);
+	return count;
+}
+static DEVICE_ATTR(unpriv_sgio, S_IRUGO | S_IWUSR, sdev_show_unpriv_sgio, sdev_store_unpriv_sgio);
+
 /*
  * TODO: can we make these symlinks to the block layer ones?
  */
@@ -948,6 +983,7 @@ static struct attribute *scsi_sdev_attrs[] = {
 	&dev_attr_rescan.attr,
 	&dev_attr_delete.attr,
 	&dev_attr_state.attr,
+	&dev_attr_unpriv_sgio.attr,
 	&dev_attr_timeout.attr,
 	&dev_attr_eh_timeout.attr,
 	&dev_attr_iocounterbits.attr,
