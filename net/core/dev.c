@@ -2495,7 +2495,7 @@ static int xmit_one(struct sk_buff *skb, struct net_device *dev,
 		dev_queue_xmit_nit(skb, dev);
 
 	len = skb->len;
-	rc = netdev_start_xmit(skb, dev, txq);
+	rc = netdev_start_xmit(skb, dev, txq, false);
 	trace_net_dev_xmit(skb, rc, dev, len);
 
 	return rc;
