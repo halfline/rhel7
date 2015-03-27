@@ -382,6 +382,7 @@ struct pktgen_dev {
 	u16 queue_map_min;
 	u16 queue_map_max;
 	__u32 skb_priority;	/* skb priority field */
+	unsigned int burst;	/* number of duplicated packets to burst */
 	int node;               /* Memory node */
 
 #ifdef CONFIG_XFRM
@@ -608,6 +609,9 @@ static int pktgen_if_show(struct seq_file *seq, void *v)
 
 	if (pkt_dev->traffic_class)
 		seq_printf(seq, "     traffic_class: 0x%02x\n", pkt_dev->traffic_class);
+
+	if (pkt_dev->burst > 1)
+		seq_printf(seq, "     burst: %d\n", pkt_dev->burst);
 
 	if (pkt_dev->node >= 0)
 		seq_printf(seq, "     node: %d\n", pkt_dev->node);
@@ -1113,6 +1117,16 @@ static ssize_t pktgen_if_write(struct file *file,
 		}
 		sprintf(pg_result, "OK: dst_mac_count=%d",
 			pkt_dev->dst_mac_count);
+		return count;
+	}
+	if (!strcmp(name, "burst")) {
+		len = num_arg(&user_buffer[i], 10, &value);
+		if (len < 0)
+			return len;
+
+		i += len;
+		pkt_dev->burst = value < 1 ? 1 : value;
+		sprintf(pg_result, "OK: burst=%d", pkt_dev->burst);
 		return count;
 	}
 	if (!strcmp(name, "node")) {
@@ -3219,6 +3233,7 @@ static void pktgen_wait_for_skb(struct pktgen_dev *pkt_dev)
 
 static void pktgen_xmit(struct pktgen_dev *pkt_dev)
 {
+	unsigned int burst = ACCESS_ONCE(pkt_dev->burst);
 	struct net_device *odev = pkt_dev->odev;
 	struct netdev_queue *txq;
 	int ret;
@@ -3267,8 +3282,10 @@ static void pktgen_xmit(struct pktgen_dev *pkt_dev)
 		pkt_dev->last_ok = 0;
 		goto unlock;
 	}
-	atomic_inc(&(pkt_dev->skb->users));
-	ret = netdev_start_xmit(pkt_dev->skb, odev, txq, false);
+	atomic_add(burst, &pkt_dev->skb->users);
+
+xmit_more:
+	ret = netdev_start_xmit(pkt_dev->skb, odev, txq, --burst > 0);
 
 	switch (ret) {
 	case NETDEV_TX_OK:
@@ -3276,6 +3293,8 @@ static void pktgen_xmit(struct pktgen_dev *pkt_dev)
 		pkt_dev->sofar++;
 		pkt_dev->seq_num++;
 		pkt_dev->tx_bytes += pkt_dev->last_pkt_size;
+		if (burst > 0 && !netif_xmit_frozen_or_drv_stopped(txq))
+			goto xmit_more;
 		break;
 	case NET_XMIT_DROP:
 	case NET_XMIT_CN:
@@ -3294,6 +3313,8 @@ static void pktgen_xmit(struct pktgen_dev *pkt_dev)
 		atomic_dec(&(pkt_dev->skb->users));
 		pkt_dev->last_ok = 0;
 	}
+	if (unlikely(burst))
+		atomic_sub(burst, &pkt_dev->skb->users);
 unlock:
 	__netif_tx_unlock_bh(txq);
 
@@ -3487,6 +3508,7 @@ static int pktgen_add_device(struct pktgen_thread *t, const char *ifname)
 	pkt_dev->svlan_p = 0;
 	pkt_dev->svlan_cfi = 0;
 	pkt_dev->svlan_id = 0xffff;
+	pkt_dev->burst = 1;
 	pkt_dev->node = -1;
 
 	err = pktgen_setup_dev(t->net, pkt_dev, ifname);
