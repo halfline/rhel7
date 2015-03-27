@@ -115,7 +115,7 @@ static void queue_process(struct work_struct *work)
 			continue;
 		}
 
-		txq = netdev_get_tx_queue(dev, skb_get_queue_mapping(skb));
+		txq = skb_get_tx_queue(dev, skb);
 
 		local_irq_save(flags);
 		__netif_tx_lock(txq, smp_processor_id());
