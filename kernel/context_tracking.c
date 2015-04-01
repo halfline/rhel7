@@ -74,7 +74,7 @@ void context_tracking_user_enter(void)
 	WARN_ON_ONCE(!current->mm);
 
 	local_irq_save(flags);
-	if ( __this_cpu_read(context_tracking.state) != IN_USER) {
+	if ( __this_cpu_read(context_tracking.state) != CONTEXT_USER) {
 		if (__this_cpu_read(context_tracking.active)) {
 			trace_user_enter(0);
 			/*
@@ -100,7 +100,7 @@ void context_tracking_user_enter(void)
 		 * OTOH we can spare the calls to vtime and RCU when context_tracking.active
 		 * is false because we know that CPU is not tickless.
 		 */
-		__this_cpu_write(context_tracking.state, IN_USER);
+		__this_cpu_write(context_tracking.state, CONTEXT_USER);
 	}
 	local_irq_restore(flags);
 }
@@ -167,7 +167,7 @@ void context_tracking_user_exit(void)
 		return;
 
 	local_irq_save(flags);
-	if (__this_cpu_read(context_tracking.state) == IN_USER) {
+	if (__this_cpu_read(context_tracking.state) == CONTEXT_USER) {
 		if (__this_cpu_read(context_tracking.active)) {
 			/*
 			 * We are going to run code that may use RCU. Inform
@@ -177,7 +177,7 @@ void context_tracking_user_exit(void)
 			vtime_user_exit(current);
 			trace_user_exit(0);
 		}
-		__this_cpu_write(context_tracking.state, IN_KERNEL);
+		__this_cpu_write(context_tracking.state, CONTEXT_KERNEL);
 	}
 	local_irq_restore(flags);
 }
