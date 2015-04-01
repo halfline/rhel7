@@ -169,7 +169,6 @@ static inline void suspend_nvs_restore(void) {}
   -------------------------------------------------------------------------- */
 struct platform_device;
 
-int acpi_create_platform_device(struct acpi_device *adev,
-				const struct acpi_device_id *id);
+struct platform_device *acpi_create_platform_device(struct acpi_device *adev);
 
 #endif /* _ACPI_INTERNAL_H_ */
