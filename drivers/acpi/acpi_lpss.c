@@ -54,23 +54,26 @@ ACPI_MODULE_NAME("acpi_lpss");
 
 #define LPSS_PRV_REG_COUNT		9
 
+/* LPSS Flags */
+#define LPSS_CLK			BIT(0)
+#define LPSS_CLK_GATE			BIT(1)
+#define LPSS_CLK_DIVIDER		BIT(2)
+#define LPSS_LTR			BIT(3)
+#define LPSS_SAVE_CTX			BIT(4)
+
 struct lpss_private_data;
 
 struct lpss_device_desc {
-	bool clk_required;
 	const char *clkdev_name;
-	bool ltr_required;
+	unsigned int flags;
 	unsigned int prv_offset;
 	size_t prv_size_override;
-	bool clk_divider;
-	bool clk_gate;
-	bool save_ctx;
 	void (*setup)(struct lpss_private_data *pdata);
 };
 
 static struct lpss_device_desc lpss_dma_desc = {
-	.clk_required = true,
 	.clkdev_name = "hclk",
+	.flags = LPSS_CLK,
 };
 
 struct lpss_private_data {
@@ -107,60 +110,45 @@ static void lpss_i2c_setup(struct lpss_private_data *pdata)
 }
 
 static struct lpss_device_desc lpt_dev_desc = {
-	.clk_required = true,
+	.flags = LPSS_CLK | LPSS_CLK_GATE | LPSS_CLK_DIVIDER | LPSS_LTR,
 	.prv_offset = 0x800,
-	.ltr_required = true,
-	.clk_divider = true,
-	.clk_gate = true,
 };
 
 static struct lpss_device_desc lpt_i2c_dev_desc = {
-	.clk_required = true,
+	.flags = LPSS_CLK | LPSS_CLK_GATE | LPSS_LTR,
 	.prv_offset = 0x800,
-	.ltr_required = true,
-	.clk_gate = true,
 };
 
 static struct lpss_device_desc lpt_uart_dev_desc = {
-	.clk_required = true,
+	.flags = LPSS_CLK | LPSS_CLK_GATE | LPSS_CLK_DIVIDER | LPSS_LTR,
 	.prv_offset = 0x800,
-	.ltr_required = true,
-	.clk_divider = true,
-	.clk_gate = true,
 	.setup = lpss_uart_setup,
 };
 
 static struct lpss_device_desc lpt_sdio_dev_desc = {
+	.flags = LPSS_LTR,
 	.prv_offset = 0x1000,
 	.prv_size_override = 0x1018,
-	.ltr_required = true,
 };
 
 static struct lpss_device_desc byt_uart_dev_desc = {
-	.clk_required = true,
+	.flags = LPSS_CLK | LPSS_CLK_GATE | LPSS_CLK_DIVIDER | LPSS_SAVE_CTX,
 	.prv_offset = 0x800,
-	.clk_divider = true,
-	.clk_gate = true,
-	.save_ctx = true,
 	.setup = lpss_uart_setup,
 };
 
 static struct lpss_device_desc byt_spi_dev_desc = {
-	.clk_required = true,
+	.flags = LPSS_CLK | LPSS_CLK_GATE | LPSS_CLK_DIVIDER | LPSS_SAVE_CTX,
 	.prv_offset = 0x400,
-	.clk_divider = true,
-	.clk_gate = true,
-	.save_ctx = true,
 };
 
 static struct lpss_device_desc byt_sdio_dev_desc = {
-	.clk_required = true,
+	.flags = LPSS_CLK,
 };
 
 static struct lpss_device_desc byt_i2c_dev_desc = {
-	.clk_required = true,
+	.flags = LPSS_CLK | LPSS_SAVE_CTX,
 	.prv_offset = 0x800,
-	.save_ctx = true,
 	.setup = lpss_i2c_setup,
 };
 
@@ -241,13 +229,13 @@ static int register_device_clock(struct acpi_device *adev,
 	parent = clk_data->name;
 	prv_base = pdata->mmio_base + dev_desc->prv_offset;
 
-	if (dev_desc->clk_gate) {
+	if (dev_desc->flags & LPSS_CLK_GATE) {
 		clk = clk_register_gate(NULL, devname, parent, 0,
 					prv_base, 0, 0, NULL);
 		parent = devname;
 	}
 
-	if (dev_desc->clk_divider) {
+	if (dev_desc->flags & LPSS_CLK_DIVIDER) {
 		/* Prevent division by zero */
 		if (!readl(prv_base))
 			writel(LPSS_CLK_DIVIDER_DEF_MASK, prv_base);
@@ -319,7 +307,7 @@ static int acpi_lpss_create_device(struct acpi_device *adev,
 
 	pdata->dev_desc = dev_desc;
 
-	if (dev_desc->clk_required) {
+	if (dev_desc->flags & LPSS_CLK) {
 		ret = register_device_clock(adev, pdata);
 		if (ret) {
 			/* Skip the device, but continue the namespace scan. */
@@ -616,19 +604,19 @@ static int acpi_lpss_platform_notify(struct notifier_block *nb,
 
 	switch (action) {
 	case BUS_NOTIFY_BOUND_DRIVER:
-		if (pdata->dev_desc->save_ctx)
+		if (pdata->dev_desc->flags & LPSS_SAVE_CTX)
 			pdev->dev.pm_domain = &acpi_lpss_pm_domain;
 		break;
 	case BUS_NOTIFY_UNBOUND_DRIVER:
-		if (pdata->dev_desc->save_ctx)
+		if (pdata->dev_desc->flags & LPSS_SAVE_CTX)
 			pdev->dev.pm_domain = NULL;
 		break;
 	case BUS_NOTIFY_ADD_DEVICE:
-		if (pdata->dev_desc->ltr_required)
+		if (pdata->dev_desc->flags & LPSS_LTR)
 			return sysfs_create_group(&pdev->dev.kobj,
 						  &lpss_attr_group);
 	case BUS_NOTIFY_DEL_DEVICE:
-		if (pdata->dev_desc->ltr_required)
+		if (pdata->dev_desc->flags & LPSS_LTR)
 			sysfs_remove_group(&pdev->dev.kobj, &lpss_attr_group);
 	default:
 		break;
@@ -645,7 +633,7 @@ static void acpi_lpss_bind(struct device *dev)
 {
 	struct lpss_private_data *pdata = acpi_driver_data(ACPI_COMPANION(dev));
 
-	if (!pdata || !pdata->mmio_base || !pdata->dev_desc->ltr_required)
+	if (!pdata || !pdata->mmio_base || !(pdata->dev_desc->flags & LPSS_LTR))
 		return;
 
 	if (pdata->mmio_size >= pdata->dev_desc->prv_offset + LPSS_LTR_SIZE)
