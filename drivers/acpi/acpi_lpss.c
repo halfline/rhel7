@@ -54,12 +54,6 @@ ACPI_MODULE_NAME("acpi_lpss");
 
 #define LPSS_PRV_REG_COUNT		9
 
-struct lpss_shared_clock {
-	const char *name;
-	unsigned long rate;
-	struct clk *clk;
-};
-
 struct lpss_private_data;
 
 struct lpss_device_desc {
@@ -71,7 +65,6 @@ struct lpss_device_desc {
 	bool clk_divider;
 	bool clk_gate;
 	bool save_ctx;
-	struct lpss_shared_clock *shared_clock;
 	void (*setup)(struct lpss_private_data *pdata);
 };
 
@@ -164,16 +157,10 @@ static struct lpss_device_desc byt_sdio_dev_desc = {
 	.clk_required = true,
 };
 
-static struct lpss_shared_clock i2c_clock = {
-	.name = "i2c_clk",
-	.rate = 100000000,
-};
-
 static struct lpss_device_desc byt_i2c_dev_desc = {
 	.clk_required = true,
 	.prv_offset = 0x800,
 	.save_ctx = true,
-	.shared_clock = &i2c_clock,
 	.setup = lpss_i2c_setup,
 };
 
@@ -228,7 +215,6 @@ static int register_device_clock(struct acpi_device *adev,
 				 struct lpss_private_data *pdata)
 {
 	const struct lpss_device_desc *dev_desc = pdata->dev_desc;
-	struct lpss_shared_clock *shared_clock = dev_desc->shared_clock;
 	const char *devname = dev_name(&adev->dev);
 	struct clk *clk = ERR_PTR(-ENODEV);
 	struct lpss_clk_data *clk_data;
@@ -254,17 +240,6 @@ static int register_device_clock(struct acpi_device *adev,
 
 	parent = clk_data->name;
 	prv_base = pdata->mmio_base + dev_desc->prv_offset;
-
-	if (shared_clock) {
-		clk = shared_clock->clk;
-		if (!clk) {
-			clk = clk_register_fixed_rate(NULL, shared_clock->name,
-						      "lpss_clk", 0,
-						      shared_clock->rate);
-			shared_clock->clk = clk;
-		}
-		parent = shared_clock->name;
-	}
 
 	if (dev_desc->clk_gate) {
 		clk = clk_register_gate(NULL, devname, parent, 0,
