@@ -518,7 +518,7 @@ static int acpi_lpss_suspend_late(struct device *dev)
 	return acpi_dev_suspend_late(dev);
 }
 
-static int acpi_lpss_restore_early(struct device *dev)
+static int acpi_lpss_resume_early(struct device *dev)
 {
 	int ret = acpi_dev_resume_early(dev);
 
@@ -559,10 +559,10 @@ static struct dev_pm_domain acpi_lpss_pm_domain = {
 	.ops = {
 #ifdef CONFIG_PM_SLEEP
 		.suspend_late = acpi_lpss_suspend_late,
-		.restore_early = acpi_lpss_restore_early,
+		.restore_early = acpi_lpss_resume_early,
 		.prepare = acpi_subsys_prepare,
 		.resume_early = acpi_subsys_resume_early,
-		.poweroff_late = acpi_subsys_suspend_late,
+		.poweroff_late = acpi_lpss_suspend_late,
 #endif
 #ifdef CONFIG_PM_RUNTIME
 		.runtime_suspend = acpi_lpss_runtime_suspend,
