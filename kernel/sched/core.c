@@ -300,6 +300,9 @@ const_debug unsigned int sysctl_sched_nr_migrate = 32;
  */
 const_debug unsigned int sysctl_sched_time_avg = MSEC_PER_SEC;
 
+/* cpus with isolated domains */
+cpumask_var_t cpu_isolated_map;
+
 /*
  * period over which we measure -rt task cpu usage in us.
  * default: 1s
@@ -5991,9 +5994,6 @@ cpu_attach_domain(struct sched_domain *sd, struct root_domain *rd, int cpu)
 
 	update_top_cache_domain(cpu);
 }
-
-/* cpus with isolated domains */
-static cpumask_var_t cpu_isolated_map;
 
 /* Setup the mask of cpus configured for isolated domains */
 static int __init isolated_cpu_setup(char *str)
