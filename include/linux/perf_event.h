@@ -525,10 +525,9 @@ struct perf_event_context {
 	int				nr_branch_stack; /* branch_stack evt */
 	struct rcu_head			rcu_head;
 
-#ifndef __GENKSYMS__
-	struct delayed_work		orphans_remove;
-	bool				orphans_remove_sched;
-#endif
+	RH_KABI_EXTEND(struct delayed_work	orphans_remove)
+	RH_KABI_EXTEND(bool			orphans_remove_sched)
+	RH_KABI_EXTEND(struct list_head		active_ctx_list)
 };
 
 /*
@@ -547,7 +546,9 @@ struct perf_cpu_context {
 	int				exclusive;
 	struct hrtimer			hrtimer;
 	ktime_t				hrtimer_interval;
-	struct list_head		rotation_list;
+
+	RH_KABI_DEPRECATE(struct list_head,	rotation_list)
+
 	struct pmu			*unique_pmu;
 	struct perf_cgroup		*cgrp;
 };
