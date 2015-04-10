@@ -482,7 +482,7 @@ enum perf_event_context_type {
  */
 struct perf_event_context {
 	struct pmu			*pmu;
-	enum perf_event_context_type	type;
+	RH_KABI_DEPRECATE(enum perf_event_context_type, type)
 	/*
 	 * Protect the states of the events in the list,
 	 * nr_active, and the list:
