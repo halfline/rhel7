@@ -638,7 +638,7 @@ struct perf_sample_data {
 	 */
 	RH_KABI_EXTEND(u64				txn)
 	RH_KABI_EXTEND(struct perf_regs                 regs_intr)
-};
+} ____cacheline_aligned;
 
 /* default value for data source */
 #define PERF_MEM_NA (PERF_MEM_S(OP, NA)   |\
@@ -655,14 +655,9 @@ static inline void perf_sample_data_init(struct perf_sample_data *data,
 	data->raw  = NULL;
 	data->br_stack = NULL;
 	data->period = period;
-	data->regs_user.abi = PERF_SAMPLE_REGS_ABI_NONE;
-	data->regs_user.regs = NULL;
-	data->stack_user_size = 0;
 	data->weight = 0;
 	data->data_src.val = PERF_MEM_NA;
 	data->txn = 0;
-	data->regs_intr.abi = PERF_SAMPLE_REGS_ABI_NONE;
-	data->regs_intr.regs = NULL;
 }
 
 extern void perf_output_sample(struct perf_output_handle *handle,
