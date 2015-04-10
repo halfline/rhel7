@@ -542,10 +542,4 @@ static inline int i2c_adapter_id(struct i2c_adapter *adap)
 
 #endif /* I2C */
 
-#if IS_ENABLED(CONFIG_ACPI_I2C)
-extern void acpi_i2c_register_devices(struct i2c_adapter *adap);
-#else
-static inline void acpi_i2c_register_devices(struct i2c_adapter *adap) {}
-#endif
-
 #endif /* _LINUX_I2C_H */
