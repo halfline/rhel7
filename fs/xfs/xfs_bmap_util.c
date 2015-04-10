@@ -133,7 +133,7 @@ xfs_bmap_finish(
 			mp = ntp->t_mountp;
 			if (!XFS_FORCED_SHUTDOWN(mp))
 				xfs_force_shutdown(mp,
-						   (error == EFSCORRUPTED) ?
+						   (error == -EFSCORRUPTED) ?
 						   SHUTDOWN_CORRUPT_INCORE :
 						   SHUTDOWN_META_IO_ERROR);
 			return error;
@@ -365,7 +365,7 @@ xfs_bmap_count_tree(
 			xfs_trans_brelse(tp, bp);
 			XFS_ERROR_REPORT("xfs_bmap_count_tree(1)",
 					 XFS_ERRLEVEL_LOW, mp);
-			return EFSCORRUPTED;
+			return -EFSCORRUPTED;
 		}
 		xfs_trans_brelse(tp, bp);
 	} else {
@@ -432,7 +432,7 @@ xfs_bmap_count_blocks(
 	if (unlikely(xfs_bmap_count_tree(mp, tp, ifp, bno, level, count) < 0)) {
 		XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)", XFS_ERRLEVEL_LOW,
 				 mp);
-		return EFSCORRUPTED;
+		return -EFSCORRUPTED;
 	}
 
 	return 0;
@@ -524,13 +524,13 @@ xfs_getbmap(
 			if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS &&
 			    ip->i_d.di_aformat != XFS_DINODE_FMT_BTREE &&
 			    ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)
-				return EINVAL;
+				return -EINVAL;
 		} else if (unlikely(
 			   ip->i_d.di_aformat != 0 &&
 			   ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS)) {
 			XFS_ERROR_REPORT("xfs_getbmap", XFS_ERRLEVEL_LOW,
 					 ip->i_mount);
-			return EFSCORRUPTED;
+			return -EFSCORRUPTED;
 		}
 
 		prealloced = 0;
@@ -539,7 +539,7 @@ xfs_getbmap(
 		if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
 		    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
 		    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
-			return EINVAL;
+			return -EINVAL;
 
 		if (xfs_get_extsz_hint(ip) ||
 		    ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC|XFS_DIFLAG_APPEND)){
@@ -559,26 +559,26 @@ xfs_getbmap(
 		bmv->bmv_entries = 0;
 		return 0;
 	} else if (bmv->bmv_length < 0) {
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	nex = bmv->bmv_count - 1;
 	if (nex <= 0)
-		return EINVAL;
+		return -EINVAL;
 	bmvend = bmv->bmv_offset + bmv->bmv_length;
 
 
 	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
-		return ENOMEM;
+		return -ENOMEM;
 	out = kmem_zalloc_large(bmv->bmv_count * sizeof(struct getbmapx), 0);
 	if (!out)
-		return ENOMEM;
+		return -ENOMEM;
 
 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
 	if (whichfork == XFS_DATA_FORK) {
 		if (!(iflags & BMV_IF_DELALLOC) &&
 		    (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size)) {
-			error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
+			error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
 			if (error)
 				goto out_unlock_iolock;
 
@@ -611,7 +611,7 @@ xfs_getbmap(
 	/*
 	 * Allocate enough space to handle "subnex" maps at a time.
 	 */
-	error = ENOMEM;
+	error = -ENOMEM;
 	subnex = 16;
 	map = kmem_alloc(subnex * sizeof(*map), KM_MAYFAIL | KM_NOFS);
 	if (!map)
@@ -882,7 +882,7 @@ xfs_free_eofblocks(
 		if (need_iolock) {
 			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
 				xfs_trans_cancel(tp, 0);
-				return EAGAIN;
+				return -EAGAIN;
 			}
 		}
 
@@ -955,14 +955,14 @@ xfs_alloc_file_space(
 	trace_xfs_alloc_file_space(ip);
 
 	if (XFS_FORCED_SHUTDOWN(mp))
-		return EIO;
+		return -EIO;
 
 	error = xfs_qm_dqattach(ip, 0);
 	if (error)
 		return error;
 
 	if (len <= 0)
-		return EINVAL;
+		return -EINVAL;
 
 	rt = XFS_IS_REALTIME_INODE(ip);
 	extsz = xfs_get_extsz_hint(ip);
@@ -1028,7 +1028,7 @@ xfs_alloc_file_space(
 			/*
 			 * Free the transaction structure.
 			 */
-			ASSERT(error == ENOSPC || XFS_FORCED_SHUTDOWN(mp));
+			ASSERT(error == -ENOSPC || XFS_FORCED_SHUTDOWN(mp));
 			xfs_trans_cancel(tp, 0);
 			break;
 		}
@@ -1065,7 +1065,7 @@ xfs_alloc_file_space(
 		allocated_fsb = imapp->br_blockcount;
 
 		if (nimaps == 0) {
-			error = ENOSPC;
+			error = -ENOSPC;
 			break;
 		}
 
@@ -1126,7 +1126,7 @@ xfs_zero_remaining_bytes(
 					mp->m_rtdev_targp : mp->m_ddev_targp,
 				  BTOBB(mp->m_sb.sb_blocksize), 0);
 	if (!bp)
-		return ENOMEM;
+		return -ENOMEM;
 
 	xfs_buf_unlock(bp);
 
@@ -1158,7 +1158,7 @@ xfs_zero_remaining_bytes(
 		XFS_BUF_SET_ADDR(bp, xfs_fsb_to_db(ip, imap.br_startblock));
 
 		if (XFS_FORCED_SHUTDOWN(mp)) {
-			error = EIO;
+			error = -EIO;
 			break;
 		}
 		xfs_buf_iorequest(bp);
@@ -1176,7 +1176,7 @@ xfs_zero_remaining_bytes(
 		XFS_BUF_WRITE(bp);
 
 		if (XFS_FORCED_SHUTDOWN(mp)) {
-			error = EIO;
+			error = -EIO;
 			break;
 		}
 		xfs_buf_iorequest(bp);
@@ -1234,7 +1234,7 @@ xfs_free_file_space(
 
 	rounding = max_t(xfs_off_t, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
 	ioffset = offset & ~(rounding - 1);
-	error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+	error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
 					      ioffset, -1);
 	if (error)
 		goto out;
@@ -1315,7 +1315,7 @@ xfs_free_file_space(
 			/*
 			 * Free the transaction structure.
 			 */
-			ASSERT(error == ENOSPC || XFS_FORCED_SHUTDOWN(mp));
+			ASSERT(error == -ENOSPC || XFS_FORCED_SHUTDOWN(mp));
 			xfs_trans_cancel(tp, 0);
 			break;
 		}
@@ -1396,7 +1396,7 @@ xfs_zero_file_space(
 		 * appending writes make it to disk (otherwise we could just
 		 * punch out the delalloc blocks).
 		 */
-		error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
 				start_boundary, end_boundary - 1);
 		if (error)
 			goto out;
@@ -1557,14 +1557,14 @@ xfs_swap_extents_check_format(
 	/* Should never get a local format */
 	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
 	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL)
-		return EINVAL;
+		return -EINVAL;
 
 	/*
 	 * if the target inode has less extents that then temporary inode then
 	 * why did userspace call us?
 	 */
 	if (ip->i_d.di_nextents < tip->i_d.di_nextents)
-		return EINVAL;
+		return -EINVAL;
 
 	/*
 	 * if the target inode is in extent form and the temp inode is in btree
@@ -1573,19 +1573,19 @@ xfs_swap_extents_check_format(
 	 */
 	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
 	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
-		return EINVAL;
+		return -EINVAL;
 
 	/* Check temp in extent form to max in target */
 	if (tip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
 	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) >
 			XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
-		return EINVAL;
+		return -EINVAL;
 
 	/* Check target in extent form to max in temp */
 	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
 	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) >
 			XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
-		return EINVAL;
+		return -EINVAL;
 
 	/*
 	 * If we are in a btree format, check that the temp root block will fit
@@ -1599,20 +1599,20 @@ xfs_swap_extents_check_format(
 	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
 		if (XFS_IFORK_BOFF(ip) &&
 		    XFS_BMAP_BMDR_SPACE(tip->i_df.if_broot) > XFS_IFORK_BOFF(ip))
-			return EINVAL;
+			return -EINVAL;
 		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
 		    XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
-			return EINVAL;
+			return -EINVAL;
 	}
 
 	/* Reciprocal target->temp btree format checks */
 	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
 		if (XFS_IFORK_BOFF(tip) &&
 		    XFS_BMAP_BMDR_SPACE(ip->i_df.if_broot) > XFS_IFORK_BOFF(tip))
-			return EINVAL;
+			return -EINVAL;
 		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
 		    XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
-			return EINVAL;
+			return -EINVAL;
 	}
 
 	return 0;
@@ -1624,21 +1624,21 @@ xfs_swap_extent_flush(
 {
 	int	error;
 
-	error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
+	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
 	if (error)
 		return error;
 	truncate_pagecache_range(VFS_I(ip), 0, -1);
 
 	/* Verify O_DIRECT for ftmp */
 	if (VFS_I(ip)->i_mapping->nrpages)
-		return EINVAL;
+		return -EINVAL;
 
 	/*
 	 * Don't try to swap extents on mmap()d files because we can't lock
 	 * out races against page faults safely.
 	 */
 	if (mapping_mapped(VFS_I(ip)->i_mapping))
-		return EBUSY;
+		return -EBUSY;
 	return 0;
 }
 
@@ -1661,7 +1661,7 @@ xfs_swap_extents(
 
 	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
 	if (!tempifp) {
-		error = ENOMEM;
+		error = -ENOMEM;
 		goto out;
 	}
 
@@ -1676,13 +1676,13 @@ xfs_swap_extents(
 
 	/* Verify that both files have the same format */
 	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
-		error = EINVAL;
+		error = -EINVAL;
 		goto out_unlock;
 	}
 
 	/* Verify both files are either real-time or non-realtime */
 	if (XFS_IS_REALTIME_INODE(ip) != XFS_IS_REALTIME_INODE(tip)) {
-		error = EINVAL;
+		error = -EINVAL;
 		goto out_unlock;
 	}
 
@@ -1706,7 +1706,7 @@ xfs_swap_extents(
 	if (sxp->sx_offset != 0 ||
 	    sxp->sx_length != ip->i_d.di_size ||
 	    sxp->sx_length != tip->i_d.di_size) {
-		error = EFAULT;
+		error = -EFAULT;
 		goto out_trans_cancel;
 	}
 
@@ -1733,7 +1733,7 @@ xfs_swap_extents(
 	    (sbp->bs_ctime.tv_nsec != VFS_I(ip)->i_ctime.tv_nsec) ||
 	    (sbp->bs_mtime.tv_sec != VFS_I(ip)->i_mtime.tv_sec) ||
 	    (sbp->bs_mtime.tv_nsec != VFS_I(ip)->i_mtime.tv_nsec)) {
-		error = EBUSY;
+		error = -EBUSY;
 		goto out_trans_cancel;
 	}
 	/*

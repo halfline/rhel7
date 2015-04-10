@@ -71,7 +71,7 @@ xfs_initxattrs(
 	int			error = 0;
 
 	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
-		error = -xfs_attr_set(ip, xattr->name, xattr->value,
+		error = xfs_attr_set(ip, xattr->name, xattr->value,
 				      xattr->value_len, ATTR_SECURE);
 		if (error < 0)
 			break;
@@ -92,7 +92,7 @@ xfs_init_security(
 	struct inode	*dir,
 	const struct qstr *qstr)
 {
-	return -security_inode_init_security(inode, dir, qstr,
+	return security_inode_init_security(inode, dir, qstr,
 					     &xfs_initxattrs, NULL);
 }
 
@@ -172,7 +172,7 @@ xfs_vn_mknod(
 		goto out_cleanup_inode;
 
 	if (default_acl) {
-		error = -xfs_inherit_acl(inode, default_acl);
+		error = xfs_inherit_acl(inode, default_acl);
 		default_acl = NULL;
 		if (unlikely(error))
 			goto out_cleanup_inode;
@@ -180,13 +180,13 @@ xfs_vn_mknod(
 
 
 	d_instantiate(dentry, inode);
-	return -error;
+	return error;
 
  out_cleanup_inode:
 	xfs_cleanup_inode(dir, inode, dentry);
  out_free_acl:
 	posix_acl_release(default_acl);
-	return -error;
+	return error;
 }
 
 STATIC int
@@ -224,8 +224,8 @@ xfs_vn_lookup(
 	xfs_dentry_to_name(&name, dentry, 0);
 	error = xfs_lookup(XFS_I(dir), &name, &cip, NULL);
 	if (unlikely(error)) {
-		if (unlikely(error != ENOENT))
-			return ERR_PTR(-error);
+		if (unlikely(error != -ENOENT))
+			return ERR_PTR(error);
 		d_add(dentry, NULL);
 		return NULL;
 	}
@@ -251,8 +251,8 @@ xfs_vn_ci_lookup(
 	xfs_dentry_to_name(&xname, dentry, 0);
 	error = xfs_lookup(XFS_I(dir), &xname, &ip, &ci_name);
 	if (unlikely(error)) {
-		if (unlikely(error != ENOENT))
-			return ERR_PTR(-error);
+		if (unlikely(error != -ENOENT))
+			return ERR_PTR(error);
 		/*
 		 * call d_add(dentry, NULL) here when d_drop_negative_children
 		 * is called in xfs_vn_mknod (ie. allow negative dentries
@@ -287,7 +287,7 @@ xfs_vn_link(
 
 	error = xfs_link(XFS_I(dir), XFS_I(inode), &name);
 	if (unlikely(error))
-		return -error;
+		return error;
 
 	ihold(inode);
 	d_instantiate(dentry, inode);
@@ -304,7 +304,7 @@ xfs_vn_unlink(
 
 	xfs_dentry_to_name(&name, dentry, 0);
 
-	error = -xfs_remove(XFS_I(dir), &name, XFS_I(dentry->d_inode));
+	error = xfs_remove(XFS_I(dir), &name, XFS_I(dentry->d_inode));
 	if (error)
 		return error;
 
@@ -350,7 +350,7 @@ xfs_vn_symlink(
  out_cleanup_inode:
 	xfs_cleanup_inode(dir, inode, dentry);
  out:
-	return -error;
+	return error;
 }
 
 STATIC int
@@ -367,8 +367,8 @@ xfs_vn_rename(
 	xfs_dentry_to_name(&oname, odentry, 0);
 	xfs_dentry_to_name(&nname, ndentry, odentry->d_inode->i_mode);
 
-	return -xfs_rename(XFS_I(odir), &oname, XFS_I(odentry->d_inode),
-			   XFS_I(ndir), &nname, new_inode ?
+	return xfs_rename(XFS_I(odir), &oname, XFS_I(odentry->d_inode),
+			  XFS_I(ndir), &nname, new_inode ?
 						XFS_I(new_inode) : NULL);
 }
 
@@ -389,7 +389,7 @@ xfs_vn_follow_link(
 	if (!link)
 		goto out_err;
 
-	error = -xfs_readlink(XFS_I(dentry->d_inode), link);
+	error = xfs_readlink(XFS_I(dentry->d_inode), link);
 	if (unlikely(error))
 		goto out_kfree;
 
@@ -533,12 +533,12 @@ xfs_setattr_nonsize(
 	/* If acls are being inherited, we already have this checked */
 	if (!(flags & XFS_ATTR_NOACL)) {
 		if (mp->m_flags & XFS_MOUNT_RDONLY)
-			return EROFS;
+			return -EROFS;
 
 		if (XFS_FORCED_SHUTDOWN(mp))
-			return EIO;
+			return -EIO;
 
-		error = -inode_change_ok(inode, iattr);
+		error = inode_change_ok(inode, iattr);
 		if (error)
 			return error;
 	}
@@ -700,7 +700,7 @@ xfs_setattr_nonsize(
 	 * 	     Posix ACL code seems to care about this issue either.
 	 */
 	if ((mask & ATTR_MODE) && !(flags & XFS_ATTR_NOACL)) {
-		error = -xfs_acl_chmod(inode);
+		error = xfs_acl_chmod(inode);
 		if (error)
 			return error;
 	}
@@ -735,12 +735,12 @@ xfs_setattr_size(
 	trace_xfs_setattr(ip);
 
 	if (mp->m_flags & XFS_MOUNT_RDONLY)
-		return EROFS;
+		return -EROFS;
 
 	if (XFS_FORCED_SHUTDOWN(mp))
-		return EIO;
+		return -EIO;
 
-	error = -inode_change_ok(inode, iattr);
+	error = inode_change_ok(inode, iattr);
 	if (error)
 		return error;
 
@@ -805,7 +805,7 @@ xfs_setattr_size(
 	 * care about here.
 	 */
 	if (oldsize != ip->i_d.di_size && newsize > ip->i_d.di_size) {
-		error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
 						      ip->i_d.di_size, newsize);
 		if (error)
 			return error;
@@ -831,7 +831,7 @@ xfs_setattr_size(
 	 * much we can do about this, except to hope that the caller sees ENOMEM
 	 * and retries the truncate operation.
 	 */
-	error = -block_truncate_page(inode->i_mapping, newsize, xfs_get_blocks);
+	error = block_truncate_page(inode->i_mapping, newsize, xfs_get_blocks);
 	if (error)
 		return error;
 	truncate_setsize(inode, newsize);
@@ -937,7 +937,7 @@ xfs_vn_setattr(
 		error = xfs_setattr_nonsize(ip, iattr, 0);
 	}
 
-	return -error;
+	return error;
 }
 
 STATIC int
@@ -957,7 +957,7 @@ xfs_vn_update_time(
 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_fsyncts, 0, 0);
 	if (error) {
 		xfs_trans_cancel(tp, 0);
-		return -error;
+		return error;
 	}
 
 	xfs_ilock(ip, XFS_ILOCK_EXCL);
@@ -978,7 +978,7 @@ xfs_vn_update_time(
 	}
 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
 	xfs_trans_log_inode(tp, ip, XFS_ILOG_TIMESTAMP);
-	return -xfs_trans_commit(tp, 0);
+	return xfs_trans_commit(tp, 0);
 }
 
 #define XFS_FIEMAP_FLAGS	(FIEMAP_FLAG_SYNC|FIEMAP_FLAG_XATTR)
@@ -1023,7 +1023,7 @@ xfs_fiemap_format(
 		*full = 1;	/* user array now full */
 	}
 
-	return -error;
+	return error;
 }
 
 STATIC int
@@ -1062,7 +1062,7 @@ xfs_vn_fiemap(
 
 	error = xfs_getbmap(ip, &bm, xfs_fiemap_format, fieinfo);
 	if (error)
-		return -error;
+		return error;
 
 	return 0;
 }

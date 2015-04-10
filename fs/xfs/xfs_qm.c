@@ -97,18 +97,18 @@ restart:
 			next_index = be32_to_cpu(dqp->q_core.d_id) + 1;
 
 			error = execute(batch[i], data);
-			if (error == EAGAIN) {
+			if (error == -EAGAIN) {
 				skipped++;
 				continue;
 			}
-			if (error && last_error != EFSCORRUPTED)
+			if (error && last_error != -EFSCORRUPTED)
 				last_error = error;
 		}
 
 		mutex_unlock(&qi->qi_tree_lock);
 
 		/* bail out if the filesystem is corrupted.  */
-		if (last_error == EFSCORRUPTED) {
+		if (last_error == -EFSCORRUPTED) {
 			skipped = 0;
 			break;
 		}
@@ -137,7 +137,7 @@ xfs_qm_dqpurge(
 	xfs_dqlock(dqp);
 	if ((dqp->dq_flags & XFS_DQ_FREEING) || dqp->q_nrefs != 0) {
 		xfs_dqunlock(dqp);
-		return EAGAIN;
+		return -EAGAIN;
 	}
 
 	dqp->dq_flags |= XFS_DQ_FREEING;
@@ -852,7 +852,7 @@ xfs_qm_dqiter_bufs(
 		 * will leave a trace in the log indicating corruption has
 		 * been detected.
 		 */
-		if (error == EFSCORRUPTED) {
+		if (error == -EFSCORRUPTED) {
 			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
 				      XFS_FSB_TO_DADDR(mp, bno),
 				      mp->m_quotainfo->qi_dqchunklen, 0, &bp,
@@ -1001,8 +1001,8 @@ xfs_qm_quotacheck_dqadjust(
 		/*
 		 * Shouldn't be able to turn off quotas here.
 		 */
-		ASSERT(error != ESRCH);
-		ASSERT(error != ENOENT);
+		ASSERT(error != -ESRCH);
+		ASSERT(error != -ENOENT);
 		return error;
 	}
 
@@ -1089,7 +1089,7 @@ xfs_qm_dqusage_adjust(
 	 */
 	if (xfs_is_quota_inode(&mp->m_sb, ino)) {
 		*res = BULKSTAT_RV_NOTHING;
-		return EINVAL;
+		return -EINVAL;
 	}
 
 	/*
@@ -1668,7 +1668,7 @@ xfs_qm_vop_dqalloc(
 						 XFS_QMOPT_DOWARN,
 						 &uq);
 			if (error) {
-				ASSERT(error != ENOENT);
+				ASSERT(error != -ENOENT);
 				return error;
 			}
 			/*
@@ -1697,7 +1697,7 @@ xfs_qm_vop_dqalloc(
 			if (error) {
 				if (uq)
 					xfs_qm_dqrele(uq);
-				ASSERT(error != ENOENT);
+				ASSERT(error != -ENOENT);
 				return error;
 			}
 			xfs_dqunlock(gq);
@@ -1717,7 +1717,7 @@ xfs_qm_vop_dqalloc(
 						 XFS_QMOPT_DOWARN,
 						 &pq);
 			if (error) {
-				ASSERT(error != ENOENT);
+				ASSERT(error != -ENOENT);
 				goto error_rele;
 			}
 			xfs_dqunlock(pq);
