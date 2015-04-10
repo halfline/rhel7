@@ -105,7 +105,7 @@ struct perf_branch_stack {
 	struct perf_branch_entry	entries[0];
 };
 
-struct perf_regs_user {
+struct perf_regs {
 	__u64		abi;
 	struct pt_regs	*regs;
 };
@@ -600,6 +600,10 @@ extern void perf_pmu_migrate_context(struct pmu *pmu,
 extern u64 perf_event_read_value(struct perf_event *event,
 				 u64 *enabled, u64 *running);
 
+struct perf_regs_user {
+	__u64		abi;
+	struct pt_regs	*regs;
+};
 
 struct perf_sample_data {
 	u64				type;
@@ -622,7 +626,10 @@ struct perf_sample_data {
 	struct perf_callchain_entry	*callchain;
 	struct perf_raw_record		*raw;
 	struct perf_branch_stack	*br_stack;
-	struct perf_regs_user		regs_user;
+
+	RH_KABI_CHANGE_TYPE(struct perf_regs_user       regs_user,
+			    struct perf_regs            regs_user)
+
 	u64				stack_user_size;
 	u64				weight;
 
@@ -630,6 +637,7 @@ struct perf_sample_data {
 	 * Transaction flags for abort events:
 	 */
 	RH_KABI_EXTEND(u64				txn)
+	RH_KABI_EXTEND(struct perf_regs                 regs_intr)
 };
 
 /* default value for data source */
@@ -653,6 +661,8 @@ static inline void perf_sample_data_init(struct perf_sample_data *data,
 	data->weight = 0;
 	data->data_src.val = PERF_MEM_NA;
 	data->txn = 0;
+	data->regs_intr.abi = PERF_SAMPLE_REGS_ABI_NONE;
+	data->regs_intr.regs = NULL;
 }
 
 extern void perf_output_sample(struct perf_output_handle *handle,
