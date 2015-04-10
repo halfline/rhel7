@@ -105,11 +105,6 @@ struct perf_branch_stack {
 	struct perf_branch_entry	entries[0];
 };
 
-struct perf_regs {
-	__u64		abi;
-	struct pt_regs	*regs;
-};
-
 struct task_struct;
 
 /*
@@ -638,6 +633,12 @@ struct perf_sample_data {
 	 */
 	RH_KABI_EXTEND(u64				txn)
 	RH_KABI_EXTEND(struct perf_regs                 regs_intr)
+
+	/*
+	 * regs_user may point to task_pt_regs or to regs_user_copy, depending
+	 * on arch details.
+	 */
+	RH_KABI_EXTEND(struct pt_regs			regs_user_copy)
 } ____cacheline_aligned;
 
 /* default value for data source */
