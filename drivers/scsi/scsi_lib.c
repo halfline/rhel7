@@ -20,6 +20,7 @@
 #include <linux/delay.h>
 #include <linux/hardirq.h>
 #include <linux/scatterlist.h>
+#include <linux/ratelimit.h>
 
 #include <scsi/scsi.h>
 #include <scsi/scsi_cmnd.h>
@@ -884,18 +885,25 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
 	switch (action) {
 	case ACTION_FAIL:
 		/* Give up and fail the remainder of the request */
-		if (unlikely(scsi_logging_level))
-			level = SCSI_LOG_LEVEL(SCSI_LOG_MLQUEUE_SHIFT,
-					       SCSI_LOG_MLQUEUE_BITS);
-		/*
-		 * if logging is enabled the failure will be printed
-		 * in scsi_log_completion(), so avoid duplicate messages
-		 */
-		if (!level && !(req->cmd_flags & REQ_QUIET)) {
-			scsi_print_result(cmd, NULL, FAILED);
-			if (driver_byte(result) & DRIVER_SENSE)
-				scsi_print_sense(cmd);
-			scsi_print_command(cmd);
+		if (!(req->cmd_flags & REQ_QUIET)) {
+			static DEFINE_RATELIMIT_STATE(_rs,
+					DEFAULT_RATELIMIT_INTERVAL,
+					DEFAULT_RATELIMIT_BURST);
+
+			if (unlikely(scsi_logging_level))
+				level = SCSI_LOG_LEVEL(SCSI_LOG_MLCOMPLETE_SHIFT,
+						       SCSI_LOG_MLCOMPLETE_BITS);
+
+			/*
+			 * if logging is enabled the failure will be printed
+			 * in scsi_log_completion(), so avoid duplicate messages
+			 */
+			if (!level && __ratelimit(&_rs)) {
+				scsi_print_result(cmd, NULL, FAILED);
+				if (driver_byte(result) & DRIVER_SENSE)
+					scsi_print_sense(cmd);
+				scsi_print_command(cmd);
+			}
 		}
 		if (!blk_end_request_err(req, error))
 			goto next_command;
