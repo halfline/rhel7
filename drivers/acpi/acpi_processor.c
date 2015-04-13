@@ -178,7 +178,7 @@ static int acpi_processor_hotadd_init(struct acpi_processor *pr)
 	if (ACPI_FAILURE(status) || !(sta & ACPI_STA_DEVICE_PRESENT))
 		return -ENODEV;
 
-	ret = acpi_map_lsapic(pr->handle, &pr->id);
+	ret = acpi_map_lsapic(pr->handle, pr->apic_id, &pr->id);
 	if (ret)
 		return ret;
 
