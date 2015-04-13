@@ -384,7 +384,8 @@ struct pci_dev {
  * going forward.  This structure will never be under KABI restrictions.
  */
 struct pci_dev_rh {
-	RH_KABI_EXTEND(u8		dma_alias_devfn) /* devfn of DMA alias, if any */
+	RH_KABI_EXTEND(u8   dma_alias_devfn) /* devfn of DMA alias, if any */
+	RH_KABI_EXTEND(char *driver_override) /* Driver name to force a match */
 };
 
 static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
