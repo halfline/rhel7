@@ -1280,7 +1280,7 @@ static inline void pcie_set_ecrc_checking(struct pci_dev *dev) { }
 static inline void pcie_ecrc_get_policy(char *str) { }
 #endif
 
-#define pci_enable_msi(pdev)	pci_enable_msi_block(pdev, 1)
+#define pci_enable_msi(pdev)	pci_enable_msi_exact(pdev, 1)
 
 #ifdef CONFIG_HT_IRQ
 /* The functions a driver should call */
