@@ -694,6 +694,8 @@ struct pci_driver {
 struct pci_driver_rh {
 	unsigned int  size;	/* Note: always outside of __GENKSYMS__ check */
 #ifndef __GENKSYMS__
+	/* PCI function reset prepare or completed */
+	void (*reset_notify)(struct pci_dev *dev, bool prepare);
 #endif
 };
 
