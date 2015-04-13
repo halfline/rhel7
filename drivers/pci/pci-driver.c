@@ -1382,8 +1382,6 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
 		return -ENODEV;
 
 	pdev = to_pci_dev(dev);
-	if (!pdev)
-		return -ENODEV;
 
 	if (add_uevent_var(env, "PCI_CLASS=%04X", pdev->class))
 		return -ENOMEM;
@@ -1404,6 +1402,7 @@ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
 			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
 			   (u8)(pdev->class)))
 		return -ENOMEM;
+
 	return 0;
 }
 
