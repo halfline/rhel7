@@ -1,1 +1,1 @@
-# CONFIG_TCG_ST33_I2C is not set
+CONFIG_TCG_ST33_I2C=m
