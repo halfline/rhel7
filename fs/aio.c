@@ -654,6 +654,9 @@ static struct kioctx *ioctx_alloc(unsigned nr_events)
 
 out_cleanup:
 	err = -EAGAIN;
+	atomic_set(&ctx->dead, 1);
+	if (ctx->mmap_size)
+		vm_munmap(ctx->mmap_base, ctx->mmap_size);
 	aio_free_ring(ctx);
 out_freectx:
 	mutex_unlock(&ctx->ring_lock);
