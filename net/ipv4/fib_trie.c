@@ -114,8 +114,7 @@ struct tnode {
 
 struct leaf_info {
 	struct hlist_node hlist;
-	int plen;
-	u32 mask_plen; /* ntohl(inet_make_mask(plen)) */
+	unsigned char slen;
 	struct hlist_head falh;
 	struct rcu_head rcu;
 };
@@ -337,8 +336,7 @@ static struct leaf_info *leaf_info_new(int plen)
 {
 	struct leaf_info *li = kmalloc(sizeof(struct leaf_info),  GFP_KERNEL);
 	if (li) {
-		li->plen = plen;
-		li->mask_plen = ntohl(inet_make_mask(plen));
+		li->slen = KEYLENGTH - plen;
 		INIT_HLIST_HEAD(&li->falh);
 	}
 	return li;
@@ -884,9 +882,10 @@ static struct leaf_info *find_leaf_info(struct tnode *l, int plen)
 {
 	struct hlist_head *head = &l->list;
 	struct leaf_info *li;
+	int slen = KEYLENGTH - plen;
 
 	hlist_for_each_entry_rcu(li, head, hlist)
-		if (li->plen == plen)
+		if (li->slen == slen)
 			return li;
 
 	return NULL;
@@ -940,33 +939,29 @@ static void remove_leaf_info(struct tnode *l, struct leaf_info *old)
 		return;
 
 	/* update the trie with the latest suffix length */
-	l->slen = KEYLENGTH - li->plen;
+	l->slen = li->slen;
 	leaf_pull_suffix(l);
 }
 
 static void insert_leaf_info(struct tnode *l, struct leaf_info *new)
 {
 	struct hlist_head *head = &l->list;
-	struct leaf_info *li = NULL, *last = NULL;
+	struct leaf_info *li, *last = NULL;
 
-	if (hlist_empty(head)) {
-		hlist_add_head_rcu(&new->hlist, head);
-	} else {
-		hlist_for_each_entry(li, head, hlist) {
-			if (new->plen > li->plen)
-				break;
-
-			last = li;
-		}
-		if (last)
-			hlist_add_after_rcu(&last->hlist, &new->hlist);
-		else
-			hlist_add_before_rcu(&new->hlist, &li->hlist);
+	hlist_for_each_entry(li, head, hlist) {
+		if (new->slen < li->slen)
+			break;
+		last = li;
 	}
 
+	if (last)
+		hlist_add_after_rcu(&last->hlist, &new->hlist);
+	else
+		hlist_add_head_rcu(&new->hlist, head);
+
 	/* if we added to the tail node then we need to update slen */
-	if (l->slen < (KEYLENGTH - new->plen)) {
-		l->slen = KEYLENGTH - new->plen;
+	if (l->slen < new->slen) {
+		l->slen = new->slen;
 		leaf_push_suffix(l);
 	}
 }
@@ -1150,7 +1145,7 @@ int fib_table_insert(struct fib_table *tb, struct fib_config *cfg)
 	int err;
 	struct tnode *l;
 
-	if (plen > 32)
+	if (plen > KEYLENGTH)
 		return -EINVAL;
 
 	key = ntohl(cfg->fc_dst);
@@ -1436,7 +1431,8 @@ found:
 	hlist_for_each_entry_rcu(li, &n->list, hlist) {
 		struct fib_alias *fa;
 
-		if ((key ^ n->key) & li->mask_plen)
+		if (((key ^ n->key) >= (1ul << li->slen)) &&
+		    ((BITS_PER_LONG > KEYLENGTH) || (li->slen != KEYLENGTH)))
 			continue;
 
 		hlist_for_each_entry_rcu(fa, &li->falh, fa_list) {
@@ -1470,7 +1466,7 @@ found:
 				if (!(fib_flags & FIB_LOOKUP_NOREF))
 					atomic_inc(&fi->fib_clntref);
 
-				res->prefixlen = li->plen;
+				res->prefixlen = KEYLENGTH - li->slen;
 				res->nh_sel = nhsel;
 				res->type = fa->fa_type;
 				res->scope = fi->fib_scope;
@@ -1625,7 +1621,7 @@ static int trie_flush_leaf(struct tnode *l)
 	int found = 0;
 	struct hlist_node *tmp;
 	struct leaf_info *li;
-	unsigned char plen = KEYLENGTH;
+	unsigned char slen = 0;
 
 	hlist_for_each_entry_safe(li, tmp, &l->list, hlist) {
 		found += trie_flush_list(&li->falh);
@@ -1636,10 +1632,10 @@ static int trie_flush_leaf(struct tnode *l)
 			continue;
 		}
 
-		plen = li->plen;
+		slen = li->slen;
 	}
 
-	l->slen = KEYLENGTH - plen;
+	l->slen = slen;
 
 	return found;
 }
@@ -1750,7 +1746,7 @@ void fib_free_table(struct fib_table *tb)
 	kfree(tb);
 }
 
-static int fn_trie_dump_fa(t_key key, int plen, struct hlist_head *fah,
+static int fn_trie_dump_fa(t_key key, int slen, struct hlist_head *fah,
 			   struct fib_table *tb,
 			   struct sk_buff *skb, struct netlink_callback *cb)
 {
@@ -1775,7 +1771,7 @@ static int fn_trie_dump_fa(t_key key, int plen, struct hlist_head *fah,
 				  tb->tb_id,
 				  fa->fa_type,
 				  xkey,
-				  plen,
+				  KEYLENGTH - slen,
 				  fa->fa_tos,
 				  fa->fa_info, NLM_F_MULTI) < 0) {
 			cb->args[5] = i;
@@ -1809,7 +1805,7 @@ static int fn_trie_dump_leaf(struct tnode *l, struct fib_table *tb,
 		if (hlist_empty(&li->falh))
 			continue;
 
-		if (fn_trie_dump_fa(l->key, li->plen, &li->falh, tb, skb, cb) < 0) {
+		if (fn_trie_dump_fa(l->key, li->slen, &li->falh, tb, skb, cb) < 0) {
 			cb->args[4] = i;
 			return -1;
 		}
@@ -2295,7 +2291,8 @@ static int fib_trie_seq_show(struct seq_file *seq, void *v)
 				char buf1[32], buf2[32];
 
 				seq_indent(seq, iter->depth+1);
-				seq_printf(seq, "  /%d %s %s", li->plen,
+				seq_printf(seq, "  /%zu %s %s",
+					   KEYLENGTH - li->slen,
 					   rtn_scope(buf1, sizeof(buf1),
 						     fa->fa_info->fib_scope),
 					   rtn_type(buf2, sizeof(buf2),
@@ -2445,7 +2442,7 @@ static int fib_route_seq_show(struct seq_file *seq, void *v)
 		struct fib_alias *fa;
 		__be32 mask, prefix;
 
-		mask = inet_make_mask(li->plen);
+		mask = inet_make_mask(KEYLENGTH - li->slen);
 		prefix = htonl(l->key);
 
 		hlist_for_each_entry_rcu(fa, &li->falh, fa_list) {
