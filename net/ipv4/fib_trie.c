@@ -137,6 +137,7 @@ struct trie_stat {
 };
 
 struct trie {
+	struct rcu_head	rcu;
 	struct tnode __rcu *trie;
 #ifdef CONFIG_IP_FIB_TRIE_STATS
 	struct trie_use_stats __percpu *stats;
@@ -191,6 +192,13 @@ static inline struct tnode *tnode_get_child_rcu(const struct tnode *tn,
 						unsigned long i)
 {
 	return rcu_dereference_rtnl(tn->tnode[i]);
+}
+
+static inline struct fib_table *trie_get_table(struct trie *t)
+{
+	unsigned long *tb_data = (unsigned long *)t;
+
+	return container_of(tb_data, struct fib_table, tb_data[0]);
 }
 
 /* To understand this stuff, an understanding of keys and all their bits is
@@ -1635,14 +1643,22 @@ flush_complete:
 	return found;
 }
 
-void fib_free_table(struct fib_table *tb)
+static void __trie_free_rcu(struct rcu_head *head)
 {
-#ifdef CONFIG_IP_FIB_TRIE_STATS
-	struct trie *t = (struct trie *)tb->tb_data;
+	struct trie *t = container_of(head, struct trie, rcu);
+	struct fib_table *tb = trie_get_table(t);
 
+#ifdef CONFIG_IP_FIB_TRIE_STATS
 	free_percpu(t->stats);
 #endif /* CONFIG_IP_FIB_TRIE_STATS */
 	kfree(tb);
+}
+
+void fib_free_table(struct fib_table *tb)
+{
+	struct trie *t = (struct trie *)tb->tb_data;
+
+	call_rcu(&t->rcu, __trie_free_rcu);
 }
 
 static int fn_trie_dump_leaf(struct tnode *l, struct fib_table *tb,
@@ -1681,6 +1697,7 @@ static int fn_trie_dump_leaf(struct tnode *l, struct fib_table *tb,
 	return skb->len;
 }
 
+/* rcu_read_lock needs to be hold by caller from readside */
 int fib_table_dump(struct fib_table *tb, struct sk_buff *skb,
 		   struct netlink_callback *cb)
 {
@@ -1692,15 +1709,12 @@ int fib_table_dump(struct fib_table *tb, struct sk_buff *skb,
 	int count = cb->args[2];
 	t_key key = cb->args[3];
 
-	rcu_read_lock();
-
 	tp = rcu_dereference_rtnl(t->trie);
 
 	while ((l = leaf_walk_rcu(&tp, key)) != NULL) {
 		if (fn_trie_dump_leaf(l, tb, skb, cb) < 0) {
 			cb->args[3] = key;
 			cb->args[2] = count;
-			rcu_read_unlock();
 			return -1;
 		}
 
@@ -1714,8 +1728,6 @@ int fib_table_dump(struct fib_table *tb, struct sk_buff *skb,
 		if (key < l->key)
 			break;
 	}
-
-	rcu_read_unlock();
 
 	cb->args[3] = key;
 	cb->args[2] = count;
