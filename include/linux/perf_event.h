@@ -117,6 +117,8 @@ struct hw_perf_event_extra {
 	int		idx;	/* index in shared_regs->regs[] */
 };
 
+struct event_constraint;
+
 /**
  * struct hw_perf_event - performance event hardware details:
  */
@@ -167,6 +169,8 @@ struct hw_perf_event {
 
 	u64				freq_time_stamp;
 	u64				freq_count_stamp;
+
+	RH_KABI_EXTEND(struct event_constraint *constraint)
 #endif
 };
 
