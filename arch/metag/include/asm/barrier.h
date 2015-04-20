@@ -45,8 +45,6 @@ static inline void wmb(void)
 	wr_fence();
 }
 
-#define read_barrier_depends()  do { } while (0)
-
 #ifndef CONFIG_SMP
 #define fence()		do { } while (0)
 #define smp_mb()        barrier()
@@ -79,7 +77,10 @@ static inline void fence(void)
 #define smp_wmb()       barrier()
 #endif
 #endif
-#define smp_read_barrier_depends()     do { } while (0)
+
+#define read_barrier_depends()		do { } while (0)
+#define smp_read_barrier_depends()	do { } while (0)
+
 #define set_mb(var, value) do { var = value; smp_mb(); } while (0)
 
 #endif /* _ASM_METAG_BARRIER_H */
