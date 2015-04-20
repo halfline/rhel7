@@ -42,12 +42,12 @@ rh-kabi:
 	@(cd $(REDHAT)/kabi/ && ln -Tsf kabi-rhel7$(RHELMINOR) kabi-current)
 
 rh-check-kabi: rh-kabi
-	@if [ ! -e $(REDHAT)/../Module.symvers ]; then \
+	@if [ ! -e $(_OUTPUT)/Module.symvers ]; then \
 		echo "ERROR: You must compile the kernel and modules first";\
 		exit 1;\
 	fi
 	@$(REDHAT)/kabi/check-kabi -k $(REDHAT)/kabi/Module.kabi_$(MACH) \
-	 -s $(REDHAT)/../Module.symvers
+	 -s $(_OUTPUT)/Module.symvers
 
 rh-configs:
 	cd $(REDHAT)/configs; ./build_configs.sh
