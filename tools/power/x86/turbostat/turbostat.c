@@ -1098,9 +1098,9 @@ void dump_system_config_info(void)
 	if (!do_ivt_turbo_ratio_limit)
 		goto print_nhm_turbo_ratio_limits;
 
-	get_msr(0, MSR_IVT_TURBO_RATIO_LIMIT, &msr);
+	get_msr(0, MSR_TURBO_RATIO_LIMIT1, &msr);
 
-	fprintf(stderr, "cpu0: MSR_IVT_TURBO_RATIO_LIMIT: 0x%08llx\n", msr);
+	fprintf(stderr, "cpu0: MSR_TURBO_RATIO_LIMIT1: 0x%08llx\n", msr);
 
 	ratio = (msr >> 56) & 0xFF;
 	if (ratio)
@@ -1162,9 +1162,9 @@ print_nhm_turbo_ratio_limits:
 	if (!do_nhm_turbo_ratio_limit)
 		return;
 
-	get_msr(0, MSR_NHM_TURBO_RATIO_LIMIT, &msr);
+	get_msr(0, MSR_TURBO_RATIO_LIMIT, &msr);
 
-	fprintf(stderr, "cpu0: MSR_NHM_TURBO_RATIO_LIMIT: 0x%08llx\n", msr);
+	fprintf(stderr, "cpu0: MSR_TURBO_RATIO_LIMIT: 0x%08llx\n", msr);
 
 	ratio = (msr >> 56) & 0xFF;
 	if (ratio)
