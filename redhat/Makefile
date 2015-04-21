@@ -12,7 +12,7 @@ BUILD_TARGET ?= --scratch $(BUILD_SCRATCH_TARGET)
 #BUILD_TARGET ?= $(BUILD_DEFAULT_TARGET)
 #endif
 
-RHGITURL:=$(shell git config rhg.url || git config remote.origin.url)
+RHGITURL:=$(shell git config rhg.url || git config remote.origin.pushurl || git config remote.origin.url)
 RHGITCOMMIT?=$(shell git log -1 --pretty=format:%H)
 
 # this section is needed in order to make O= to work
