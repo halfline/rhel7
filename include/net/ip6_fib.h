@@ -290,9 +290,8 @@ extern void			fib6_clean_all(struct net *net,
 					       int (*func)(struct rt6_info *, void *arg),
 					       void *arg);
 
-extern int			fib6_add(struct fib6_node *root,
-					 struct rt6_info *rt,
-					 struct nl_info *info);
+int fib6_add(struct fib6_node *root, struct rt6_info *rt, struct nl_info *info,
+	     struct nlattr *mx, int mx_len);
 
 extern int			fib6_del(struct rt6_info *rt,
 					 struct nl_info *info);
