@@ -1559,6 +1559,13 @@ struct task_struct {
 	RH_KABI_RESERVE(6)
 	RH_KABI_RESERVE(7)
 	RH_KABI_RESERVE(8)
+#ifndef __GENKSYMS__
+#ifdef CONFIG_MEMCG
+	struct memcg_oom_info {
+		unsigned int may_oom:1;
+	} memcg_oom;
+#endif
+#endif /* __GENKSYMS__ */
 };
 
 /* Future-safe accessor for struct task_struct's cpus_allowed. */
