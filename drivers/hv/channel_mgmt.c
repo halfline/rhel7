@@ -148,7 +148,7 @@ static struct vmbus_channel *alloc_channel(void)
 
 	channel->id = atomic_inc_return(&chan_num);
 	spin_lock_init(&channel->inbound_lock);
-	spin_lock_init(&channel->sc_lock);
+	spin_lock_init(&channel->lock);
 
 	INIT_LIST_HEAD(&channel->sc_list);
 	INIT_LIST_HEAD(&channel->percpu_list);
@@ -249,9 +249,9 @@ static void vmbus_process_rescind_offer(struct work_struct *work)
 		spin_unlock_irqrestore(&vmbus_connection.channel_lock, flags);
 	} else {
 		primary_channel = channel->primary_channel;
-		spin_lock_irqsave(&primary_channel->sc_lock, flags);
+		spin_lock_irqsave(&primary_channel->lock, flags);
 		list_del(&channel->sc_list);
-		spin_unlock_irqrestore(&primary_channel->sc_lock, flags);
+		spin_unlock_irqrestore(&primary_channel->lock, flags);
 	}
 	free_channel(channel);
 }
@@ -325,9 +325,9 @@ static void vmbus_process_offer(struct work_struct *work)
 			 * Process the sub-channel.
 			 */
 			newchannel->primary_channel = channel;
-			spin_lock_irqsave(&channel->sc_lock, flags);
+			spin_lock_irqsave(&channel->lock, flags);
 			list_add_tail(&newchannel->sc_list, &channel->sc_list);
-			spin_unlock_irqrestore(&channel->sc_lock, flags);
+			spin_unlock_irqrestore(&channel->lock, flags);
 
 			if (newchannel->target_cpu != get_cpu()) {
 				put_cpu();
