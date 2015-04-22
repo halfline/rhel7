@@ -1018,6 +1018,7 @@ static struct cpufreq_driver intel_pstate_driver = {
 
 static int __initdata no_load;
 static int __initdata no_hwp;
+static int __initdata hwp_only;
 static unsigned int force_load;
 
 static int intel_pstate_msrs_not_valid(void)
@@ -1215,6 +1216,9 @@ static int __init intel_pstate_init(void)
 	if (cpu_has(c,X86_FEATURE_HWP) && !no_hwp)
 		intel_pstate_hwp_enable();
 
+	if (!hwp_active && hwp_only)
+		goto out;
+
 	rc = cpufreq_register_driver(&intel_pstate_driver);
 	if (rc)
 		goto out;
@@ -1249,6 +1253,8 @@ static int __init intel_pstate_setup(char *str)
 		no_hwp = 1;
 	if (!strcmp(str, "force"))
 		force_load = 1;
+	if (!strcmp(str, "hwp_only"))
+		hwp_only = 1;
 	return 0;
 }
 early_param("intel_pstate", intel_pstate_setup);
