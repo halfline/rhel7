@@ -93,6 +93,7 @@ struct eeh_pe {
 	struct list_head edevs;		/* Link list of EEH devices	*/
 	struct list_head child;		/* Child PEs			*/
 	RH_KABI_EXTEND(atomic_t pass_dev_cnt)	/* Count of passed through devs	*/
+	RH_KABI_EXTEND(void *data)	/* PE auxillary data		*/
 };
 
 #define eeh_pe_for_each_dev(pe, edev, tmp) \
@@ -257,6 +258,7 @@ static inline void eeh_serialize_unlock(unsigned long flags)
 #define EEH_MAX_ALLOWED_FREEZES 5
 
 typedef void *(*eeh_traverse_func)(void *data, void *flag);
+void eeh_set_pe_aux_size(int size);
 int eeh_phb_pe_create(struct pci_controller *phb);
 struct eeh_pe *eeh_phb_pe_get(struct pci_controller *phb);
 struct eeh_pe *eeh_pe_get(struct eeh_dev *edev);
