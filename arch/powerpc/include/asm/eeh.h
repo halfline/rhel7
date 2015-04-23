@@ -25,6 +25,7 @@
 #include <linux/list.h>
 #include <linux/string.h>
 #include <linux/time.h>
+#include <linux/atomic.h>
 
 #include <linux/rh_kabi.h>
 
@@ -90,10 +91,16 @@ struct eeh_pe {
 	struct list_head child_list;	/* Link PE to the child list	*/
 	struct list_head edevs;		/* Link list of EEH devices	*/
 	struct list_head child;		/* Child PEs			*/
+	RH_KABI_EXTEND(atomic_t pass_dev_cnt)	/* Count of passed through devs	*/
 };
 
 #define eeh_pe_for_each_dev(pe, edev, tmp) \
 		list_for_each_entry_safe(edev, tmp, &pe->edevs, list)
+
+static inline bool eeh_pe_passed(struct eeh_pe *pe)
+{
+	return pe ? !!atomic_read(&pe->pass_dev_cnt) : false;
+}
 
 /*
  * The struct is used to trace EEH state for the associated
