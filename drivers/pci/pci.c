@@ -3366,7 +3366,8 @@ static void pci_reset_notify(struct pci_dev *dev, bool prepare)
 {
 	const struct pci_error_handlers *err_handler =
 			dev->driver ? dev->driver->err_handler : NULL;
-	if (err_handler && dev->driver->pci_driver_rh->reset_notify)
+	if (err_handler && dev->driver->pci_driver_rh
+	    && dev->driver->pci_driver_rh->reset_notify)
 		dev->driver->pci_driver_rh->reset_notify(dev, prepare);
 }
 
