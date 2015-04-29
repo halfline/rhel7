@@ -1497,6 +1497,32 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Apr 29 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-244.el7]
+- [kernel] timers: Reduce future __run_timers() latency for first add to empty list (Rik van Riel) [1193625]
+- [kernel] subject timers: Reduce future __run_timers() latency for newly emptied list (Rik van Riel) [1193625]
+- [kernel] timers: Reduce __run_timers() latency for empty list (Rik van Riel) [1193625]
+- [kernel] timers: Track total number of timers in list (Rik van Riel) [1193625]
+- [misc] genwqe: remove unnecessary version.h inclusion (Steve Best) [1182052]
+- [misc] assorted conversions to p[dD] (Steve Best) [1182052]
+- [misc] genwqe: check for error from get_user_pages_fast() (Steve Best) [1182052]
+- [misc] genwqe: Support blocking when DDCB queue is busy (Steve Best) [1182052]
+- [misc] genwqe: Fix checkpatch complaints (Steve Best) [1182052]
+- [misc] genwqe: Check return code of pci_sriov_enable (Steve Best) [1182052]
+- [misc] genwqe: Do not modify return code of genwqe_set_interrupt_capability (Steve Best) [1182052]
+- [misc] genwqe: Update author information (Steve Best) [1182052]
+- [misc] genwqe: Remove sysfs entry for driver version (Steve Best) [1182052]
+- [misc] genwqe: Check pci_get_totalvfs return code (Steve Best) [1182052]
+- [misc] genwqe: fix pci_enable_msi usage (Steve Best) [1182052]
+- [s390] dasd: fix inability to set a DASD device offline (Hendrik Brueckner) [1213888]
+- [s390] dasd: Fix unresumed device after suspend/resume having no paths (Hendrik Brueckner) [1213889]
+- [s390] af_iucv: fix AF_IUCV sendmsg() errno (Hendrik Brueckner) [1213885]
+- [s390] dasd: fix unresumed device after suspend/resume (Hendrik Brueckner) [1213884]
+- [scsi] megaraid_sas: revert: Add release date and update driver version (Tomas Henzl) [1207175]
+- [pci] Fix RHEL7 specific possible Null pointer dereference (Myron Stowe) [1215237]
+- [x86] mce: Fix regression. All error records should report via /dev/mcelog (Seth Jennings) [1183957]
+- [fs] isofs: Fix unchecked printing of ER records (Mateusz Guzik) [1180483] {CVE-2014-9584}
+- [fs] isofs: infinite loop in CE record entries (Jacob Tanenbaum) [1175248] {CVE-2014-9420}
+
 * Mon Apr 27 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-243.el7]
 - [fs] xfs: fix behaviour of XFS_IOC_FSSETXATTR on directories (Brian Foster) [1200652]
 - [fs] xfs: factor projid hint checking out of xfs_ioctl_setattr (Brian Foster) [1200652]
