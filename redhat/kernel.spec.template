@@ -1497,6 +1497,67 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Apr 30 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-245.el7]
+- [mm] memcg: use proper memcg in limit bypass (Johannes Weiner) [1213903] {CVE-2014-8171}
+- [mm] memcg: do not allow task about to OOM kill to bypass the limit (Johannes Weiner) [1213903] {CVE-2014-8171}
+- [mm] memcg: do not declare OOM from __GFP_NOFAIL allocations (Johannes Weiner) [1213903] {CVE-2014-8171}
+- [fs] buffer: move allocation failure loop into the allocator (Johannes Weiner) [1213903] {CVE-2014-8171}
+- [mm] memcg: handle non-error OOM situations more gracefully (Johannes Weiner) [1213903] {CVE-2014-8171}
+- [mm] memcg: do not trap chargers with full callstack on OOM (Johannes Weiner) [1213903] {CVE-2014-8171}
+- [mm] memcg: rework and document OOM waiting and wakeup (Johannes Weiner) [1213903] {CVE-2014-8171}
+- [mm] memcg: enable memcg OOM killer only for user faults (Johannes Weiner) [1213903] {CVE-2014-8171}
+- [x86] finish user fault error path with fatal signal (Johannes Weiner) [1213903] {CVE-2014-8171}
+- [arch] mm: pass userspace fault flag to generic fault handler (Johannes Weiner) [1213903] {CVE-2014-8171}
+- [block] cfq-iosched: handle failure of cfq group allocation (Vivek Goyal) [1190716]
+- [crypto] qat - do not duplicate string containing firmware name (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - fix double release_firmware on error path (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - print ring name in debug output (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - fix checkpatch CODE_INDENT issue (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - fix checkpatch COMPARISON_TO_NULL issue (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - fix checkpatch BIT_MACRO issues (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - fix checkpatch CONCATENATED_STRING issues (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - checkpatch PARENTHESIS_ALIGNMENT and LOGICAL_CONTINUATIONS (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - fix checkpatch CHECK_SPACING issues (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - fix typo (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - make error and info log messages more descriptive (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - fix typo in string (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - remove duplicate definition of Intel PCI vendor id (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - remove incorrect __exit markup (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - don't need qat_auth_state struct (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - Ensure ipad and opad are zeroed (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - remove unnecessary include of atomic.h header file (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - use pci_wait_for_pending_transaction() (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - adf_ae_stop() is never called (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - correctly type a boolean (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - fix device reset flow (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - Fix incorrect uses of memzero_explicit (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - add support for cbc(aes) ablkcipher (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - Fix assumption that sg in and out will have the same nents (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - fix problem with coalescing enable logic (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - Fix 64 bytes requests (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - Use memzero_explicit (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - Move BAR definitions to device specific module (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - misspelling typo - "reseting" should be "resetting" (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - cleanup unnecessary break checkpatch warning (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - cleanup coccicheck warning - NULL check before freeing functions (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - fix bad unlock balance (Nikolay Aleksandrov) [1173791]
+- [crypto] llvmlinux: Remove VLAIS from crypto/.../qat_algs.c (Nikolay Aleksandrov) [1173791]
+- [crypto] llvmlinux: Add macro to remove use of VLAIS in crypto code (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - Removed unneeded partial state (Nikolay Aleksandrov) [1173791]
+- [crypto] qat - Fix typo in name of tasklet_struct (Nikolay Aleksandrov) [1173791]
+- [crypto] treewide: fix errors in printk (Nikolay Aleksandrov) [1173791]
+- [netdrv] netxen: Fix trivial typos in comments (Tony Camuso) [1187294]
+- [netdrv] netxen: Use eth_<foo>_addr instead of memset (Tony Camuso) [1187294]
+- [netdrv] netxen: Fix typo in printk (Tony Camuso) [1187294]
+- [netdrv] netxen: Delete an unnecessary check before the function call "kfree" (Tony Camuso) [1187294]
+- [netdrv] netxen: fix netxen_nic_poll() logic (Tony Camuso) [1187294]
+- [netdrv] netxen: Fix link event handling (Tony Camuso) [1187294]
+- [netdrv] netxen: Fix bug in Tx completion path (Tony Camuso) [1187294]
+- [netdrv] netxen: Fix BUG "sleeping function called from invalid context" (Tony Camuso) [1187294]
+- [netdrv] netxen: Convert remaining uses of pr_warning to pr_warn (Tony Camuso) [1187294]
+- [kernel] time: More core infrastructure for timespec64 (Prarit Bhargava) [1215108]
+- [kernel] time64: Add time64.h header and define struct timespec64 (Prarit Bhargava) [1215108]
+
 * Wed Apr 29 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-244.el7]
 - [kernel] timers: Reduce future __run_timers() latency for first add to empty list (Rik van Riel) [1193625]
 - [kernel] subject timers: Reduce future __run_timers() latency for newly emptied list (Rik van Riel) [1193625]
