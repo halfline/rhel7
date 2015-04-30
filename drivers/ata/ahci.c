@@ -1157,6 +1157,9 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
 		goto single_msi;
 	}
 
+	if (nvec > 1)
+		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+
 	return nvec;
 
 single_msi:
@@ -1173,7 +1176,6 @@ intx:
  *	ahci_host_activate - start AHCI host, request IRQs and register it
  *	@host: target ATA host
  *	@irq: base IRQ number to request
- *	@n_msis: number of MSIs allocated for this host
  *	@irq_handler: irq_handler used when requesting IRQs
  *	@irq_flags: irq_flags used when requesting IRQs
  *
@@ -1187,13 +1189,9 @@ intx:
  *	RETURNS:
  *	0 on success, -errno otherwise.
  */
-int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
+int ahci_host_activate(struct ata_host *host, int irq)
 {
 	int i, rc;
-
-	/* Sharing Last Message among several ports is not supported */
-	if (n_msis < host->n_ports)
-		return -EINVAL;
 
 	rc = ata_host_start(host);
 	if (rc)
@@ -1242,7 +1240,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 	struct device *dev = &pdev->dev;
 	struct ahci_host_priv *hpriv;
 	struct ata_host *host;
-	int n_ports, n_msis, i, rc;
+	int n_ports, i, rc;
 	int ahci_pci_bar = AHCI_PCI_BAR_STANDARD;
 
 	VPRINTK("ENTER\n");
@@ -1397,9 +1395,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 	 */
 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
 
-	n_msis = ahci_init_interrupts(pdev, n_ports, hpriv);
-	if (n_msis > 1)
-		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+	ahci_init_interrupts(pdev, n_ports, hpriv);
 
 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
 	if (!host)
@@ -1452,7 +1448,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 	pci_set_master(pdev);
 
 	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
-		return ahci_host_activate(host, pdev->irq, n_msis);
+		return ahci_host_activate(host, pdev->irq);
 
 	return ata_host_activate(host, pdev->irq, ahci_interrupt, IRQF_SHARED,
 				 &ahci_sht);
