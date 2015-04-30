@@ -1867,8 +1867,6 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
 
 	irq_masked = irq_stat & hpriv->port_map;
 
-	spin_lock(&host->lock);
-
 	for (i = 0; i < host->n_ports; i++) {
 		struct ata_port *ap;
 
@@ -1899,8 +1897,6 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
 	 * pending event on a dummy port might cause screaming IRQ.
 	 */
 	writel(irq_stat, mmio + HOST_IRQ_STAT);
-
-	spin_unlock(&host->lock);
 
 	VPRINTK("EXIT\n");
 
