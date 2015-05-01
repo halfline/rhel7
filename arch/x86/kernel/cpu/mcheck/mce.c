@@ -1969,6 +1969,7 @@ __setup("mce", mcheck_enable);
 int __init mcheck_init(void)
 {
 	mcheck_intel_therm_init();
+	mcheck_vendor_init_severity();
 
 	return 0;
 }
