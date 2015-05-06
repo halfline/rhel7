@@ -1374,7 +1374,9 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
 	 * Allocate enough to hold the header (the same size as one scsi_lun)
 	 * plus the number of luns we are requesting.
 	 */
-	length = (MAX_INIT_REPORT_LUNS + 1) * sizeof(struct scsi_lun);
+	length = (max_scsi_report_luns < MAX_INIT_REPORT_LUNS) ?
+		(max_scsi_report_luns + 1) * sizeof(struct scsi_lun) :
+		(MAX_INIT_REPORT_LUNS + 1) * sizeof(struct scsi_lun);
 retry:
 	lun_data = kmalloc(length, GFP_KERNEL |
 			   (sdev->host->unchecked_isa_dma ? __GFP_DMA : 0));
