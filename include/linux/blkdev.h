@@ -21,6 +21,7 @@
 #include <linux/bsg.h>
 #include <linux/smp.h>
 #include <linux/rcupdate.h>
+#include <linux/percpu-refcount.h>
 
 #include <asm/scatterlist.h>
 
@@ -503,7 +504,7 @@ struct request_queue {
 #endif
 	struct rcu_head		rcu_head;
 	wait_queue_head_t	mq_freeze_wq;
-	struct percpu_counter	mq_usage_counter;
+	RH_KABI_DEPRECATE(struct percpu_counter, mq_usage_counter)
 	struct list_head	all_q_node;
 
 	RH_KABI_EXTEND(unprep_rq_fn		*unprep_rq_fn)
@@ -515,6 +516,7 @@ struct request_queue {
 	RH_KABI_EXTEND(spinlock_t			requeue_lock)
 	RH_KABI_EXTEND(struct work_struct		requeue_work)
 	RH_KABI_EXTEND(int				mq_freeze_depth)
+	RH_KABI_EXTEND(struct percpu_ref	mq_usage_counter)
 };
 
 #define QUEUE_FLAG_QUEUED	1	/* uses generic tag queueing */
