@@ -5,6 +5,7 @@
 #include <linux/rh_kabi.h>
 
 struct blk_mq_tags;
+struct blk_flush_queue;
 
 struct blk_mq_cpu_notifier {
 	struct list_head list;
@@ -74,6 +75,8 @@ struct blk_mq_hw_ctx {
 	RH_KABI_EXTEND(struct blk_mq_ctxmap	ctx_map)
 
 	RH_KABI_EXTEND(atomic_t		nr_active)
+
+	RH_KABI_EXTEND(struct blk_flush_queue	*fq)
 };
 
 #ifdef __GENKSYMS__
@@ -155,6 +158,10 @@ struct blk_mq_ops {
 	/*
 	 * Called for every command allocated by the block layer to allow
 	 * the driver to set up driver specific data.
+	 *
+	 * Tag greater than or equal to queue_depth is for setting up
+	 * flush request.
+	 *
 	 * Ditto for exit/teardown.
 	 */
 	init_request_fn		*init_request;
