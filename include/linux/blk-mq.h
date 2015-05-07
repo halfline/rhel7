@@ -62,7 +62,7 @@ struct blk_mq_hw_ctx {
 
 	unsigned int		queue_depth;	/* DEPRECATED: RHEL kABI padding, repurpose? */
 	unsigned int		numa_node;
-	unsigned int		cmd_size;	/* per-request extra data */
+	RH_KABI_DEPRECATE(unsigned int, cmd_size)
 
 	struct blk_mq_cpu_notifier	cpu_notifier;
 	struct kobject		kobj;
