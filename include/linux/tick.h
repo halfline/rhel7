@@ -13,6 +13,12 @@
 #include <linux/context_tracking_state.h>
 #include <linux/cpumask.h>
 
+#if defined(CONFIG_GENERIC_CLOCKEVENTS_BROADCAST) && defined(CONFIG_TICK_ONESHOT)
+extern void hotplug_cpu__broadcast_tick_pull(int dead_cpu);
+#else
+static inline void hotplug_cpu__broadcast_tick_pull(int dead_cpu) { }
+#endif
+
 #ifdef CONFIG_GENERIC_CLOCKEVENTS
 
 enum tick_device_mode {
