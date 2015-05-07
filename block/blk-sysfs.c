@@ -548,7 +548,7 @@ static void blk_release_queue(struct kobject *kobj)
 	if (q->queue_tags)
 		__blk_queue_free_tags(q);
 
-	kfree(q->flush_rq);
+	blk_exit_flush(q);
 
 	blk_trace_shutdown(q);
 
