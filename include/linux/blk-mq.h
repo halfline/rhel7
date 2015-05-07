@@ -109,9 +109,15 @@ struct blk_mq_tag_set {
 };
 #endif
 
-/* This thing was never covered by kabi */
+struct blk_mq_queue_data {
+	struct request *rq;
+	struct list_head *list;
+	bool last;
+};
+
+/* None of these function pointers are covered by RHEL kABI */
 RH_KABI_REPLACE_P(typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *),
-	           typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *, bool))
+		  typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, const struct blk_mq_queue_data *))
 
 typedef struct blk_mq_hw_ctx *(map_queue_fn)(struct request_queue *, const int);
 #ifdef __GENKSYMS__
