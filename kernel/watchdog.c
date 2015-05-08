@@ -601,14 +601,16 @@ int proc_dowatchdog(struct ctl_table *table, int write,
 {
 	int err, old_thresh, old_enabled;
 	bool old_hardlockup;
+	static DEFINE_MUTEX(watchdog_proc_mutex);
 
+	mutex_lock(&watchdog_proc_mutex);
 	old_thresh = ACCESS_ONCE(watchdog_thresh);
 	old_enabled = ACCESS_ONCE(watchdog_user_enabled);
 	old_hardlockup = watchdog_hardlockup_detector_is_enabled();
 
 	err = proc_dointvec_minmax(table, write, buffer, lenp, ppos);
 	if (err || !write)
-		return err;
+		goto out;
 
 	set_sample_period();
 	/*
@@ -633,7 +635,8 @@ int proc_dowatchdog(struct ctl_table *table, int write,
 		watchdog_user_enabled = old_enabled;
 		watchdog_enable_hardlockup_detector(old_hardlockup);
 	}
-
+out:
+	mutex_unlock(&watchdog_proc_mutex);
 	return err;
 }
 #endif /* CONFIG_SYSCTL */
