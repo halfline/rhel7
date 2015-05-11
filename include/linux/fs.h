@@ -2638,6 +2638,9 @@ enum {
 
 	/* inode/fs/bdev does not need truncate protection */
 	DIO_IGNORE_TRUNCATE = 0x04,
+
+	/* filesystem can handle aio writes beyond i_size */
+	DIO_ASYNC_EXTEND = 0x08,
 };
 
 void dio_end_io(struct bio *bio, int error);
