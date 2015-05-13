@@ -3588,10 +3588,10 @@ static int ext4_ext_convert_to_initialized(handle_t *handle,
 		}
 	}
 
-	allocated = ext4_split_extent(handle, inode, path,
+	err = ext4_split_extent(handle, inode, path,
 				      &split_map, split_flag, flags);
-	if (allocated < 0)
-		err = allocated;
+	if (err > 0)
+		err = 0;
 
 out:
 	/* If we have gotten a failure, don't zero out status tree */
