@@ -4285,6 +4285,7 @@ int ext4_ext_map_blocks(handle_t *handle, struct inode *inode,
 	ext4_io_end_t *io = ext4_inode_aio(inode);
 	ext4_lblk_t cluster_offset;
 	int set_unwritten = 0;
+	bool map_from_cluster = false;
 
 	ext_debug("blocks %u/%u requested for inode %lu\n",
 		  map->m_lblk, map->m_len, inode->i_ino);
@@ -4361,10 +4362,6 @@ int ext4_ext_map_blocks(handle_t *handle, struct inode *inode,
 		}
 	}
 
-	if ((sbi->s_cluster_ratio > 1) &&
-	    ext4_find_delalloc_cluster(inode, map->m_lblk))
-		map->m_flags |= EXT4_MAP_FROM_CLUSTER;
-
 	/*
 	 * requested block isn't allocated yet;
 	 * we couldn't try to create block if create flag is zero
@@ -4382,7 +4379,6 @@ int ext4_ext_map_blocks(handle_t *handle, struct inode *inode,
 	/*
 	 * Okay, we need to do block allocation.
 	 */
-	map->m_flags &= ~EXT4_MAP_FROM_CLUSTER;
 	newex.ee_block = cpu_to_le32(map->m_lblk);
 	cluster_offset = EXT4_LBLK_COFF(sbi, map->m_lblk);
 
@@ -4394,7 +4390,7 @@ int ext4_ext_map_blocks(handle_t *handle, struct inode *inode,
 	    get_implied_cluster_alloc(inode->i_sb, map, ex, path)) {
 		ar.len = allocated = map->m_len;
 		newblock = map->m_pblk;
-		map->m_flags |= EXT4_MAP_FROM_CLUSTER;
+		map_from_cluster = true;
 		goto got_allocated_blocks;
 	}
 
@@ -4415,7 +4411,7 @@ int ext4_ext_map_blocks(handle_t *handle, struct inode *inode,
 	    get_implied_cluster_alloc(inode->i_sb, map, ex2, path)) {
 		ar.len = allocated = map->m_len;
 		newblock = map->m_pblk;
-		map->m_flags |= EXT4_MAP_FROM_CLUSTER;
+		map_from_cluster = true;
 		goto got_allocated_blocks;
 	}
 
@@ -4539,7 +4535,7 @@ got_allocated_blocks:
 		 */
 		reserved_clusters = get_reserved_cluster_alloc(inode,
 						map->m_lblk, allocated);
-		if (map->m_flags & EXT4_MAP_FROM_CLUSTER) {
+		if (map_from_cluster) {
 			if (reserved_clusters) {
 				/*
 				 * We have clusters reserved for this range.
