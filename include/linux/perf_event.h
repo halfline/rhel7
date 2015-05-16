@@ -156,6 +156,7 @@ struct hw_perf_event {
 			struct list_head	cqm_events_entry;
 			struct list_head	cqm_groups_entry;
 			struct list_head	cqm_group_entry;
+			struct task_struct	*cqm_target;
 		};
 #endif /* __GENKSYMS__ */
 #ifdef CONFIG_HAVE_HW_BREAKPOINT
