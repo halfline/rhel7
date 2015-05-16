@@ -285,6 +285,11 @@ struct pmu {
 	 * various common per-pmu feature flags
 	 */
 	RH_KABI_EXTEND(int	capabilities)
+
+	/*
+	 * context-switches callback
+	 */
+	RH_KABI_EXTEND(void (*sched_task) (struct perf_event_context *ctx, bool sched_in))
 };
 
 /**
@@ -584,6 +589,8 @@ extern void perf_event_delayed_put(struct task_struct *task);
 extern void perf_event_print_debug(void);
 extern void perf_pmu_disable(struct pmu *pmu);
 extern void perf_pmu_enable(struct pmu *pmu);
+extern void perf_sched_cb_dec(struct pmu *pmu);
+extern void perf_sched_cb_inc(struct pmu *pmu);
 extern int perf_event_task_disable(void);
 extern int perf_event_task_enable(void);
 extern int perf_event_refresh(struct perf_event *event, int refresh);
