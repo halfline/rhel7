@@ -277,7 +277,12 @@ struct pmu {
 	/*
 	 * flush branch stack on context-switches (needed in cpu-wide mode)
 	 */
+#ifdef __GENKSYMS__
 	void (*flush_branch_stack)	(void);
+#else
+	/* KABI this pointer is deprecated */
+	void (*rh_reserved_flush_branch_stack)	(void);
+#endif
 
 	RH_KABI_EXTEND(struct module *module)
 
