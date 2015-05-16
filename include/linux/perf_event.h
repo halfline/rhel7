@@ -290,6 +290,11 @@ struct pmu {
 	 * context-switches callback
 	 */
 	RH_KABI_EXTEND(void (*sched_task) (struct perf_event_context *ctx, bool sched_in))
+
+	/*
+	 * PMU specific data size
+	 */
+	RH_KABI_EXTEND(size_t task_ctx_size)
 };
 
 /**
@@ -327,6 +332,7 @@ struct swevent_hlist {
 #define PERF_ATTACH_CONTEXT	0x01
 #define PERF_ATTACH_GROUP	0x02
 #define PERF_ATTACH_TASK	0x04
+#define PERF_ATTACH_TASK_DATA	0x08
 
 struct perf_cgroup;
 struct ring_buffer;
@@ -537,6 +543,7 @@ struct perf_event_context {
 	RH_KABI_EXTEND(struct delayed_work	orphans_remove)
 	RH_KABI_EXTEND(bool			orphans_remove_sched)
 	RH_KABI_EXTEND(struct list_head		active_ctx_list)
+	RH_KABI_EXTEND(void			*task_ctx_data) /* pmu specific data */
 };
 
 /*
