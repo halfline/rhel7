@@ -531,7 +531,7 @@ struct perf_event_context {
 	u64				generation;
 	int				pin_count;
 	int				nr_cgroups;	 /* cgroup evts */
-	int				nr_branch_stack; /* branch_stack evt */
+	RH_KABI_DEPRECATE(int, nr_branch_stack)
 	struct rcu_head			rcu_head;
 
 	RH_KABI_EXTEND(struct delayed_work	orphans_remove)
