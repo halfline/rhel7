@@ -53,6 +53,9 @@ struct perf_guest_info_callbacks {
 #include <linux/sysfs.h>
 #include <linux/perf_regs.h>
 #include <linux/workqueue.h>
+#ifndef __GENKSYMS__
+#include <linux/cgroup.h>
+#endif
 #include <asm/local.h>
 
 #include <linux/rh_kabi.h>
@@ -582,6 +585,37 @@ struct perf_output_handle {
 	void				*addr;
 	int				page;
 };
+
+#ifdef CONFIG_CGROUP_PERF
+
+#ifndef __GENKSYMS__
+/*
+ * perf_cgroup_info keeps track of time_enabled for a cgroup.
+ * This is a per-cpu dynamically allocated data structure.
+ */
+struct perf_cgroup_info {
+	u64				time;
+	u64				timestamp;
+};
+
+struct perf_cgroup {
+	struct cgroup_subsys_state	css;
+	struct perf_cgroup_info	__percpu *info;
+};
+#endif /* __GENKSYMS__ */
+
+/*
+ * Must ensure cgroup is pinned (css_get) before calling
+ * this function. In other words, we cannot call this function
+ * if there is no cgroup event for the current CPU context.
+ */
+static inline struct perf_cgroup *
+perf_cgroup_from_task(struct task_struct *task)
+{
+	return container_of(task_subsys_state(task, perf_subsys_id),
+			    struct perf_cgroup, css);
+}
+#endif /* CONFIG_CGROUP_PERF */
 
 #ifdef CONFIG_PERF_EVENTS
 
