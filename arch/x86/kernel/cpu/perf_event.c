@@ -1040,7 +1040,6 @@ static int x86_pmu_add(struct perf_event *event, int flags)
 
 	hwc = &event->hw;
 
-	perf_pmu_disable(event->pmu);
 	n0 = cpuc->n_events;
 	ret = n = collect_events(cpuc, event, false);
 	if (ret < 0)
@@ -1078,7 +1077,6 @@ done_collect:
 
 	ret = 0;
 out:
-	perf_pmu_enable(event->pmu);
 	return ret;
 }
 
