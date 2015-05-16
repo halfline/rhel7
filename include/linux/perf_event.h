@@ -149,6 +149,15 @@ struct hw_perf_event {
 			/* for tp_event->class */
 			struct list_head	tp_list;
 		};
+#ifndef __GENKSYMS__
+		struct { /* intel_cqm */
+			int			cqm_state;
+			int			cqm_rmid;
+			struct list_head	cqm_events_entry;
+			struct list_head	cqm_groups_entry;
+			struct list_head	cqm_group_entry;
+		};
+#endif /* __GENKSYMS__ */
 #ifdef CONFIG_HAVE_HW_BREAKPOINT
 		struct { /* breakpoint */
 			/*
