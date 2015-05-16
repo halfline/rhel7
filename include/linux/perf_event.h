@@ -145,7 +145,7 @@ struct hw_perf_event {
 			struct hrtimer	hrtimer;
 		};
 		struct { /* tracepoint */
-			struct task_struct	*tp_target;
+			RH_KABI_DEPRECATE(struct task_struct*, tp_target)
 			/* for tp_event->class */
 			struct list_head	tp_list;
 		};
@@ -156,7 +156,6 @@ struct hw_perf_event {
 			struct list_head	cqm_events_entry;
 			struct list_head	cqm_groups_entry;
 			struct list_head	cqm_group_entry;
-			struct task_struct	*cqm_target;
 		};
 #endif /* __GENKSYMS__ */
 #ifdef CONFIG_HAVE_HW_BREAKPOINT
@@ -166,7 +165,7 @@ struct hw_perf_event {
 			 * problem hw_breakpoint has with context
 			 * creation and event initalization.
 			 */
-			struct task_struct		*bp_target;
+			RH_KABI_DEPRECATE(struct task_struct*, bp_target)
 			struct arch_hw_breakpoint	info;
 			struct list_head		bp_list;
 		};
@@ -184,6 +183,7 @@ struct hw_perf_event {
 	u64				freq_count_stamp;
 
 	RH_KABI_EXTEND(struct event_constraint *constraint)
+	RH_KABI_EXTEND(struct task_struct	*target)
 #endif
 };
 
