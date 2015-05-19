@@ -970,6 +970,9 @@ struct netdev_phys_port_id {
  *	Called by vxlan to notify the driver about a UDP port and socket
  *	address family that vxlan is not listening to anymore. The operation
  *	is protected by the vxlan_net->sock_lock.
+ *
+ * int (*ndo_get_iflink)(const struct net_device *dev);
+ *	Called to get the iflink value of this device.
  */
 struct net_device_ops {
 	int			(*ndo_init)(struct net_device *dev);
@@ -1114,7 +1117,7 @@ struct net_device_ops {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-	RH_KABI_RESERVE_P(1)
+	RH_KABI_USE_P(1, int	(*ndo_get_iflink)(const struct net_device *dev))
 	RH_KABI_RESERVE_P(2)
 	RH_KABI_RESERVE_P(3)
 	RH_KABI_RESERVE_P(4)
@@ -1865,6 +1868,7 @@ extern void		dev_add_offload(struct packet_offload *po);
 extern void		dev_remove_offload(struct packet_offload *po);
 extern void		__dev_remove_offload(struct packet_offload *po);
 
+int dev_get_iflink(const struct net_device *dev);
 extern struct net_device	*__dev_get_by_flags(struct net *net, unsigned short flags,
 						    unsigned short mask);
 extern struct net_device	*dev_get_by_name(struct net *net, const char *name);
