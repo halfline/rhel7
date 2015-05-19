@@ -1958,7 +1958,7 @@ replay:
 		dev->ifindex = ifm->ifi_index;
 
 		if (ops->newlink)
-			err = ops->newlink(net, dev, tb, data);
+			err = ops->newlink(link_net ? : net, dev, tb, data);
 		else
 			err = register_netdevice(dev);
 
