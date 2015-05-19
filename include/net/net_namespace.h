@@ -264,6 +264,8 @@ static inline struct net *read_pnet(struct net * const *pnet)
 #endif
 
 int peernet2id_alloc(struct net *net, struct net *peer);
+int peernet2id(struct net *net, struct net *peer);
+bool peernet_has_id(struct net *net, struct net *peer);
 struct net *get_net_ns_by_id(struct net *net, int id);
 
 struct pernet_operations {
