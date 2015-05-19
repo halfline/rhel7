@@ -49,6 +49,7 @@ static inline int rtnl_msg_family(const struct nlmsghdr *nlh)
  *			    to create when creating a new device.
  *	@get_num_rx_queues: Function to determine number of receive queues
  *			    to create when creating a new device.
+ *	@get_link_net: Function to get the i/o netns of the device
  */
 struct rtnl_link_ops {
 	struct list_head	list;
@@ -90,7 +91,7 @@ struct rtnl_link_ops {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-	RH_KABI_RESERVE_P(1)
+	RH_KABI_USE_P(1, struct net	*(*get_link_net)(const struct net_device *dev))
 	RH_KABI_RESERVE_P(2)
 	RH_KABI_RESERVE_P(3)
 	RH_KABI_RESERVE_P(4)
