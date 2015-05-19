@@ -563,7 +563,6 @@ static int vlan_dev_init(struct net_device *dev)
 	/* IFF_BROADCAST|IFF_MULTICAST; ??? */
 	dev->flags  = real_dev->flags & ~(IFF_UP | IFF_PROMISC | IFF_ALLMULTI |
 					  IFF_MASTER | IFF_SLAVE);
-	dev->iflink = real_dev->ifindex;
 	dev->state  = (real_dev->state & ((1<<__LINK_STATE_NOCARRIER) |
 					  (1<<__LINK_STATE_DORMANT))) |
 		      (1<<__LINK_STATE_PRESENT);
@@ -743,6 +742,13 @@ static void vlan_dev_netpoll_cleanup(struct net_device *dev)
 }
 #endif /* CONFIG_NET_POLL_CONTROLLER */
 
+static int vlan_dev_get_iflink(const struct net_device *dev)
+{
+	struct net_device *real_dev = vlan_dev_priv(dev)->real_dev;
+
+	return real_dev->ifindex;
+}
+
 static const struct ethtool_ops vlan_ethtool_ops = {
 	.get_settings	        = vlan_ethtool_get_settings,
 	.get_drvinfo	        = vlan_ethtool_get_drvinfo,
@@ -777,6 +783,7 @@ static const struct net_device_ops vlan_netdev_ops = {
 	.ndo_netpoll_cleanup	= vlan_dev_netpoll_cleanup,
 #endif
 	.ndo_fix_features	= vlan_dev_fix_features,
+	.ndo_get_iflink		= vlan_dev_get_iflink,
 };
 
 void vlan_setup(struct net_device *dev)
