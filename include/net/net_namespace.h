@@ -128,6 +128,7 @@ struct net {
 	/* upstream has this as part of netns_ipv4 */
 	RH_KABI_EXTEND(struct local_ports ipv4_sysctl_local_ports)
 	RH_KABI_EXTEND(struct idr	netns_ids)
+	RH_KABI_EXTEND(spinlock_t	nsid_lock)
 };
 
 /*
