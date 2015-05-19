@@ -1106,7 +1106,8 @@ static const struct inode_operations xfs_inode_operations = {
 	.update_time		= xfs_vn_update_time,
 };
 
-static const struct inode_operations xfs_dir_inode_operations = {
+static const struct inode_operations_wrapper xfs_dir_inode_operations = {
+	.ops = {
 	.create			= xfs_vn_create,
 	.lookup			= xfs_vn_lookup,
 	.link			= xfs_vn_link,
@@ -1130,9 +1131,11 @@ static const struct inode_operations xfs_dir_inode_operations = {
 	.removexattr		= generic_removexattr,
 	.listxattr		= xfs_vn_listxattr,
 	.update_time		= xfs_vn_update_time,
+	},
 };
 
-static const struct inode_operations xfs_dir_ci_inode_operations = {
+static const struct inode_operations_wrapper xfs_dir_ci_inode_operations = {
+	.ops = {
 	.create			= xfs_vn_create,
 	.lookup			= xfs_vn_ci_lookup,
 	.link			= xfs_vn_link,
@@ -1156,6 +1159,7 @@ static const struct inode_operations xfs_dir_ci_inode_operations = {
 	.removexattr		= generic_removexattr,
 	.listxattr		= xfs_vn_listxattr,
 	.update_time		= xfs_vn_update_time,
+	},
 };
 
 static const struct inode_operations xfs_symlink_inode_operations = {
@@ -1258,10 +1262,13 @@ xfs_setup_inode(
 		break;
 	case S_IFDIR:
 		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
-		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
-			inode->i_op = &xfs_dir_ci_inode_operations;
-		else
-			inode->i_op = &xfs_dir_inode_operations;
+		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb)) {
+			inode->i_op = &xfs_dir_ci_inode_operations.ops;
+			inode->i_flags |= S_IOPS_WRAPPER;
+		} else {
+			inode->i_op = &xfs_dir_inode_operations.ops;
+			inode->i_flags |= S_IOPS_WRAPPER;
+		}
 		inode->i_fop = &xfs_dir_file_operations;
 		ip->d_ops = ip->i_mount->m_dir_inode_ops;
 		break;
