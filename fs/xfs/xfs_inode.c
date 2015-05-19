@@ -2787,7 +2787,7 @@ xfs_rename(
 	int		error;
 	xfs_bmap_free_t free_list;
 	xfs_fsblock_t   first_block;
-	int		cancel_flags;
+	int		cancel_flags = 0;
 	int		committed;
 	xfs_inode_t	*inodes[__XFS_SORT_INODES];
 	int		num_inodes = __XFS_SORT_INODES;
@@ -2801,28 +2801,23 @@ xfs_rename(
 	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip, NULL,
 				inodes, &num_inodes);
 
-	xfs_bmap_init(&free_list, &first_block);
 	tp = xfs_trans_alloc(mp, XFS_TRANS_RENAME);
-	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
 	spaceres = XFS_RENAME_SPACE_RES(mp, target_name->len);
 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_rename, spaceres, 0);
 	if (error == -ENOSPC) {
 		spaceres = 0;
 		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_rename, 0, 0);
 	}
-	if (error) {
-		xfs_trans_cancel(tp, 0);
-		goto std_return;
-	}
+	if (error)
+		goto out_trans_cancel;
+	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
 
 	/*
 	 * Attach the dquots to the inodes
 	 */
 	error = xfs_qm_vop_rename_dqattach(inodes);
-	if (error) {
-		xfs_trans_cancel(tp, cancel_flags);
-		goto std_return;
-	}
+	if (error)
+		goto out_trans_cancel;
 
 	/*
 	 * Lock all the participating inodes. Depending upon whether
@@ -2852,8 +2847,10 @@ xfs_rename(
 	if (unlikely((target_dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
 		     (xfs_get_projid(target_dp) != xfs_get_projid(src_ip)))) {
 		error = -EXDEV;
-		goto error_return;
+		goto out_trans_cancel;
 	}
+
+	xfs_bmap_init(&free_list, &first_block);
 
 	/*
 	 * Handle RENAME_EXCHANGE flags
@@ -2863,7 +2860,7 @@ xfs_rename(
 					 target_dp, target_name, target_ip,
 					 &free_list, &first_block, spaceres);
 		if (error)
-			goto abort_return;
+			goto out_trans_abort;
 		goto finish_rename;
 	}
 
@@ -2878,7 +2875,7 @@ xfs_rename(
 		if (!spaceres) {
 			error = xfs_dir_canenter(tp, target_dp, target_name);
 			if (error)
-				goto error_return;
+				goto out_trans_cancel;
 		}
 		/*
 		 * If target does not exist and the rename crosses
@@ -2889,9 +2886,9 @@ xfs_rename(
 						src_ip->i_ino, &first_block,
 						&free_list, spaceres);
 		if (error == -ENOSPC)
-			goto error_return;
+			goto out_bmap_cancel;
 		if (error)
-			goto abort_return;
+			goto out_trans_abort;
 
 		xfs_trans_ichgtime(tp, target_dp,
 					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
@@ -2899,7 +2896,7 @@ xfs_rename(
 		if (new_parent && src_is_directory) {
 			error = xfs_bumplink(tp, target_dp);
 			if (error)
-				goto abort_return;
+				goto out_trans_abort;
 		}
 	} else { /* target_ip != NULL */
 		/*
@@ -2914,7 +2911,7 @@ xfs_rename(
 			if (!(xfs_dir_isempty(target_ip)) ||
 			    (target_ip->i_d.di_nlink > 2)) {
 				error = -EEXIST;
-				goto error_return;
+				goto out_trans_cancel;
 			}
 		}
 
@@ -2931,7 +2928,7 @@ xfs_rename(
 					src_ip->i_ino,
 					&first_block, &free_list, spaceres);
 		if (error)
-			goto abort_return;
+			goto out_trans_abort;
 
 		xfs_trans_ichgtime(tp, target_dp,
 					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
@@ -2942,7 +2939,7 @@ xfs_rename(
 		 */
 		error = xfs_droplink(tp, target_ip);
 		if (error)
-			goto abort_return;
+			goto out_trans_abort;
 
 		if (src_is_directory) {
 			/*
@@ -2950,7 +2947,7 @@ xfs_rename(
 			 */
 			error = xfs_droplink(tp, target_ip);
 			if (error)
-				goto abort_return;
+				goto out_trans_abort;
 		}
 	} /* target_ip != NULL */
 
@@ -2967,7 +2964,7 @@ xfs_rename(
 					&first_block, &free_list, spaceres);
 		ASSERT(error != -EEXIST);
 		if (error)
-			goto abort_return;
+			goto out_trans_abort;
 	}
 
 	/*
@@ -2993,13 +2990,13 @@ xfs_rename(
 		 */
 		error = xfs_droplink(tp, src_dp);
 		if (error)
-			goto abort_return;
+			goto out_trans_abort;
 	}
 
 	error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
 					&first_block, &free_list, spaceres);
 	if (error)
-		goto abort_return;
+		goto out_trans_abort;
 
 	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
@@ -3017,12 +3014,8 @@ finish_rename:
 	}
 
 	error = xfs_bmap_finish(&tp, &free_list, &committed);
-	if (error) {
-		xfs_bmap_cancel(&free_list);
-		xfs_trans_cancel(tp, (XFS_TRANS_RELEASE_LOG_RES |
-				 XFS_TRANS_ABORT));
-		goto std_return;
-	}
+	if (error)
+		goto out_trans_abort;
 
 	/*
 	 * trans_commit will unlock src_ip, target_ip & decrement
@@ -3030,12 +3023,12 @@ finish_rename:
 	 */
 	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
 
- abort_return:
+out_trans_abort:
 	cancel_flags |= XFS_TRANS_ABORT;
- error_return:
+out_bmap_cancel:
 	xfs_bmap_cancel(&free_list);
+out_trans_cancel:
 	xfs_trans_cancel(tp, cancel_flags);
- std_return:
 	return error;
 }
 
