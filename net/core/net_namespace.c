@@ -16,7 +16,6 @@
 #include <linux/export.h>
 #include <linux/user_namespace.h>
 #include <linux/net_namespace.h>
-#include <linux/rtnetlink.h>
 #ifndef __GENKSYMS__
 #include <net/sock.h>
 #endif
