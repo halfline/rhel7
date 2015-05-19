@@ -8,6 +8,7 @@
 #include <linux/workqueue.h>
 #include <linux/list.h>
 #include <linux/sysctl.h>
+#include <linux/idr.h>
 
 #include <net/netns/core.h>
 #include <net/netns/mib.h>
@@ -131,6 +132,7 @@ struct net {
 	RH_KABI_EXTEND(int		sysctl_ip_fwd_use_pmtu)
 	/* upstream has this as part of netns_ipv4 */
 	RH_KABI_EXTEND(struct local_ports ipv4_sysctl_local_ports)
+	RH_KABI_EXTEND(struct idr	netns_ids)
 };
 
 /*
@@ -289,6 +291,9 @@ static inline struct net *read_pnet(struct net * const *pnet)
 #define __net_initdata	__initdata
 #define __net_initconst	__initconst
 #endif
+
+int peernet2id(struct net *net, struct net *peer);
+struct net *get_net_ns_by_id(struct net *net, int id);
 
 struct pernet_operations {
 	struct list_head list;
