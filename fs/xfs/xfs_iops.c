@@ -355,19 +355,35 @@ xfs_vn_rename(
 	struct inode	*odir,
 	struct dentry	*odentry,
 	struct inode	*ndir,
-	struct dentry	*ndentry)
+	struct dentry	*ndentry,
+	unsigned int	flags)
 {
 	struct inode	*new_inode = ndentry->d_inode;
 	struct xfs_name	oname;
 	struct xfs_name	nname;
 
+	/* XFS does not support RENAME_EXCHANGE yet */
+	if (flags & ~RENAME_NOREPLACE)
+		return -EINVAL;
+
 	xfs_dentry_to_name(&oname, odentry, 0);
 	xfs_dentry_to_name(&nname, ndentry, odentry->d_inode->i_mode);
 
 	return xfs_rename(XFS_I(odir), &oname, XFS_I(odentry->d_inode),
-			  XFS_I(ndir), &nname, new_inode ?
-						XFS_I(new_inode) : NULL);
+			  XFS_I(ndir), &nname,
+			  new_inode ? XFS_I(new_inode) : NULL);
 }
+
+STATIC int
+xfs_vn_rename_old(
+	struct inode	*odir,
+	struct dentry	*odentry,
+	struct inode	*ndir,
+	struct dentry	*ndentry)
+{
+	return xfs_vn_rename(odir, odentry, ndir, ndentry, 0);
+}
+
 
 /*
  * careful here - this function can get called recursively, so
@@ -1122,7 +1138,7 @@ static const struct inode_operations_wrapper xfs_dir_inode_operations = {
 	 */
 	.rmdir			= xfs_vn_unlink,
 	.mknod			= xfs_vn_mknod,
-	.rename			= xfs_vn_rename,
+	.rename			= xfs_vn_rename_old,
 	.get_acl		= xfs_get_acl,
 	.getattr		= xfs_vn_getattr,
 	.setattr		= xfs_vn_setattr,
@@ -1132,6 +1148,7 @@ static const struct inode_operations_wrapper xfs_dir_inode_operations = {
 	.listxattr		= xfs_vn_listxattr,
 	.update_time		= xfs_vn_update_time,
 	},
+	.rename2		= xfs_vn_rename,
 };
 
 static const struct inode_operations_wrapper xfs_dir_ci_inode_operations = {
@@ -1150,7 +1167,7 @@ static const struct inode_operations_wrapper xfs_dir_ci_inode_operations = {
 	 */
 	.rmdir			= xfs_vn_unlink,
 	.mknod			= xfs_vn_mknod,
-	.rename			= xfs_vn_rename,
+	.rename			= xfs_vn_rename_old,
 	.get_acl		= xfs_get_acl,
 	.getattr		= xfs_vn_getattr,
 	.setattr		= xfs_vn_setattr,
@@ -1160,6 +1177,7 @@ static const struct inode_operations_wrapper xfs_dir_ci_inode_operations = {
 	.listxattr		= xfs_vn_listxattr,
 	.update_time		= xfs_vn_update_time,
 	},
+	.rename2		= xfs_vn_rename,
 };
 
 static const struct inode_operations xfs_symlink_inode_operations = {
