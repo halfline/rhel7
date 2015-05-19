@@ -5857,8 +5857,6 @@ void free_netdev(struct net_device *dev)
 {
 	struct napi_struct *p, *n;
 
-	release_net(dev_net(dev));
-
 	kfree(dev->_tx);
 #ifdef CONFIG_RPS
 	kfree(dev->_rx);
