@@ -818,7 +818,7 @@ xfs_ialloc(
 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
 	xfs_trans_log_inode(tp, ip, flags);
 
-	/* now that we have an i_mode we can setup inode ops and unlock */
+	/* now that we have an i_mode we can setup the inode structure */
 	xfs_setup_inode(ip);
 
 	*ipp = ip;
@@ -1236,12 +1236,14 @@ xfs_create(
 	xfs_trans_cancel(tp, cancel_flags);
  out_release_inode:
 	/*
-	 * Wait until after the current transaction is aborted to
-	 * release the inode.  This prevents recursive transactions
-	 * and deadlocks from xfs_inactive.
+	 * Wait until after the current transaction is aborted to finish the
+	 * setup of the inode and release the inode.  This prevents recursive
+	 * transactions and deadlocks from xfs_inactive.
 	 */
-	if (ip)
+	if (ip) {
+		xfs_finish_inode_setup(ip);
 		IRELE(ip);
+	}
 
 	xfs_qm_dqrele(udqp);
 	xfs_qm_dqrele(gdqp);
@@ -1346,12 +1348,14 @@ xfs_create_tmpfile(
 	xfs_trans_cancel(tp, cancel_flags);
  out_release_inode:
 	/*
-	 * Wait until after the current transaction is aborted to
-	 * release the inode.  This prevents recursive transactions
-	 * and deadlocks from xfs_inactive.
+	 * Wait until after the current transaction is aborted to finish the
+	 * setup of the inode and release the inode.  This prevents recursive
+	 * transactions and deadlocks from xfs_inactive.
 	 */
-	if (ip)
+	if (ip) {
+		xfs_finish_inode_setup(ip);
 		IRELE(ip);
+	}
 
 	xfs_qm_dqrele(udqp);
 	xfs_qm_dqrele(gdqp);

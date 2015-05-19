@@ -380,6 +380,27 @@ int		xfs_bumplink(struct xfs_trans *, struct xfs_inode *);
 int		xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
 int		xfs_iozero(struct xfs_inode *, loff_t, size_t);
 
+/* from xfs_iops.c */
+/*
+ * When setting up a newly allocated inode, we need to call
+ * xfs_finish_inode_setup() once the inode is fully instantiated at
+ * the VFS level to prevent the rest of the world seeing the inode
+ * before we've completed instantiation. Otherwise we can do it
+ * the moment the inode lookup is complete.
+ */
+extern void xfs_setup_inode(struct xfs_inode *ip);
+static inline void xfs_finish_inode_setup(struct xfs_inode *ip)
+{
+	xfs_iflags_clear(ip, XFS_INEW);
+	barrier();
+	unlock_new_inode(VFS_I(ip));
+}
+
+static inline void xfs_setup_existing_inode(struct xfs_inode *ip)
+{
+	xfs_setup_inode(ip);
+	xfs_finish_inode_setup(ip);
+}
 
 #define IHOLD(ip) \
 do { \
