@@ -1256,7 +1256,8 @@ int
 xfs_create_tmpfile(
 	struct xfs_inode	*dp,
 	struct dentry		*dentry,
-	umode_t			mode)
+	umode_t			mode,
+	struct xfs_inode	**ipp)
 {
 	struct xfs_mount	*mp = dp->i_mount;
 	struct xfs_inode	*ip = NULL;
@@ -1336,6 +1337,7 @@ xfs_create_tmpfile(
 	xfs_qm_dqrele(gdqp);
 	xfs_qm_dqrele(pdqp);
 
+	*ipp = ip;
 	return 0;
 
  out_trans_abort:
