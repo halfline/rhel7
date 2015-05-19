@@ -1262,8 +1262,6 @@ static void ip6_tnl_link_config(struct ip6_tnl *t)
 	else
 		dev->flags &= ~IFF_POINTOPOINT;
 
-	dev->iflink = p->link;
-
 	if (p->flags & IP6_TNL_F_CAP_XMIT) {
 		int strict = (ipv6_addr_type(&p->raddr) &
 			      (IPV6_ADDR_MULTICAST|IPV6_ADDR_LINKLOCAL));
@@ -1515,6 +1513,13 @@ ip6_tnl_change_mtu(struct net_device *dev, int new_mtu)
 	return 0;
 }
 
+int ip6_tnl_get_iflink(const struct net_device *dev)
+{
+	struct ip6_tnl *t = netdev_priv(dev);
+
+	return t->parms.link;
+}
+EXPORT_SYMBOL(ip6_tnl_get_iflink);
 
 static const struct net_device_ops ip6_tnl_netdev_ops = {
 	.ndo_init	= ip6_tnl_dev_init,
@@ -1523,6 +1528,7 @@ static const struct net_device_ops ip6_tnl_netdev_ops = {
 	.ndo_do_ioctl	= ip6_tnl_ioctl,
 	.ndo_change_mtu = ip6_tnl_change_mtu,
 	.ndo_get_stats	= ip6_get_stats,
+	.ndo_get_iflink = ip6_tnl_get_iflink,
 };
 
 
