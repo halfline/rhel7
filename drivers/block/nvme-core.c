@@ -2001,6 +2001,13 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
 	/* Deregister the admin queue's interrupt */
 	free_irq(dev->entry[0].vector, adminq);
 
+	/*
+	 * If we enable msix early due to not intx, disable it again before
+	 * setting up the full range we need.
+	 */
+	if (!pdev->irq)
+		pci_disable_msix(pdev);
+
 	vecs = nr_io_queues;
 	for (i = 0; i < vecs; i++)
 		dev->entry[i].entry = i;
@@ -2168,10 +2175,22 @@ static int nvme_dev_map(struct nvme_dev *dev)
 	dev->bar = ioremap(pci_resource_start(pdev, 0), 8192);
 	if (!dev->bar)
 		goto disable;
+
 	if (readl(&dev->bar->csts) == -1) {
 		result = -ENODEV;
 		goto unmap;
 	}
+
+	/*
+	 * Some devices don't advertse INTx interrupts, pre-enable a single
+	 * MSIX vec for setup. We'll adjust this later.
+	 */
+	if (!pdev->irq) {
+		result = pci_enable_msix(pdev, dev->entry, 1);
+		if (result < 0)
+			goto unmap;
+	}
+
 	cap = readq(&dev->bar->cap);
 	dev->q_depth = min_t(int, NVME_CAP_MQES(cap) + 1, NVME_Q_DEPTH);
 	dev->db_stride = 1 << NVME_CAP_STRIDE(cap);
