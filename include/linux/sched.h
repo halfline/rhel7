@@ -1538,7 +1538,7 @@ struct task_struct {
 #ifdef CONFIG_HAVE_HW_BREAKPOINT
 	atomic_t ptrace_bp_refcnt;
 #endif
-#ifdef CONFIG_UPROBES
+#if !defined(CONFIG_S390) && defined(CONFIG_UPROBES)
 	struct uprobe_task *utask;
 #endif
 #if defined(CONFIG_BCACHE) || defined(CONFIG_BCACHE_MODULE)
@@ -1553,7 +1553,11 @@ struct task_struct {
 	RH_KABI_RESERVE(1)
 #endif
 	RH_KABI_USE(2, unsigned long atomic_flags)
+#if defined(CONFIG_S390) && defined(CONFIG_UPROBES)
+	RH_KABI_USE(3, struct uprobe_task *utask)
+#else
 	RH_KABI_RESERVE(3)
+#endif
 	RH_KABI_RESERVE(4)
 	RH_KABI_RESERVE(5)
 	RH_KABI_RESERVE(6)

@@ -26,6 +26,7 @@
 
 #include <linux/errno.h>
 #include <linux/rbtree.h>
+#include <linux/rh_kabi.h>
 
 struct vm_area_struct;
 struct mm_struct;
@@ -101,7 +102,11 @@ struct xol_area {
 };
 
 struct uprobes_state {
-	struct xol_area		*xol_area;
+#ifdef CONFIG_S390
+	RH_KABI_EXTEND(struct xol_area *xol_area)
+#else
+	struct xol_area *xol_area;
+#endif
 };
 
 extern int __weak set_swbp(struct arch_uprobe *aup, struct mm_struct *mm, unsigned long vaddr);
