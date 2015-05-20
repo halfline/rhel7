@@ -13,6 +13,7 @@
 
 #ifndef __ASSEMBLY__
 
+#include <linux/rh_kabi.h>
 #include <linux/linkage.h>
 #include <linux/irqflags.h>
 #include <asm/cpu.h>
@@ -90,6 +91,7 @@ struct thread_struct {
 	int ri_signum;
 #ifdef CONFIG_64BIT
 	unsigned char trap_tdb[256];	/* Transaction abort diagnose block */
+	RH_KABI_EXTEND(__vector128 *vxrs) /* Vector register save area */
 #endif
 };
 
