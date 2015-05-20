@@ -42,10 +42,17 @@ extern unsigned long perf_instruction_pointer(struct pt_regs *regs);
 extern unsigned long perf_misc_flags(struct pt_regs *regs);
 #define perf_misc_flags(regs) perf_misc_flags(regs)
 
+/* Perf pt_regs extension for sample-data-entry indicators */
+struct perf_sf_sde_regs {
+	unsigned char in_guest:1;	  /* guest sample */
+	unsigned long reserved:63;	  /* reserved */
+};
+
 /* Perf PMU definitions for the counter facility */
 #define PERF_CPUM_CF_MAX_CTR		256
 
 /* Perf PMU definitions for the sampling facility */
+#define PERF_CPUM_SF_PSW_MASK		0x8000000000000000UL
 #define PERF_CPUM_SF_MAX_CTR		1
 #define PERF_EVENT_CPUM_SF		0xB0000UL	/* Raw event ID */
 
