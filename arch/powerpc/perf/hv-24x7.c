@@ -285,6 +285,8 @@ static unsigned long single_24x7_request(u8 domain, u32 offset, u16 ix,
 	*res = be64_to_cpu(result_buffer->result);
 
 out:
+	put_cpu_var(hv_24x7_reqb);
+	put_cpu_var(hv_24x7_resb);
 	return ret;
 }
 
