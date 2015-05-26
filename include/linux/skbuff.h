@@ -599,8 +599,9 @@ struct sk_buff {
 	RH_KABI_EXTEND(__u8			encap_hdr_csum:1)
 	RH_KABI_EXTEND(__u8			csum_valid:1)
 	RH_KABI_EXTEND(__u8			csum_complete_sw:1)
-	RH_KABI_EXTEND(__u8			xmit_more:1;)
-	/* 3/5 bit hole (depending on ndisc_nodetype presence) */
+	RH_KABI_EXTEND(__u8			xmit_more:1)
+	RH_KABI_EXTEND(__u8			inner_protocol_type:1)
+	/* 1/3 bit hole (depending on ndisc_nodetype presence) */
 	kmemcheck_bitfield_end(flags2);
 
 #if defined CONFIG_NET_DMA_RH_KABI || defined CONFIG_NET_RX_BUSY_POLL
@@ -618,7 +619,15 @@ struct sk_buff {
 		__u32		reserved_tailroom;
 	};
 
+#ifdef __GENKSYMS__
 	__be16			inner_protocol;
+#else
+	union {
+		__be16		inner_protocol;
+		__u8		inner_ipproto;
+	};
+#endif
+
 	__u16			inner_transport_header;
 	__u16			inner_network_header;
 	__u16			inner_mac_header;
@@ -1753,6 +1762,23 @@ static inline void skb_reserve(struct sk_buff *skb, int len)
 {
 	skb->data += len;
 	skb->tail += len;
+}
+
+#define ENCAP_TYPE_ETHER	0
+#define ENCAP_TYPE_IPPROTO	1
+
+static inline void skb_set_inner_protocol(struct sk_buff *skb,
+					  __be16 protocol)
+{
+	skb->inner_protocol = protocol;
+	skb->inner_protocol_type = ENCAP_TYPE_ETHER;
+}
+
+static inline void skb_set_inner_ipproto(struct sk_buff *skb,
+					 __u8 ipproto)
+{
+	skb->inner_ipproto = ipproto;
+	skb->inner_protocol_type = ENCAP_TYPE_IPPROTO;
 }
 
 static inline void skb_reset_inner_headers(struct sk_buff *skb)
