@@ -195,7 +195,7 @@ static int gre_tnl_send(struct vport *vport, struct sk_buff *skb)
 
 	return iptunnel_xmit(skb->sk, rt, skb, fl.saddr,
 			     tun_key->ipv4_dst, IPPROTO_GRE,
-			     tun_key->ipv4_tos, tun_key->ipv4_ttl, df);
+			     tun_key->ipv4_tos, tun_key->ipv4_ttl, df, false);
 err_free_rt:
 	ip_rt_put(rt);
 error:

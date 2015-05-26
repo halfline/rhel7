@@ -1574,6 +1574,8 @@ static int vxlan6_xmit_skb(struct vxlan_sock *vs,
 	if (IS_ERR(skb))
 		return -EINVAL;
 
+	skb_scrub_packet(skb, false);
+
 	min_headroom = LL_RESERVED_SPACE(dst->dev) + dst->header_len
 			+ VXLAN_HLEN + sizeof(struct ipv6hdr)
 			+ (vlan_tx_tag_present(skb) ? VLAN_HLEN : 0);
@@ -1608,7 +1610,6 @@ static int vxlan6_xmit_skb(struct vxlan_sock *vs,
 	memset(&(IPCB(skb)->opt), 0, sizeof(IPCB(skb)->opt));
 	IPCB(skb)->flags &= ~(IPSKB_XFRM_TUNNEL_SIZE | IPSKB_XFRM_TRANSFORMED |
 			      IPSKB_REROUTED);
-	skb_dst_drop(skb);
 	skb_dst_set(skb, dst);
 
 	udp6_set_csum(udp_get_no_check6_tx(vs->sock->sk), skb,
@@ -1682,7 +1683,7 @@ int vxlan_xmit_skb(struct vxlan_sock *vs,
 		     src, dst, skb->len);
 
 	return iptunnel_xmit(vs->sock->sk, rt, skb, src, dst, IPPROTO_UDP,
-			     tos, ttl, df);
+			     tos, ttl, df, false);
 }
 EXPORT_SYMBOL_GPL(vxlan_xmit_skb);
 
