@@ -1866,8 +1866,8 @@ extern void		dev_add_offload(struct packet_offload *po);
 extern void		dev_remove_offload(struct packet_offload *po);
 extern void		__dev_remove_offload(struct packet_offload *po);
 
-extern struct net_device	*dev_get_by_flags_rcu(struct net *net, unsigned short flags,
-						      unsigned short mask);
+extern struct net_device	*__dev_get_by_flags(struct net *net, unsigned short flags,
+						    unsigned short mask);
 extern struct net_device	*dev_get_by_name(struct net *net, const char *name);
 extern struct net_device	*dev_get_by_name_rcu(struct net *net, const char *name);
 extern struct net_device	*__dev_get_by_name(struct net *net, const char *name);
