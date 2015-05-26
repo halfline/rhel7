@@ -3210,7 +3210,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
 	return 0;
 }
 
-void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
+void pci_reset_secondary_bus(struct pci_dev *dev)
 {
 	u16 ctrl;
 
@@ -3234,6 +3234,11 @@ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
 	 * but we don't make use of them yet.
 	 */
 	ssleep(1);
+}
+
+void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
+{
+	pci_reset_secondary_bus(dev);
 }
 
 /**
