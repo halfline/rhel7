@@ -1085,7 +1085,7 @@ static int vxlan_igmp_join(struct vxlan_dev *vxlan)
 	struct sock *sk = vs->sock->sk;
 	union vxlan_addr *ip = &vxlan->default_dst.remote_ip;
 	int ifindex = vxlan->default_dst.remote_ifindex;
-	int ret;
+	int ret = -EINVAL;
 
 	lock_sock(sk);
 	if (ip->sa.sa_family == AF_INET) {
@@ -1113,7 +1113,7 @@ static int vxlan_igmp_leave(struct vxlan_dev *vxlan)
 	struct sock *sk = vs->sock->sk;
 	union vxlan_addr *ip = &vxlan->default_dst.remote_ip;
 	int ifindex = vxlan->default_dst.remote_ifindex;
-	int ret;
+	int ret = -EINVAL;
 
 	lock_sock(sk);
 	if (ip->sa.sa_family == AF_INET) {
