@@ -63,12 +63,6 @@ MODULE_DESCRIPTION("IPv6 tunneling device");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS_NETDEV("ip6tnl0");
 
-#ifdef IP6_TNL_DEBUG
-#define IP6_TNL_TRACE(x...) pr_debug("%s:" x "\n", __func__)
-#else
-#define IP6_TNL_TRACE(x...) do {;} while(0)
-#endif
-
 #define IPV6_TCLASS_SHIFT 20
 
 #define HASH_SIZE_SHIFT  5
