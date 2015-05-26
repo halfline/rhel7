@@ -200,11 +200,7 @@ static int dsm_get_label(acpi_handle handle, int func,
 		return -1;
 
 	obj = (union acpi_object *)output->pointer;
-
-	switch (obj->type) {
-	case ACPI_TYPE_PACKAGE:
-		if (obj->package.count != 2)
-			break;
+	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 2) {
 		len = obj->package.elements[0].integer.value;
 		if (buf) {
 			if (attribute == ACPI_ATTR_INDEX_SHOW)
@@ -217,10 +213,10 @@ static int dsm_get_label(acpi_handle handle, int func,
 		}
 		kfree(output->pointer);
 		return len;
-	break;
-	default:
-		kfree(output->pointer);
 	}
+
+	kfree(output->pointer);
+
 	return -1;
 }
 
