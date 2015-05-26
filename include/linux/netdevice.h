@@ -1393,7 +1393,7 @@ struct net_device {
 	union {
 		void				*ml_priv;
 		struct pcpu_lstats __percpu	*lstats; /* loopback stats */
-		struct pcpu_tstats __percpu	*tstats; /* tunnel stats */
+		RH_KABI_CHANGE_TYPE(struct pcpu_tstats __percpu	*tstats, struct pcpu_sw_netstats __percpu	*tstats)
 		struct pcpu_dstats __percpu	*dstats; /* dummy stats */
 		struct pcpu_vstats __percpu	*vstats; /* veth stats */
 	};
@@ -1717,6 +1717,15 @@ struct packet_offload {
 struct udp_offload {
 	__be16			 port;
 	struct offload_callbacks callbacks;
+};
+
+/* often modified stats are per cpu, other are shared (netdev->stats) */
+struct pcpu_sw_netstats {
+	u64     rx_packets;
+	u64     rx_bytes;
+	u64     tx_packets;
+	u64     tx_bytes;
+	struct u64_stats_sync   syncp;
 };
 
 #define netdev_alloc_pcpu_stats(type)				\
