@@ -1665,8 +1665,14 @@ int dev_forward_skb(struct net_device *dev, struct sk_buff *skb)
 		kfree_skb(skb);
 		return NET_RX_DROP;
 	}
-	skb_scrub_packet(skb, true);
 	skb->protocol = eth_type_trans(skb, dev);
+
+	/* eth_type_trans() can set pkt_type.
+	 * call skb_scrub_packet() after it to clear pkt_type _after_ calling
+	 * eth_type_trans().
+	 */
+	skb_scrub_packet(skb, true);
+
 	return netif_rx(skb);
 }
 EXPORT_SYMBOL_GPL(dev_forward_skb);
