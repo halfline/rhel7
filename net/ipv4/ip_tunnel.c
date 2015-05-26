@@ -55,6 +55,7 @@
 #include <net/netns/generic.h>
 #include <net/rtnetlink.h>
 #include <net/udp.h>
+#include <net/gue.h>
 
 #if IS_ENABLED(CONFIG_IPV6)
 #include <net/ipv6.h>
@@ -494,6 +495,8 @@ static int ip_encap_hlen(struct ip_tunnel_encap *e)
 		return 0;
 	case TUNNEL_ENCAP_FOU:
 		return sizeof(struct udphdr);
+	case TUNNEL_ENCAP_GUE:
+		return sizeof(struct udphdr) + sizeof(struct guehdr);
 	default:
 		return -EINVAL;
 	}
@@ -545,6 +548,15 @@ static int fou_build_header(struct sk_buff *skb, struct ip_tunnel_encap *e,
 	skb_reset_transport_header(skb);
 	uh = udp_hdr(skb);
 
+	if (e->type == TUNNEL_ENCAP_GUE) {
+		struct guehdr *guehdr = (struct guehdr *)&uh[1];
+
+		guehdr->version = 0;
+		guehdr->hlen = 0;
+		guehdr->flags = 0;
+		guehdr->next_hdr = *protocol;
+	}
+
 	uh->dest = e->dport;
 	uh->source = sport;
 	uh->len = htons(skb->len);
@@ -564,6 +576,7 @@ int ip_tunnel_encap(struct sk_buff *skb, struct ip_tunnel *t,
 	case TUNNEL_ENCAP_NONE:
 		return 0;
 	case TUNNEL_ENCAP_FOU:
+	case TUNNEL_ENCAP_GUE:
 		return fou_build_header(skb, &t->encap, t->encap_hlen,
 					protocol, fl4);
 	default:
