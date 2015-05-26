@@ -470,7 +470,7 @@ static struct vxlan_fdb *__vxlan_find_mac(struct vxlan_dev *vxlan,
 	struct vxlan_fdb *f;
 
 	hlist_for_each_entry_rcu(f, head, hlist) {
-		if (compare_ether_addr(mac, f->eth_addr) == 0)
+		if (ether_addr_equal(mac, f->eth_addr))
 			return f;
 	}
 
@@ -1176,8 +1176,7 @@ static void vxlan_rcv(struct vxlan_sock *vs,
 	skb_postpull_rcsum(skb, eth_hdr(skb), ETH_HLEN);
 
 	/* Ignore packet loops (and multicast echo) */
-	if (compare_ether_addr(eth_hdr(skb)->h_source,
-			       vxlan->dev->dev_addr) == 0)
+	if (ether_addr_equal(eth_hdr(skb)->h_source, vxlan->dev->dev_addr))
 		goto drop;
 
 	/* Re-examine inner Ethernet packet */
@@ -1538,7 +1537,7 @@ static bool route_shortcircuit(struct net_device *dev, struct sk_buff *skb)
 	if (n) {
 		bool diff;
 
-		diff = compare_ether_addr(eth_hdr(skb)->h_dest, n->ha) != 0;
+		diff = !ether_addr_equal(eth_hdr(skb)->h_dest, n->ha);
 		if (diff) {
 			memcpy(eth_hdr(skb)->h_source, eth_hdr(skb)->h_dest,
 				dev->addr_len);
