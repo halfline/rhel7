@@ -177,6 +177,7 @@ enum  hrtimer_base_type {
  * @max_hang_time:	Maximum time spent in hrtimer_interrupt
  * @clock_base:		array of clock bases for this cpu
  * @cpu:		cpu number
+ * @in_hrtirq:		hrtimer_interrupt() is currently executing
  */
 struct hrtimer_cpu_base {
 	raw_spinlock_t			lock;
@@ -193,6 +194,7 @@ struct hrtimer_cpu_base {
 #endif
 	struct hrtimer_clock_base	clock_base[HRTIMER_MAX_CLOCK_BASES];
 	RH_KABI_EXTEND(int cpu)
+	RH_KABI_EXTEND(int in_hrtirq)
 };
 
 static inline void hrtimer_set_expires(struct hrtimer *timer, ktime_t time)
