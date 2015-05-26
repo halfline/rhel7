@@ -56,7 +56,8 @@ static inline struct vxlan_port *vxlan_vport(const struct vport *vport)
 }
 
 /* Called with rcu_read_lock and BH disabled. */
-static void vxlan_rcv(struct vxlan_sock *vs, struct sk_buff *skb, __be32 vx_vni)
+static void vxlan_rcv(struct vxlan_sock *vs, struct sk_buff *skb,
+		      struct vxlan_metadata *md)
 {
 	struct ovs_key_ipv4_tunnel tun_key;
 	struct vport *vport = vs->data;
@@ -65,7 +66,7 @@ static void vxlan_rcv(struct vxlan_sock *vs, struct sk_buff *skb, __be32 vx_vni)
 
 	/* Save outer tunnel values */
 	iph = ip_hdr(skb);
-	key = cpu_to_be64(ntohl(vx_vni) >> 8);
+	key = cpu_to_be64(ntohl(md->vni) >> 8);
 	ovs_flow_tun_key_init(&tun_key, iph, key, TUNNEL_KEY);
 
 	ovs_vport_receive(vport, skb, &tun_key);
@@ -141,6 +142,7 @@ static int vxlan_tnl_send(struct vport *vport, struct sk_buff *skb)
 	struct vxlan_port *vxlan_port = vxlan_vport(vport);
 	__be16 dst_port = inet_sk(vxlan_port->vs->sock->sk)->inet_sport;
 	struct ovs_key_ipv4_tunnel *tun_key;
+	struct vxlan_metadata md = {0};
 	struct rtable *rt;
 	struct flowi4 fl;
 	__be16 src_port;
@@ -173,12 +175,13 @@ static int vxlan_tnl_send(struct vport *vport, struct sk_buff *skb)
 	skb->local_df = 1;
 
 	src_port = udp_flow_src_port(net, skb, 0, 0, true);
+	md.vni = htonl(be64_to_cpu(tun_key->tun_id) << 8);
 
 	err = vxlan_xmit_skb(vxlan_port->vs, rt, skb,
 			     fl.saddr, tun_key->ipv4_dst,
 			     tun_key->ipv4_tos, tun_key->ipv4_ttl, df,
 			     src_port, dst_port,
-			     htonl(be64_to_cpu(tun_key->tun_id) << 8),
+			     &md,
 			     false);
 	if (err < 0)
 		ip_rt_put(rt);
