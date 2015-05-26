@@ -958,21 +958,19 @@ remove_hrtimer(struct hrtimer *timer, struct hrtimer_clock_base *base)
  * @mode:	expiry mode: absolute (HRTIMER_MODE_ABS) or
  *		relative (HRTIMER_MODE_REL)
  *
- * Returns:
- *  0 on success
- *  1 when the timer was active
+ * Note: see KABI note at bottom of function.
  */
 int hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,
-			   unsigned long delta_ns, const enum hrtimer_mode mode)
+			    unsigned long delta_ns, const enum hrtimer_mode mode)
 {
 	struct hrtimer_clock_base *base, *new_base;
 	unsigned long flags;
-	int ret, leftmost;
+	int leftmost;
 
 	base = lock_hrtimer_base(timer, &flags);
 
 	/* Remove an active timer from the queue: */
-	ret = remove_hrtimer(timer, base);
+	remove_hrtimer(timer, base);
 
 	/* Switch the timer base, if necessary: */
 	new_base = switch_hrtimer_base(timer, base, mode & HRTIMER_MODE_PINNED);
@@ -996,11 +994,8 @@ int hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,
 	timer_stats_hrtimer_set_start_info(timer);
 
 	leftmost = enqueue_hrtimer(timer, new_base);
-
-	if (!leftmost) {
-		unlock_hrtimer_base(timer, &flags);
-		return ret;
-	}
+	if (!leftmost)
+		goto unlock;
 
 	if (!hrtimer_is_hres_active(timer)) {
 		/*
@@ -1011,10 +1006,15 @@ int hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,
 	} else {
 		hrtimer_reprogram(timer, new_base);
 	}
-
+unlock:
 	unlock_hrtimer_base(timer, &flags);
-
-	return ret;
+	/*
+	 * RHEL7 KABI: There may be external callers to this function that
+	 * check this return value.  For the purposes of matching upstream this
+	 * return can be safely ignored, as upstream has made this function
+	 * return void.
+	 */
+	return 0;
 }
 EXPORT_SYMBOL_GPL(hrtimer_start_range_ns);
 
@@ -1435,8 +1435,6 @@ static int __sched do_nanosleep(struct hrtimer_sleeper *t, enum hrtimer_mode mod
 	do {
 		set_current_state(TASK_INTERRUPTIBLE);
 		hrtimer_start_expires(&t->timer, mode);
-		if (!hrtimer_active(&t->timer))
-			t->task = NULL;
 
 		if (likely(t->task))
 			freezable_schedule();
@@ -1715,8 +1713,6 @@ schedule_hrtimeout_range_clock(ktime_t *expires, unsigned long delta,
 	hrtimer_init_sleeper(&t, current);
 
 	hrtimer_start_expires(&t.timer, mode);
-	if (!hrtimer_active(&t.timer))
-		t.task = NULL;
 
 	if (likely(t.task))
 		schedule();
