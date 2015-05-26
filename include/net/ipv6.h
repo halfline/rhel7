@@ -894,4 +894,12 @@ extern int ipv6_sysctl_register(void);
 extern void ipv6_sysctl_unregister(void);
 #endif
 
+int ipv6_sock_mc_join(struct sock *sk, int ifindex,
+		      const struct in6_addr *addr);
+int __ipv6_sock_mc_join(struct sock *sk, int ifindex,
+			const struct in6_addr *addr);
+int ipv6_sock_mc_drop(struct sock *sk, int ifindex,
+		      const struct in6_addr *addr);
+int __ipv6_sock_mc_drop(struct sock *sk, int ifindex,
+			const struct in6_addr *addr);
 #endif /* _NET_IPV6_H */
