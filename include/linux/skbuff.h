@@ -373,6 +373,8 @@ enum {
 	SKB_GSO_GRE_CSUM = 1 << 11,
 
 	SKB_GSO_UDP_TUNNEL_CSUM = 1 << 12,
+
+	SKB_GSO_TUNNEL_REMCSUM = 1 << 13,
 };
 
 /* NETIF_F_GSO flags are no longer part of a single range */
@@ -601,7 +603,8 @@ struct sk_buff {
 	RH_KABI_EXTEND(__u8			csum_complete_sw:1)
 	RH_KABI_EXTEND(__u8			xmit_more:1)
 	RH_KABI_EXTEND(__u8			inner_protocol_type:1)
-	/* 1/3 bit hole (depending on ndisc_nodetype presence) */
+	RH_KABI_EXTEND(__u8			remcsum_offload:1)
+	/* 0/2 bit hole (depending on ndisc_nodetype presence) */
 	kmemcheck_bitfield_end(flags2);
 
 #if defined CONFIG_NET_DMA_RH_KABI || defined CONFIG_NET_RX_BUSY_POLL
