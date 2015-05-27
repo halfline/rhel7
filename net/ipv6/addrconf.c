@@ -4428,6 +4428,7 @@ static int inet6_set_iftoken(struct inet6_dev *idev, struct in6_addr *token)
 	}
 
 	write_unlock_bh(&idev->lock);
+	addrconf_verify(0);
 	return 0;
 }
 
