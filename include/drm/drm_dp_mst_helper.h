@@ -388,7 +388,6 @@ struct drm_dp_payload {
 	int payload_state;
 	int start_slot;
 	int num_slots;
-	int vcpi;
 };
 
 /**
@@ -455,7 +454,6 @@ struct drm_dp_mst_topology_mgr {
 	struct drm_dp_vcpi **proposed_vcpis;
 	struct drm_dp_payload *payloads;
 	unsigned long payload_mask;
-	unsigned long vcpi_mask;
 
 	wait_queue_head_t tx_waitq;
 	struct work_struct work;

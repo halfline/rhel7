@@ -9,6 +9,26 @@
 #ifndef DRM_BACKPORT_H_
 #define DRM_BACKPORT_H_
 
+#include <linux/hrtimer.h>
+
+static inline u64 ktime_get_raw_ns(void)
+{
+	struct timespec now;
+	getrawmonotonic(&now);
+	return timespec_to_ns(&now);
+}
+
+/**
+ * ktime_mono_to_real - Convert monotonic time to clock realtime
+ */
+static inline ktime_t ktime_mono_to_real(ktime_t mono)
+{
+	return ktime_sub(mono, ktime_get_monotonic_offset());
+}
+
+/*
+ *
+ */
 
 #include <linux/mm.h>
 
@@ -54,9 +74,39 @@ struct shrinker2 {
 void register_shrinker2(struct shrinker2 *shrinker);
 void unregister_shrinker2(struct shrinker2 *shrinker);
 
-//#define shrinker            shrinker2
-//#define register_shrinker   register_shrinker2
-//#define unregister_shrinker unregister_shrinker2
+#define shrinker            shrinker2
+#define register_shrinker   register_shrinker2
+#define unregister_shrinker unregister_shrinker2
+
+/*
+ *
+ */
+
+#include <linux/rculist.h>
+
+/**
+ * hlist_add_behind_rcu
+ * @n: the new element to add to the hash list.
+ * @prev: the existing element to add the new element after.
+ *
+ * Description:
+ * Adds the specified element to the specified hlist
+ * after the specified node while permitting racing traversals.
+ *
+ * The caller must take whatever precautions are necessary
+ * (such as holding appropriate locks) to avoid racing
+ * with another list-mutation primitive, such as hlist_add_head_rcu()
+ * or hlist_del_rcu(), running on this same list.
+ * However, it is perfectly legal to run concurrently with
+ * the _rcu list-traversal primitives, such as
+ * hlist_for_each_entry_rcu(), used to prevent memory-consistency
+ * problems on Alpha CPUs.
+ */
+static inline void hlist_add_behind_rcu(struct hlist_node *n,
+                                       struct hlist_node *prev)
+{
+	hlist_add_after_rcu(prev, n);
+}
 
 #undef pr_fmt
 

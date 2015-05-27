@@ -226,11 +226,14 @@ static int radeon_cs_get_ring(struct radeon_cs_parser *p, u32 ring, s32 priority
 
 static void radeon_cs_sync_rings(struct radeon_cs_parser *p)
 {
-	struct radeon_cs_reloc *reloc;
+	int i;
 
-	list_for_each_entry(reloc, &p->validated, tv.head) {
+	for (i = 0; i < p->nrelocs; i++) {
+		if (!p->relocs[i].robj)
+			continue;
+
 		radeon_semaphore_sync_to(p->ib.semaphore,
-					 reloc->robj->tbo.sync_obj);
+					 p->relocs[i].robj->tbo.sync_obj);
 	}
 }
 
@@ -415,7 +418,7 @@ static void radeon_cs_parser_fini(struct radeon_cs_parser *parser, int error, bo
 	kfree(parser->track);
 	kfree(parser->relocs);
 	kfree(parser->relocs_ptr);
-	drm_free_large(parser->vm_bos);
+	kfree(parser->vm_bos);
 	for (i = 0; i < parser->nchunks; i++)
 		drm_free_large(parser->chunks[i].kdata);
 	kfree(parser->chunks);
@@ -448,7 +451,7 @@ static int radeon_cs_ib_chunk(struct radeon_device *rdev,
 		radeon_vce_note_usage(rdev);
 
 	radeon_cs_sync_rings(parser);
-	r = radeon_ib_schedule(rdev, &parser->ib, NULL);
+	r = radeon_ib_schedule(rdev, &parser->ib, NULL, true);
 	if (r) {
 		DRM_ERROR("Failed to schedule IB !\n");
 	}
@@ -498,7 +501,8 @@ static int radeon_bo_vm_update_pte(struct radeon_cs_parser *p,
 		if (r)
 			return r;
 	}
-	return 0;
+
+	return radeon_vm_clear_invalids(rdev, vm);
 }
 
 static int radeon_cs_ib_vm_chunk(struct radeon_device *rdev,
@@ -538,9 +542,9 @@ static int radeon_cs_ib_vm_chunk(struct radeon_device *rdev,
 
 	if ((rdev->family >= CHIP_TAHITI) &&
 	    (parser->chunk_const_ib_idx != -1)) {
-		r = radeon_ib_schedule(rdev, &parser->ib, &parser->const_ib);
+		r = radeon_ib_schedule(rdev, &parser->ib, &parser->const_ib, true);
 	} else {
-		r = radeon_ib_schedule(rdev, &parser->ib, NULL);
+		r = radeon_ib_schedule(rdev, &parser->ib, NULL, true);
 	}
 
 out:

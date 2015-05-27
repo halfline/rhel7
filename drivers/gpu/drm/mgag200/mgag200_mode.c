@@ -1486,23 +1486,8 @@ static int mga_vga_mode_valid(struct drm_connector *connector,
 	struct mga_fbdev *mfbdev = mdev->mfbdev;
 	struct drm_fb_helper *fb_helper = &mfbdev->helper;
 	struct drm_fb_helper_connector *fb_helper_conn = NULL;
-	int bpp;
+	int bpp = 32;
 	int i = 0;
-
-	bpp = mdev->preferred_bpp;
-	/* Validate the mode input by the user - since we don't have depth information
-	 * in the mode this is the best we can do */
-	for (i = 0; i < fb_helper->connector_count; i++) {
-		if (fb_helper->connector_info[i]->connector == connector) {
-			/* Found the helper for this connector */
-			fb_helper_conn = fb_helper->connector_info[i];
-			if (fb_helper_conn->cmdline_mode.specified) {
-				if (fb_helper_conn->cmdline_mode.bpp_specified) {
-					bpp = fb_helper_conn->cmdline_mode.bpp;
-				}
-			}
-		}
-	}
 
 	if (IS_G200_SE(mdev)) {
 		if (mdev->unique_rev_id == 0x01) {
@@ -1551,6 +1536,19 @@ static int mga_vga_mode_valid(struct drm_connector *connector,
 		return MODE_BAD;
 	}
 
+	/* Validate the mode input by the user */
+	for (i = 0; i < fb_helper->connector_count; i++) {
+		if (fb_helper->connector_info[i]->connector == connector) {
+			/* Found the helper for this connector */
+			fb_helper_conn = fb_helper->connector_info[i];
+			if (fb_helper_conn->cmdline_mode.specified) {
+				if (fb_helper_conn->cmdline_mode.bpp_specified) {
+					bpp = fb_helper_conn->cmdline_mode.bpp;
+				}
+			}
+		}
+	}
+
 	if ((mode->hdisplay * mode->vdisplay * (bpp/8)) > mdev->mc.vram_size) {
 		if (fb_helper_conn)
 			fb_helper_conn->cmdline_mode.specified = false;
@@ -1564,19 +1562,9 @@ static struct drm_encoder *mga_connector_best_encoder(struct drm_connector
 						  *connector)
 {
 	int enc_id = connector->encoder_ids[0];
-	struct drm_mode_object *obj;
-	struct drm_encoder *encoder;
-
 	/* pick the encoder ids */
-	if (enc_id) {
-		obj =
-		    drm_mode_object_find(connector->dev, enc_id,
-					 DRM_MODE_OBJECT_ENCODER);
-		if (!obj)
-			return NULL;
-		encoder = obj_to_encoder(obj);
-		return encoder;
-	}
+	if (enc_id)
+		return drm_encoder_find(connector->dev, enc_id);
 	return NULL;
 }
 
@@ -1623,7 +1611,7 @@ static struct drm_connector *mga_vga_init(struct drm_device *dev)
 
 	drm_connector_helper_add(connector, &mga_vga_connector_helper_funcs);
 
-	drm_sysfs_connector_add(connector);
+	drm_connector_register(connector);
 
 	mga_connector->i2c = mgag200_i2c_create(dev);
 	if (!mga_connector->i2c)

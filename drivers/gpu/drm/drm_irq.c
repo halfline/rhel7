@@ -128,7 +128,7 @@ static void vblank_disable_and_save(struct drm_device *dev, int crtc)
 	 */
 	if ((vblrc > 0) && (abs64(diff_ns) > 1000000)) {
 		atomic_inc(&dev->vblank[crtc].count);
-		smp_mb__after_atomic_inc();
+		smp_mb__after_atomic();
 	}
 
 	/* Invalidate all timestamps while vblank irq's are off. */
@@ -542,8 +542,8 @@ int drm_calc_vbltimestamp_from_scanoutpos(struct drm_device *dev, int crtc,
 					  const struct drm_crtc *refcrtc,
 					  const struct drm_display_mode *mode)
 {
-	ktime_t stime, etime, mono_time_offset;
 	struct timeval tv_etime;
+	ktime_t stime, etime;
 	int vbl_status;
 	int vpos, hpos, i;
 	int framedur_ns, linedur_ns, pixeldur_ns, delta_ns, duration_ns;
@@ -588,13 +588,6 @@ int drm_calc_vbltimestamp_from_scanoutpos(struct drm_device *dev, int crtc,
 		vbl_status = dev->driver->get_scanout_position(dev, crtc, flags, &vpos,
 							       &hpos, &stime, &etime);
 
-		/*
-		 * Get correction for CLOCK_MONOTONIC -> CLOCK_REALTIME if
-		 * CLOCK_REALTIME is requested.
-		 */
-		if (!drm_timestamp_monotonic)
-			mono_time_offset = ktime_get_monotonic_offset();
-
 		/* Return as no-op if scanout query unsupported or failed. */
 		if (!(vbl_status & DRM_SCANOUTPOS_VALID)) {
 			DRM_DEBUG("crtc %d : scanoutpos query failed [%d].\n",
@@ -633,7 +626,7 @@ int drm_calc_vbltimestamp_from_scanoutpos(struct drm_device *dev, int crtc,
 	delta_ns = vpos * linedur_ns + hpos * pixeldur_ns;
 
 	if (!drm_timestamp_monotonic)
-		etime = ktime_sub(etime, mono_time_offset);
+		etime = ktime_mono_to_real(etime);
 
 	/* save this only for debugging purposes */
 	tv_etime = ktime_to_timeval(etime);
@@ -664,10 +657,7 @@ static struct timeval get_drm_timestamp(void)
 {
 	ktime_t now;
 
-	now = ktime_get();
-	if (!drm_timestamp_monotonic)
-		now = ktime_sub(now, ktime_get_monotonic_offset());
-
+	now = drm_timestamp_monotonic ? ktime_get() : ktime_get_real();
 	return ktime_to_timeval(now);
 }
 
@@ -868,9 +858,9 @@ static void drm_update_vblank_count(struct drm_device *dev, int crtc)
 		vblanktimestamp(dev, crtc, tslot) = t_vblank;
 	}
 
-	smp_mb__before_atomic_inc();
+	smp_mb__before_atomic();
 	atomic_add(diff, &dev->vblank[crtc].count);
-	smp_mb__after_atomic_inc();
+	smp_mb__after_atomic();
 }
 
 /**
@@ -1479,9 +1469,9 @@ bool drm_handle_vblank(struct drm_device *dev, int crtc)
 		/* Increment cooked vblank count. This also atomically commits
 		 * the timestamp computed above.
 		 */
-		smp_mb__before_atomic_inc();
+		smp_mb__before_atomic();
 		atomic_inc(&dev->vblank[crtc].count);
-		smp_mb__after_atomic_inc();
+		smp_mb__after_atomic();
 	} else {
 		DRM_DEBUG("crtc %d: Redundant vblirq ignored. diff_ns = %d\n",
 			  crtc, (int) diff_ns);

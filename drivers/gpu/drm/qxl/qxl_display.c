@@ -523,6 +523,7 @@ static int qxl_crtc_mode_set(struct drm_crtc *crtc,
 	struct qxl_framebuffer *qfb;
 	struct qxl_bo *bo, *old_bo = NULL;
 	struct qxl_crtc *qcrtc = to_qxl_crtc(crtc);
+	uint32_t width, height, base_offset;
 	bool recreate_primary = false;
 	int ret;
 	int surf_id;
@@ -552,10 +553,9 @@ static int qxl_crtc_mode_set(struct drm_crtc *crtc,
 	if (qcrtc->index == 0)
 		recreate_primary = true;
 
-	if (bo->surf.stride * bo->surf.height > qdev->vram_size) {
-		DRM_ERROR("Mode doesn't fit in vram size (vgamem)");
-		return -EINVAL;
-        }
+	width = mode->hdisplay;
+	height = mode->vdisplay;
+	base_offset = 0;
 
 	ret = qxl_bo_reserve(bo, false);
 	if (ret != 0)
@@ -569,10 +569,10 @@ static int qxl_crtc_mode_set(struct drm_crtc *crtc,
 	if (recreate_primary) {
 		qxl_io_destroy_primary(qdev);
 		qxl_io_log(qdev,
-			   "recreate primary: %dx%d,%d,%d\n",
-			   bo->surf.width, bo->surf.height,
-			   bo->surf.stride, bo->surf.format);
-		qxl_io_create_primary(qdev, 0, bo);
+			   "recreate primary: %dx%d (was %dx%d,%d,%d)\n",
+			   width, height, bo->surf.width,
+			   bo->surf.height, bo->surf.stride, bo->surf.format);
+		qxl_io_create_primary(qdev, base_offset, bo);
 		bo->is_primary = true;
 	}
 
@@ -835,7 +835,7 @@ static void qxl_conn_destroy(struct drm_connector *connector)
 	struct qxl_output *qxl_output =
 		drm_connector_to_qxl_output(connector);
 
-	drm_sysfs_connector_remove(connector);
+	drm_connector_unregister(connector);
 	drm_connector_cleanup(connector);
 	kfree(qxl_output);
 }
@@ -902,7 +902,7 @@ static int qdev_output_init(struct drm_device *dev, int num_output)
 
 	drm_object_attach_property(&connector->base,
 				   qdev->hotplug_mode_update_property, 0);
-	drm_sysfs_connector_add(connector);
+	drm_connector_register(connector);
 	return 0;
 }
 
