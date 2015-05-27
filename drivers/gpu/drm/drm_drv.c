@@ -40,15 +40,19 @@
 unsigned int drm_debug = 0;	/* 1 to enable debug output */
 EXPORT_SYMBOL(drm_debug);
 
+bool drm_atomic = 0;
+
 MODULE_AUTHOR(CORE_AUTHOR);
 MODULE_DESCRIPTION(CORE_DESC);
 MODULE_LICENSE("GPL and additional rights");
 MODULE_PARM_DESC(debug, "Enable debug output");
+MODULE_PARM_DESC(atomic, "Enable experimental atomic KMS API");
 MODULE_PARM_DESC(vblankoffdelay, "Delay until vblank irq auto-disable [msecs] (0: never disable, <0: disable immediately)");
 MODULE_PARM_DESC(timestamp_precision_usec, "Max. error on timestamps [usecs]");
 MODULE_PARM_DESC(timestamp_monotonic, "Use monotonic timestamps");
 
 module_param_named(debug, drm_debug, int, 0600);
+module_param_named_unsafe(atomic, drm_atomic, bool, 0600);
 
 static DEFINE_SPINLOCK(drm_minor_lock);
 static struct idr drm_minors_idr;
@@ -859,6 +863,10 @@ static int __init drm_core_init(void)
 {
 	int ret = -ENOMEM;
 
+	ret = drm_backport_init();
+	if (ret)
+		goto err_p1;
+
 	drm_global_init();
 	drm_connector_ida_init();
 	idr_init(&drm_minors_idr);
@@ -902,6 +910,7 @@ static void __exit drm_core_exit(void)
 
 	drm_connector_ida_destroy();
 	idr_destroy(&drm_minors_idr);
+	drm_backport_exit();
 }
 
 module_init(drm_core_init);

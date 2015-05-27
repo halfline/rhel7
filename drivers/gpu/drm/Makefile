@@ -15,7 +15,7 @@ drm-y       :=	drm_auth.o drm_bufs.o drm_cache.o \
 		drm_info.o drm_debugfs.o drm_encoder_slave.o \
 		drm_trace_points.o drm_global.o drm_prime.o \
 		drm_rect.o drm_vma_manager.o drm_flip_work.o \
-		drm_modeset_lock.o drm_atomic.o
+		drm_modeset_lock.o drm_atomic.o drm_bridge.o
 
 drm-y += drm_backport.o
 
@@ -23,7 +23,6 @@ drm-$(CONFIG_COMPAT) += drm_ioc32.o
 drm-$(CONFIG_DRM_GEM_CMA_HELPER) += drm_gem_cma_helper.o
 drm-$(CONFIG_PCI) += ati_pcigart.o
 drm-$(CONFIG_DRM_PANEL) += drm_panel.o
-drm-$(CONFIG_OF) += drm_of.o
 
 drm_kms_helper-y := drm_crtc_helper.o drm_dp_helper.o drm_probe_helper.o \
 		drm_plane_helper.o drm_dp_mst_topology.o drm_atomic_helper.o
@@ -36,7 +35,6 @@ obj-$(CONFIG_DRM_KMS_HELPER) += drm_kms_helper.o
 CFLAGS_drm_trace_points.o := -I$(src)
 
 obj-$(CONFIG_DRM)	+= drm.o
-obj-$(CONFIG_DRM_MIPI_DSI) += drm_mipi_dsi.o
 obj-$(CONFIG_DRM_TTM)	+= ttm/
 obj-$(CONFIG_DRM_TDFX)	+= tdfx/
 obj-$(CONFIG_DRM_R128)	+= r128/

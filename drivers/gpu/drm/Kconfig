@@ -8,7 +8,6 @@ menuconfig DRM
 	tristate "Direct Rendering Manager (XFree86 4.1.0 and higher DRI support)"
 	depends on (AGP || AGP=n) && !EMULATED_CMPXCHG && MMU && HAS_DMA
 	select HDMI
-	select FB_CMDLINE
 	select I2C
 	select I2C_ALGOBIT
 	select DMA_SHARED_BUFFER
@@ -24,6 +23,12 @@ menuconfig DRM
 config DRM_MIPI_DSI
 	bool
 	depends on DRM
+
+config DRM_USB
+	tristate
+	depends on DRM
+	depends on USB_SUPPORT && USB_ARCH_HAS_HCD
+	select USB
 
 config DRM_KMS_HELPER
 	tristate
@@ -62,12 +67,13 @@ config DRM_TTM
 
 config DRM_GEM_CMA_HELPER
 	bool
-	depends on DRM
+	depends on DRM && HAVE_DMA_ATTRS
 	help
 	  Choose this if you need the GEM CMA helper functions
 
 config DRM_KMS_CMA_HELPER
 	bool
+	depends on DRM && HAVE_DMA_ATTRS
 	select DRM_GEM_CMA_HELPER
 	select DRM_KMS_FB_HELPER
 	select FB_SYS_FILLRECT
@@ -110,7 +116,6 @@ config DRM_RADEON
 	select HWMON
 	select BACKLIGHT_CLASS_DEVICE
 	select INTERVAL_TREE
-	select MMU_NOTIFIER
 	help
 	  Choose this option if you have an ATI Radeon graphics card.  There
 	  are both PCI and AGP versions.  You don't need to choose this to

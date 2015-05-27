@@ -94,7 +94,7 @@ static void mipi_dsi_dev_release(struct device *dev)
 {
 	struct mipi_dsi_device *dsi = to_mipi_dsi_device(dev);
 
-	of_node_put(dev->of_node);
+//	of_node_put(dev->of_node);
 	kfree(dsi);
 }
 
@@ -129,6 +129,7 @@ static int mipi_dsi_device_add(struct mipi_dsi_device *dsi)
 	return device_add(&dsi->dev);
 }
 
+#if 0
 static struct mipi_dsi_device *
 of_mipi_dsi_device_add(struct mipi_dsi_host *host, struct device_node *node)
 {
@@ -170,9 +171,11 @@ of_mipi_dsi_device_add(struct mipi_dsi_host *host, struct device_node *node)
 
 	return dsi;
 }
+#endif
 
 int mipi_dsi_host_register(struct mipi_dsi_host *host)
 {
+#if 0
 	struct device_node *node;
 
 	for_each_available_child_of_node(host->dev->of_node, node) {
@@ -181,7 +184,7 @@ int mipi_dsi_host_register(struct mipi_dsi_host *host)
 			continue;
 		of_mipi_dsi_device_add(host, node);
 	}
-
+#endif
 	return 0;
 }
 EXPORT_SYMBOL(mipi_dsi_host_register);
@@ -323,8 +326,6 @@ EXPORT_SYMBOL(mipi_dsi_packet_format_is_long);
 int mipi_dsi_create_packet(struct mipi_dsi_packet *packet,
 			   const struct mipi_dsi_msg *msg)
 {
-	const u8 *tx = msg->tx_buf;
-
 	if (!packet || !msg)
 		return -EINVAL;
 
@@ -353,8 +354,10 @@ int mipi_dsi_create_packet(struct mipi_dsi_packet *packet,
 		packet->header[2] = (msg->tx_len >> 8) & 0xff;
 
 		packet->payload_length = msg->tx_len;
-		packet->payload = tx;
+		packet->payload = msg->tx_buf;
 	} else {
+		const u8 *tx = msg->tx_buf;
+
 		packet->header[1] = (msg->tx_len > 0) ? tx[0] : 0;
 		packet->header[2] = (msg->tx_len > 1) ? tx[1] : 0;
 	}

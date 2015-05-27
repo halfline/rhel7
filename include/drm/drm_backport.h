@@ -30,6 +30,18 @@ static inline ktime_t ktime_mono_to_real(ktime_t mono)
  *
  */
 
+/**
+ * list_last_entry - get the last element from a list
+ * @ptr:	the list head to take the element from.
+ * @type:	the type of the struct this is embedded in.
+ * @member:	the name of the list_struct within the struct.
+ *
+ * Note, that list is expected to be not empty.
+ */
+#define list_last_entry(ptr, type, member) \
+	list_entry((ptr)->prev, type, member)
+
+
 #define module_param_named_unsafe(name, value, type, perm)		\
 	module_param_named(name, value, type, perm)
 
@@ -121,6 +133,34 @@ static inline void hlist_add_behind_rcu(struct hlist_node *n,
 {
 	hlist_add_after_rcu(prev, n);
 }
+
+/* stubs, we don't have mipi-dsi.. */
+struct mipi_dsi_device;
+struct mipi_dsi_packet;
+struct mipi_dsi_msg;
+static inline ssize_t mipi_dsi_dcs_write_buffer(struct mipi_dsi_device *dsi,
+				  const void *data, size_t len)
+{
+	return -EINVAL;
+}
+
+static inline ssize_t mipi_dsi_generic_write(struct mipi_dsi_device *dsi, const void *payload,
+			       size_t size)
+{
+	return -EINVAL;
+}
+
+static inline int mipi_dsi_create_packet(struct mipi_dsi_packet *packet,
+			   const struct mipi_dsi_msg *msg)
+{
+	return -EINVAL;
+}
+
+static inline int mipi_dsi_attach(struct mipi_dsi_device *dsi)
+{
+	return -ENOSYS;
+}
+
 
 int __init drm_backport_init(void);
 void __exit drm_backport_exit(void);
