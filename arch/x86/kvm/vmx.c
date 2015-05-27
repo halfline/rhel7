@@ -6033,7 +6033,7 @@ static int nested_vmx_check_vmptr(struct kvm_vcpu *vcpu, int exit_reason,
 		 * which replaces physical address width with 32
 		 *
 		 */
-		if (!IS_ALIGNED(vmptr, PAGE_SIZE) || (vmptr >> maxphyaddr)) {
+		if (!PAGE_ALIGNED(vmptr) || (vmptr >> maxphyaddr)) {
 			nested_vmx_failInvalid(vcpu);
 			skip_emulated_instruction(vcpu);
 			return 1;
@@ -6051,7 +6051,7 @@ static int nested_vmx_check_vmptr(struct kvm_vcpu *vcpu, int exit_reason,
 		vmx->nested.vmxon_ptr = vmptr;
 		break;
 	case EXIT_REASON_VMCLEAR:
-		if (!IS_ALIGNED(vmptr, PAGE_SIZE) || (vmptr >> maxphyaddr)) {
+		if (!PAGE_ALIGNED(vmptr) || (vmptr >> maxphyaddr)) {
 			nested_vmx_failValid(vcpu,
 					     VMXERR_VMCLEAR_INVALID_ADDRESS);
 			skip_emulated_instruction(vcpu);
@@ -6066,7 +6066,7 @@ static int nested_vmx_check_vmptr(struct kvm_vcpu *vcpu, int exit_reason,
 		}
 		break;
 	case EXIT_REASON_VMPTRLD:
-		if (!IS_ALIGNED(vmptr, PAGE_SIZE) || (vmptr >> maxphyaddr)) {
+		if (!PAGE_ALIGNED(vmptr) || (vmptr >> maxphyaddr)) {
 			nested_vmx_failValid(vcpu,
 					     VMXERR_VMPTRLD_INVALID_ADDRESS);
 			skip_emulated_instruction(vcpu);
@@ -8268,14 +8268,14 @@ static int nested_vmx_run(struct kvm_vcpu *vcpu, bool launch)
 	}
 
 	if ((vmcs12->cpu_based_vm_exec_control & CPU_BASED_USE_MSR_BITMAPS) &&
-			!IS_ALIGNED(vmcs12->msr_bitmap, PAGE_SIZE)) {
+			!PAGE_ALIGNED(vmcs12->msr_bitmap)) {
 		/*TODO: Also verify bits beyond physical address width are 0*/
 		nested_vmx_failValid(vcpu, VMXERR_ENTRY_INVALID_CONTROL_FIELD);
 		return 1;
 	}
 
 	if (nested_cpu_has2(vmcs12, SECONDARY_EXEC_VIRTUALIZE_APIC_ACCESSES) &&
-			!IS_ALIGNED(vmcs12->apic_access_addr, PAGE_SIZE)) {
+			!PAGE_ALIGNED(vmcs12->apic_access_addr)) {
 		/*TODO: Also verify bits beyond physical address width are 0*/
 		nested_vmx_failValid(vcpu, VMXERR_ENTRY_INVALID_CONTROL_FIELD);
 		return 1;
