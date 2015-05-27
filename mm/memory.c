@@ -1831,6 +1831,11 @@ long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 					fault_flags |= FAULT_FLAG_ALLOW_RETRY;
 				if (foll_flags & FOLL_NOWAIT)
 					fault_flags |= (FAULT_FLAG_ALLOW_RETRY | FAULT_FLAG_RETRY_NOWAIT);
+				if (foll_flags & FOLL_TRIED) {
+					WARN_ON_ONCE(fault_flags &
+						     FAULT_FLAG_ALLOW_RETRY);
+					fault_flags |= FAULT_FLAG_TRIED;
+				}
 
 				ret = handle_mm_fault(mm, vma, start,
 							fault_flags);
