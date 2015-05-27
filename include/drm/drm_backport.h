@@ -30,6 +30,13 @@ static inline ktime_t ktime_mono_to_real(ktime_t mono)
  *
  */
 
+#define module_param_named_unsafe(name, value, type, perm)		\
+	module_param_named(name, value, type, perm)
+
+/*
+ *
+ */
+
 #include <linux/mm.h>
 
 #define SHRINK_STOP (~0UL)
@@ -82,6 +89,13 @@ void unregister_shrinker2(struct shrinker2 *shrinker);
  *
  */
 
+extern struct workqueue_struct *system_power_efficient_wq;
+
+
+/*
+ *
+ */
+
 #include <linux/rculist.h>
 
 /**
@@ -107,6 +121,9 @@ static inline void hlist_add_behind_rcu(struct hlist_node *n,
 {
 	hlist_add_after_rcu(prev, n);
 }
+
+int __init drm_backport_init(void);
+void __exit drm_backport_exit(void);
 
 #undef pr_fmt
 
