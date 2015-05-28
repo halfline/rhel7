@@ -1325,6 +1325,9 @@ static int __init init_scsi(void)
 {
 	int error;
 
+	if (scsi_use_blk_mq)
+		mark_tech_preview("scsi-mq", THIS_MODULE);
+
 	error = scsi_init_queue();
 	if (error)
 		return error;
