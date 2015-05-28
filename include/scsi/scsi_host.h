@@ -720,7 +720,7 @@ struct Scsi_Host {
 	/*
 	 * Host has rejected a command because it was busy.
 	 */
-	unsigned int host_blocked;
+	RH_KABI_CHANGE_TYPE(unsigned int host_blocked, atomic_t host_blocked)
 
 	/*
 	 * Value host_blocked counts down from

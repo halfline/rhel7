@@ -185,7 +185,8 @@ struct scsi_device {
 	struct list_head event_list;	/* asserted events */
 	struct work_struct event_work;
 
-	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
+	RH_KABI_CHANGE_TYPE(unsigned int device_blocked, atomic_t device_blocked)
+					/* Device returned QUEUE_FULL. */
 
 	unsigned int max_device_blocked; /* what device_blocked counts down from  */
 #define SCSI_DEFAULT_DEVICE_BLOCKED	3
@@ -335,7 +336,7 @@ struct scsi_target {
 	 * If set to zero then there is not limit.
 	 */
 	unsigned int		can_queue;
-	unsigned int		target_blocked;
+	RH_KABI_CHANGE_TYPE(unsigned int target_blocked, atomic_t target_blocked)
 	unsigned int		max_target_blocked;
 #define SCSI_DEFAULT_TARGET_BLOCKED	3
 
