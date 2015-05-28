@@ -7,6 +7,9 @@
 #include <linux/workqueue.h>
 #include <linux/mutex.h>
 #include <linux/seq_file.h>
+#ifndef __GENKSYMS__
+#include <linux/blk-mq.h>
+#endif
 #include <scsi/scsi.h>
 
 #include <linux/rh_kabi.h>
@@ -486,6 +489,9 @@ struct scsi_host_template {
 	 */
 	unsigned no_async_abort:1;
 
+	/* temporary flag to disable blk-mq I/O path */
+	RH_KABI_EXTEND(unsigned disable_blk_mq:1)
+
 	/*
 	 * Countdown for host blocking with no commands outstanding.
 	 */
@@ -615,7 +621,14 @@ struct Scsi_Host {
 	 * Area to keep a shared tag map (if needed, will be
 	 * NULL if not).
 	 */
+#ifndef __GENKSYMS__
+	union {
+		struct blk_queue_tag	*bqt;
+		struct blk_mq_tag_set	*tag_set;
+	};
+#else
 	struct blk_queue_tag	*bqt;
+#endif
 
 	RH_KABI_CHANGE_TYPE(unsigned int host_busy, atomic_t host_busy)
 					   /* commands actually active on low-level */
@@ -705,6 +718,8 @@ struct Scsi_Host {
 
 	/* The controller does not support WRITE SAME */
 	unsigned no_write_same:1;
+
+	RH_KABI_EXTEND(unsigned use_blk_mq:1)
 
 	/*
 	 * Optional work queue to be utilized by the transport
@@ -828,6 +843,13 @@ static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
 		shost->shost_state == SHOST_CANCEL_RECOVERY ||
 		shost->shost_state == SHOST_DEL_RECOVERY ||
 		shost->tmf_in_progress;
+}
+
+extern bool scsi_use_blk_mq;
+
+static inline bool shost_use_blk_mq(struct Scsi_Host *shost)
+{
+	return shost->use_blk_mq;
 }
 
 extern int scsi_queue_work(struct Scsi_Host *, struct work_struct *);
