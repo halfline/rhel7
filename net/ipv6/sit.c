@@ -1269,7 +1269,7 @@ static void ipip6_tunnel_setup(struct net_device *dev)
 	dev->hard_header_len 	= LL_MAX_HEADER + sizeof(struct iphdr);
 	dev->mtu		= ETH_DATA_LEN - sizeof(struct iphdr);
 	dev->flags		= IFF_NOARP;
-	dev->priv_flags	       &= ~IFF_XMIT_DST_RELEASE;
+	netif_keep_dst(dev);
 	dev->addr_len		= 4;
 	dev->features		|= NETIF_F_LLTX;
 	dev->features		|= SIT_FEATURES;
