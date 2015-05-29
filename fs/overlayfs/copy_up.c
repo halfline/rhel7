@@ -7,6 +7,7 @@
  * the Free Software Foundation.
  */
 
+#include <linux/module.h>
 #include <linux/fs.h>
 #include <linux/slab.h>
 #include <linux/file.h>
@@ -16,9 +17,38 @@
 #include <linux/uaccess.h>
 #include <linux/sched.h>
 #include <linux/namei.h>
+#include <linux/fdtable.h>
 #include "overlayfs.h"
 
 #define OVL_COPY_UP_CHUNK_SIZE (1 << 20)
+
+static unsigned ovl_check_copy_up;
+module_param_named(check_copy_up, ovl_check_copy_up, uint,
+		   S_IWUSR | S_IRUGO);
+MODULE_PARM_DESC(ovl_check_copy_up,
+		 "Warn on copy-up when causing process also has a R/O fd open");
+
+static int ovl_check_fd(const void *data, struct file *f, unsigned fd)
+{
+	const struct dentry *dentry = data;
+
+	if (f->f_path.dentry == dentry)
+		pr_warn("overlayfs: Copying up %pD, but open R/O on fd %u\n", f, fd);
+	return 0;
+}
+
+/*
+ * Check the fds open by this process and warn if something like the following
+ * scenario is about to occur:
+ *
+ *	fd1 = open("foo", O_RDONLY);
+ *	fd2 = open("foo", O_RDWR);
+ */
+static void ovl_do_check_copy_up(struct dentry *dentry)
+{
+	if (ovl_check_copy_up)
+		iterate_fd(current->files, 0, ovl_check_fd, dentry);
+}
 
 int ovl_copy_xattr(struct dentry *old, struct dentry *new)
 {
@@ -299,6 +329,8 @@ int ovl_copy_up_one(struct dentry *parent, struct dentry *dentry,
 	const struct cred *old_cred;
 	struct cred *override_cred;
 	char *link = NULL;
+
+	ovl_do_check_copy_up(lowerpath->dentry);
 
 	ovl_path_upper(parent, &parentpath);
 	upperdir = parentpath.dentry;
