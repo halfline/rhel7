@@ -1108,7 +1108,6 @@ static int __init vti6_tunnel_init(void)
 
 	err = xfrm6_protocol_register(&vti_esp6_protocol, IPPROTO_ESP);
 	if (err < 0) {
-		unregister_pernet_device(&vti6_net_ops);
 		pr_err("%s: can't register vti6 protocol\n", __func__);
 
 		goto out;
@@ -1117,7 +1116,6 @@ static int __init vti6_tunnel_init(void)
 	err = xfrm6_protocol_register(&vti_ah6_protocol, IPPROTO_AH);
 	if (err < 0) {
 		xfrm6_protocol_deregister(&vti_esp6_protocol, IPPROTO_ESP);
-		unregister_pernet_device(&vti6_net_ops);
 		pr_err("%s: can't register vti6 protocol\n", __func__);
 
 		goto out;
@@ -1127,7 +1125,6 @@ static int __init vti6_tunnel_init(void)
 	if (err < 0) {
 		xfrm6_protocol_deregister(&vti_ah6_protocol, IPPROTO_AH);
 		xfrm6_protocol_deregister(&vti_esp6_protocol, IPPROTO_ESP);
-		unregister_pernet_device(&vti6_net_ops);
 		pr_err("%s: can't register vti6 protocol\n", __func__);
 
 		goto out;
