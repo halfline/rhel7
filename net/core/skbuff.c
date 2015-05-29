@@ -1962,6 +1962,7 @@ done:
 
 	return ret;
 }
+EXPORT_SYMBOL_GPL(skb_splice_bits);
 
 /**
  *	skb_store_bits - store bits from kernel buffer to skb
