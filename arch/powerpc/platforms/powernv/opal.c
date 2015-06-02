@@ -625,6 +625,14 @@ static void opal_init_heartbeat(void)
 		kthread_run(kopald, NULL, "kopald");
 }
 
+static void opal_i2c_create_devs(void)
+{
+	struct device_node *np;
+
+	for_each_compatible_node(np, NULL, "ibm,opal-i2c")
+		of_platform_device_create(np, NULL, NULL);
+}
+
 static void __init opal_irq_init(struct device_node *dn)
 {
 	const __be32 *irqs;
@@ -691,6 +699,9 @@ static int __init opal_init(void)
 
 	/* Setup a heatbeat thread if requested by OPAL */
 	opal_init_heartbeat();
+
+	/* Create i2c platform devices */
+	opal_i2c_create_devs();
 
 	/* Find all OPAL interrupts and request them */
 	opal_irq_init(opal_node);
@@ -820,3 +831,4 @@ EXPORT_SYMBOL_GPL(opal_rtc_read);
 EXPORT_SYMBOL_GPL(opal_rtc_write);
 EXPORT_SYMBOL_GPL(opal_tpo_read);
 EXPORT_SYMBOL_GPL(opal_tpo_write);
+EXPORT_SYMBOL_GPL(opal_i2c_request);
