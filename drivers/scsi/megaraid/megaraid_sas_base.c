@@ -5444,7 +5444,6 @@ static int megasas_probe_one(struct pci_dev *pdev,
 	megasas_mgmt_info.instance[megasas_mgmt_info.max_index] = NULL;
 	megasas_mgmt_info.max_index--;
 
-	pci_set_drvdata(pdev, NULL);
 	instance->instancet->disable_intr(instance);
 	megasas_destroy_irqs(instance);
 
@@ -5798,8 +5797,6 @@ static void megasas_detach_one(struct pci_dev *pdev)
 		}
 	}
 
-	pci_set_drvdata(instance->pdev, NULL);
-
 	instance->instancet->disable_intr(instance);
 
 	megasas_destroy_irqs(instance);
@@ -5869,8 +5866,6 @@ static void megasas_detach_one(struct pci_dev *pdev)
 				    instance->system_info_buf, instance->system_info_h);
 
 	scsi_host_put(host);
-
-	pci_set_drvdata(pdev, NULL);
 
 	pci_disable_device(pdev);
 
