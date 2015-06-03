@@ -282,6 +282,13 @@ static inline bool is_kvmppc_resume_guest(int r)
 	return (r == RESUME_GUEST || r == RESUME_GUEST_NV);
 }
 
+static inline bool is_kvmppc_hv_enabled(struct kvm *kvm);
+static inline bool kvmppc_supports_magic_page(struct kvm_vcpu *vcpu)
+{
+	/* Only PR KVM supports the magic page */
+	return !is_kvmppc_hv_enabled(vcpu->kvm);
+}
+
 extern int kvmppc_h_logical_ci_load(struct kvm_vcpu *vcpu);
 extern int kvmppc_h_logical_ci_store(struct kvm_vcpu *vcpu);
 
