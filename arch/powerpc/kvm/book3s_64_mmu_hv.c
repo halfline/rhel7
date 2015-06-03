@@ -38,6 +38,7 @@
 #include <asm/cputable.h>
 
 #include "book3s_hv_cma.h"
+#include "trace_hv.h"
 
 /* POWER7 has 10-bit LPIDs, PPC970 has 6-bit LPIDs */
 #define MAX_LPID_970	63
@@ -624,6 +625,8 @@ int kvmppc_book3s_hv_page_fault(struct kvm_run *run, struct kvm_vcpu *vcpu,
 	gfn = gpa >> PAGE_SHIFT;
 	memslot = gfn_to_memslot(kvm, gfn);
 
+	trace_kvm_page_fault_enter(vcpu, hpte, memslot, ea, dsisr);
+
 	/* No memslot means it's an emulated MMIO region */
 	if (!memslot || (memslot->flags & KVM_MEMSLOT_INVALID))
 		return kvmppc_hv_emulate_mmio(run, vcpu, gpa, ea,
@@ -643,6 +646,7 @@ int kvmppc_book3s_hv_page_fault(struct kvm_run *run, struct kvm_vcpu *vcpu,
 	mmu_seq = kvm->mmu_notifier_seq;
 	smp_rmb();
 
+	ret = -EFAULT;
 	is_io = 0;
 	pfn = 0;
 	page = NULL;
@@ -666,7 +670,7 @@ int kvmppc_book3s_hv_page_fault(struct kvm_run *run, struct kvm_vcpu *vcpu,
 		}
 		up_read(&current->mm->mmap_sem);
 		if (!pfn)
-			return -EFAULT;
+			goto out_put;
 	} else {
 		page = pages[0];
 		pfn = page_to_pfn(page);
@@ -696,14 +700,14 @@ int kvmppc_book3s_hv_page_fault(struct kvm_run *run, struct kvm_vcpu *vcpu,
 		}
 	}
 
-	ret = -EFAULT;
 	if (psize > pte_size)
 		goto out_put;
 
 	/* Check WIMG vs. the actual page we're accessing */
 	if (!hpte_cache_flags_ok(r, is_io)) {
 		if (is_io)
-			return -EFAULT;
+			goto out_put;
+
 		/*
 		 * Allow guest to map emulated device memory as
 		 * uncacheable, but actually make it cacheable.
@@ -767,6 +771,8 @@ int kvmppc_book3s_hv_page_fault(struct kvm_run *run, struct kvm_vcpu *vcpu,
 		SetPageDirty(page);
 
  out_put:
+	trace_kvm_page_fault_exit(vcpu, hpte, ret);
+
 	if (page) {
 		/*
 		 * We drop pages[0] here, not page because page might
