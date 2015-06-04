@@ -3454,20 +3454,6 @@ void hugetlb_unreserve_pages(struct inode *inode, long offset, long freed)
 
 #ifdef CONFIG_MEMORY_FAILURE
 
-/* Should be called in hugetlb_lock */
-static int is_hugepage_on_freelist(struct page *hpage)
-{
-	struct page *page;
-	struct page *tmp;
-	struct hstate *h = page_hstate(hpage);
-	int nid = page_to_nid(hpage);
-
-	list_for_each_entry_safe(page, tmp, &h->hugepage_freelists[nid], lru)
-		if (page == hpage)
-			return 1;
-	return 0;
-}
-
 /*
  * This function is called from memory failure code.
  * Assume the caller holds page lock of the head page.
@@ -3479,7 +3465,11 @@ int dequeue_hwpoisoned_huge_page(struct page *hpage)
 	int ret = -EBUSY;
 
 	spin_lock(&hugetlb_lock);
-	if (is_hugepage_on_freelist(hpage)) {
+	/*
+	 * Just checking !page_huge_active is not enough, because that could be
+	 * an isolated/hwpoisoned hugepage (which have >0 refcount).
+	 */
+	if (!page_huge_active(hpage) && !page_count(hpage)) {
 		/*
 		 * Hwpoisoned hugepage isn't linked to activelist or freelist,
 		 * but dangling hpage->lru can trigger list-debug warnings
