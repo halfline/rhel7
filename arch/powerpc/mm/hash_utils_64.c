@@ -1000,7 +1000,9 @@ static void check_paca_psize(unsigned long ea, struct mm_struct *mm,
  * -1 - critical hash insertion error
  * -2 - access not permitted by subpage protection mechanism
  */
-int hash_page_mm(struct mm_struct *mm, unsigned long ea, unsigned long access, unsigned long trap)
+int hash_page_mm(struct mm_struct *mm, unsigned long ea,
+		 unsigned long access, unsigned long trap,
+		 unsigned long flags)
 {
 	enum ctx_state prev_state = exception_enter();
 	pgd_t *pgdir;
@@ -1008,7 +1010,7 @@ int hash_page_mm(struct mm_struct *mm, unsigned long ea, unsigned long access, u
 	pte_t *ptep;
 	unsigned hugeshift;
 	const struct cpumask *tmp;
-	int rc, user_region = 0, local = 0;
+	int rc, user_region = 0;
 	int psize, ssize;
 
 	DBG_LOW("hash_page(ea=%016lx, access=%lx, trap=%lx\n",
@@ -1060,7 +1062,7 @@ int hash_page_mm(struct mm_struct *mm, unsigned long ea, unsigned long access, u
 	/* Check CPU locality */
 	tmp = cpumask_of(smp_processor_id());
 	if (user_region && cpumask_equal(mm_cpumask(mm), tmp))
-		local = 1;
+		flags |= HPTE_LOCAL_UPDATE;
 
 #ifndef CONFIG_PPC_64K_PAGES
 	/* If we use 4K pages and our psize is not 4K, then we might
@@ -1097,11 +1099,11 @@ int hash_page_mm(struct mm_struct *mm, unsigned long ea, unsigned long access, u
 	if (hugeshift) {
 		if (pmd_trans_huge(*(pmd_t *)ptep))
 			rc = __hash_page_thp(ea, access, vsid, (pmd_t *)ptep,
-					     trap, local, ssize, psize);
+					     trap, flags, ssize, psize);
 #ifdef CONFIG_HUGETLB_PAGE
 		else
 			rc = __hash_page_huge(ea, access, vsid, ptep, trap,
-					      local, ssize, hugeshift, psize);
+					      flags, ssize, hugeshift, psize);
 #else
 		else {
 			/*
@@ -1160,7 +1162,8 @@ int hash_page_mm(struct mm_struct *mm, unsigned long ea, unsigned long access, u
 
 #ifdef CONFIG_PPC_HAS_HASH_64K
 	if (psize == MMU_PAGE_64K)
-		rc = __hash_page_64K(ea, access, vsid, ptep, trap, local, ssize);
+		rc = __hash_page_64K(ea, access, vsid, ptep, trap,
+				     flags, ssize);
 	else
 #endif /* CONFIG_PPC_HAS_HASH_64K */
 	{
@@ -1169,7 +1172,7 @@ int hash_page_mm(struct mm_struct *mm, unsigned long ea, unsigned long access, u
 			rc = -2;
 		else
 			rc = __hash_page_4K(ea, access, vsid, ptep, trap,
-					    local, ssize, spp);
+					    flags, ssize, spp);
 	}
 
 	/* Dump some info in case of hash insertion failure, they should
@@ -1192,14 +1195,19 @@ bail:
 }
 EXPORT_SYMBOL_GPL(hash_page_mm);
 
-int hash_page(unsigned long ea, unsigned long access, unsigned long trap)
+int hash_page(unsigned long ea, unsigned long access, unsigned long trap,
+	      unsigned long dsisr)
 {
+	unsigned long flags = 0;
 	struct mm_struct *mm = current->mm;
 
 	if (REGION_ID(ea) == VMALLOC_REGION_ID)
 		mm = &init_mm;
 
-	return hash_page_mm(mm, ea, access, trap);
+	if (dsisr & DSISR_NOHPTE)
+		flags |= HPTE_NOHPTE_UPDATE;
+
+	return hash_page_mm(mm, ea, access, trap, flags);
 }
 EXPORT_SYMBOL_GPL(hash_page);
 
@@ -1211,7 +1219,7 @@ void hash_preload(struct mm_struct *mm, unsigned long ea,
 	pgd_t *pgdir;
 	pte_t *ptep;
 	unsigned long flags;
-	int rc, ssize, local = 0;
+	int rc, ssize, update_flags = 0;
 
 	BUG_ON(REGION_ID(ea) != USER_REGION_ID);
 
@@ -1262,16 +1270,17 @@ void hash_preload(struct mm_struct *mm, unsigned long ea,
 
 	/* Is that local to this CPU ? */
 	if (cpumask_equal(mm_cpumask(mm), cpumask_of(smp_processor_id())))
-		local = 1;
+		update_flags |= HPTE_LOCAL_UPDATE;
 
 	/* Hash it in */
 #ifdef CONFIG_PPC_HAS_HASH_64K
 	if (mm->context.user_psize == MMU_PAGE_64K)
-		rc = __hash_page_64K(ea, access, vsid, ptep, trap, local, ssize);
+		rc = __hash_page_64K(ea, access, vsid, ptep, trap,
+				     update_flags, ssize);
 	else
 #endif /* CONFIG_PPC_HAS_HASH_64K */
-		rc = __hash_page_4K(ea, access, vsid, ptep, trap, local, ssize,
-				    subpage_protection(mm, ea));
+		rc = __hash_page_4K(ea, access, vsid, ptep, trap, update_flags,
+				    ssize, subpage_protection(mm, ea));
 
 	/* Dump some info in case of hash insertion failure, they should
 	 * never happen so it is really useful to know if/when they do

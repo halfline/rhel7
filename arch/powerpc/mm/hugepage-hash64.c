@@ -70,8 +70,8 @@ static void invalidate_old_hpte(unsigned long vsid, unsigned long addr,
 
 
 int __hash_page_thp(unsigned long ea, unsigned long access, unsigned long vsid,
-		    pmd_t *pmdp, unsigned long trap, int local, int ssize,
-		    unsigned int psize)
+		    pmd_t *pmdp, unsigned long trap, unsigned long flags,
+		    int ssize, unsigned int psize)
 {
 	unsigned int index, valid;
 	unsigned char *hpte_slot_array;
@@ -158,7 +158,7 @@ int __hash_page_thp(unsigned long ea, unsigned long access, unsigned long vsid,
 		slot += hidx & _PTEIDX_GROUP_IX;
 
 		ret = ppc_md.hpte_updatepp(slot, rflags, vpn,
-					   psize, lpsize, ssize, local);
+					   psize, lpsize, ssize, flags);
 		/*
 		 * We failed to update, try to insert a new entry.
 		 */
