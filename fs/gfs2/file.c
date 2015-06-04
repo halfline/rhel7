@@ -436,11 +436,11 @@ static int gfs2_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
 	if (ret)
 		goto out_unlock;
 
-	ret = gfs2_quota_lock_check(ip);
-	if (ret)
-		goto out_unlock;
 	gfs2_write_calc_reserv(ip, PAGE_CACHE_SIZE, &data_blocks, &ind_blocks);
 	ap.target = data_blocks + ind_blocks;
+	ret = gfs2_quota_lock_check(ip, &ap);
+	if (ret)
+		goto out_unlock;
 	ret = gfs2_inplace_reserve(ip, &ap);
 	if (ret)
 		goto out_quota_unlock;
@@ -859,14 +859,13 @@ static long gfs2_fallocate(struct file *file, int mode, loff_t offset,
 			offset += bytes;
 			continue;
 		}
-		error = gfs2_quota_lock_check(ip);
-		if (error)
-			goto out_unlock;
-
 retry:
 		gfs2_write_calc_reserv(ip, bytes, &data_blocks, &ind_blocks);
-
 		ap.target = data_blocks + ind_blocks;
+
+		error = gfs2_quota_lock_check(ip, &ap);
+		if (error)
+			goto out_unlock;
 		error = gfs2_inplace_reserve(ip, &ap);
 		if (error) {
 			if (error == -ENOSPC && bytes > sdp->sd_sb.sb_bsize) {
@@ -874,6 +873,7 @@ retry:
 				bytes &= bsize_mask;
 				if (bytes == 0)
 					bytes = sdp->sd_sb.sb_bsize;
+				gfs2_quota_unlock(ip);
 				goto retry;
 			}
 			goto out_qunlock;

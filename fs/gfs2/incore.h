@@ -291,7 +291,7 @@ struct gfs2_blkreserv {
  * to the allocation code.
  */
 struct gfs2_alloc_parms {
-	u32 target;
+	u64 target;
 	u32 aflags;
 };
 
