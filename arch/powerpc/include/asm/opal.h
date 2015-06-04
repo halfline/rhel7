@@ -1083,6 +1083,8 @@ void opal_free_sg_list(struct opal_sg_list *sg);
 #define OPAL_DUMP_REGION_LOG_BUF		0x80
 #define OPAL_DUMP_REGION_HOST_END		0xFF
 
+extern int opal_error_code(int rc);
+
 #endif /* __ASSEMBLY__ */
 
 #endif /* __OPAL_H */
