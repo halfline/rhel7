@@ -924,7 +924,8 @@ out:
  * to the newly allocated page in newpage.
  */
 static int unmap_and_move(new_page_t get_new_page, unsigned long private,
-			struct page *page, int force, enum migrate_mode mode)
+			struct page *page, int force, enum migrate_mode mode,
+			enum migrate_reason reason)
 {
 	int rc = 0;
 	int *result = NULL;
@@ -966,7 +967,8 @@ out:
 		list_del(&page->lru);
 		dec_zone_page_state(page, NR_ISOLATED_ANON +
 				page_is_file_cache(page));
-		putback_lru_page(page);
+		if (reason != MR_MEMORY_FAILURE)
+			putback_lru_page(page);
 	}
 	/*
 	 * Move the new page to the LRU. If migration was not successful
@@ -1096,7 +1098,7 @@ int migrate_pages(struct list_head *from, new_page_t get_new_page,
 						private, page, pass > 2, mode);
 			else
 				rc = unmap_and_move(get_new_page, private,
-						page, pass > 2, mode);
+						page, pass > 2, mode, reason);
 
 			switch(rc) {
 			case -ENOMEM:
