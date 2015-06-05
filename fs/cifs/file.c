@@ -2552,14 +2552,12 @@ cifs_uncached_retry_writev(struct cifs_writedata *wdata)
 }
 
 static ssize_t
-cifs_iovec_write(struct file *file, const struct iovec *iov,
-		 unsigned long nr_segs, loff_t *poffset)
+cifs_iovec_write(struct file *file, struct iov_iter *from, loff_t *poffset)
 {
 	unsigned long nr_pages, i;
 	size_t bytes, copied, len, cur_len;
 	ssize_t total_written = 0;
 	loff_t offset;
-	struct iov_iter it;
 	struct cifsFileInfo *open_file;
 	struct cifs_tcon *tcon;
 	struct cifs_sb_info *cifs_sb;
@@ -2568,13 +2566,15 @@ cifs_iovec_write(struct file *file, const struct iovec *iov,
 	int rc;
 	pid_t pid;
 
-	len = iov_length(iov, nr_segs);
-	if (!len)
-		return 0;
-
+	len = iov_iter_count(from);
 	rc = generic_write_checks(file, poffset, &len, 0);
 	if (rc)
 		return rc;
+
+	if (!len)
+		return 0;
+
+	iov_iter_truncate(from, len);
 
 	INIT_LIST_HEAD(&wdata_list);
 	cifs_sb = CIFS_SB(file->f_path.dentry->d_sb);
@@ -2591,7 +2591,6 @@ cifs_iovec_write(struct file *file, const struct iovec *iov,
 	else
 		pid = current->tgid;
 
-	iov_iter_init(&it, iov, nr_segs, len, 0);
 	do {
 		size_t save_len;
 
@@ -2613,8 +2612,7 @@ cifs_iovec_write(struct file *file, const struct iovec *iov,
 		for (i = 0; i < nr_pages; i++) {
 			bytes = min_t(size_t, cur_len, PAGE_SIZE);
 			copied = copy_page_from_iter(wdata->pages[i], 0, bytes,
-									&it);
-
+						     from);
 			cur_len -= copied;
 			/*
 			 * If we didn't copy as much as we expected, then that
@@ -2718,6 +2716,9 @@ ssize_t cifs_user_writev(struct kiocb *iocb, const struct iovec *iov,
 {
 	ssize_t written;
 	struct inode *inode;
+	struct iov_iter from;
+
+        iov_iter_init(&from, iov, nr_segs, iov_length(iov, nr_segs), 0);
 
 	inode = file_inode(iocb->ki_filp);
 
@@ -2727,7 +2728,7 @@ ssize_t cifs_user_writev(struct kiocb *iocb, const struct iovec *iov,
 	 * write request.
 	 */
 
-	written = cifs_iovec_write(iocb->ki_filp, iov, nr_segs, &pos);
+	written = cifs_iovec_write(iocb->ki_filp, &from, &pos);
 	if (written > 0) {
 		set_bit(CIFS_INO_INVALID_MAPPING, &CIFS_I(inode)->flags);
 		iocb->ki_pos = pos;
