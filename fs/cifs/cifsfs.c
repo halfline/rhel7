@@ -929,7 +929,7 @@ const struct file_operations cifs_file_direct_ops = {
 	/* BB reevaluate whether they can be done with directio, no cache */
 	.read = do_sync_read,
 	.write = do_sync_write,
-	.aio_read = cifs_user_readv,
+	.aio_read = cifs_user_readv_wrapper,
 	.aio_write = cifs_user_writev,
 	.open = cifs_open,
 	.release = cifs_close,
@@ -985,7 +985,7 @@ const struct file_operations cifs_file_direct_nobrl_ops = {
 	/* BB reevaluate whether they can be done with directio, no cache */
 	.read = do_sync_read,
 	.write = do_sync_write,
-	.aio_read = cifs_user_readv,
+	.aio_read = cifs_user_readv_wrapper,
 	.aio_write = cifs_user_writev,
 	.open = cifs_open,
 	.release = cifs_close,

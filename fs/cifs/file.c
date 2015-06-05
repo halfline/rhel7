@@ -2999,31 +2999,24 @@ cifs_uncached_read_into_pages(struct TCP_Server_Info *server,
 	return total_read > 0 ? total_read : result;
 }
 
-ssize_t cifs_user_readv(struct kiocb *iocb, const struct iovec *iov,
-			       unsigned long nr_segs, loff_t pos)
+ssize_t cifs_user_readv(struct kiocb *iocb, struct iov_iter *to)
 {
 	struct file *file = iocb->ki_filp;
 	ssize_t rc;
 	size_t len, cur_len;
 	ssize_t total_read = 0;
-	loff_t offset = pos;
+	loff_t offset = iocb->ki_pos;
 	unsigned int npages;
 	struct cifs_sb_info *cifs_sb;
 	struct cifs_tcon *tcon;
 	struct cifsFileInfo *open_file;
 	struct cifs_readdata *rdata, *tmp;
 	struct list_head rdata_list;
-	struct iov_iter to;
 	pid_t pid;
 
-	if (!nr_segs)
-		return 0;
-
-	len = iov_length(iov, nr_segs);
+	len = iov_iter_count(to);
 	if (!len)
 		return 0;
-
-	iov_iter_init(&to, iov, nr_segs, len, 0);
 
 	INIT_LIST_HEAD(&rdata_list);
 	cifs_sb = CIFS_SB(file->f_path.dentry->d_sb);
@@ -3082,7 +3075,7 @@ error:
 	if (!list_empty(&rdata_list))
 		rc = 0;
 
-	len = iov_iter_count(&to);
+	len = iov_iter_count(to);
 	/* the loop below should proceed in the order of increasing offsets */
 	list_for_each_entry_safe(rdata, tmp, &rdata_list, list) {
 	again:
@@ -3099,7 +3092,7 @@ error:
 					goto again;
 				}
 			} else {
-				rc = cifs_readdata_to_iov(rdata, &to);
+				rc = cifs_readdata_to_iov(rdata, to);
 			}
 
 		}
@@ -3107,7 +3100,7 @@ error:
 		kref_put(&rdata->refcount, cifs_uncached_readdata_release);
 	}
 
-	total_read = len - iov_iter_count(&to);
+	total_read = len - iov_iter_count(to);
 
 	cifs_stats_bytes_read(tcon, total_read);
 
@@ -3116,15 +3109,25 @@ error:
 		rc = 0;
 
 	if (total_read) {
-		iocb->ki_pos = pos + total_read;
+		iocb->ki_pos += total_read;
 		return total_read;
 	}
 	return rc;
 }
 
+ssize_t cifs_user_readv_wrapper(struct kiocb *iocb, const struct iovec *iov,
+			unsigned long nr_segs, loff_t pos)
+{
+	struct iov_iter to;
+
+	iov_iter_init(&to, iov, nr_segs, iov_length(iov, nr_segs), 0);
+	return cifs_user_readv(iocb, &to);
+}
+
+
 ssize_t
 cifs_strict_readv(struct kiocb *iocb, const struct iovec *iov,
-		  unsigned long nr_segs, loff_t pos)
+		 unsigned long nr_segs, loff_t pos)
 {
 	struct inode *inode = file_inode(iocb->ki_filp);
 	struct cifsInodeInfo *cinode = CIFS_I(inode);
@@ -3143,7 +3146,7 @@ cifs_strict_readv(struct kiocb *iocb, const struct iovec *iov,
 	 * pos+len-1.
 	 */
 	if (!CIFS_CACHE_READ(cinode))
-		return cifs_user_readv(iocb, iov, nr_segs, pos);
+		return cifs_user_readv_wrapper(iocb, iov, nr_segs, pos);
 
 	if (cap_unix(tcon->ses) &&
 	    (CIFS_UNIX_FCNTL_CAP & le64_to_cpu(tcon->fsUnixInfo.Capability)) &&
