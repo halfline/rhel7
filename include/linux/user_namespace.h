@@ -31,7 +31,6 @@ struct user_namespace {
 	kuid_t			owner;
 	kgid_t			group;
 	unsigned int		proc_inum;
-	unsigned long		flags;
 	bool			may_mount_sysfs;
 	bool			may_mount_proc;
 
@@ -41,6 +40,7 @@ struct user_namespace {
 	struct rw_semaphore	persistent_keyring_register_sem;
 #endif
 	RH_KABI_EXTEND(int level)
+	RH_KABI_EXTEND(unsigned long flags)
 };
 
 extern struct user_namespace init_user_ns;
