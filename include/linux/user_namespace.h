@@ -5,6 +5,7 @@
 #include <linux/nsproxy.h>
 #include <linux/sched.h>
 #include <linux/err.h>
+#include <linux/rh_kabi.h>
 
 #define UID_GID_MAP_MAX_EXTENTS 5
 
@@ -23,7 +24,6 @@ struct user_namespace {
 	struct uid_gid_map	projid_map;
 	atomic_t		count;
 	struct user_namespace	*parent;
-	int			level;
 	kuid_t			owner;
 	kgid_t			group;
 	unsigned int		proc_inum;
@@ -35,6 +35,7 @@ struct user_namespace {
 	struct key		*persistent_keyring_register;
 	struct rw_semaphore	persistent_keyring_register_sem;
 #endif
+	RH_KABI_EXTEND(int level)
 };
 
 extern struct user_namespace init_user_ns;
