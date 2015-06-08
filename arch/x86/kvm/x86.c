@@ -7648,6 +7648,7 @@ void kvm_arch_commit_memory_region(struct kvm *kvm,
 				const struct kvm_memory_slot *old,
 				enum kvm_mr_change change)
 {
+	struct kvm_memslots *slots;
 	struct kvm_memory_slot *new;
 	int nr_mmu_pages = 0;
 
@@ -7669,7 +7670,8 @@ void kvm_arch_commit_memory_region(struct kvm *kvm,
 		kvm_mmu_change_mmu_pages(kvm, nr_mmu_pages);
 
 	/* It's OK to get 'new' slot here as it has already been installed */
-	new = id_to_memslot(kvm->memslots, mem->slot);
+	slots = kvm_memslots(kvm);
+	new = id_to_memslot(slots, mem->slot);
 
 	/*
 	 * Set up write protection and/or dirty logging for the new slot.
