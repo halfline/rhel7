@@ -5448,6 +5448,7 @@ xfs_bmse_merge(
 	struct xfs_bmbt_irec		left;
 	xfs_filblks_t			blockcount;
 	int				error, i;
+	struct xfs_mount		*mp = ip->i_mount;
 
 	xfs_bmbt_get_all(gotp, &got);
 	xfs_bmbt_get_all(leftp, &left);
@@ -5482,19 +5483,19 @@ xfs_bmse_merge(
 				   got.br_blockcount, &i);
 	if (error)
 		return error;
-	XFS_WANT_CORRUPTED_RETURN(i == 1);
+	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
 
 	error = xfs_btree_delete(cur, &i);
 	if (error)
 		return error;
-	XFS_WANT_CORRUPTED_RETURN(i == 1);
+	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
 
 	/* lookup and update size of the previous extent */
 	error = xfs_bmbt_lookup_eq(cur, left.br_startoff, left.br_startblock,
 				   left.br_blockcount, &i);
 	if (error)
 		return error;
-	XFS_WANT_CORRUPTED_RETURN(i == 1);
+	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
 
 	left.br_blockcount = blockcount;
 
@@ -5516,6 +5517,7 @@ xfs_bmse_shift_one(
 	int				*logflags)
 {
 	struct xfs_ifork		*ifp;
+	struct xfs_mount		*mp;
 	xfs_fileoff_t			startoff;
 	struct xfs_bmbt_rec_host	*leftp;
 	struct xfs_bmbt_irec		got;
@@ -5523,13 +5525,14 @@ xfs_bmse_shift_one(
 	int				error;
 	int				i;
 
+	mp = ip->i_mount;
 	ifp = XFS_IFORK_PTR(ip, whichfork);
 
 	xfs_bmbt_get_all(gotp, &got);
 	startoff = got.br_startoff - offset_shift_fsb;
 
 	/* delalloc extents should be prevented by caller */
-	XFS_WANT_CORRUPTED_RETURN(!isnullstartblock(got.br_startblock));
+	XFS_WANT_CORRUPTED_RETURN(mp, !isnullstartblock(got.br_startblock));
 
 	/*
 	 * Check for merge if we've got an extent to the left, otherwise make
@@ -5568,7 +5571,7 @@ xfs_bmse_shift_one(
 				   got.br_blockcount, &i);
 	if (error)
 		return error;
-	XFS_WANT_CORRUPTED_RETURN(i == 1);
+	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
 
 	got.br_startoff = startoff;
 	return xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
