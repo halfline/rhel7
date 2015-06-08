@@ -2432,6 +2432,7 @@ static const struct net_device_ops mlx4_netdev_ops_master = {
 #ifdef CONFIG_MLX4_EN_VXLAN
 	.ndo_add_vxlan_port	= mlx4_en_add_vxlan_port,
 	.ndo_del_vxlan_port	= mlx4_en_del_vxlan_port,
+	.ndo_gso_check		= mlx4_en_gso_check,
 #endif
 };
 
