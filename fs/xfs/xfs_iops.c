@@ -507,7 +507,7 @@ xfs_setattr_mode(
 	inode->i_mode |= mode & ~S_IFMT;
 }
 
-static void
+void
 xfs_setattr_time(
 	struct xfs_inode	*ip,
 	struct iattr		*iattr)
