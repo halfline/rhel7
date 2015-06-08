@@ -902,7 +902,7 @@ static ssize_t macvtap_put_user(struct macvtap_queue *q,
 	}
 	copied = vnet_hdr_len;
 
-	if (!vlan_tx_tag_present(skb))
+	if (!skb_vlan_tag_present(skb))
 		len = min_t(int, skb->len, len);
 	else {
 		int copy;
@@ -911,7 +911,7 @@ static ssize_t macvtap_put_user(struct macvtap_queue *q,
 			__be16 h_vlan_TCI;
 		} veth;
 		veth.h_vlan_proto = skb->vlan_proto;
-		veth.h_vlan_TCI = htons(vlan_tx_tag_get(skb));
+		veth.h_vlan_TCI = htons(skb_vlan_tag_get(skb));
 
 		vlan_offset = offsetof(struct vlan_ethhdr, h_vlan_proto);
 		len = min_t(int, skb->len + VLAN_HLEN, len);

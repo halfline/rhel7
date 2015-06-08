@@ -922,8 +922,8 @@ static void prb_clear_rxhash(struct tpacket_kbdq_core *pkc,
 static void prb_fill_vlan_info(struct tpacket_kbdq_core *pkc,
 			struct tpacket3_hdr *ppd)
 {
-	if (vlan_tx_tag_present(pkc->skb)) {
-		ppd->hv1.tp_vlan_tci = vlan_tx_tag_get(pkc->skb);
+	if (skb_vlan_tag_present(pkc->skb)) {
+		ppd->hv1.tp_vlan_tci = skb_vlan_tag_get(pkc->skb);
 		ppd->tp_status = TP_STATUS_VLAN_VALID;
 	} else {
 		ppd->hv1.tp_vlan_tci = 0;
@@ -1916,8 +1916,8 @@ static int tpacket_rcv(struct sk_buff *skb, struct net_device *dev,
 		h.h2->tp_net = netoff;
 		h.h2->tp_sec = ts.tv_sec;
 		h.h2->tp_nsec = ts.tv_nsec;
-		if (vlan_tx_tag_present(skb)) {
-			h.h2->tp_vlan_tci = vlan_tx_tag_get(skb);
+		if (skb_vlan_tag_present(skb)) {
+			h.h2->tp_vlan_tci = skb_vlan_tag_get(skb);
 			status |= TP_STATUS_VLAN_VALID;
 		} else {
 			h.h2->tp_vlan_tci = 0;
@@ -2940,8 +2940,8 @@ static int packet_recvmsg(struct kiocb *iocb, struct socket *sock,
 		aux.tp_snaplen = skb->len;
 		aux.tp_mac = 0;
 		aux.tp_net = skb_network_offset(skb);
-		if (vlan_tx_tag_present(skb)) {
-			aux.tp_vlan_tci = vlan_tx_tag_get(skb);
+		if (skb_vlan_tag_present(skb)) {
+			aux.tp_vlan_tci = skb_vlan_tag_get(skb);
 			aux.tp_status |= TP_STATUS_VLAN_VALID;
 		} else {
 			aux.tp_vlan_tci = 0;

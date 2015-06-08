@@ -160,7 +160,7 @@ static int gre_tnl_send(struct vport *vport, struct sk_buff *skb)
 
 	min_headroom = LL_RESERVED_SPACE(rt->dst.dev) + rt->dst.header_len
 			+ tunnel_hlen + sizeof(struct iphdr)
-			+ (vlan_tx_tag_present(skb) ? VLAN_HLEN : 0);
+			+ (skb_vlan_tag_present(skb) ? VLAN_HLEN : 0);
 	if (skb_headroom(skb) < min_headroom || skb_header_cloned(skb)) {
 		int head_delta = SKB_DATA_ALIGN(min_headroom -
 						skb_headroom(skb) +
@@ -171,10 +171,10 @@ static int gre_tnl_send(struct vport *vport, struct sk_buff *skb)
 			goto err_free_rt;
 	}
 
-	if (vlan_tx_tag_present(skb)) {
+	if (skb_vlan_tag_present(skb)) {
 		if (unlikely(!__vlan_put_tag(skb,
 					     skb->vlan_proto,
-					     vlan_tx_tag_get(skb)))) {
+					     skb_vlan_tag_get(skb)))) {
 			err = -ENOMEM;
 			goto err_free_rt;
 		}

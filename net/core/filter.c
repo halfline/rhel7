@@ -342,10 +342,10 @@ load_b:
 			A = raw_smp_processor_id();
 			continue;
 		case BPF_S_ANC_VLAN_TAG:
-			A = vlan_tx_tag_get(skb);
+			A = skb_vlan_tag_get(skb);
 			continue;
 		case BPF_S_ANC_VLAN_TAG_PRESENT:
-			A = !!vlan_tx_tag_present(skb);
+			A = !!skb_vlan_tag_present(skb);
 			continue;
 		case BPF_S_ANC_PAY_OFFSET:
 			A = skb_get_poff(skb);

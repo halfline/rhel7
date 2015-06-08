@@ -1706,7 +1706,7 @@ static int vxlan6_xmit_skb(struct dst_entry *dst, struct sk_buff *skb,
 
 	min_headroom = LL_RESERVED_SPACE(dst->dev) + dst->header_len
 			+ VXLAN_HLEN + sizeof(struct ipv6hdr)
-			+ (vlan_tx_tag_present(skb) ? VLAN_HLEN : 0);
+			+ (skb_vlan_tag_present(skb) ? VLAN_HLEN : 0);
 
 	/* Need space for new headers (invalidates iph ptr) */
 	err = skb_cow_head(skb, min_headroom);
@@ -1715,10 +1715,10 @@ static int vxlan6_xmit_skb(struct dst_entry *dst, struct sk_buff *skb,
 		goto err;
 	}
 
-	if (vlan_tx_tag_present(skb)) {
+	if (skb_vlan_tag_present(skb)) {
 		if (WARN_ON(!__vlan_put_tag(skb,
 					    skb->vlan_proto,
-					    vlan_tx_tag_get(skb)))) {
+					    skb_vlan_tag_get(skb)))) {
 			err = -ENOMEM;
 			goto err;
 		}
@@ -1792,7 +1792,7 @@ int vxlan_xmit_skb(struct rtable *rt, struct sk_buff *skb,
 
 	min_headroom = LL_RESERVED_SPACE(rt->dst.dev) + rt->dst.header_len
 			+ VXLAN_HLEN + sizeof(struct iphdr)
-			+ (vlan_tx_tag_present(skb) ? VLAN_HLEN : 0);
+			+ (skb_vlan_tag_present(skb) ? VLAN_HLEN : 0);
 
 	/* Need space for new headers (invalidates iph ptr) */
 	err = skb_cow_head(skb, min_headroom);
@@ -1801,10 +1801,10 @@ int vxlan_xmit_skb(struct rtable *rt, struct sk_buff *skb,
 		return err;
 	}
 
-	if (vlan_tx_tag_present(skb)) {
+	if (skb_vlan_tag_present(skb)) {
 		if (WARN_ON(!__vlan_put_tag(skb,
 					    skb->vlan_proto,
-					    vlan_tx_tag_get(skb))))
+					    skb_vlan_tag_get(skb))))
 			return -ENOMEM;
 
 		skb->vlan_tci = 0;

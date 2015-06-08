@@ -2478,7 +2478,7 @@ netdev_features_t netif_skb_features(struct sk_buff *skb)
 	if (skb->encapsulation)
 		features &= dev->hw_enc_features;
 
-	if (!vlan_tx_tag_present(skb)) {
+	if (!skb_vlan_tag_present(skb)) {
 		if (unlikely(protocol == htons(ETH_P_8021Q) ||
 			     protocol == htons(ETH_P_8021AD))) {
 			struct vlan_ethhdr *veh = (struct vlan_ethhdr *)skb->data;
@@ -2557,10 +2557,10 @@ out:
 
 struct sk_buff *validate_xmit_vlan(struct sk_buff *skb, netdev_features_t features)
 {
-	if (vlan_tx_tag_present(skb) &&
+	if (skb_vlan_tag_present(skb) &&
 	    !vlan_hw_offload_capable(features, skb->vlan_proto)) {
 		skb = __vlan_put_tag(skb, skb->vlan_proto,
-				     vlan_tx_tag_get(skb));
+				     skb_vlan_tag_get(skb));
 		if (skb)
 			skb->vlan_tci = 0;
 	}
@@ -3486,7 +3486,7 @@ ncls:
 	if (pfmemalloc && !skb_pfmemalloc_protocol(skb))
 		goto drop;
 
-	if (vlan_tx_tag_present(skb)) {
+	if (skb_vlan_tag_present(skb)) {
 		if (pt_prev) {
 			ret = deliver_skb(skb, pt_prev, orig_dev);
 			pt_prev = NULL;
@@ -3518,8 +3518,8 @@ ncls:
 		}
 	}
 
-	if (unlikely(vlan_tx_tag_present(skb))) {
-		if (vlan_tx_tag_get_id(skb))
+	if (unlikely(skb_vlan_tag_present(skb))) {
+		if (skb_vlan_tag_get_id(skb))
 			skb->pkt_type = PACKET_OTHERHOST;
 		/* Note: we might in the future use prio bits
 		 * and set skb->priority like in vlan_do_receive()

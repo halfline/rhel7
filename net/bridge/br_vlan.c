@@ -185,7 +185,7 @@ bool br_allowed_ingress(struct net_bridge *br, struct net_port_vlans *v,
 	 * sent from vlan device on the bridge device, it does not have
 	 * HW accelerated vlan tag.
 	 */
-	if (unlikely(!vlan_tx_tag_present(skb) &&
+	if (unlikely(!skb_vlan_tag_present(skb) &&
 		     skb->protocol == proto)) {
 		skb = vlan_untag(skb);
 		if (unlikely(!skb))
@@ -198,7 +198,7 @@ bool br_allowed_ingress(struct net_bridge *br, struct net_port_vlans *v,
 			/* Protocol-mismatch, empty out vlan_tci for new tag */
 			skb_push(skb, ETH_HLEN);
 			skb = __vlan_put_tag(skb, skb->vlan_proto,
-					     vlan_tx_tag_get(skb));
+					     skb_vlan_tag_get(skb));
 			if (unlikely(!skb))
 				return false;
 
