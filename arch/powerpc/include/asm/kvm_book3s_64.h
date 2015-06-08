@@ -420,7 +420,7 @@ static inline void note_hpte_modification(struct kvm *kvm,
  */
 static inline struct kvm_memslots *kvm_memslots_raw(struct kvm *kvm)
 {
-	return rcu_dereference_raw_notrace(kvm->memslots);
+	return rcu_dereference_raw_notrace(kvm->memslots[0]);
 }
 
 #endif /* CONFIG_KVM_BOOK3S_HV_POSSIBLE */
