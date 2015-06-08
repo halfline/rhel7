@@ -2555,7 +2555,7 @@ struct sk_buff *validate_xmit_skb(struct sk_buff *skb, struct net_device *dev)
 	if (unlikely(!skb))
 		goto out_null;
 
-	if (netif_needs_gso(dev, skb, features)) {
+	if (netif_needs_gso(skb, features)) {
 		struct sk_buff *segs;
 
 		segs = skb_gso_segment(skb, features);
