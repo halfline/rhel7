@@ -190,7 +190,7 @@ struct kvm_run {
 	__u32 exit_reason;
 	__u8 ready_for_interrupt_injection;
 	__u8 if_flag;
-	__u8 padding2[2];
+	__u16 flags;
 
 	/* in (pre_kvm_run), out (post_kvm_run) */
 	__u64 cr8;
@@ -680,6 +680,7 @@ struct kvm_ppc_smmu_info {
 #define KVM_CAP_S390_IRQ_STATE 114
 #define KVM_CAP_PPC_HWRNG 115
 #define KVM_CAP_DISABLE_QUIRKS 116
+#define KVM_CAP_X86_SMM 117
 
 #ifdef KVM_CAP_IRQ_ROUTING
 
@@ -1041,6 +1042,18 @@ struct kvm_s390_ucas_mapping {
 #define KVM_KVMCLOCK_CTRL	  _IO(KVMIO,   0xad)
 #define KVM_ARM_VCPU_INIT	  _IOW(KVMIO,  0xae, struct kvm_vcpu_init)
 #define KVM_GET_REG_LIST	  _IOWR(KVMIO, 0xb0, struct kvm_reg_list)
+/* Available with KVM_CAP_S390_MEM_OP */
+#define KVM_S390_MEM_OP		  _IOW(KVMIO,  0xb1, struct kvm_s390_mem_op)
+/* Available with KVM_CAP_S390_SKEYS */
+#define KVM_S390_GET_SKEYS      _IOW(KVMIO, 0xb2, struct kvm_s390_skeys)
+#define KVM_S390_SET_SKEYS      _IOW(KVMIO, 0xb3, struct kvm_s390_skeys)
+/* Available with KVM_CAP_S390_INJECT_IRQ */
+#define KVM_S390_IRQ              _IOW(KVMIO,  0xb4, struct kvm_s390_irq)
+/* Available with KVM_CAP_S390_IRQ_STATE */
+#define KVM_S390_SET_IRQ_STATE	  _IOW(KVMIO, 0xb5, struct kvm_s390_irq_state)
+#define KVM_S390_GET_IRQ_STATE	  _IOW(KVMIO, 0xb6, struct kvm_s390_irq_state)
+/* Available with KVM_CAP_X86_SMM */
+#define KVM_SMI                   _IO(KVMIO,   0xb7)
 
 #define KVM_DEV_ASSIGN_ENABLE_IOMMU	(1 << 0)
 #define KVM_DEV_ASSIGN_PCI_2_3		(1 << 1)
