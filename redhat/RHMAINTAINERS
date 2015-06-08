@@ -692,6 +692,11 @@ M:	Prarit Bhargava <prarit@redhat.com>
 S:	Maintained
 F:	arch/x86/
 
+UNISYS SPAR FIRMWARE SUPPORT
+M:	Erik Arfvidson <earfvids@redhat.com>
+S:	Maintained
+F:	drivers/staging/unisys
+
 UNIVERSAL EXTENSIBLE FIRMWARE INTERFACE (UEFI/EFI)
 M:	Lenny Szubowicz <lszubowi@redhat.com>
 M:	Myron Stowe <mstowe@redhat.com>
