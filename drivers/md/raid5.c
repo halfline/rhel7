@@ -6310,14 +6310,12 @@ abort:
 	return -EIO;
 }
 
-static int stop(struct mddev *mddev)
+static void raid5_free(struct mddev *mddev, void *priv)
 {
-	struct r5conf *conf = mddev->private;
+	struct r5conf *conf = priv;
 
 	free_conf(conf);
-	mddev->private = NULL;
 	mddev->to_remove = &raid5_attrs_group;
-	return 0;
 }
 
 static void status(struct seq_file *seq, struct mddev *mddev)
@@ -7091,7 +7089,7 @@ static struct md_personality raid6_personality =
 	.owner		= THIS_MODULE,
 	.make_request	= make_request,
 	.run		= run,
-	.stop		= stop,
+	.free		= raid5_free,
 	.status		= status,
 	.error_handler	= error,
 	.hot_add_disk	= raid5_add_disk,
@@ -7115,7 +7113,7 @@ static struct md_personality raid5_personality =
 	.owner		= THIS_MODULE,
 	.make_request	= make_request,
 	.run		= run,
-	.stop		= stop,
+	.free		= raid5_free,
 	.status		= status,
 	.error_handler	= error,
 	.hot_add_disk	= raid5_add_disk,
@@ -7140,7 +7138,7 @@ static struct md_personality raid4_personality =
 	.owner		= THIS_MODULE,
 	.make_request	= make_request,
 	.run		= run,
-	.stop		= stop,
+	.free		= raid5_free,
 	.status		= status,
 	.error_handler	= error,
 	.hot_add_disk	= raid5_add_disk,
