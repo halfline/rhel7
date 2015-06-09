@@ -419,7 +419,6 @@ static int __init alsa_sound_init(void)
 		unregister_chrdev(major, "alsa");
 		return -ENOMEM;
 	}
-	snd_info_minor_register();
 #ifndef MODULE
 	pr_info("Advanced Linux Sound Architecture Driver Initialized.\n");
 #endif
@@ -428,7 +427,6 @@ static int __init alsa_sound_init(void)
 
 static void __exit alsa_sound_exit(void)
 {
-	snd_info_minor_unregister();
 	snd_info_done();
 	unregister_chrdev(major, "alsa");
 }
