@@ -42,11 +42,20 @@ static bool nfs_pgarray_set(struct nfs_page_array *p, unsigned int pagecount)
 	return p->pagevec != NULL;
 }
 
+struct nfs_pgio_mirror *
+nfs_pgio_current_mirror(struct nfs_pageio_descriptor *desc)
+{
+	return nfs_pgio_has_mirroring(desc) ?
+		&desc->pg_mirrors[desc->pg_mirror_idx] :
+		&desc->pg_mirrors[0];
+}
+EXPORT_SYMBOL_GPL(nfs_pgio_current_mirror);
+
 void nfs_pgheader_init(struct nfs_pageio_descriptor *desc,
 		       struct nfs_pgio_header *hdr,
 		       void (*release)(struct nfs_pgio_header *hdr))
 {
-	struct nfs_pgio_mirror *mirror = &desc->pg_mirrors[desc->pg_mirror_idx];
+	struct nfs_pgio_mirror *mirror = nfs_pgio_current_mirror(desc);
 
 
 	hdr->req = nfs_list_entry(mirror->pg_list.next);
@@ -489,7 +498,7 @@ nfs_wait_on_request(struct nfs_page *req)
 size_t nfs_generic_pg_test(struct nfs_pageio_descriptor *desc,
 			   struct nfs_page *prev, struct nfs_page *req)
 {
-	struct nfs_pgio_mirror *mirror = &desc->pg_mirrors[desc->pg_mirror_idx];
+	struct nfs_pgio_mirror *mirror = nfs_pgio_current_mirror(desc);
 
 
 	if (mirror->pg_count > mirror->pg_bsize) {
@@ -786,7 +795,7 @@ static void nfs_pgio_result(struct rpc_task *task, void *calldata)
 int nfs_generic_pgio(struct nfs_pageio_descriptor *desc,
 		     struct nfs_pgio_header *hdr)
 {
-	struct nfs_pgio_mirror *mirror = &desc->pg_mirrors[desc->pg_mirror_idx];
+	struct nfs_pgio_mirror *mirror = nfs_pgio_current_mirror(desc);
 
 	struct nfs_page		*req;
 	struct page		**pages,
@@ -835,7 +844,7 @@ static int nfs_generic_pg_pgios(struct nfs_pageio_descriptor *desc)
 	struct nfs_pgio_header *hdr;
 	int ret;
 
-	mirror = &desc->pg_mirrors[desc->pg_mirror_idx];
+	mirror = nfs_pgio_current_mirror(desc);
 
 	hdr = nfs_pgio_header_alloc(desc->pg_rw_ops);
 	if (!hdr) {
@@ -965,7 +974,7 @@ static bool nfs_can_coalesce_requests(struct nfs_page *prev,
 static int nfs_pageio_do_add_request(struct nfs_pageio_descriptor *desc,
 				     struct nfs_page *req)
 {
-	struct nfs_pgio_mirror *mirror = &desc->pg_mirrors[desc->pg_mirror_idx];
+	struct nfs_pgio_mirror *mirror = nfs_pgio_current_mirror(desc);
 
 	struct nfs_page *prev = NULL;
 
@@ -989,7 +998,7 @@ static int nfs_pageio_do_add_request(struct nfs_pageio_descriptor *desc,
  */
 static void nfs_pageio_doio(struct nfs_pageio_descriptor *desc)
 {
-	struct nfs_pgio_mirror *mirror = &desc->pg_mirrors[desc->pg_mirror_idx];
+	struct nfs_pgio_mirror *mirror = nfs_pgio_current_mirror(desc);
 
 
 	if (!list_empty(&mirror->pg_list)) {
@@ -1019,7 +1028,7 @@ static void nfs_pageio_doio(struct nfs_pageio_descriptor *desc)
 static int __nfs_pageio_add_request(struct nfs_pageio_descriptor *desc,
 			   struct nfs_page *req)
 {
-	struct nfs_pgio_mirror *mirror = &desc->pg_mirrors[desc->pg_mirror_idx];
+	struct nfs_pgio_mirror *mirror = nfs_pgio_current_mirror(desc);
 
 	struct nfs_page *subreq;
 	unsigned int bytes_left = 0;
@@ -1082,7 +1091,7 @@ err_ptr:
 
 static int nfs_do_recoalesce(struct nfs_pageio_descriptor *desc)
 {
-	struct nfs_pgio_mirror *mirror = &desc->pg_mirrors[desc->pg_mirror_idx];
+	struct nfs_pgio_mirror *mirror = nfs_pgio_current_mirror(desc);
 	LIST_HEAD(head);
 
 	do {
