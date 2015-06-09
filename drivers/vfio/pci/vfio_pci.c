@@ -176,6 +176,7 @@ static void vfio_pci_release(void *device_data)
 	mutex_lock(&driver_lock);
 
 	if (!(--vdev->refcnt)) {
+		vfio_spapr_pci_eeh_release(vdev->pdev);
 		vfio_pci_disable(vdev);
 	}
 
@@ -198,6 +199,12 @@ static int vfio_pci_open(void *device_data)
 		ret = vfio_pci_enable(vdev);
 		if (ret)
 			goto error;
+
+		ret = vfio_spapr_pci_eeh_open(vdev->pdev);
+		if (ret) {
+			vfio_pci_disable(vdev);
+			goto error;
+		}
 	}
 	vdev->refcnt++;
 error:
