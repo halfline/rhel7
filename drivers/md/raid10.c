@@ -3400,7 +3400,7 @@ static sector_t sync_request(struct mddev *mddev, sector_t sector_nr,
 				/* remove last page from this bio */
 				bio2->bi_vcnt--;
 				bio2->bi_size -= len;
-				bio2->bi_flags &= ~(1<< BIO_SEG_VALID);
+				__clear_bit(BIO_SEG_VALID, &bio2->bi_flags);
 			}
 			goto bio_full;
 		}
@@ -4428,7 +4428,7 @@ read_more:
 	read_bio->bi_end_io = end_sync_read;
 	read_bio->bi_rw = READ;
 	read_bio->bi_flags &= (~0UL << BIO_RESET_BITS);
-	read_bio->bi_flags |= 1 << BIO_UPTODATE;
+	__set_bit(BIO_UPTODATE, &read_bio->bi_flags);
 	read_bio->bi_vcnt = 0;
 	read_bio->bi_size = 0;
 	r10_bio->master_bio = read_bio;
@@ -4484,7 +4484,7 @@ read_more:
 				/* Remove last page from this bio */
 				bio2->bi_vcnt--;
 				bio2->bi_size -= len;
-				bio2->bi_flags &= ~(1<<BIO_SEG_VALID);
+				__clear_bit(BIO_SEG_VALID, &bio2->bi_flags);
 			}
 			goto bio_full;
 		}
