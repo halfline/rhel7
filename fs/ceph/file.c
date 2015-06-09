@@ -300,6 +300,11 @@ int ceph_release(struct inode *inode, struct file *file)
 	return 0;
 }
 
+enum {
+	CHECK_EOF = 1,
+	READ_INLINE = 2,
+};
+
 /*
  * Read a range of bytes striped over one or more objects.  Iterate over
  * objects we stripe over.  (That's not atomic, but good enough for now.)
@@ -379,7 +384,7 @@ more:
 		ret = read;
 		/* did we bounce off eof? */
 		if (pos + left > inode->i_size)
-			*checkeof = 1;
+			*checkeof = CHECK_EOF;
 	}
 
 	dout("striped_read returns %d\n", ret);
@@ -776,6 +781,51 @@ out:
 	return ret;
 }
 
+static ssize_t inline_to_iov(struct kiocb *iocb, struct iov_iter *i,
+			     struct page *inline_page, int inline_len,
+			     loff_t i_size)
+{
+	loff_t pos = iocb->ki_pos;
+	size_t len = iov_iter_count(i);
+	ssize_t ret = 0;
+
+	BUG_ON(PageHighMem(inline_page));
+
+	/* does not support inline data > PAGE_SIZE */
+	if (i_size > PAGE_CACHE_SIZE)
+		return -EIO;
+
+	if (pos < i_size) {
+		void *kdata = page_address(inline_page) + pos;
+		loff_t end = min_t(loff_t, pos + len, i_size);
+		size_t left = end - pos;
+
+		if (inline_len < end)
+			zero_user_segment(inline_page, inline_len, end);
+
+		while (left) {
+			void __user *udata = i->iov->iov_base + i->iov_offset;
+			size_t n = min(i->iov->iov_len - i->iov_offset, left);
+
+			if (__copy_to_user(udata, kdata, n)) {
+				ret = -EFAULT;
+				break;
+			}
+			iov_iter_advance(i, n);
+			kdata += n;
+			pos += n;
+			left -= n;
+		}
+	}
+
+	if (pos > iocb->ki_pos) {
+		ret = pos - iocb->ki_pos;
+		iocb->ki_pos = pos;
+	}
+
+	return ret;
+}
+
 /*
  * Wrap generic_file_aio_read with checks for cap bits on the inode.
  * Atomically grab references, so that those bits are not released
@@ -792,9 +842,10 @@ static ssize_t ceph_aio_read(struct kiocb *iocb, const struct iovec *iov,
 	struct inode *inode = file_inode(filp);
 	struct ceph_inode_info *ci = ceph_inode(inode);
 	struct page *pinned_page = NULL;
+	struct iov_iter i;
 	ssize_t ret;
 	int want, got = 0;
-	int checkeof = 0, read = 0;
+	int retry_op = 0, read = 0;
 
 again:
 	dout("aio_read %p %llx.%llx %llu~%u trying to get caps on %p\n",
@@ -811,8 +862,6 @@ again:
 	if ((got & (CEPH_CAP_FILE_CACHE|CEPH_CAP_FILE_LAZYIO)) == 0 ||
 	    (iocb->ki_filp->f_flags & O_DIRECT) ||
 	    (fi->flags & CEPH_F_SYNC)) {
-		struct iov_iter i;
-
 		dout("aio_sync_read %p %llx.%llx %llu~%u got cap refs on %s\n",
 		     inode, ceph_vinop(inode), iocb->ki_pos, (unsigned)len,
 		     ceph_cap_string(got));
@@ -826,8 +875,12 @@ again:
 
 		iov_iter_init(&i, iov, nr_segs, len, read);
 
-		/* hmm, this isn't really async... */
-		ret = ceph_sync_read(iocb, &i, &checkeof);
+		if (ci->i_inline_version == CEPH_INLINE_NONE) {
+			/* hmm, this isn't really async... */
+			ret = ceph_sync_read(iocb, &i, &retry_op);
+		} else {
+			retry_op = READ_INLINE;
+		}
 	} else {
 		/*
 		 * We can't modify the content of iov,
@@ -852,12 +905,36 @@ out:
 		pinned_page = NULL;
 	}
 	ceph_put_cap_refs(ci, got);
+	if (retry_op && ret >= 0) {
+		int statret;
+		struct page *page = NULL;
+		loff_t i_size;
+		if (retry_op == READ_INLINE) {
+			page = __page_cache_alloc(GFP_NOFS);
+			if (!page)
+				return -ENOMEM;
+		}
 
-	if (checkeof && ret >= 0) {
-		int statret = ceph_do_getattr(inode, CEPH_STAT_CAP_SIZE, false);
+		statret = __ceph_do_getattr(inode, page,
+					    CEPH_STAT_CAP_INLINE_DATA, !!page);
+		if (statret < 0) {
+			 __free_page(page);
+			if (statret == -ENODATA) {
+				BUG_ON(retry_op != READ_INLINE);
+				goto again;
+			}
+			return statret;
+		}
+
+		i_size = i_size_read(inode);
+		if (retry_op == READ_INLINE) {
+			ret = inline_to_iov(iocb, &i, page, statret, i_size);
+			__free_pages(page, 0);
+			return ret;
+		}
 
 		/* hit EOF or hole? */
-		if (statret == 0 && iocb->ki_pos < inode->i_size &&
+		if (retry_op == CHECK_EOF && iocb->ki_pos < i_size &&
 			ret < len) {
 			dout("sync_read hit hole, ppos %lld < size %lld"
 			     ", reading more\n", iocb->ki_pos,
@@ -865,7 +942,7 @@ out:
 
 			read += ret;
 			len -= ret;
-			checkeof = 0;
+			retry_op = 0;
 			goto again;
 		}
 	}
