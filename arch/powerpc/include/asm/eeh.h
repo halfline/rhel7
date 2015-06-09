@@ -143,19 +143,14 @@ struct eeh_dev {
 	struct eeh_pe *pe;		/* Associated PE		*/
 	struct list_head list;		/* Form link list in the PE	*/
 	struct pci_controller *phb;	/* Associated PHB		*/
-	struct device_node *dn;		/* Associated device node	*/
-	struct pci_dn *pdn;		/* Associated PCI device node	*/
+	RH_KABI_CHANGE_TYPE(struct device_node *dn, /* Associated device node */
+			    struct pci_dn *pdn) /* Associated PCI device node */
 	struct pci_dev *pdev;		/* Associated PCI device	*/
 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
 	RH_KABI_EXTEND(int pcix_cap)	/* Saved PCIx capability	*/
 	RH_KABI_EXTEND(int pcie_cap)	/* Saved PCIe capability	*/
 	RH_KABI_EXTEND(int aer_cap)	/* Saved AER capability		*/
 };
-
-static inline struct device_node *eeh_dev_to_of_node(struct eeh_dev *edev)
-{
-	return edev ? edev->dn : NULL;
-}
 
 static inline struct pci_dn *eeh_dev_to_pdn(struct eeh_dev *edev)
 {
