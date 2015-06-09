@@ -171,7 +171,8 @@ struct opal_sg_list {
 #define OPAL_FLASH_READ				110
 #define OPAL_FLASH_WRITE			111
 #define OPAL_FLASH_ERASE			112
-#define OPAL_LAST				112
+#define OPAL_PRD_MSG				113
+#define OPAL_LAST				113
 
 /* Device tree flags */
 
@@ -309,6 +310,8 @@ enum OpalMessageType {
 	OPAL_MSG_EPOW,
 	OPAL_MSG_SHUTDOWN,
 	OPAL_MSG_HMI_EVT,
+	OPAL_MSG_DPO,
+	OPAL_MSG_PRD,
 	OPAL_MSG_TYPE_MAX,
 };
 
@@ -837,6 +840,23 @@ typedef struct oppanel_line {
 	uint64_t 	line_len;
 } oppanel_line_t;
 
+enum opal_prd_msg_type {
+	OPAL_PRD_MSG_TYPE_INIT = 0,	/* HBRT --> OPAL */
+	OPAL_PRD_MSG_TYPE_FINI,		/* HBRT/kernel --> OPAL */
+	OPAL_PRD_MSG_TYPE_ATTN,		/* HBRT <-- OPAL */
+	OPAL_PRD_MSG_TYPE_ATTN_ACK,	/* HBRT --> OPAL */
+	OPAL_PRD_MSG_TYPE_OCC_ERROR,	/* HBRT <-- OPAL */
+	OPAL_PRD_MSG_TYPE_OCC_RESET,	/* HBRT <-- OPAL */
+};
+
+struct opal_prd_msg_header {
+	uint8_t		type;
+	uint8_t		pad[1];
+	__be16		size;
+};
+
+struct opal_prd_msg;
+
 /* OPAL I2C request */
 struct opal_i2c_request {
 	uint8_t	type;
@@ -1026,6 +1046,7 @@ int64_t opal_ipmi_recv(uint64_t interface, struct opal_ipmi_msg *msg,
 		uint64_t *msg_len);
 int64_t opal_i2c_request(uint64_t async_token, uint32_t bus_id,
 			 struct opal_i2c_request *oreq);
+int64_t opal_prd_msg(struct opal_prd_msg *msg);
 
 int64_t opal_flash_read(uint64_t id, uint64_t offset, uint64_t buf,
 		uint64_t size, uint64_t token);
