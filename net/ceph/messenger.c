@@ -481,7 +481,7 @@ static int ceph_tcp_connect(struct ceph_connection *con)
 			       IPPROTO_TCP, &sock);
 	if (ret)
 		return ret;
-	sock->sk->sk_allocation = GFP_NOFS | __GFP_MEMALLOC;
+	sock->sk->sk_allocation = GFP_NOFS;
 
 #ifdef CONFIG_LOCKDEP
 	lockdep_set_class(&sock->sk->sk_lock, &socket_class);
@@ -516,8 +516,6 @@ static int ceph_tcp_connect(struct ceph_connection *con)
 			pr_err("kernel_setsockopt(TCP_NODELAY) failed: %d",
 			       ret);
 	}
-
-	sk_set_memalloc(sock->sk);
 
 	con->sock = sock;
 	return 0;
@@ -2810,10 +2808,7 @@ static void con_work(struct work_struct *work)
 {
 	struct ceph_connection *con = container_of(work, struct ceph_connection,
 						   work.work);
-	unsigned long pflags = current->flags;
 	bool fault;
-
-	current->flags |= PF_MEMALLOC;
 
 	mutex_lock(&con->mutex);
 	while (true) {
@@ -2868,8 +2863,6 @@ static void con_work(struct work_struct *work)
 		con_fault_finish(con);
 
 	con->ops->put(con);
-
-	tsk_restore_flags(current, pflags, PF_MEMALLOC);
 }
 
 /*
