@@ -1785,8 +1785,8 @@ void __init pnv_pci_init_ioda_phb(struct device_node *np,
 	 */
 	if (is_kdump_kernel()) {
 		pr_info("  Issue PHB reset ...\n");
-		ioda_eeh_phb_reset(hose, EEH_RESET_FUNDAMENTAL);
-		ioda_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
+		pnv_eeh_phb_reset(hose, EEH_RESET_FUNDAMENTAL);
+		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
 	}
 
 	/* Configure M64 window */
