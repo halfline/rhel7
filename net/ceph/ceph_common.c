@@ -237,6 +237,8 @@ enum {
 	Opt_noshare,
 	Opt_crc,
 	Opt_nocrc,
+	Opt_cephx_require_signatures,
+	Opt_nocephx_require_signatures,
 	Opt_tcp_nodelay,
 	Opt_notcp_nodelay,
 };
@@ -257,6 +259,8 @@ static match_table_t opt_tokens = {
 	{Opt_noshare, "noshare"},
 	{Opt_crc, "crc"},
 	{Opt_nocrc, "nocrc"},
+	{Opt_cephx_require_signatures, "cephx_require_signatures"},
+	{Opt_nocephx_require_signatures, "nocephx_require_signatures"},
 	{Opt_tcp_nodelay, "tcp_nodelay"},
 	{Opt_notcp_nodelay, "notcp_nodelay"},
 	{-1, NULL}
@@ -458,6 +462,13 @@ ceph_parse_options(char *options, const char *dev_name,
 			opt->flags |= CEPH_OPT_NOCRC;
 			break;
 
+		case Opt_cephx_require_signatures:
+			opt->flags &= ~CEPH_OPT_NOMSGAUTH;
+			break;
+		case Opt_nocephx_require_signatures:
+			opt->flags |= CEPH_OPT_NOMSGAUTH;
+			break;
+
 		case Opt_tcp_nodelay:
 			opt->flags |= CEPH_OPT_TCP_NODELAY;
 			break;
@@ -506,6 +517,9 @@ struct ceph_client *ceph_create_client(struct ceph_options *opt, void *private,
 	mutex_init(&client->mount_mutex);
 	init_waitqueue_head(&client->auth_wq);
 	client->auth_err = 0;
+
+	if (!ceph_test_opt(client, NOMSGAUTH))
+		required_features |= CEPH_FEATURE_MSG_AUTH;
 
 	client->extra_mon_dispatch = NULL;
 	client->supported_features = CEPH_FEATURES_SUPPORTED_DEFAULT |
