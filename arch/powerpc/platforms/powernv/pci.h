@@ -74,12 +74,6 @@ struct pnv_ioda_pe {
 	struct list_head	list;
 };
 
-/* IOC dependent EEH operations */
-#ifdef CONFIG_EEH
-struct pnv_eeh_ops {
-};
-#endif /* CONFIG_EEH */
-
 #define PNV_PHB_FLAG_EEH	(1 << 0)
 
 struct pnv_phb {
@@ -92,10 +86,6 @@ struct pnv_phb {
 	void __iomem		*regs;
 	int			initialized;
 	spinlock_t		lock;
-
-#ifdef CONFIG_EEH
-	struct pnv_eeh_ops	*eeh_ops;
-#endif
 
 #ifdef CONFIG_DEBUG_FS
 	int			has_dbgfs;
@@ -200,9 +190,6 @@ struct pnv_phb {
 };
 
 extern struct pci_ops pnv_pci_ops;
-#ifdef CONFIG_EEH
-extern struct pnv_eeh_ops ioda_eeh_ops;
-#endif
 
 void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
 				unsigned char *log_buff);
