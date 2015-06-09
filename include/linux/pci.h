@@ -246,6 +246,9 @@ struct pcie_link_state;
 struct pci_vpd;
 struct pci_sriov;
 struct pci_ats;
+#ifdef CONFIG_PPC64
+struct pci_dn;
+#endif
 
 /*
  * The pci_dev structure is used to describe PCI devices.
@@ -387,6 +390,9 @@ struct pci_dev {
 struct pci_dev_rh {
 	RH_KABI_EXTEND(u8   dma_alias_devfn) /* devfn of DMA alias, if any */
 	RH_KABI_EXTEND(char *driver_override) /* Driver name to force a match */
+#ifdef CONFIG_PPC64
+	RH_KABI_EXTEND(struct pci_dn *pci_data) /* PCI device node*/
+#endif
 };
 
 static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
