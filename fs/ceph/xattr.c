@@ -833,7 +833,7 @@ static int ceph_sync_setxattr(struct dentry *dentry, const char *name,
 	struct ceph_pagelist *pagelist = NULL;
 	int err;
 
-	if (value) {
+	if (size > 0) {
 		/* copy value into pagelist */
 		pagelist = kmalloc(sizeof(*pagelist), GFP_NOFS);
 		if (!pagelist)
@@ -843,7 +843,7 @@ static int ceph_sync_setxattr(struct dentry *dentry, const char *name,
 		err = ceph_pagelist_append(pagelist, value, size);
 		if (err)
 			goto out;
-	} else {
+	} else if (!value) {
 		flags |= CEPH_XATTR_REMOVE;
 	}
 
@@ -895,6 +895,9 @@ int ceph_setxattr(struct dentry *dentry, const char *name,
 
 	if (ceph_snap(inode) != CEPH_NOSNAP)
 		return -EROFS;
+
+	if (size == 0)
+		value = "";  /* empty EA, do not remove */
 
 	if (!ceph_is_valid_xattr(name))
 		return -EOPNOTSUPP;
