@@ -792,13 +792,10 @@ static ssize_t inline_to_iov(struct kiocb *iocb, struct iov_iter *i,
 
 	BUG_ON(PageHighMem(inline_page));
 
-	/* does not support inline data > PAGE_SIZE */
-	if (i_size > PAGE_CACHE_SIZE)
-		return -EIO;
-
-	if (pos < i_size) {
+	if (pos < i_size && pos < PAGE_CACHE_SIZE) {
 		void *kdata = page_address(inline_page) + pos;
-		loff_t end = min_t(loff_t, pos + len, i_size);
+		loff_t end = min_t(loff_t, pos + len,
+				   min_t(loff_t, i_size, PAGE_CACHE_SIZE));
 		size_t left = end - pos;
 
 		if (inline_len < end)
@@ -814,6 +811,23 @@ static ssize_t inline_to_iov(struct kiocb *iocb, struct iov_iter *i,
 			}
 			iov_iter_advance(i, n);
 			kdata += n;
+			pos += n;
+			left -= n;
+		}
+	}
+
+	if (!ret && pos < i_size && pos < iocb->ki_pos + len) {
+		size_t left = min_t(loff_t, iocb->ki_pos + len, i_size) - pos;
+
+		while (left) {
+			void __user *udata = i->iov->iov_base + i->iov_offset;
+			size_t n = min(i->iov->iov_len - i->iov_offset, left);
+
+			if (__clear_user(udata, n)) {
+				ret = -EFAULT;
+				break;
+			}
+			iov_iter_advance(i, n);
 			pos += n;
 			left -= n;
 		}
@@ -929,6 +943,7 @@ out:
 
 		i_size = i_size_read(inode);
 		if (retry_op == READ_INLINE) {
+			BUG_ON(ret > 0 || read > 0);
 			ret = inline_to_iov(iocb, &i, page, statret, i_size);
 			__free_pages(page, 0);
 			return ret;
@@ -936,7 +951,7 @@ out:
 
 		/* hit EOF or hole? */
 		if (retry_op == CHECK_EOF && iocb->ki_pos < i_size &&
-			ret < len) {
+		    ret < len) {
 			dout("sync_read hit hole, ppos %lld < size %lld"
 			     ", reading more\n", iocb->ki_pos,
 			     inode->i_size);

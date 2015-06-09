@@ -186,17 +186,22 @@ static int readpage_nounlock(struct file *filp, struct page *page)
 	u64 len = PAGE_CACHE_SIZE;
 
 	if (off >= i_size_read(inode)) {
-		zero_user_segment(page, err, PAGE_CACHE_SIZE);
+		zero_user_segment(page, 0, PAGE_CACHE_SIZE);
 		SetPageUptodate(page);
 		return 0;
 	}
 
-	/*
-	 * Uptodate inline data should have been added into page cache
-	 * while getting Fcr caps.
-	 */
-	if (ci->i_inline_version != CEPH_INLINE_NONE)
-		return -EINVAL;
+	if (ci->i_inline_version != CEPH_INLINE_NONE) {
+		/*
+		 * Uptodate inline data should have been added
+		 * into page cache while getting Fcr caps.
+		 */
+		if (off == 0)
+			return -EINVAL;
+		zero_user_segment(page, 0, PAGE_CACHE_SIZE);
+		SetPageUptodate(page);
+		return 0;
+	}
 
 	dout("readpage inode %p file %p page %p index %lu\n",
 	     inode, filp, page, page->index);
