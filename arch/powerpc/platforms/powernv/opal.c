@@ -271,6 +271,7 @@ static void opal_do_notifier(uint64_t events)
 	atomic_notifier_call_chain(&opal_notifier_head,
 				   events, (void *)changed_mask);
 }
+EXPORT_SYMBOL_GPL(opal_message_notifier_register);
 
 void opal_notifier_update_evt(uint64_t evt_mask,
 			      uint64_t evt_val)
@@ -324,6 +325,7 @@ int opal_message_notifier_unregister(enum OpalMessageType msg_type,
 	return atomic_notifier_chain_unregister(
 			&opal_msg_notifier_head[msg_type], nb);
 }
+EXPORT_SYMBOL_GPL(opal_message_notifier_unregister);
 
 static void opal_message_do_notify(uint32_t msg_type, void *msg)
 {
@@ -825,6 +827,8 @@ void opal_shutdown(void)
 
 /* Export this so that test modules can use it */
 EXPORT_SYMBOL_GPL(opal_invalid_call);
+EXPORT_SYMBOL_GPL(opal_xscom_read);
+EXPORT_SYMBOL_GPL(opal_xscom_write);
 EXPORT_SYMBOL_GPL(opal_ipmi_send);
 EXPORT_SYMBOL_GPL(opal_ipmi_recv);
 EXPORT_SYMBOL_GPL(opal_flash_read);
