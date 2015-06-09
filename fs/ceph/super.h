@@ -242,6 +242,7 @@ struct ceph_inode_info {
 	spinlock_t i_ceph_lock;
 
 	u64 i_version;
+	u64 i_inline_version;
 	u32 i_time_warp_seq;
 
 	unsigned i_ceph_flags;
@@ -811,6 +812,8 @@ extern int ceph_atomic_open(struct inode *dir, struct dentry *dentry,
 			    struct file *file, unsigned flags, umode_t mode,
 			    int *opened);
 extern int ceph_release(struct inode *inode, struct file *filp);
+extern void ceph_fill_inline_data(struct inode *inode, struct page *locked_page,
+				  char *data, size_t len);
 
 /* dir.c */
 extern const struct file_operations ceph_dir_fops;
