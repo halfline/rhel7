@@ -34,7 +34,7 @@ static inline struct dev_info *which_dev(struct mddev *mddev, sector_t sector)
 
 	lo = 0;
 	hi = mddev->raid_disks - 1;
-	conf = rcu_dereference(mddev->private);
+	conf = mddev->private;
 
 	/*
 	 * Binary Search
@@ -70,7 +70,6 @@ static int linear_mergeable_bvec(struct mddev *mddev,
 	int maxbytes = biovec->bv_len;
 	struct request_queue *subq;
 
-	rcu_read_lock();
 	dev0 = which_dev(mddev, sector);
 	maxsectors = dev0->end_sector - sector;
 	subq = bdev_get_queue(dev0->rdev->bdev);
@@ -80,7 +79,6 @@ static int linear_mergeable_bvec(struct mddev *mddev,
 		maxbytes = min(maxbytes, subq->merge_bvec_fn(subq, bvm,
 							     biovec));
 	}
-	rcu_read_unlock();
 
 	if (maxsectors < bio_sectors)
 		maxsectors = 0;
@@ -101,15 +99,13 @@ static int linear_congested(struct mddev *mddev, int bits)
 	struct linear_conf *conf;
 	int i, ret = 0;
 
-	rcu_read_lock();
-	conf = rcu_dereference(mddev->private);
+	conf = mddev->private;
 
 	for (i = 0; i < mddev->raid_disks && !ret ; i++) {
 		struct request_queue *q = bdev_get_queue(conf->disks[i].rdev->bdev);
 		ret |= bdi_congested(&q->backing_dev_info, bits);
 	}
 
-	rcu_read_unlock();
 	return ret;
 }
 
@@ -118,12 +114,10 @@ static sector_t linear_size(struct mddev *mddev, sector_t sectors, int raid_disk
 	struct linear_conf *conf;
 	sector_t array_sectors;
 
-	rcu_read_lock();
-	conf = rcu_dereference(mddev->private);
+	conf = mddev->private;
 	WARN_ONCE(sectors || raid_disks,
 		  "%s does not support generic reshape\n", __func__);
 	array_sectors = conf->array_sectors;
-	rcu_read_unlock();
 
 	return array_sectors;
 }
@@ -243,33 +237,22 @@ static int linear_add(struct mddev *mddev, struct md_rdev *rdev)
 	if (!newconf)
 		return -ENOMEM;
 
-	oldconf = rcu_dereference_protected(mddev->private,
-					    lockdep_is_held(
-						    &mddev->reconfig_mutex));
+	mddev_suspend(mddev);
+	oldconf = mddev->private;
 	mddev->raid_disks++;
-	rcu_assign_pointer(mddev->private, newconf);
+	mddev->private = newconf;
 	md_set_array_sectors(mddev, linear_size(mddev, 0, 0));
 	set_capacity(mddev->gendisk, mddev->array_sectors);
+	mddev_resume(mddev);
 	revalidate_disk(mddev->gendisk);
-	kfree_rcu(oldconf, rcu);
+	kfree(oldconf);
 	return 0;
 }
 
 static int linear_stop (struct mddev *mddev)
 {
-	struct linear_conf *conf =
-		rcu_dereference_protected(mddev->private,
-					  lockdep_is_held(
-						  &mddev->reconfig_mutex));
+	struct linear_conf *conf = mddev->private;
 
-	/*
-	 * We do not require rcu protection here since
-	 * we hold reconfig_mutex for both linear_add and
-	 * linear_stop, so they cannot race.
-	 * We should make sure any old 'conf's are properly
-	 * freed though.
-	 */
-	rcu_barrier();
 	blk_sync_queue(mddev->queue); /* the unplug fn references 'conf'*/
 	kfree(conf);
 	mddev->private = NULL;
@@ -287,7 +270,6 @@ static void linear_make_request(struct mddev *mddev, struct bio *bio)
 		return;
 	}
 
-	rcu_read_lock();
 	tmp_dev = which_dev(mddev, bio->bi_sector);
 	start_sector = tmp_dev->end_sector - tmp_dev->rdev->sectors;
 
@@ -304,7 +286,6 @@ static void linear_make_request(struct mddev *mddev, struct bio *bio)
 		       bdevname(tmp_dev->rdev->bdev, b),
 		       (unsigned long long)tmp_dev->rdev->sectors,
 		       (unsigned long long)start_sector);
-		rcu_read_unlock();
 		bio_io_error(bio);
 		return;
 	}
@@ -314,8 +295,6 @@ static void linear_make_request(struct mddev *mddev, struct bio *bio)
 		 */
 		struct bio_pair *bp;
 		sector_t end_sector = tmp_dev->end_sector;
-
-		rcu_read_unlock();
 
 		bp = bio_split(bio, end_sector - bio->bi_sector);
 
@@ -328,7 +307,6 @@ static void linear_make_request(struct mddev *mddev, struct bio *bio)
 	bio->bi_bdev = tmp_dev->rdev->bdev;
 	bio->bi_sector = bio->bi_sector - start_sector
 		+ tmp_dev->rdev->data_offset;
-	rcu_read_unlock();
 
 	if (unlikely((bio->bi_rw & REQ_DISCARD) &&
 		     !blk_queue_discard(bdev_get_queue(bio->bi_bdev)))) {
@@ -346,6 +324,10 @@ static void linear_status (struct seq_file *seq, struct mddev *mddev)
 	seq_printf(seq, " %dk rounding", mddev->chunk_sectors / 2);
 }
 
+static void linear_quiesce(struct mddev *mddev, int state)
+{
+}
+
 static struct md_personality linear_personality =
 {
 	.name		= "linear",
@@ -357,6 +339,7 @@ static struct md_personality linear_personality =
 	.status		= linear_status,
 	.hot_add_disk	= linear_add,
 	.size		= linear_size,
+	.quiesce	= linear_quiesce,
 	.congested	= linear_congested,
 	.mergeable_bvec	= linear_mergeable_bvec,
 };
