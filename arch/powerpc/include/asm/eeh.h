@@ -76,6 +76,7 @@ struct device_node;
 #define EEH_PE_CFG_BLOCKED	(1 << 2)	/* Block config access	*/
 
 #define EEH_PE_KEEP		(1 << 8)	/* Keep PE on hotplug	*/
+#define EEH_PE_CFG_RESTRICTED	(1 << 9)	/* Block config on error */
 
 struct eeh_pe {
 	int type;			/* PE type: PHB/Bus/Device	*/
