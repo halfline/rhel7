@@ -1025,8 +1025,6 @@ static int __nfs_pageio_add_request(struct nfs_pageio_descriptor *desc,
 	unsigned int bytes_left = 0;
 	unsigned int offset, pgbase;
 
-	WARN_ON_ONCE(desc->pg_mirror_idx >= desc->pg_mirror_count);
-
 	nfs_page_group_lock(req, false);
 
 	subreq = req;
@@ -1166,7 +1164,8 @@ int nfs_pageio_add_request(struct nfs_pageio_descriptor *desc,
 		} else
 			dupreq = req;
 
-		desc->pg_mirror_idx = midx;
+		if (nfs_pgio_has_mirroring(desc))
+			desc->pg_mirror_idx = midx;
 		if (!nfs_pageio_add_request_mirror(desc, dupreq))
 			return 0;
 	}
@@ -1185,7 +1184,8 @@ static void nfs_pageio_complete_mirror(struct nfs_pageio_descriptor *desc,
 	struct nfs_pgio_mirror *mirror = &desc->pg_mirrors[mirror_idx];
 	u32 restore_idx = desc->pg_mirror_idx;
 
-	desc->pg_mirror_idx = mirror_idx;
+	if (nfs_pgio_has_mirroring(desc))
+		desc->pg_mirror_idx = mirror_idx;
 	for (;;) {
 		nfs_pageio_doio(desc);
 		if (!mirror->pg_recoalesce)
