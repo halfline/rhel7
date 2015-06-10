@@ -100,10 +100,17 @@ struct backlight_device {
 	/* The framebuffer notifier block */
 	struct notifier_block fb_notif;
 
+	struct device dev;
+
+#ifndef __GENKSYMS__
+	/*
+	 * Currently used only by acpi_video driver through
+	 * backlight_device_registered.
+	 */
+
 	/* list entry of all registered backlight devices */
 	struct list_head entry;
-
-	struct device dev;
+#endif
 };
 
 static inline void backlight_update_status(struct backlight_device *bd)
