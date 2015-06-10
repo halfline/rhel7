@@ -167,4 +167,15 @@ struct platform_device;
 
 struct platform_device *acpi_create_platform_device(struct acpi_device *adev);
 
+/*--------------------------------------------------------------------------
+					Video
+  -------------------------------------------------------------------------- */
+#if defined(CONFIG_ACPI_VIDEO) || defined(CONFIG_ACPI_VIDEO_MODULE)
+bool acpi_video_backlight_quirks(void);
+bool acpi_video_verify_backlight_support(void);
+#else
+static inline bool acpi_video_backlight_quirks(void) { return false; }
+static inline bool acpi_video_verify_backlight_support(void) { return false; }
+#endif
+
 #endif /* _ACPI_INTERNAL_H_ */
