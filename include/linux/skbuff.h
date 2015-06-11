@@ -2823,6 +2823,8 @@ static inline ktime_t net_invalid_timestamp(void)
 	return ktime_set(0, 0);
 }
 
+struct sk_buff *skb_clone_sk(struct sk_buff *skb);
+
 void skb_timestamping_init(void);
 
 #ifdef CONFIG_NETWORK_PHY_TIMESTAMPING

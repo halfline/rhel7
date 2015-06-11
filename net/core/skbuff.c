@@ -887,6 +887,27 @@ static struct sk_buff *__skb_clone(struct sk_buff *n, struct sk_buff *skb)
 #undef C
 }
 
+struct sk_buff *skb_clone_sk(struct sk_buff *skb)
+{
+	struct sock *sk = skb->sk;
+	struct sk_buff *clone;
+
+	if (!sk || !atomic_inc_not_zero(&sk->sk_refcnt))
+		return NULL;
+
+	clone = skb_clone(skb, GFP_ATOMIC);
+	if (!clone) {
+		sock_put(sk);
+		return NULL;
+	}
+
+	clone->sk = sk;
+	clone->destructor = sock_efree;
+
+	return clone;
+}
+EXPORT_SYMBOL(skb_clone_sk);
+
 /**
  *	skb_morph	-	morph one skb into another
  *	@dst: the skb to receive the contents

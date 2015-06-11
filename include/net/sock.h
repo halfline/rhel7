@@ -1574,6 +1574,7 @@ extern struct sk_buff		*sock_rmalloc(struct sock *sk,
 					      gfp_t priority);
 extern void			sock_wfree(struct sk_buff *skb);
 extern void			sock_rfree(struct sk_buff *skb);
+extern void			sock_efree(struct sk_buff *skb);
 extern void			sock_edemux(struct sk_buff *skb);
 
 extern int			sock_setsockopt(struct socket *sock, int level,
