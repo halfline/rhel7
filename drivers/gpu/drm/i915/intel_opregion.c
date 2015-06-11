@@ -403,7 +403,8 @@ int intel_opregion_notify_adapter(struct drm_device *dev, pci_power_t state)
  */
 static bool should_ignore_backlight_request(void)
 {
-	return false;
+	return acpi_video_backlight_support() &&
+	       !acpi_video_verify_backlight_support();
 }
 
 static u32 asle_set_backlight(struct drm_device *dev, u32 bclp)
