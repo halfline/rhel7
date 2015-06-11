@@ -210,7 +210,7 @@ int inet_sk_diag_fill(struct sock *sk, struct inet_connection_sock *icsk,
 		int err = 0;
 
 		rcu_read_lock();
-		ca_ops = ACCESS_ONCE(icsk->icsk_ca_ops);
+		ca_ops = READ_ONCE(icsk->icsk_ca_ops);
 		if (ca_ops)
 			err = nla_put_string(skb, INET_DIAG_CONG, ca_ops->name);
 		rcu_read_unlock();
@@ -224,7 +224,7 @@ int inet_sk_diag_fill(struct sock *sk, struct inet_connection_sock *icsk,
 		int err = 0;
 
 		rcu_read_lock();
-		ca_ops = ACCESS_ONCE(icsk->icsk_ca_ops);
+		ca_ops = READ_ONCE(icsk->icsk_ca_ops);
 		if (ca_ops && ca_ops->get_info)
 			err = ca_ops->get_info(sk, ext, skb);
 		rcu_read_unlock();
