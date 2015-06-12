@@ -228,10 +228,10 @@ static void set_skb_frag(struct sk_buff *skb, struct page *page,
 }
 
 /* Called from bottom half context */
-static struct sk_buff *page_to_skb(struct receive_queue *rq,
+static struct sk_buff *page_to_skb(struct virtnet_info *vi,
+				   struct receive_queue *rq,
 				   struct page *page, unsigned int len)
 {
-	struct virtnet_info *vi = rq->vq->vdev->priv;
 	struct sk_buff *skb;
 	struct skb_vnet_hdr *hdr;
 	unsigned int copy, hdr_len, offset;
@@ -302,11 +302,12 @@ static struct sk_buff *receive_small(void *buf, unsigned int len)
 }
 
 static struct sk_buff *receive_big(struct net_device *dev,
+				   struct virtnet_info *vi,
 				   struct receive_queue *rq,
 				   void *buf, unsigned int len)
 {
 	struct page *page = buf;
-	struct sk_buff *skb = page_to_skb(rq, page, len);
+	struct sk_buff *skb = page_to_skb(vi, rq, page, len);
 
 	if (unlikely(!skb))
 		goto err;
@@ -328,7 +329,7 @@ static struct sk_buff *receive_mergeable(struct net_device *dev,
 	struct skb_vnet_hdr *hdr = page_address(buf);
 	u16 num_buf = virtio16_to_cpu(rq->vq->vdev, hdr->mhdr.num_buffers);
 	struct page *page = buf;
-	struct sk_buff *skb = page_to_skb(rq, page, len);
+	struct sk_buff *skb = page_to_skb(vi, rq, page, len);
 	int i;
 
 	if (unlikely(!skb))
@@ -380,9 +381,9 @@ err_buf:
 	return NULL;
 }
 
-static void receive_buf(struct receive_queue *rq, void *buf, unsigned int len)
+static void receive_buf(struct virtnet_info *vi, struct receive_queue *rq,
+			void *buf, unsigned int len)
 {
-	struct virtnet_info *vi = rq->vq->vdev->priv;
 	struct net_device *dev = vi->dev;
 	struct virtnet_stats *stats = this_cpu_ptr(vi->stats);
 	struct sk_buff *skb;
@@ -400,7 +401,7 @@ static void receive_buf(struct receive_queue *rq, void *buf, unsigned int len)
 	if (vi->mergeable_rx_bufs)
 		skb = receive_mergeable(dev, vi, rq, buf, len);
 	else if (vi->big_packets)
-		skb = receive_big(dev, rq, buf, len);
+		skb = receive_big(dev, vi, rq, buf, len);
 	else
 		skb = receive_small(buf, len);
 
@@ -469,9 +470,9 @@ frame_err:
 	dev_kfree_skb(skb);
 }
 
-static int add_recvbuf_small(struct receive_queue *rq, gfp_t gfp)
+static int add_recvbuf_small(struct virtnet_info *vi, struct receive_queue *rq,
+			     gfp_t gfp)
 {
-	struct virtnet_info *vi = rq->vq->vdev->priv;
 	struct sk_buff *skb;
 	struct skb_vnet_hdr *hdr;
 	int err;
@@ -567,9 +568,9 @@ static int add_recvbuf_mergeable(struct receive_queue *rq, gfp_t gfp)
  * before we're receiving packets, or from refill_work which is
  * careful to disable receiving (using napi_disable).
  */
-static bool try_fill_recv(struct receive_queue *rq, gfp_t gfp)
+static bool try_fill_recv(struct virtnet_info *vi, struct receive_queue *rq,
+			  gfp_t gfp)
 {
-	struct virtnet_info *vi = rq->vq->vdev->priv;
 	int err;
 	bool oom;
 
@@ -579,7 +580,7 @@ static bool try_fill_recv(struct receive_queue *rq, gfp_t gfp)
 		else if (vi->big_packets)
 			err = add_recvbuf_big(rq, gfp);
 		else
-			err = add_recvbuf_small(rq, gfp);
+			err = add_recvbuf_small(vi, rq, gfp);
 
 		oom = err == -ENOMEM;
 		if (err)
@@ -631,7 +632,7 @@ static void refill_work(struct work_struct *work)
 		struct receive_queue *rq = &vi->rq[i];
 
 		napi_disable(&rq->napi);
-		still_empty = !try_fill_recv(rq, GFP_KERNEL);
+		still_empty = !try_fill_recv(vi, rq, GFP_KERNEL);
 		virtnet_napi_enable(rq);
 
 		/* In theory, this can happen: if we don't get any buffers in
@@ -653,13 +654,13 @@ static int virtnet_poll(struct napi_struct *napi, int budget)
 again:
 	while (received < budget &&
 	       (buf = virtqueue_get_buf(rq->vq, &len)) != NULL) {
-		receive_buf(rq, buf, len);
+		receive_buf(vi, rq, buf, len);
 		--rq->num;
 		received++;
 	}
 
 	if (rq->num < rq->max / 2) {
-		if (!try_fill_recv(rq, GFP_ATOMIC))
+		if (!try_fill_recv(vi, rq, GFP_ATOMIC))
 			schedule_delayed_work(&vi->refill, 0);
 	}
 
@@ -686,7 +687,7 @@ static int virtnet_open(struct net_device *dev)
 	for (i = 0; i < vi->max_queue_pairs; i++) {
 		if (i < vi->curr_queue_pairs)
 			/* Make sure we have some buffers: if oom use wq. */
-			if (!try_fill_recv(&vi->rq[i], GFP_KERNEL))
+			if (!try_fill_recv(vi, &vi->rq[i], GFP_KERNEL))
 				schedule_delayed_work(&vi->refill, 0);
 		virtnet_napi_enable(&vi->rq[i]);
 	}
@@ -1661,7 +1662,7 @@ static int virtnet_probe(struct virtio_device *vdev)
 
 	/* Last of all, set up some receive buffers. */
 	for (i = 0; i < vi->curr_queue_pairs; i++) {
-		try_fill_recv(&vi->rq[i], GFP_KERNEL);
+		try_fill_recv(vi, &vi->rq[i], GFP_KERNEL);
 
 		/* If we didn't even get one input buffer, we're useless. */
 		if (vi->rq[i].num == 0) {
@@ -1779,7 +1780,7 @@ static int virtnet_restore(struct virtio_device *vdev)
 
 	if (netif_running(vi->dev)) {
 		for (i = 0; i < vi->curr_queue_pairs; i++)
-			if (!try_fill_recv(&vi->rq[i], GFP_KERNEL))
+			if (!try_fill_recv(vi, &vi->rq[i], GFP_KERNEL))
 				schedule_delayed_work(&vi->refill, 0);
 
 		for (i = 0; i < vi->max_queue_pairs; i++)
