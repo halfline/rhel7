@@ -109,9 +109,6 @@ struct virtnet_info {
 	/* Host can handle any s/g split between our header and packet data */
 	bool any_header_sg;
 
-	/* enable config space updates */
-	bool config_enable;
-
 	/* Active statistics */
 	struct virtnet_stats __percpu *stats;
 
@@ -1320,9 +1317,6 @@ static void virtnet_config_changed_work(struct work_struct *work)
 	u16 v;
 
 	mutex_lock(&vi->config_lock);
-	if (!vi->config_enable)
-		goto done;
-
 	if (virtio_cread_feature(vi->vdev, VIRTIO_NET_F_STATUS,
 				 struct virtio_net_config, status, &v) < 0)
 		goto done;
@@ -1627,7 +1621,6 @@ static int virtnet_probe(struct virtio_device *vdev)
 		goto free_stats;
 
 	mutex_init(&vi->config_lock);
-	vi->config_enable = true;
 	INIT_WORK(&vi->config_work, virtnet_config_changed_work);
 
 	/* If we can receive ANY GSO packets, we must allocate large ones. */
@@ -1730,16 +1723,13 @@ static void virtnet_remove(struct virtio_device *vdev)
 
 	unregister_hotcpu_notifier(&vi->nb);
 
-	/* Prevent config work handler from accessing the device. */
-	mutex_lock(&vi->config_lock);
-	vi->config_enable = false;
-	mutex_unlock(&vi->config_lock);
+	/* Make sure no work handler is accessing the device. */
+	flush_work(&vi->config_work);
 
 	unregister_netdev(vi->dev);
 
 	remove_vq_common(vi);
 
-	flush_work(&vi->config_work);
 
 	free_percpu(vi->vq_index);
 	free_percpu(vi->stats);
@@ -1754,10 +1744,8 @@ static int virtnet_freeze(struct virtio_device *vdev)
 
 	unregister_hotcpu_notifier(&vi->nb);
 
-	/* Prevent config work handler from accessing the device */
-	mutex_lock(&vi->config_lock);
-	vi->config_enable = false;
-	mutex_unlock(&vi->config_lock);
+	/* Make sure no work handler is accessing the device */
+	flush_work(&vi->config_work);
 
 	netif_device_detach(vi->dev);
 	cancel_delayed_work_sync(&vi->refill);
@@ -1769,8 +1757,6 @@ static int virtnet_freeze(struct virtio_device *vdev)
 		}
 
 	remove_vq_common(vi);
-
-	flush_work(&vi->config_work);
 
 	return 0;
 }
@@ -1794,10 +1780,6 @@ static int virtnet_restore(struct virtio_device *vdev)
 	}
 
 	netif_device_attach(vi->dev);
-
-	mutex_lock(&vi->config_lock);
-	vi->config_enable = true;
-	mutex_unlock(&vi->config_lock);
 
 	rtnl_lock();
 	virtnet_set_queues(vi, vi->curr_queue_pairs);
