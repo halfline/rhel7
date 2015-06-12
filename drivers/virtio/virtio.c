@@ -201,7 +201,9 @@ static int virtio_dev_probe(struct device *_d)
 		if (device_features & (1ULL << i))
 			__virtio_set_bit(dev, i);
 
-	dev->config->finalize_features(dev);
+	err = dev->config->finalize_features(dev);
+	if (err)
+		goto err;
 
 	if (virtio_has_feature(dev, VIRTIO_F_VERSION_1)) {
 		add_status(dev, VIRTIO_CONFIG_S_FEATURES_OK);
@@ -341,6 +343,7 @@ EXPORT_SYMBOL_GPL(virtio_device_freeze);
 int virtio_device_restore(struct virtio_device *dev)
 {
 	struct virtio_driver *drv = drv_to_virtio(dev->dev.driver);
+	int ret;
 
 	/* We always start by resetting the device, in case a previous
 	 * driver messed it up. */
@@ -360,20 +363,24 @@ int virtio_device_restore(struct virtio_device *dev)
 	/* We have a driver! */
 	add_status(dev, VIRTIO_CONFIG_S_DRIVER);
 
-	dev->config->finalize_features(dev);
+	ret = dev->config->finalize_features(dev);
+	if (ret)
+		goto err;
 
 	if (drv->restore) {
-		int ret = drv->restore(dev);
-		if (ret) {
-			add_status(dev, VIRTIO_CONFIG_S_FAILED);
-			return ret;
-		}
+		ret = drv->restore(dev);
+		if (ret)
+			goto err;
 	}
 
 	/* Finally, tell the device we're all set */
 	add_status(dev, VIRTIO_CONFIG_S_DRIVER_OK);
 
 	return 0;
+
+err:
+	add_status(dev, VIRTIO_CONFIG_S_FAILED);
+	return ret;
 }
 EXPORT_SYMBOL_GPL(virtio_device_restore);
 #endif
