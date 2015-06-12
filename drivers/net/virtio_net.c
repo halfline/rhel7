@@ -118,9 +118,6 @@ struct virtnet_info {
 	/* Work struct for config space updates */
 	struct work_struct config_work;
 
-	/* Lock for config space updates */
-	struct mutex config_lock;
-
 	/* Does the affinity hint is set for virtqueues? */
 	bool affinity_hint_set;
 
@@ -1316,7 +1313,6 @@ static void virtnet_config_changed_work(struct work_struct *work)
 		container_of(work, struct virtnet_info, config_work);
 	u16 v;
 
-	mutex_lock(&vi->config_lock);
 	if (virtio_cread_feature(vi->vdev, VIRTIO_NET_F_STATUS,
 				 struct virtio_net_config, status, &v) < 0)
 		goto done;
@@ -1342,7 +1338,7 @@ static void virtnet_config_changed_work(struct work_struct *work)
 		netif_tx_stop_all_queues(vi->dev);
 	}
 done:
-	mutex_unlock(&vi->config_lock);
+	return;
 }
 
 static void virtnet_config_changed(struct virtio_device *vdev)
@@ -1620,7 +1616,6 @@ static int virtnet_probe(struct virtio_device *vdev)
 	if (vi->vq_index == NULL)
 		goto free_stats;
 
-	mutex_init(&vi->config_lock);
 	INIT_WORK(&vi->config_work, virtnet_config_changed_work);
 
 	/* If we can receive ANY GSO packets, we must allocate large ones. */
