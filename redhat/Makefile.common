@@ -35,7 +35,8 @@ SPECRELEASE:=$(PREBUILD)$(BUILD)%{?dist}$(BUILDID)
 
 TARFILE:=linux-$(KVERSION)-$(PKGRELEASE).tar.xz
 TARBALL:=$(REDHAT)/$(TARFILE)
-KABI_TARFILE:=kernel-abi-whitelists.tar.bz2
+DISTRO_BUILD:=$(shell echo $(BUILD) | sed -e 's|\(^[0-9]\{1,4\}\)\..*|\1|')
+KABI_TARFILE:=kernel-abi-whitelists-$(DISTRO_BUILD).tar.bz2
 KABI_TARBALL:=$(REDHAT)/rpm/SOURCES/$(KABI_TARFILE)
 
 RHELMAJOR:=$(shell git show HEAD:Makefile | grep ^RHEL_MAJOR | sed -e s/RHEL_MAJOR\ =\ //)

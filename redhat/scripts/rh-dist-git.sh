@@ -24,6 +24,13 @@ function die
 	exit 1;
 }
 
+function upload_kabi_tarball()
+{
+	sed -i "/kernel-abi-whitelist.*.tar.bz2/d" $tmpdir/kernel/sources;
+	sed -i "/kernel-abi-whitelist.*.tar.bz2/d" $tmpdir/kernel/.gitignore;
+	rhpkg upload $rhdistgit_kabi_tarball >/dev/null || die "uploading kabi tarball";
+}
+
 if [ -z "$rhdistgit_branch" ]; then
 	echo "$0 <branch> [local clone] [alternate tmp] [alternate dist-git server]" >&2;
 	exit 1;
@@ -45,11 +52,12 @@ $redhat/scripts/copy_files.sh "$topdir" "$tmpdir"
 echo "Uploading new tarballs"
 # upload tarballs
 sed -i "/linux-3.*.el7.tar.xz/d" $tmpdir/kernel/sources;
-sed -i "/kernel-abi-whitelists.tar.bz2/d" $tmpdir/kernel/sources;
 sed -i "/linux-3.*.el7.tar.xz/d" $tmpdir/kernel/.gitignore;
-sed -i "/kernel-abi-whitelists.tar.bz2/d" $tmpdir/kernel/.gitignore;
 rhpkg upload $rhdistgit_tarball >/dev/null || die "uploading kernel tarball";
-rhpkg upload $rhdistgit_kabi_tarball >/dev/null || die "uploading kabi tarball";
+
+# Only upload kernel-abi-whitelists tarball if its release counter changed.
+whitelists_file="$(awk '/kernel-abi-whitelists/ {print $2}' $tmpdir/kernel/sources)"
+grep "$whitelists_file" $rhdistgit_kabi_tarball >/dev/null || upload_kabi_tarball;
 
 echo "Creating diff for review ($tmpdir/diff) and changelog"
 # diff the result (redhat/cvs/dontdiff). note: diff reuturns 1 if

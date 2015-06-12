@@ -9,6 +9,8 @@ Summary: The Linux kernel
 # For internal testing builds during development, it should be 0.
 %global released_kernel %%RELEASED_KERNEL%%
 
+%global distro_build %%DISTRO_BUILD%%
+
 %define rpmversion %%RPMVERSION%%
 %define pkgrelease %%PKGRELEASE%%
 
@@ -362,7 +364,7 @@ Source21: Module.kabi_ppc64
 Source22: Module.kabi_ppc64le
 Source23: Module.kabi_s390x
 
-Source25: kernel-abi-whitelists.tar.bz2
+Source25: kernel-abi-whitelists-%{distro_build}.tar.bz2
 
 Source50: kernel-%{version}-x86_64.config
 Source51: kernel-%{version}-x86_64-debug.config

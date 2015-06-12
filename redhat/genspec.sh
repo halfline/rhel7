@@ -6,6 +6,7 @@ PKGRELEASE=$3
 RPMVERSION=$4
 RELEASED_KERNEL=$5
 SPECRELEASE=$6
+DISTRO_BUILD=$7
 clogf="$SOURCES/changelog"
 # hide [redhat] entries from changelog
 HIDE_REDHAT=1;
@@ -162,6 +163,7 @@ test -n "$SPECFILE" &&
 	s/%%RPMVERSION%%/$RPMVERSION/
 	s/%%PKGRELEASE%%/$PKGRELEASE/
 	s/%%SPECRELEASE%%/$SPECRELEASE/
+	s/%%DISTRO_BUILD%%/$DISTRO_BUILD/
 	s/%%RELEASED_KERNEL%%/$RELEASED_KERNEL/" $SPECFILE
 
 rm -f $clogf{,.rev,.stripped};
