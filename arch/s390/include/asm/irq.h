@@ -60,6 +60,7 @@ enum interruption_class {
 	CPU_RST,
 #ifndef __GENKSYMS__
 	IRQIO_VAI,
+	IRQEXT_FTP,
 #endif
 	NR_ARCH_IRQS
 };
