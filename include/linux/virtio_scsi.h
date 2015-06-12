@@ -27,13 +27,15 @@
 #ifndef _LINUX_VIRTIO_SCSI_H
 #define _LINUX_VIRTIO_SCSI_H
 
+#include <linux/virtio_types.h>
+
 #define VIRTIO_SCSI_CDB_SIZE   32
 #define VIRTIO_SCSI_SENSE_SIZE 96
 
 /* SCSI command request, followed by data-out */
 struct virtio_scsi_cmd_req {
 	u8 lun[8];		/* Logical Unit Number */
-	u64 tag;		/* Command identifier */
+	__virtio64 tag;		/* Command identifier */
 	u8 task_attr;		/* Task attribute */
 	u8 prio;
 	u8 crn;
@@ -42,9 +44,9 @@ struct virtio_scsi_cmd_req {
 
 /* Response, followed by sense data and data-in */
 struct virtio_scsi_cmd_resp {
-	u32 sense_len;		/* Sense data length */
-	u32 resid;		/* Residual bytes in data buffer */
-	u16 status_qualifier;	/* Status qualifier */
+	__virtio32 sense_len;		/* Sense data length */
+	__virtio32 resid;		/* Residual bytes in data buffer */
+	__virtio16 status_qualifier;	/* Status qualifier */
 	u8 status;		/* Command completion status */
 	u8 response;		/* Response values */
 	u8 sense[VIRTIO_SCSI_SENSE_SIZE];
@@ -52,10 +54,10 @@ struct virtio_scsi_cmd_resp {
 
 /* Task Management Request */
 struct virtio_scsi_ctrl_tmf_req {
-	u32 type;
-	u32 subtype;
+	__virtio32 type;
+	__virtio32 subtype;
 	u8 lun[8];
-	u64 tag;
+	__virtio64 tag;
 } __packed;
 
 struct virtio_scsi_ctrl_tmf_resp {
@@ -64,20 +66,20 @@ struct virtio_scsi_ctrl_tmf_resp {
 
 /* Asynchronous notification query/subscription */
 struct virtio_scsi_ctrl_an_req {
-	u32 type;
+	__virtio32 type;
 	u8 lun[8];
-	u32 event_requested;
+	__virtio32 event_requested;
 } __packed;
 
 struct virtio_scsi_ctrl_an_resp {
-	u32 event_actual;
+	__virtio32 event_actual;
 	u8 response;
 } __packed;
 
 struct virtio_scsi_event {
-	u32 event;
+	__virtio32 event;
 	u8 lun[8];
-	u32 reason;
+	__virtio32 reason;
 } __packed;
 
 struct virtio_scsi_config {
