@@ -112,6 +112,14 @@ struct vhost_virtqueue {
 	/* Log write descriptors */
 	void __user *log_base;
 	struct vhost_log *log;
+
+	/* Ring endianness. Defaults to legacy native endianness.
+	 * Set to true when starting a modern virtio device. */
+	bool is_le;
+#ifdef CONFIG_VHOST_CROSS_ENDIAN_LEGACY
+	/* Ring endianness requested by userspace for cross-endian support. */
+	bool user_be;
+#endif
 };
 
 struct vhost_dev {
@@ -190,8 +198,7 @@ static inline bool vhost_has_feature(struct vhost_dev *dev, int bit)
 
 static inline bool vhost_is_little_endian(struct vhost_virtqueue *vq)
 {
-	return vhost_has_feature(vq->dev, VIRTIO_F_VERSION_1) ||
-		virtio_legacy_is_little_endian();
+	return vq->is_le;
 }
 
 /* Memory accessors */
