@@ -88,6 +88,28 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
 		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
 }
 
+static bool pnv_iommu_bypass_disabled __read_mostly;
+
+static int __init iommu_setup(char *str)
+{
+	if (!str)
+		return -EINVAL;
+
+	while (*str) {
+		if (!strncmp(str, "nobypass", 8)) {
+			pnv_iommu_bypass_disabled = true;
+			pr_info("PowerNV: IOMMU bypass window disabled.\n");
+			break;
+		}
+		str += strcspn(str, ",");
+		if (*str == ',')
+			str++;
+	}
+
+	return 0;
+}
+early_param("iommu", iommu_setup);
+
 /*
  * stdcix is only supposed to be used in hypervisor real mode as per
  * the architecture spec
@@ -1813,7 +1835,9 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
 	}
 
 	/* Also create a bypass window */
-	pnv_pci_ioda2_setup_bypass_pe(phb, pe);
+	if (!pnv_iommu_bypass_disabled)
+		pnv_pci_ioda2_setup_bypass_pe(phb, pe);
+
 	return;
 fail:
 	if (pe->tce32_seg >= 0)
