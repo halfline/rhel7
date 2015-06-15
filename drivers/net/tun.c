@@ -107,12 +107,6 @@ do {								\
  * overload it to mean fasync when stored there.
  */
 #define TUN_FASYNC	IFF_ATTACH_QUEUE
-#define TUN_NO_PI	IFF_NO_PI
-/* This flag has no real effect */
-#define TUN_ONE_QUEUE	IFF_ONE_QUEUE
-#define TUN_PERSIST 	IFF_PERSIST
-#define TUN_VNET_HDR 	IFF_VNET_HDR
-#define TUN_TAP_MQ      IFF_MULTI_QUEUE
 
 #define TUN_FEATURES (IFF_NO_PI | IFF_ONE_QUEUE | IFF_VNET_HDR | \
 		      IFF_MULTI_QUEUE)
@@ -458,7 +452,7 @@ static void __tun_detach(struct tun_file *tfile, bool clean)
 		if (tun && tun->numqueues == 0 && tun->numdisabled == 0) {
 			netif_carrier_off(tun->dev);
 
-			if (!(tun->flags & TUN_PERSIST) &&
+			if (!(tun->flags & IFF_PERSIST) &&
 			    tun->dev->reg_state == NETREG_REGISTERED)
 				unregister_netdevice(tun->dev);
 		}
@@ -509,7 +503,7 @@ static void tun_detach_all(struct net_device *dev)
 	}
 	BUG_ON(tun->numdisabled != 0);
 
-	if (tun->flags & TUN_PERSIST)
+	if (tun->flags & IFF_PERSIST)
 		module_put(THIS_MODULE);
 }
 
@@ -527,7 +521,7 @@ static int tun_attach(struct tun_struct *tun, struct file *file)
 		goto out;
 
 	err = -EBUSY;
-	if (!(tun->flags & TUN_TAP_MQ) && tun->numqueues == 1)
+	if (!(tun->flags & IFF_MULTI_QUEUE) && tun->numqueues == 1)
 		goto out;
 
 	err = -E2BIG;
@@ -886,7 +880,7 @@ static void tun_net_init(struct net_device *dev)
 	struct tun_struct *tun = netdev_priv(dev);
 
 	switch (tun->flags & TUN_TYPE_MASK) {
-	case TUN_TUN_DEV:
+	case IFF_TUN:
 		dev->netdev_ops = &tun_netdev_ops;
 
 		/* Point-to-Point TUN Device */
@@ -900,7 +894,7 @@ static void tun_net_init(struct net_device *dev)
 		dev->tx_queue_len = TUN_READQ_SIZE;  /* We prefer our own queue length */
 		break;
 
-	case TUN_TAP_DEV:
+	case IFF_TAP:
 		dev->netdev_ops = &tap_netdev_ops;
 		/* Ethernet TAP Device */
 		ether_setup(dev);
@@ -1094,7 +1088,7 @@ static ssize_t tun_get_user(struct tun_struct *tun, struct tun_file *tfile,
 	int err;
 	u32 rxhash;
 
-	if (!(tun->flags & TUN_NO_PI)) {
+	if (!(tun->flags & IFF_NO_PI)) {
 		if (len < sizeof(pi))
 			return -EINVAL;
 		len -= sizeof(pi);
@@ -1104,7 +1098,7 @@ static ssize_t tun_get_user(struct tun_struct *tun, struct tun_file *tfile,
 		offset += sizeof(pi);
 	}
 
-	if (tun->flags & TUN_VNET_HDR) {
+	if (tun->flags & IFF_VNET_HDR) {
 		if (len < tun->vnet_hdr_sz)
 			return -EINVAL;
 		len -= tun->vnet_hdr_sz;
@@ -1121,7 +1115,7 @@ static ssize_t tun_get_user(struct tun_struct *tun, struct tun_file *tfile,
 		offset += tun->vnet_hdr_sz;
 	}
 
-	if ((tun->flags & TUN_TYPE_MASK) == TUN_TAP_DEV) {
+	if ((tun->flags & TUN_TYPE_MASK) == IFF_TAP) {
 		align += NET_IP_ALIGN;
 		if (unlikely(len < ETH_HLEN ||
 			     (gso.hdr_len && gso.hdr_len < ETH_HLEN)))
@@ -1184,8 +1178,8 @@ static ssize_t tun_get_user(struct tun_struct *tun, struct tun_file *tfile,
 	}
 
 	switch (tun->flags & TUN_TYPE_MASK) {
-	case TUN_TUN_DEV:
-		if (tun->flags & TUN_NO_PI) {
+	case IFF_TUN:
+		if (tun->flags & IFF_NO_PI) {
 			switch (skb->data[0] & 0xf0) {
 			case 0x40:
 				pi.proto = htons(ETH_P_IP);
@@ -1204,7 +1198,7 @@ static ssize_t tun_get_user(struct tun_struct *tun, struct tun_file *tfile,
 		skb->protocol = pi.proto;
 		skb->dev = tun->dev;
 		break;
-	case TUN_TAP_DEV:
+	case IFF_TAP:
 		skb->protocol = eth_type_trans(skb, tun->dev);
 		break;
 	}
@@ -1297,10 +1291,10 @@ static ssize_t tun_put_user(struct tun_struct *tun,
 	if (skb_vlan_tag_present(skb))
 		vlan_hlen = VLAN_HLEN;
 
-	if (tun->flags & TUN_VNET_HDR)
+	if (tun->flags & IFF_VNET_HDR)
 		vnet_hdr_sz = tun->vnet_hdr_sz;
 
-	if (!(tun->flags & TUN_NO_PI)) {
+	if (!(tun->flags & IFF_NO_PI)) {
 		if ((len -= sizeof(pi)) < 0)
 			return -EINVAL;
 
@@ -1652,7 +1646,7 @@ static int tun_set_iff(struct net *net, struct file *file, struct ifreq *ifr)
 			return -EINVAL;
 
 		if (!!(ifr->ifr_flags & IFF_MULTI_QUEUE) !=
-		    !!(tun->flags & TUN_TAP_MQ))
+		    !!(tun->flags & IFF_MULTI_QUEUE))
 			return -EINVAL;
 
 		if (tun_not_capable(tun))
@@ -1665,7 +1659,7 @@ static int tun_set_iff(struct net *net, struct file *file, struct ifreq *ifr)
 		if (err < 0)
 			return err;
 
-		if (tun->flags & TUN_TAP_MQ &&
+		if (tun->flags & IFF_MULTI_QUEUE &&
 		    (tun->numqueues + tun->numdisabled > 1)) {
 			/* One or more queue has already been attached, no need
 			 * to initialize the device again.
@@ -1688,11 +1682,11 @@ static int tun_set_iff(struct net *net, struct file *file, struct ifreq *ifr)
 		/* Set dev type */
 		if (ifr->ifr_flags & IFF_TUN) {
 			/* TUN device */
-			flags |= TUN_TUN_DEV;
+			flags |= IFF_TUN;
 			name = "tun%d";
 		} else if (ifr->ifr_flags & IFF_TAP) {
 			/* TAP device */
-			flags |= TUN_TAP_DEV;
+			flags |= IFF_TAP;
 			name = "tap%d";
 		} else
 			return -EINVAL;
@@ -1889,7 +1883,7 @@ static int tun_set_queue(struct file *file, struct ifreq *ifr)
 		ret = tun_attach(tun, file);
 	} else if (ifr->ifr_flags & IFF_DETACH_QUEUE) {
 		tun = rtnl_dereference(tfile->tun);
-		if (!tun || !(tun->flags & TUN_TAP_MQ) || tfile->detached)
+		if (!tun || !(tun->flags & IFF_MULTI_QUEUE) || tfile->detached)
 			ret = -EINVAL;
 		else
 			__tun_detach(tfile, false);
@@ -1974,12 +1968,12 @@ static long __tun_chr_ioctl(struct file *file, unsigned int cmd,
 		/* Disable/Enable persist mode. Keep an extra reference to the
 		 * module to prevent the module being unprobed.
 		 */
-		if (arg && !(tun->flags & TUN_PERSIST)) {
-			tun->flags |= TUN_PERSIST;
+		if (arg && !(tun->flags & IFF_PERSIST)) {
+			tun->flags |= IFF_PERSIST;
 			__module_get(THIS_MODULE);
 		}
-		if (!arg && (tun->flags & TUN_PERSIST)) {
-			tun->flags &= ~TUN_PERSIST;
+		if (!arg && (tun->flags & IFF_PERSIST)) {
+			tun->flags &= ~IFF_PERSIST;
 			module_put(THIS_MODULE);
 		}
 
@@ -2037,7 +2031,7 @@ static long __tun_chr_ioctl(struct file *file, unsigned int cmd,
 	case TUNSETTXFILTER:
 		/* Can be set only for TAPs */
 		ret = -EINVAL;
-		if ((tun->flags & TUN_TYPE_MASK) != TUN_TAP_DEV)
+		if ((tun->flags & TUN_TYPE_MASK) != IFF_TAP)
 			break;
 		ret = update_filter(&tun->txflt, (void __user *)arg);
 		break;
@@ -2096,7 +2090,7 @@ static long __tun_chr_ioctl(struct file *file, unsigned int cmd,
 	case TUNATTACHFILTER:
 		/* Can be set only for TAPs */
 		ret = -EINVAL;
-		if ((tun->flags & TUN_TYPE_MASK) != TUN_TAP_DEV)
+		if ((tun->flags & TUN_TYPE_MASK) != IFF_TAP)
 			break;
 		ret = -EFAULT;
 		if (copy_from_user(&tun->fprog, argp, sizeof(tun->fprog)))
@@ -2108,7 +2102,7 @@ static long __tun_chr_ioctl(struct file *file, unsigned int cmd,
 	case TUNDETACHFILTER:
 		/* Can be set only for TAPs */
 		ret = -EINVAL;
-		if ((tun->flags & TUN_TYPE_MASK) != TUN_TAP_DEV)
+		if ((tun->flags & TUN_TYPE_MASK) != IFF_TAP)
 			break;
 		ret = 0;
 		tun_detach_filter(tun, tun->numqueues);
@@ -2276,10 +2270,10 @@ static void tun_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info
 	strlcpy(info->version, DRV_VERSION, sizeof(info->version));
 
 	switch (tun->flags & TUN_TYPE_MASK) {
-	case TUN_TUN_DEV:
+	case IFF_TUN:
 		strlcpy(info->bus_info, "tun", sizeof(info->bus_info));
 		break;
-	case TUN_TAP_DEV:
+	case IFF_TAP:
 		strlcpy(info->bus_info, "tap", sizeof(info->bus_info));
 		break;
 	}
