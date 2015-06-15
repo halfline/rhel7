@@ -79,6 +79,16 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
 		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
 }
 
+/*
+ * stdcix is only supposed to be used in hypervisor real mode as per
+ * the architecture spec
+ */
+static inline void __raw_rm_writeq(u64 val, volatile void __iomem *paddr)
+{
+	__asm__ __volatile__("stdcix %0,0,%1"
+		: : "r" (val), "r" (paddr) : "memory");
+}
+
 static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
 {
 	unsigned long pe;
@@ -914,10 +924,13 @@ static void pnv_ioda_setup_bus_dma(struct pnv_ioda_pe *pe,
 	}
 }
 
-static void pnv_pci_ioda1_tce_invalidate(struct iommu_table *tbl,
-					 __be64 *startp, __be64 *endp)
+static void pnv_pci_ioda1_tce_invalidate(struct pnv_ioda_pe *pe,
+					 struct iommu_table *tbl,
+					 __be64 *startp, __be64 *endp, bool rm)
 {
-	__be64 __iomem *invalidate = (__be64 __iomem *)tbl->it_index;
+	__be64 __iomem *invalidate = rm ?
+		(__be64 __iomem *)pe->tce_inval_reg_phys :
+		(__be64 __iomem *)tbl->it_index;
 	unsigned long start, end, inc;
 
 	start = __pa(startp);
@@ -944,7 +957,10 @@ static void pnv_pci_ioda1_tce_invalidate(struct iommu_table *tbl,
 
         mb(); /* Ensure above stores are visible */
         while (start <= end) {
-                __raw_writeq(cpu_to_be64(start), invalidate);
+		if (rm)
+			__raw_rm_writeq(cpu_to_be64(start), invalidate);
+		else
+			__raw_writeq(cpu_to_be64(start), invalidate);
                 start += inc;
         }
 
@@ -956,10 +972,12 @@ static void pnv_pci_ioda1_tce_invalidate(struct iommu_table *tbl,
 
 static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
 					 struct iommu_table *tbl,
-					 __be64 *startp, __be64 *endp)
+					 __be64 *startp, __be64 *endp, bool rm)
 {
 	unsigned long start, end, inc;
-	__be64 __iomem *invalidate = (__be64 __iomem *)tbl->it_index;
+	__be64 __iomem *invalidate = rm ?
+		(__be64 __iomem *)pe->tce_inval_reg_phys :
+		(__be64 __iomem *)tbl->it_index;
 
 	/* We'll invalidate DMA address in PE scope */
 	start = 0x2ul << 60;
@@ -975,22 +993,25 @@ static void pnv_pci_ioda2_tce_invalidate(struct pnv_ioda_pe *pe,
 	mb();
 
 	while (start <= end) {
-		__raw_writeq(cpu_to_be64(start), invalidate);
+		if (rm)
+			__raw_rm_writeq(cpu_to_be64(start), invalidate);
+		else
+			__raw_writeq(cpu_to_be64(start), invalidate);
 		start += inc;
 	}
 }
 
 void pnv_pci_ioda_tce_invalidate(struct iommu_table *tbl,
-				 __be64 *startp, __be64 *endp)
+				 __be64 *startp, __be64 *endp, bool rm)
 {
 	struct pnv_ioda_pe *pe = container_of(tbl, struct pnv_ioda_pe,
 					      tce32_table);
 	struct pnv_phb *phb = pe->phb;
 
 	if (phb->type == PNV_PHB_IODA1)
-		pnv_pci_ioda1_tce_invalidate(tbl, startp, endp);
+		pnv_pci_ioda1_tce_invalidate(pe, tbl, startp, endp, rm);
 	else
-		pnv_pci_ioda2_tce_invalidate(pe, tbl, startp, endp);
+		pnv_pci_ioda2_tce_invalidate(pe, tbl, startp, endp, rm);
 }
 
 static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
@@ -1062,7 +1083,9 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
 		 * errors, and on the first pass the data will be a relative
 		 * bus number, print that out instead.
 		 */
-		tbl->it_index = (unsigned long)ioremap(be64_to_cpup(swinvp), 8);
+		pe->tce_inval_reg_phys = be64_to_cpup(swinvp);
+		tbl->it_index = (unsigned long)ioremap(pe->tce_inval_reg_phys,
+				8);
 		tbl->it_type |= (TCE_PCI_SWINV_CREATE |
 				 TCE_PCI_SWINV_FREE   |
 				 TCE_PCI_SWINV_PAIR);
@@ -1195,7 +1218,9 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
 		 * errors, and on the first pass the data will be a relative
 		 * bus number, print that out instead.
 		 */
-		tbl->it_index = (unsigned long)ioremap(be64_to_cpup(swinvp), 8);
+		pe->tce_inval_reg_phys = be64_to_cpup(swinvp);
+		tbl->it_index = (unsigned long)ioremap(pe->tce_inval_reg_phys,
+				8);
 		tbl->it_type |= (TCE_PCI_SWINV_CREATE | TCE_PCI_SWINV_FREE);
 	}
 	iommu_init_table(tbl, phb->hose->node);
