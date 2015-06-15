@@ -555,6 +555,11 @@ typedef struct {
 	/* for 4K PTE fragment support */
 	void *pte_frag;
 #endif
+#if 0 /* RH kABI - moved to mm_struct to avoid kABI breakage */
+#ifdef CONFIG_SPAPR_TCE_IOMMU
+	struct list_head iommu_group_mem_list;
+#endif
+#endif
 } mm_context_t;
 
 

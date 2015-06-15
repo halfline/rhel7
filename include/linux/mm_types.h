@@ -456,8 +456,15 @@ struct mm_struct {
 	struct uprobes_state uprobes_state;
 
 	/* reserved for Red Hat */
+#if defined(__GENKSYMS__) || !defined(CONFIG_SPAPR_TCE_IOMMU)
+	/* We're adding a list_head, so we need to take two reserved
+	 * fields, unfortunately there are no handy RH_KABI macros for
+	 * that case */
 	RH_KABI_RESERVE(1)
 	RH_KABI_RESERVE(2)
+#else
+	struct list_head iommu_group_mem_list;
+#endif
 	RH_KABI_RESERVE(3)
 	RH_KABI_RESERVE(4)
 	RH_KABI_RESERVE(5)
