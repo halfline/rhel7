@@ -121,7 +121,7 @@ struct vhost_dev {
 	struct vhost_memory __rcu *memory;
 	struct mm_struct *mm;
 	struct mutex mutex;
-	unsigned acked_features;
+	u64 acked_features;
 	struct vhost_virtqueue **vqs;
 	int nvqs;
 	struct file *log_file;
@@ -178,13 +178,13 @@ enum {
 			 (1ULL << VHOST_F_LOG_ALL),
 };
 
-static inline int vhost_has_feature(struct vhost_dev *dev, int bit)
+static inline bool vhost_has_feature(struct vhost_dev *dev, int bit)
 {
-	unsigned acked_features;
+	u64 acked_features;
 
 	/* TODO: check that we are running from vhost_worker or dev mutex is
 	 * held? */
 	acked_features = rcu_dereference_index_check(dev->acked_features, 1);
-	return acked_features & (1 << bit);
+	return acked_features & (1ULL << bit);
 }
 #endif
