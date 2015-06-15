@@ -190,7 +190,8 @@ static inline bool vhost_has_feature(struct vhost_dev *dev, int bit)
 
 static inline bool vhost_is_little_endian(struct vhost_virtqueue *vq)
 {
-	return vhost_has_feature(vq->dev, VIRTIO_F_VERSION_1);
+	return vhost_has_feature(vq->dev, VIRTIO_F_VERSION_1) ||
+		virtio_legacy_is_little_endian();
 }
 
 /* Memory accessors */
