@@ -885,6 +885,11 @@ int __init __weak early_irq_init(void)
 	return 0;
 }
 
+unsigned int __weak arch_dynirq_lower_bound(unsigned int from)
+{
+	return from;
+}
+
 #ifdef CONFIG_GENERIC_HARDIRQS
 int __init __weak arch_probe_nr_irqs(void)
 {
