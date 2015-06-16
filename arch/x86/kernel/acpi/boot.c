@@ -937,10 +937,6 @@ static int __init acpi_parse_madt_lapic_entries(void)
 #ifdef	CONFIG_X86_IO_APIC
 #define MP_ISA_BUS		0
 
-#ifdef CONFIG_X86_ES7000
-extern int es7000_plat;
-#endif
-
 static void __init mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
 					  u32 gsi)
 {
@@ -990,14 +986,6 @@ static void __init mp_config_acpi_legacy_irqs(void)
 #endif
 	set_bit(MP_ISA_BUS, mp_bus_not_pci);
 	pr_debug("Bus #%d is ISA\n", MP_ISA_BUS);
-
-#ifdef CONFIG_X86_ES7000
-	/*
-	 * Older generations of ES7000 have no legacy identity mappings
-	 */
-	if (es7000_plat == 1)
-		return;
-#endif
 
 	/*
 	 * Use the default configuration for the IRQs 0-15.  Unless
