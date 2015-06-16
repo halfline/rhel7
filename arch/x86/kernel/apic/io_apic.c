@@ -3342,7 +3342,7 @@ static void __init probe_nr_irqs_gsi(void)
 
 int get_nr_irqs_gsi(void)
 {
-	return nr_irqs_gsi;
+	return gsi_top + NR_IRQS_LEGACY;
 }
 
 unsigned int arch_dynirq_lower_bound(unsigned int from)
