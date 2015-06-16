@@ -59,7 +59,7 @@ struct bio {
 	unsigned int		bi_seg_front_size;
 	unsigned int		bi_seg_back_size;
 
-	atomic_t		bi_remaining;
+	atomic_t		__bi_remaining;
 
 	bio_end_io_t		*bi_end_io;
 
@@ -109,6 +109,7 @@ struct bio {
  * bio flags
  */
 #define BIO_UPTODATE	0	/* ok after I/O completion */
+#define BIO_CHAIN	1	/* chained bio, ->bi_remaining in effect */
 #define BIO_SEG_VALID	3	/* bi_phys_segments valid */
 #define BIO_CLONED	4	/* doesn't own data */
 #define BIO_BOUNCED	5	/* bio is a bounce bio */
