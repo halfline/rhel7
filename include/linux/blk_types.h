@@ -34,6 +34,7 @@ struct bio_vec {
  */
 struct bio_aux {
 	unsigned long	bi_flags;
+	atomic_t	__bi_remaining;
 
 	/*
 	 * IMPORTANT: adding any new members to this struct will require a more
@@ -41,6 +42,8 @@ struct bio_aux {
 	 * they'll need to make use of the new bio_aux member(s) you're adding).
 	 */
 };
+
+#define BIO_AUX_CHAIN	0	/* chained bio, ->bi_remaining in effect */
 
 #define bio_aux_flagged(bio, flag)	((bio)->bio_aux && (bio)->bio_aux->bi_flags & (1 << (flag)))
 
@@ -74,8 +77,6 @@ struct bio {
 	 */
 	unsigned int		bi_seg_front_size;
 	unsigned int		bi_seg_back_size;
-
-	atomic_t		__bi_remaining;
 
 	bio_end_io_t		*bi_end_io;
 
@@ -125,7 +126,6 @@ struct bio {
  * bio flags
  */
 #define BIO_UPTODATE	0	/* ok after I/O completion */
-#define BIO_CHAIN	1	/* chained bio, ->bi_remaining in effect */
 #define BIO_SEG_VALID	3	/* bi_phys_segments valid */
 #define BIO_CLONED	4	/* doesn't own data */
 #define BIO_BOUNCED	5	/* bio is a bounce bio */

@@ -273,7 +273,6 @@ void bio_init(struct bio *bio)
 {
 	memset(bio, 0, sizeof(*bio));
 	bio->bi_flags = 1 << BIO_UPTODATE;
-	atomic_set(&bio->__bi_remaining, 1);
 	atomic_set(&bio->bi_cnt, 1);
 }
 EXPORT_SYMBOL(bio_init);
@@ -285,6 +284,7 @@ static void bio_init_aux(struct bio *bio, struct bio_aux *bio_aux)
 
 	memset(bio_aux, 0, sizeof(*bio_aux));
 	bio->bio_aux = bio_aux;
+	atomic_set(&bio->bio_aux->__bi_remaining, 1);
 }
 
 /**
@@ -305,7 +305,9 @@ void bio_reset(struct bio *bio)
 
 	memset(bio, 0, BIO_RESET_BYTES);
 	bio->bi_flags = flags | (1 << BIO_UPTODATE);
-	atomic_set(&bio->__bi_remaining, 1);
+
+	if (bio->bio_aux)
+		atomic_set(&bio->bio_aux->__bi_remaining, 1);
 }
 EXPORT_SYMBOL(bio_reset);
 
@@ -321,9 +323,12 @@ static void bio_chain_endio(struct bio *bio, int error)
  */
 static inline void bio_inc_remaining(struct bio *bio)
 {
-	bio->bi_flags |= (1 << BIO_CHAIN);
+	if (WARN_ON_ONCE(!bio->bio_aux))
+		return;
+
+	bio->bio_aux->bi_flags |= (1 << BIO_AUX_CHAIN);
 	smp_mb__before_atomic();
-	atomic_inc(&bio->__bi_remaining);
+	atomic_inc(&bio->bio_aux->__bi_remaining);
 }
 
 /**
@@ -1770,13 +1775,13 @@ static inline bool bio_remaining_done(struct bio *bio)
 	 * If we're not chaining, then ->__bi_remaining is always 1 and
 	 * we always end io on the first invocation.
 	 */
-	if (!bio_flagged(bio, BIO_CHAIN))
+	if (!bio_aux_flagged(bio, BIO_AUX_CHAIN))
 		return true;
 
-	BUG_ON(atomic_read(&bio->__bi_remaining) <= 0);
+	BUG_ON(atomic_read(&bio->bio_aux->__bi_remaining) <= 0);
 
-	if (atomic_dec_and_test(&bio->__bi_remaining)) {
-		clear_bit(BIO_CHAIN, &bio->bi_flags);
+	if (atomic_dec_and_test(&bio->bio_aux->__bi_remaining)) {
+		clear_bit(BIO_AUX_CHAIN, &bio->bio_aux->bi_flags);
 		return true;
 	}
 
