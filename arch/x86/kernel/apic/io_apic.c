@@ -132,10 +132,17 @@ u32 mp_pin_to_gsi(int ioapic, int pin)
 	return mp_ioapic_gsi_routing(ioapic)->gsi_base + pin;
 }
 
-/* Initialize all legacy IRQs and all pins on the first IOAPIC at boot */
+/*
+ * Initialize all legacy IRQs and all pins on the first IOAPIC
+ * if we have legacy interrupt controller. Kernel boot option "pirq="
+ * may rely on non-legacy pins on the first IOAPIC.
+ */
 static inline int mp_init_irq_at_boot(int ioapic, int irq)
 {
-	return ioapic == 0 || (irq >= 0 && irq < NR_IRQS_LEGACY);
+	if (!nr_legacy_irqs())
+		return 0;
+
+	return ioapic == 0 || (irq >= 0 && irq < nr_legacy_irqs());
 }
 
 int nr_ioapics;
@@ -219,7 +226,7 @@ int __init arch_early_irq_init(void)
 	struct irq_cfg *cfg;
 	int count, node, i;
 
-	if (!legacy_pic->nr_legacy_irqs)
+	if (!nr_legacy_irqs())
 		io_apic_irqs = ~0UL;
 
 	for_each_ioapic(i) {
@@ -245,7 +252,7 @@ int __init arch_early_irq_init(void)
 		 * For legacy IRQ's, start with assigning irq0 to irq15 to
 		 * IRQ0_VECTOR to IRQ15_VECTOR for all cpu's.
 		 */
-		if (i < legacy_pic->nr_legacy_irqs) {
+		if (i < nr_legacy_irqs()) {
 			cfg[i].vector = IRQ0_VECTOR + i;
 			cpumask_setall(cfg[i].domain);
 		}
@@ -829,7 +836,7 @@ static int __init find_isa_irq_apic(int irq, int type)
  */
 static int EISA_ELCR(unsigned int irq)
 {
-	if (irq < legacy_pic->nr_legacy_irqs) {
+	if (irq < nr_legacy_irqs()) {
 		unsigned int port = 0x4d0 + (irq >> 3);
 		return (inb(port) >> (irq & 7)) & 1;
 	}
@@ -986,7 +993,7 @@ static int pin_2_irq(int idx, int apic, int pin)
 	} else {
 		u32 gsi = gsi_cfg->gsi_base + pin;
 
-		if (gsi >= NR_IRQS_LEGACY)
+		if (gsi >= nr_legacy_irqs())
 			irq = gsi;
 		else
 			irq = gsi_top + gsi;
@@ -1363,7 +1370,7 @@ static void setup_ioapic_irq(unsigned int irq, struct irq_cfg *cfg,
 	}
 
 	ioapic_register_intr(irq, cfg, attr->trigger);
-	if (irq < legacy_pic->nr_legacy_irqs)
+	if (irq < nr_legacy_irqs())
 		legacy_pic->mask(irq);
 
 	ioapic_write_entry(attr->ioapic, attr->ioapic_pin, entry);
@@ -1788,7 +1795,7 @@ __apicdebuginit(void) print_PIC(void)
 	unsigned int v;
 	unsigned long flags;
 
-	if (!legacy_pic->nr_legacy_irqs)
+	if (!nr_legacy_irqs())
 		return;
 
 	printk(KERN_DEBUG "\nprinting PIC contents\n");
@@ -1860,7 +1867,7 @@ void __init enable_IO_APIC(void)
 	int i8259_apic, i8259_pin;
 	int apic, pin;
 
-	if (!legacy_pic->nr_legacy_irqs)
+	if (!nr_legacy_irqs())
 		return;
 
 	for_each_ioapic_pin(apic, pin) {
@@ -1945,7 +1952,7 @@ void disable_IO_APIC(void)
 	 */
 	clear_IO_APIC();
 
-	if (!legacy_pic->nr_legacy_irqs)
+	if (!nr_legacy_irqs())
 		return;
 
 	x86_io_apic_ops.disable();
@@ -2149,7 +2156,7 @@ static unsigned int startup_ioapic_irq(struct irq_data *data)
 	unsigned long flags;
 
 	raw_spin_lock_irqsave(&ioapic_lock, flags);
-	if (irq < legacy_pic->nr_legacy_irqs) {
+	if (irq < nr_legacy_irqs()) {
 		legacy_pic->mask(irq);
 		if (legacy_pic->irq_pending(irq))
 			was_pending = 1;
@@ -2548,7 +2555,7 @@ static inline void init_IO_APIC_traps(void)
 			 * so default to an old-fashioned 8259
 			 * interrupt if we can..
 			 */
-			if (irq < legacy_pic->nr_legacy_irqs)
+			if (irq < nr_legacy_irqs())
 				legacy_pic->make_irq(irq);
 			else
 				/* Strange. Oh, well.. */
@@ -2845,7 +2852,7 @@ void __init setup_IO_APIC(void)
 	/*
 	 * calling enable_IO_APIC() is moved to setup_local_APIC for BP
 	 */
-	io_apic_irqs = legacy_pic->nr_legacy_irqs ? ~PIC_IRQS : ~0UL;
+	io_apic_irqs = nr_legacy_irqs() ? ~PIC_IRQS : ~0UL;
 
 	apic_printk(APIC_VERBOSE, "ENABLING IO-APIC IRQs\n");
 	/*
@@ -2856,7 +2863,7 @@ void __init setup_IO_APIC(void)
 	sync_Arb_IDs();
 	setup_IO_APIC_irqs();
 	init_IO_APIC_traps();
-	if (legacy_pic->nr_legacy_irqs)
+	if (nr_legacy_irqs())
 		check_timer();
 }
 
@@ -3356,7 +3363,7 @@ int get_nr_irqs_gsi(void)
 
 unsigned int arch_dynirq_lower_bound(unsigned int from)
 {
-	unsigned int min = gsi_top + NR_IRQS_LEGACY;
+	unsigned int min = gsi_top + nr_legacy_irqs();
 
 	return from < min ? min : from;
 }
@@ -3368,17 +3375,17 @@ int __init arch_probe_nr_irqs(void)
 	if (nr_irqs > (NR_VECTORS * nr_cpu_ids))
 		nr_irqs = NR_VECTORS * nr_cpu_ids;
 
-	nr = (gsi_top + NR_IRQS_LEGACY) + 8 * nr_cpu_ids;
+	nr = (gsi_top + nr_legacy_irqs()) + 8 * nr_cpu_ids;
 #if defined(CONFIG_PCI_MSI) || defined(CONFIG_HT_IRQ)
 	/*
 	 * for MSI and HT dyn irq
 	 */
-	nr += (gsi_top + NR_IRQS_LEGACY) * 16;
+	nr += gsi_top * 16;
 #endif
 	if (nr < nr_irqs)
 		nr_irqs = nr;
 
-	return NR_IRQS_LEGACY;
+	return nr_legacy_irqs();
 }
 
 int io_apic_set_pci_routing(struct device *dev, int irq,

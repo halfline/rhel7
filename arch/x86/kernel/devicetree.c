@@ -20,6 +20,7 @@
 #include <asm/hpet.h>
 #include <asm/apic.h>
 #include <asm/pci_x86.h>
+#include <asm/i8259.h>
 
 __initdata u64 initial_dtb;
 char __initdata cmd_line[COMMAND_LINE_SIZE];
@@ -338,7 +339,7 @@ static void dt_add_ioapic_domain(unsigned int ioapic_num,
 	struct irq_domain *id;
 	struct mp_ioapic_gsi *gsi_cfg;
 	int ret;
-	int num;
+	int num, legacy_irqs = nr_legacy_irqs();
 
 	gsi_cfg = mp_ioapic_gsi_routing(ioapic_num);
 	num = gsi_cfg->gsi_end - gsi_cfg->gsi_base + 1;
@@ -348,19 +349,19 @@ static void dt_add_ioapic_domain(unsigned int ioapic_num,
 	BUG_ON(!id);
 	if (gsi_cfg->gsi_base == 0) {
 		/*
-		 * The first NR_IRQS_LEGACY irq descs are allocated in
+		 * The first nr_legacy_irqs() irq descs are allocated in
 		 * early_irq_init() and need just a mapping. The
 		 * remaining irqs need both. All of them are preallocated
 		 * and assigned so we can keep the 1:1 mapping which the ioapic
 		 * is having.
 		 */
-		ret = irq_domain_associate_many(id, 0, 0, NR_IRQS_LEGACY);
+		ret = irq_domain_associate_many(id, 0, 0, legacy_irqs);
 		if (ret)
 			pr_err("Error mapping legacy IRQs: %d\n", ret);
 
-		if (num > NR_IRQS_LEGACY) {
-			ret = irq_create_strict_mappings(id, NR_IRQS_LEGACY,
-					NR_IRQS_LEGACY, num - NR_IRQS_LEGACY);
+		if (num > legacy_irqs) {
+			ret = irq_create_strict_mappings(id, legacy_irqs,
+					legacy_irqs, num - legacy_irqs);
 			if (ret)
 				pr_err("Error creating mapping for the "
 						"remaining IRQs: %d\n", ret);
