@@ -5561,10 +5561,10 @@ int btrfs_rmap_block(struct btrfs_mapping_tree *map_tree,
 
 static inline void btrfs_end_bbio(struct btrfs_bio *bbio, struct bio *bio, int err)
 {
-	if (likely(bbio->flags & BTRFS_BIO_ORIG_BIO_SUBMITTED))
-		bio_endio_nodec(bio, err);
-	else
-		bio_endio(bio, err);
+	bio->bi_private = bbio->private;
+	bio->bi_end_io = bbio->end_io;
+	bio_endio(bio, err);
+
 	kfree(bbio);
 }
 
@@ -5608,8 +5608,6 @@ static void btrfs_end_bio(struct bio *bio, int err)
 			bio = bbio->orig_bio;
 		}
 
-		bio->bi_private = bbio->private;
-		bio->bi_end_io = bbio->end_io;
 		btrfs_io_bio(bio)->mirror_num = bbio->mirror_num;
 		/* only send an error to the higher layers if it is
 		 * beyond the tolerance of the btrfs bio
@@ -5791,8 +5789,6 @@ static void bbio_error(struct btrfs_bio *bbio, struct bio *bio, u64 logical)
 		/* Shoud be the original bio. */
 		WARN_ON(bio != bbio->orig_bio);
 
-		bio->bi_private = bbio->private;
-		bio->bi_end_io = bbio->end_io;
 		btrfs_io_bio(bio)->mirror_num = bbio->mirror_num;
 		bio->bi_sector = logical >> 9;
 
@@ -5878,10 +5874,8 @@ int btrfs_map_bio(struct btrfs_root *root, int rw, struct bio *bio,
 		if (dev_nr < total_devs - 1) {
 			bio = btrfs_bio_clone(first_bio, GFP_NOFS);
 			BUG_ON(!bio); /* -ENOMEM */
-		} else {
+		} else
 			bio = first_bio;
-			bbio->flags |= BTRFS_BIO_ORIG_BIO_SUBMITTED;
-		}
 
 		submit_stripe_bio(root, bbio, bio,
 				  bbio->stripes[dev_nr].physical, dev_nr, rw,

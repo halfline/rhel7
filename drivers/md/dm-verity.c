@@ -474,7 +474,7 @@ static void verity_finish_io(struct dm_verity_io *io, int error)
 	if (io->io_vec != io->io_vec_inline)
 		mempool_free(io->io_vec, v->vec_mempool);
 
-	bio_endio_nodec(bio, error);
+	bio_endio(bio, error);
 }
 
 static void verity_work(struct work_struct *w)
