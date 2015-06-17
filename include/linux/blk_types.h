@@ -29,6 +29,22 @@ struct bio_vec {
 };
 
 /*
+ * RHEL7 auxillary shadow structure used to extend 'struct bio' without
+ * breaking RHEL kABI -- bio_init_aux() must be used to set bio->bio_aux
+ */
+struct bio_aux {
+	unsigned long	bi_flags;
+
+	/*
+	 * IMPORTANT: adding any new members to this struct will require a more
+	 * comprehensive audit (e.g. all bio_init() callers checked to see if
+	 * they'll need to make use of the new bio_aux member(s) you're adding).
+	 */
+};
+
+#define bio_aux_flagged(bio, flag)	((bio)->bio_aux && (bio)->bio_aux->bi_flags & (1 << (flag)))
+
+/*
  * main unit of I/O for the block layer and lower layers (ie drivers and
  * stacking drivers)
  */
@@ -90,10 +106,10 @@ struct bio {
 
 	/* FOR RH USE ONLY
 	 *
-	 * The following padding has been inserted before ABI freeze to
-	 * allow extending the structure while preserving ABI.
+	 * The following padding has been replaced to allow extending
+	 * the structure, using struct bio_aux, while preserving ABI.
 	 */
-	void			*rh_reserved1;
+	RH_KABI_REPLACE_P(void *rh_reserved1, struct bio_aux *bio_aux)
 
 	/*
 	 * We can inline a number of vecs at the end of the bio, to avoid

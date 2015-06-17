@@ -73,7 +73,7 @@ static unsigned int bio_slab_nr, bio_slab_max;
 
 static struct kmem_cache *bio_find_or_create_slab(unsigned int extra_size)
 {
-	unsigned int sz = sizeof(struct bio) + extra_size;
+	unsigned int sz = sizeof(struct bio) + sizeof(struct bio_aux) + extra_size;
 	struct kmem_cache *slab = NULL;
 	struct bio_slab *bslab, *new_bio_slabs;
 	unsigned int new_bio_slab_max;
@@ -278,6 +278,15 @@ void bio_init(struct bio *bio)
 }
 EXPORT_SYMBOL(bio_init);
 
+static void bio_init_aux(struct bio *bio, struct bio_aux *bio_aux)
+{
+	if (WARN_ON_ONCE(!bio_aux))
+		return;
+
+	memset(bio_aux, 0, sizeof(*bio_aux));
+	bio->bio_aux = bio_aux;
+}
+
 /**
  * bio_reset - reinitialize a bio
  * @bio:	bio to reset
@@ -427,13 +436,14 @@ struct bio *bio_alloc_bioset(gfp_t gfp_mask, int nr_iovecs, struct bio_set *bs)
 	unsigned long idx = BIO_POOL_NONE;
 	struct bio_vec *bvl = NULL;
 	struct bio *bio;
+	struct bio_aux *bio_aux;
 	void *p;
 
 	if (!bs) {
 		if (nr_iovecs > UIO_MAXIOV)
 			return NULL;
 
-		p = kmalloc(sizeof(struct bio) +
+		p = kmalloc(sizeof(struct bio) + sizeof(struct bio_aux) +
 			    nr_iovecs * sizeof(struct bio_vec),
 			    gfp_mask);
 		front_pad = 0;
@@ -479,6 +489,9 @@ struct bio *bio_alloc_bioset(gfp_t gfp_mask, int nr_iovecs, struct bio_set *bs)
 
 	bio = p + front_pad;
 	bio_init(bio);
+	bio_aux = p + front_pad +
+		sizeof(struct bio) + (inline_vecs * sizeof(struct bio_vec));
+	bio_init_aux(bio, bio_aux);
 
 	if (nr_iovecs > inline_vecs) {
 		bvl = bvec_alloc(gfp_mask, nr_iovecs, &idx, bs->bvec_pool);
