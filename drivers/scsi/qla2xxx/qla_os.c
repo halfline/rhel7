@@ -3149,8 +3149,6 @@ qla2x00_remove_one(struct pci_dev *pdev)
 
 	qla2x00_free_device(base_vha);
 
-	scsi_host_put(base_vha->host);
-
 	if (IS_QLA8044(ha)) {
 		qla8044_idc_lock(ha);
 		qla8044_clear_drv_active(ha);
@@ -3178,6 +3176,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
 			iounmap(ha->msixbase);
 	}
 
+	scsi_host_put(base_vha->host);
 	pci_release_selected_regions(ha->pdev, ha->bars);
 	kfree(ha);
 	ha = NULL;
