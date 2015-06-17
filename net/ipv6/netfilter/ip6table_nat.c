@@ -32,13 +32,13 @@ static const struct xt_table nf_nat_ipv6_table = {
 
 static unsigned int ip6table_nat_do_chain(const struct nf_hook_ops *ops,
 					  struct sk_buff *skb,
-					  const struct net_device *in,
-					  const struct net_device *out,
+					  const struct nf_hook_state *state,
 					  struct nf_conn *ct)
 {
 	struct net *net = nf_ct_net(ct);
 
-	return ip6t_do_table(skb, ops->hooknum, in, out, net->ipv6.ip6table_nat);
+	return ip6t_do_table(skb, ops->hooknum, state->in, state->out,
+			     net->ipv6.ip6table_nat);
 }
 
 static unsigned int ip6table_nat_fn(const struct nf_hook_ops *ops,
@@ -47,8 +47,7 @@ static unsigned int ip6table_nat_fn(const struct nf_hook_ops *ops,
 				    const struct net_device *out,
 				    const struct nf_hook_state *state)
 {
-	return nf_nat_ipv6_fn(ops, skb, state->in, state->out,
-			      ip6table_nat_do_chain);
+	return nf_nat_ipv6_fn(ops, skb, state, ip6table_nat_do_chain);
 }
 
 static unsigned int ip6table_nat_in(const struct nf_hook_ops *ops,
@@ -57,8 +56,7 @@ static unsigned int ip6table_nat_in(const struct nf_hook_ops *ops,
 				    const struct net_device *out,
 				    const struct nf_hook_state *state)
 {
-	return nf_nat_ipv6_in(ops, skb, state->in, state->out,
-			      ip6table_nat_do_chain);
+	return nf_nat_ipv6_in(ops, skb, state, ip6table_nat_do_chain);
 }
 
 static unsigned int ip6table_nat_out(const struct nf_hook_ops *ops,
@@ -67,8 +65,7 @@ static unsigned int ip6table_nat_out(const struct nf_hook_ops *ops,
 				     const struct net_device *out,
 				     const struct nf_hook_state *state)
 {
-	return nf_nat_ipv6_out(ops, skb, state->in, state->out,
-			       ip6table_nat_do_chain);
+	return nf_nat_ipv6_out(ops, skb, state, ip6table_nat_do_chain);
 }
 
 static unsigned int ip6table_nat_local_fn(const struct nf_hook_ops *ops,
@@ -77,8 +74,7 @@ static unsigned int ip6table_nat_local_fn(const struct nf_hook_ops *ops,
 					  const struct net_device *out,
 					  const struct nf_hook_state *state)
 {
-	return nf_nat_ipv6_local_fn(ops, skb, state->in, state->out,
-				    ip6table_nat_do_chain);
+	return nf_nat_ipv6_local_fn(ops, skb, state, ip6table_nat_do_chain);
 }
 
 static struct nf_hook_ops nf_nat_ipv6_ops[] __read_mostly = {

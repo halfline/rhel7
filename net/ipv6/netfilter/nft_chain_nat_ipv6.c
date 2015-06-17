@@ -26,13 +26,12 @@
 
 static unsigned int nft_nat_do_chain(const struct nf_hook_ops *ops,
 				     struct sk_buff *skb,
-				     const struct net_device *in,
-				     const struct net_device *out,
+				     const struct nf_hook_state *state,
 				     struct nf_conn *ct)
 {
 	struct nft_pktinfo pkt;
 
-	nft_set_pktinfo_ipv6(&pkt, ops, skb, in, out);
+	nft_set_pktinfo_ipv6(&pkt, ops, skb, state->in, state->out);
 
 	return nft_do_chain(&pkt, ops);
 }
@@ -43,7 +42,7 @@ static unsigned int nft_nat_ipv6_fn(const struct nf_hook_ops *ops,
 				    const struct net_device *out,
 				    const struct nf_hook_state *state)
 {
-	return nf_nat_ipv6_fn(ops, skb, state->in, state->out, nft_nat_do_chain);
+	return nf_nat_ipv6_fn(ops, skb, state, nft_nat_do_chain);
 }
 
 static unsigned int nft_nat_ipv6_in(const struct nf_hook_ops *ops,
@@ -52,7 +51,7 @@ static unsigned int nft_nat_ipv6_in(const struct nf_hook_ops *ops,
 				    const struct net_device *out,
 				    const struct nf_hook_state *state)
 {
-	return nf_nat_ipv6_in(ops, skb, state->in, state->out, nft_nat_do_chain);
+	return nf_nat_ipv6_in(ops, skb, state, nft_nat_do_chain);
 }
 
 static unsigned int nft_nat_ipv6_out(const struct nf_hook_ops *ops,
@@ -61,7 +60,7 @@ static unsigned int nft_nat_ipv6_out(const struct nf_hook_ops *ops,
 				     const struct net_device *out,
 				     const struct nf_hook_state *state)
 {
-	return nf_nat_ipv6_out(ops, skb, state->in, state->out, nft_nat_do_chain);
+	return nf_nat_ipv6_out(ops, skb, state, nft_nat_do_chain);
 }
 
 static unsigned int nft_nat_ipv6_local_fn(const struct nf_hook_ops *ops,
@@ -70,7 +69,7 @@ static unsigned int nft_nat_ipv6_local_fn(const struct nf_hook_ops *ops,
 					  const struct net_device *out,
 					  const struct nf_hook_state *state)
 {
-	return nf_nat_ipv6_local_fn(ops, skb, state->in, state->out, nft_nat_do_chain);
+	return nf_nat_ipv6_local_fn(ops, skb, state, nft_nat_do_chain);
 }
 
 static const struct nf_chain_type nft_chain_nat_ipv6 = {
