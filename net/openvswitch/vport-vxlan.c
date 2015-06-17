@@ -140,7 +140,8 @@ static int vxlan_tnl_send(struct vport *vport, struct sk_buff *skb)
 {
 	struct net *net = ovs_dp_get_net(vport->dp);
 	struct vxlan_port *vxlan_port = vxlan_vport(vport);
-	__be16 dst_port = inet_sk(vxlan_port->vs->sock->sk)->inet_sport;
+	struct sock *sk = vxlan_port->vs->sock->sk;
+	__be16 dst_port = inet_sk(sk)->inet_sport;
 	struct ovs_key_ipv4_tunnel *tun_key;
 	struct vxlan_metadata md = {0};
 	struct rtable *rt;
@@ -177,7 +178,7 @@ static int vxlan_tnl_send(struct vport *vport, struct sk_buff *skb)
 	src_port = udp_flow_src_port(net, skb, 0, 0, true);
 	md.vni = htonl(be64_to_cpu(tun_key->tun_id) << 8);
 
-	err = vxlan_xmit_skb(rt, skb, fl.saddr, tun_key->ipv4_dst,
+	err = vxlan_xmit_skb(rt, sk, skb, fl.saddr, tun_key->ipv4_dst,
 			     tun_key->ipv4_tos, tun_key->ipv4_ttl, df,
 			     src_port, dst_port,
 			     &md, false, 0);
