@@ -63,9 +63,8 @@
  * |                              |                    | 0xb13c-0xb140  |
  * |                              |                    | 0xb149		|
  * | MultiQ                       |       0xc00c       |		|
- * | Misc                         |       0xd212       | 0xd011-0xd017	|
- * |                              |                    | 0xd020		|
- * |                              |                    | 0xd030-0xd0ff	|
+ * | Misc                         |       0xd213       | 0xd011-0xd017	|
+ * |                              |                    | 0xd031-0xd0ff	|
  * |                              |                    | 0xd101-0xd1fe	|
  * |                              |                    | 0xd213-0xd2fe	|
  * | Target Mode		  |	  0xe070       | 0xe021		|
