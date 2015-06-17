@@ -65,7 +65,7 @@ static unsigned int ipv4_conntrack_defrag(const struct nf_hook_ops *ops,
 					  struct sk_buff *skb,
 					  const struct net_device *in,
 					  const struct net_device *out,
-					  int (*okfn)(struct sk_buff *))
+					  const struct nf_hook_state *state)
 {
 	struct sock *sk = skb->sk;
 	struct inet_sock *inet = inet_sk(skb->sk);
