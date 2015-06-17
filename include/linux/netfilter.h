@@ -47,6 +47,7 @@ struct nf_hook_ops;
 struct sock;
 
 struct nf_hook_state {
+	size_t size;
 	unsigned int hook;
 	int thresh;
 	u_int8_t pf;
@@ -54,6 +55,9 @@ struct nf_hook_state {
 	struct net_device *out;
 	struct sock *sk;
 	int (*okfn)(struct sock *, struct sk_buff *);
+	/* RHEL: this structure can be extended by adding new fields below
+	 * this point. Any user of such new field has to check the 'size'
+	 * field first to determine whether the field is present. */
 };
 
 static inline void nf_hook_state_init(struct nf_hook_state *p,
@@ -64,6 +68,7 @@ static inline void nf_hook_state_init(struct nf_hook_state *p,
 				      struct sock *sk,
 				      int (*okfn)(struct sock *, struct sk_buff *))
 {
+	p->size = sizeof(*p);
 	p->hook = hook;
 	p->thresh = thresh;
 	p->pf = pf;
