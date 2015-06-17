@@ -335,7 +335,8 @@ struct xfrm_state_afinfo {
 	int			(*state_sort)(struct xfrm_state **dst, struct xfrm_state **src, int n);
 	RH_KABI_REPLACE_P(int			(*output)(struct sk_buff *skb),
 		          int			(*output)(struct sock *sk, struct sk_buff *skb))
-	int			(*output_finish)(struct sk_buff *skb);
+	RH_KABI_REPLACE_P(int			(*output_finish)(struct sk_buff *skb),
+			  int			(*output_finish)(struct sock *sk, struct sk_buff *skb))
 	int			(*extract_input)(struct xfrm_state *x,
 						 struct sk_buff *skb);
 	int			(*extract_output)(struct xfrm_state *x,
@@ -1520,7 +1521,7 @@ extern int xfrm_input(struct sk_buff *skb, int nexthdr, __be32 spi,
 		      int encap_type);
 extern int xfrm_input_resume(struct sk_buff *skb, int nexthdr);
 extern int xfrm_output_resume(struct sk_buff *skb, int err);
-extern int xfrm_output(struct sk_buff *skb);
+int xfrm_output(struct sock *sk, struct sk_buff *skb);
 extern int xfrm_inner_extract_output(struct xfrm_state *x, struct sk_buff *skb);
 extern int xfrm4_extract_header(struct sk_buff *skb);
 extern int xfrm4_extract_input(struct xfrm_state *x, struct sk_buff *skb);
@@ -1540,7 +1541,7 @@ static inline int xfrm4_rcv_spi(struct sk_buff *skb, int nexthdr, __be32 spi)
 extern int xfrm4_extract_output(struct xfrm_state *x, struct sk_buff *skb);
 extern int xfrm4_prepare_output(struct xfrm_state *x, struct sk_buff *skb);
 extern int xfrm4_output(struct sock *sk, struct sk_buff *skb);
-extern int xfrm4_output_finish(struct sk_buff *skb);
+int xfrm4_output_finish(struct sock *sk, struct sk_buff *skb);
 extern int xfrm4_rcv_cb(struct sk_buff *skb, u8 protocol, int err);
 extern int xfrm4_protocol_register(struct xfrm4_protocol *handler, unsigned char protocol);
 extern int xfrm4_protocol_deregister(struct xfrm4_protocol *handler, unsigned char protocol);
@@ -1567,7 +1568,7 @@ extern __be32 xfrm6_tunnel_spi_lookup(struct net *net, const xfrm_address_t *sad
 extern int xfrm6_extract_output(struct xfrm_state *x, struct sk_buff *skb);
 extern int xfrm6_prepare_output(struct xfrm_state *x, struct sk_buff *skb);
 extern int xfrm6_output(struct sock *sk, struct sk_buff *skb);
-extern int xfrm6_output_finish(struct sk_buff *skb);
+int xfrm6_output_finish(struct sock *sk, struct sk_buff *skb);
 extern int xfrm6_find_1stfragopt(struct xfrm_state *x, struct sk_buff *skb,
 				 u8 **prevhdr);
 

@@ -2751,7 +2751,7 @@ EXPORT_SYMBOL(xmit_recursion);
  *	dev_loopback_xmit - loop back @skb
  *	@skb: buffer to transmit
  */
-int dev_loopback_xmit(struct sk_buff *skb)
+int dev_loopback_xmit(struct sock *sk, struct sk_buff *skb)
 {
 	skb_reset_mac_header(skb);
 	__skb_pull(skb, skb_network_offset(skb));
@@ -2885,6 +2885,11 @@ out:
 }
 EXPORT_SYMBOL(dev_queue_xmit);
 
+int dev_queue_xmit_sk(struct sock *sk, struct sk_buff *skb)
+{
+	return dev_queue_xmit(skb);
+}
+EXPORT_SYMBOL(dev_queue_xmit_sk);
 
 /*=======================================================================
 			Receiver routines
@@ -3648,6 +3653,12 @@ int netif_receive_skb(struct sk_buff *skb)
 	return __netif_receive_skb(skb);
 }
 EXPORT_SYMBOL(netif_receive_skb);
+
+int netif_receive_skb_sk(struct sock *sk, struct sk_buff *skb)
+{
+	return netif_receive_skb(skb);
+}
+EXPORT_SYMBOL(netif_receive_skb_sk);
 
 /* Network device is going away, flush any packets still pending
  * Called with irqs disabled.
