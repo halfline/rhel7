@@ -109,9 +109,9 @@ static int iser_create_device_ib_res(struct iser_device *device)
 
 	max_cqe = min(ISER_MAX_CQ_LEN, dev_attr->max_cqe);
 
-	iser_info("using %d CQs, device %s supports %d vectors\n",
+	iser_info("using %d CQs, device %s supports %d vectors max_cqe %d\n",
 		  device->comps_used, device->ib_device->name,
-		  device->ib_device->num_comp_vectors);
+		  device->ib_device->num_comp_vectors, max_cqe);
 
 	device->pd = ib_alloc_pd(device->ib_device);
 	if (IS_ERR(device->pd))
@@ -428,8 +428,10 @@ void iser_free_fastreg_pool(struct ib_conn *ib_conn)
  */
 static int iser_create_ib_conn_res(struct ib_conn *ib_conn)
 {
+	struct iser_conn *iser_conn = container_of(ib_conn, struct iser_conn,
+						   ib_conn);
 	struct iser_device	*device;
-	struct ib_device_attr	*dev_attr;
+	struct ib_device_attr *dev_attr;
 	struct ib_qp_init_attr	init_attr;
 	int			ret = -ENOMEM;
 	int index, min_index = 0;
@@ -466,9 +468,20 @@ static int iser_create_ib_conn_res(struct ib_conn *ib_conn)
 		init_attr.cap.max_send_wr = min(ISER_QP_SIG_MAX_REQ_DTOS + 1,
 							dev_attr->max_qp_wr);
 		init_attr.create_flags |= IB_QP_CREATE_SIGNATURE_EN;
+		iser_conn->max_cmds =
+			ISER_GET_MAX_XMIT_CMDS(ISER_QP_SIG_MAX_REQ_DTOS);
 	} else {
-		init_attr.cap.max_send_wr  = min(ISER_QP_MAX_REQ_DTOS + 1,
-							dev_attr->max_qp_wr);
+		if (dev_attr->max_qp_wr > ISER_QP_MAX_REQ_DTOS) {
+			init_attr.cap.max_send_wr  = ISER_QP_MAX_REQ_DTOS + 1;
+			iser_conn->max_cmds =
+				ISER_GET_MAX_XMIT_CMDS(ISER_QP_MAX_REQ_DTOS);
+		} else {
+			init_attr.cap.max_send_wr = dev_attr->max_qp_wr;
+			iser_conn->max_cmds =
+				ISER_GET_MAX_XMIT_CMDS(dev_attr->max_qp_wr);
+			iser_dbg("device %s supports max_send_wr %d\n",
+				 device->ib_device->name, dev_attr->max_qp_wr);
+		}
 	}
 
 	ret = rdma_create_qp(ib_conn->cma_id, device->pd, &init_attr);
