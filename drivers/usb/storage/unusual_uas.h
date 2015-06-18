@@ -104,6 +104,13 @@ UNUSUAL_DEV(0x174c, 0x5106, 0x0000, 0x9999,
 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
 		US_FL_IGNORE_UAS),
 
+/* Reported-by: Takeo Nakayama <javhera@gmx.com> */
+UNUSUAL_DEV(0x357d, 0x7788, 0x0000, 0x9999,
+		"JMicron",
+		"JMS566",
+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+		US_FL_NO_REPORT_OPCODES),
+
 /* Reported-by: Hans de Goede <hdegoede@redhat.com> */
 UNUSUAL_DEV(0x2109, 0x0711, 0x0000, 0x9999,
 		"VIA",
