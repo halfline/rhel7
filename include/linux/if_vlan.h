@@ -348,8 +348,6 @@ static inline void __vlan_hwaccel_put_tag(struct sk_buff *skb,
 	skb->vlan_tci = VLAN_TAG_PRESENT | vlan_tci;
 }
 
-#define HAVE_VLAN_PUT_TAG
-
 /**
  * vlan_put_tag - inserts VLAN tag according to device features
  * @skb: skbuff to tag
