@@ -147,7 +147,7 @@ static int vxlan_tnl_send(struct vport *vport, struct sk_buff *skb)
 	struct vxlan_port *vxlan_port = vxlan_vport(vport);
 	struct sock *sk = vxlan_port->vs->sock->sk;
 	__be16 dst_port = inet_sk(sk)->inet_sport;
-	struct ovs_key_ipv4_tunnel *tun_key;
+	const struct ovs_key_ipv4_tunnel *tun_key;
 	struct vxlan_metadata md = {0};
 	struct rtable *rt;
 	struct flowi4 fl;
@@ -161,15 +161,7 @@ static int vxlan_tnl_send(struct vport *vport, struct sk_buff *skb)
 	}
 
 	tun_key = &OVS_CB(skb)->egress_tun_info->tunnel;
-	/* Route lookup */
-	memset(&fl, 0, sizeof(fl));
-	fl.daddr = tun_key->ipv4_dst;
-	fl.saddr = tun_key->ipv4_src;
-	fl.flowi4_tos = RT_TOS(tun_key->ipv4_tos);
-	fl.flowi4_mark = skb->mark;
-	fl.flowi4_proto = IPPROTO_UDP;
-
-	rt = ip_route_output_key(net, &fl);
+	rt = ovs_tunnel_route_lookup(net, tun_key, skb->mark, &fl, IPPROTO_UDP);
 	if (IS_ERR(rt)) {
 		err = PTR_ERR(rt);
 		goto error;
