@@ -328,13 +328,20 @@ struct napi_struct {
 	struct list_head	dev_list;
 	struct hlist_node	napi_hash_node;
 	unsigned int		napi_id;
+	RH_KABI_EXTEND(size_t	size)
 };
+
+#define NAPI_STRUCT_HAS(napi, member)				\
+	({ const struct napi_struct *__n = napi;			\
+	   (test_bit(NAPI_STATE_EXT, &__n->state) &&		\
+	   (offsetof(struct napi_struct, member) < __n->size)); })
 
 enum {
 	NAPI_STATE_SCHED,	/* Poll is scheduled */
 	NAPI_STATE_DISABLE,	/* Disable pending */
 	NAPI_STATE_NPSVC,	/* Netpoll - don't dequeue from poll_list */
 	NAPI_STATE_HASHED,	/* In NAPI hash */
+	NAPI_STATE_EXT,		/* Extended napi_struct */
 };
 
 enum gro_result {
@@ -1727,6 +1734,10 @@ static inline void *netdev_priv(const struct net_device *dev)
  */
 #define NAPI_POLL_WEIGHT 64
 
+void __netif_napi_add(struct net_device *dev, struct napi_struct *napi,
+		      int (*poll)(struct napi_struct *, int), int weight,
+		      size_t size);
+
 /**
  *	netif_napi_add - initialize a napi context
  *	@dev:  network device
@@ -1737,8 +1748,21 @@ static inline void *netdev_priv(const struct net_device *dev)
  * netif_napi_add() must be used to initialize a napi context prior to calling
  * *any* of the other napi related functions.
  */
+static inline void _netif_napi_add(struct net_device *dev,
+				   struct napi_struct *napi,
+				   int (*poll)(struct napi_struct *, int),
+				   int weight)
+{
+	__netif_napi_add(dev, napi, poll, weight, sizeof(struct napi_struct));
+}
+
+/* RHEL has netif_napi_add in KABI so we need to keep it for binary
+ * modules. Another reason is that older binary modules uses non-extended
+ * napi_struct. Newly compiled modules will use inlined function that uses
+ * current (extended) napi_struct. */
 void netif_napi_add(struct net_device *dev, struct napi_struct *napi,
 		    int (*poll)(struct napi_struct *, int), int weight);
+#define netif_napi_add _netif_napi_add
 
 /**
  *  netif_napi_del - remove a napi context
