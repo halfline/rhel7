@@ -227,24 +227,23 @@ int net_eq(const struct net *net1, const struct net *net2)
 #endif
 
 
+#define possible_net_t	struct net *
+
+static inline void write_pnet(possible_net_t *pnet, struct net *net)
+{
 #ifdef CONFIG_NET_NS
-
-static inline void write_pnet(struct net **pnet, struct net *net)
-{
 	*pnet = net;
-}
-
-static inline struct net *read_pnet(struct net * const *pnet)
-{
-	return *pnet;
-}
-
-#else
-
-#define write_pnet(pnet, net)	do { (void)(net);} while (0)
-#define read_pnet(pnet)		(&init_net)
-
 #endif
+}
+
+static inline struct net *read_pnet(possible_net_t const *pnet)
+{
+#ifdef CONFIG_NET_NS
+	return *pnet;
+#else
+	return &init_net;
+#endif
+}
 
 #define for_each_net(VAR)				\
 	list_for_each_entry(VAR, &net_namespace_list, list)
