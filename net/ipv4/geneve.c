@@ -123,14 +123,9 @@ int geneve_xmit_skb(struct geneve_sock *gs, struct rtable *rt,
 	if (unlikely(err))
 		return err;
 
-	if (skb_vlan_tag_present(skb)) {
-		skb = vlan_insert_tag_set_proto(skb, skb->vlan_proto,
-						skb_vlan_tag_get(skb));
-		if (unlikely(!skb)
-			return -ENOMEM;
-
-		skb->vlan_tci = 0;
-	}
+	skb = vlan_hwaccel_push_inside(skb);
+	if (unlikely(!skb))
+		return -ENOMEM;
 
 	gnvh = (struct genevehdr *)__skb_push(skb, sizeof(*gnvh) + opt_len);
 	geneve_build_header(gnvh, tun_flags, vni, opt_len, opt);

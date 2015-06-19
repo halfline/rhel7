@@ -1716,15 +1716,10 @@ static int vxlan6_xmit_skb(struct dst_entry *dst, struct sock *sk,
 		goto err;
 	}
 
-	if (skb_vlan_tag_present(skb)) {
-		skb = vlan_insert_tag_set_proto(skb, skb->vlan_proto,
-						skb_vlan_tag_get(skb));
-		if (WARN_ON(!skb)) {
-			err = -ENOMEM;
-			goto err;
-		}
-
-		skb->vlan_tci = 0;
+	skb = vlan_hwaccel_push_inside(skb);
+	if (WARN_ON(!skb)) {
+		err = -ENOMEM;
+		goto err;
 	}
 
 	vxh = (struct vxlanhdr *) __skb_push(skb, sizeof(*vxh));
@@ -1802,14 +1797,9 @@ int vxlan_xmit_skb(struct rtable *rt, struct sock *sk, struct sk_buff *skb,
 		return err;
 	}
 
-	if (skb_vlan_tag_present(skb)) {
-		skb = vlan_insert_tag_set_proto(skb, skb->vlan_proto,
-						skb_vlan_tag_get(skb));
-		if (WARN_ON(!skb))
-			return -ENOMEM;
-
-		skb->vlan_tci = 0;
-	}
+	skb = vlan_hwaccel_push_inside(skb);
+	if (WARN_ON(!skb))
+		return -ENOMEM;
 
 	vxh = (struct vxlanhdr *) __skb_push(skb, sizeof(*vxh));
 	vxh->vx_flags = htonl(VXLAN_HF_VNI);

@@ -2604,12 +2604,8 @@ static struct sk_buff *validate_xmit_vlan(struct sk_buff *skb,
 					  netdev_features_t features)
 {
 	if (skb_vlan_tag_present(skb) &&
-	    !vlan_hw_offload_capable(features, skb->vlan_proto)) {
-		skb = vlan_insert_tag_set_proto(skb, skb->vlan_proto,
-						skb_vlan_tag_get(skb));
-		if (skb)
-			skb->vlan_tci = 0;
-	}
+	    !vlan_hw_offload_capable(features, skb->vlan_proto))
+		skb = __vlan_hwaccel_push_inside(skb);
 	return skb;
 }
 
