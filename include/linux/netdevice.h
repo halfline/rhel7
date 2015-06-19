@@ -329,6 +329,7 @@ struct napi_struct {
 	struct hlist_node	napi_hash_node;
 	unsigned int		napi_id;
 	RH_KABI_EXTEND(size_t	size)
+	RH_KABI_EXTEND(struct hrtimer	timer)
 };
 
 #define NAPI_STRUCT_HAS(napi, member)				\
@@ -461,14 +462,24 @@ static inline bool napi_reschedule(struct napi_struct *napi)
 	return false;
 }
 
+void __napi_complete(struct napi_struct *n);
+void napi_complete_done(struct napi_struct *n, int work_done);
 /**
  *	napi_complete - NAPI processing complete
  *	@n: napi context
  *
  * Mark NAPI processing as complete.
+ * Consider using napi_complete_done() instead.
  */
-void __napi_complete(struct napi_struct *n);
+static inline void _napi_complete(struct napi_struct *n)
+{
+	return napi_complete_done(n, 0);
+}
+
+/* RHEL has napi_complete in KABI so we need to keep it for binary
+ * modules. Newly compiled modules will use inlined function. */
 void napi_complete(struct napi_struct *n);
+#define napi_complete _napi_complete
 
 /**
  *	napi_by_id - lookup a NAPI by napi_id
@@ -503,13 +514,7 @@ void napi_hash_del(struct napi_struct *napi);
  * Stop NAPI from being scheduled on this context.
  * Waits till any outstanding processing completes.
  */
-static inline void napi_disable(struct napi_struct *n)
-{
-	set_bit(NAPI_STATE_DISABLE, &n->state);
-	while (test_and_set_bit(NAPI_STATE_SCHED, &n->state))
-		msleep(1);
-	clear_bit(NAPI_STATE_DISABLE, &n->state);
-}
+void napi_disable(struct napi_struct *n);
 
 /**
  *	napi_enable - enable NAPI scheduling
@@ -1569,7 +1574,7 @@ struct net_device {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-	RH_KABI_RESERVE_P(1)
+	RH_KABI_USE_P(1, unsigned long	gro_flush_timeout)
 	RH_KABI_RESERVE_P(2)
 	RH_KABI_RESERVE_P(3)
 	RH_KABI_RESERVE_P(4)
