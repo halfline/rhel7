@@ -256,7 +256,7 @@ static int vxlan_tnl_send(struct vport *vport, struct sk_buff *skb)
 	err = vxlan_xmit_skb(rt, sk, skb, fl.saddr, tun_key->ipv4_dst,
 			     tun_key->ipv4_tos, tun_key->ipv4_ttl, df,
 			     src_port, dst_port,
-			     &md, false, 0);
+			     &md, false, vxlan_port->exts);
 	if (err < 0)
 		ip_rt_put(rt);
 	return err;
