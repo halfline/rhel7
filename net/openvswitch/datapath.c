@@ -187,6 +187,7 @@ static void destroy_dp_rcu(struct rcu_head *rcu)
 {
 	struct datapath *dp = container_of(rcu, struct datapath, rcu);
 
+	ovs_flow_tbl_destroy(&dp->table);
 	free_percpu(dp->stats_percpu);
 	kfree(dp->ports);
 	kfree(dp);
@@ -1443,7 +1444,7 @@ err_destroy_ports_array:
 err_destroy_percpu:
 	free_percpu(dp->stats_percpu);
 err_destroy_table:
-	ovs_flow_tbl_destroy(&dp->table, false);
+	ovs_flow_tbl_destroy(&dp->table);
 err_free_dp:
 	kfree(dp);
 err_free_reply:
@@ -1474,8 +1475,6 @@ static void __dp_destroy(struct datapath *dp)
 	ovs_dp_detach_port(ovs_vport_ovsl(dp, OVSP_LOCAL));
 
 	/* RCU destroy the flow table */
-	ovs_flow_tbl_destroy(&dp->table, true);
-
 	call_rcu(&dp->rcu, destroy_dp_rcu);
 }
 
