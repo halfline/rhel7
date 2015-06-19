@@ -5556,6 +5556,12 @@ int register_netdevice(struct net_device *dev)
 		 (dev->ethtool_ops->set_rxfh &&
 		  dev->ethtool_ops->set_rxfh_indir)));
 
+	/* Drivers implementing new .ndo_set_vf_rate() should not implement
+	 * .ndo_set_vf_tx_rate()
+	 */
+	WARN_ON(dev->netdev_ops->ndo_set_vf_rate &&
+		dev->netdev_ops->ndo_set_vf_tx_rate);
+
 	ret = call_netdevice_notifiers(NETDEV_POST_INIT, dev);
 	ret = notifier_to_errno(ret);
 	if (ret)

@@ -1008,6 +1008,9 @@ struct netdev_phys_port_id {
  *	be otherwise expressed by feature flags. The check is called with
  *	the set of features that the stack has calculated and it returns
  *	those the driver believes to be appropriate.
+ *
+ * int (*ndo_set_vf_rate)(struct net_device *dev, int vf, int min_tx_rate,
+ *			  int max_tx_rate);
  */
 struct net_device_ops {
 	int			(*ndo_init)(struct net_device *dev);
@@ -1157,7 +1160,9 @@ struct net_device_ops {
 				(*ndo_features_check)(struct sk_buff *skb,
 						      struct net_device *dev,
 						      netdev_features_t features))
-	RH_KABI_RESERVE_P(3)
+	RH_KABI_USE_P(3, int	(*ndo_set_vf_rate)(struct net_device *dev,
+						   int vf, int min_tx_rate,
+						   int max_tx_rate))
 	RH_KABI_RESERVE_P(4)
 	RH_KABI_RESERVE_P(5)
 	RH_KABI_RESERVE_P(6)

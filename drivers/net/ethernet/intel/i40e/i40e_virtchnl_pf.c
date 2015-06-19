@@ -2170,7 +2170,8 @@ error_pvid:
  *
  * configure VF Tx rate
  **/
-int i40e_ndo_set_vf_bw(struct net_device *netdev, int vf_id, int tx_rate)
+int i40e_ndo_set_vf_bw(struct net_device *netdev, int vf_id, int min_tx_rate,
+		       int max_tx_rate)
 {
 	struct i40e_netdev_priv *np = netdev_priv(netdev);
 	struct i40e_pf *pf = np->vsi->back;
@@ -2184,6 +2185,12 @@ int i40e_ndo_set_vf_bw(struct net_device *netdev, int vf_id, int tx_rate)
 		dev_err(&pf->pdev->dev, "Invalid VF Identifier %d.\n", vf_id);
 		ret = -EINVAL;
 		goto error;
+	}
+
+	if (min_tx_rate) {
+		dev_err(&pf->pdev->dev, "Invalid min tx rate (%d) (greater than 0) specified for vf %d.\n",
+			min_tx_rate, vf_id);
+		return -EINVAL;
 	}
 
 	vf = &(pf->vf[vf_id]);
@@ -2208,29 +2215,29 @@ int i40e_ndo_set_vf_bw(struct net_device *netdev, int vf_id, int tx_rate)
 		break;
 	}
 
-	if (tx_rate > speed) {
-		dev_err(&pf->pdev->dev, "Invalid tx rate %d specified for VF %d.",
-			tx_rate, vf->vf_id);
+	if (max_tx_rate > speed) {
+		dev_err(&pf->pdev->dev, "Invalid max tx rate %d specified for VF %d.",
+			max_tx_rate, vf->vf_id);
 		ret = -EINVAL;
 		goto error;
 	}
 
-	if (tx_rate < 50) {
+	if (max_tx_rate < 50) {
 		dev_warn(&pf->pdev->dev, "Setting max Tx rate to minimum usable value of 50Mbps.\n");
-		tx_rate = 50;
+		max_tx_rate = 50;
 	}
 
 	/* Tx rate credits are in values of 50Mbps, 0 is disabled*/
 	ret = i40e_aq_config_vsi_bw_limit(&pf->hw, vsi->seid,
-					  tx_rate / I40E_BW_CREDIT_DIVISOR,
+					  max_tx_rate / I40E_BW_CREDIT_DIVISOR,
 					  I40E_MAX_BW_INACTIVE_ACCUM, NULL);
 	if (ret) {
-		dev_err(&pf->pdev->dev, "Unable to set tx rate, error code %d.\n",
+		dev_err(&pf->pdev->dev, "Unable to set max tx rate, error code %d.\n",
 			ret);
 		ret = -EIO;
 		goto error;
 	}
-	vf->tx_rate = tx_rate;
+	vf->tx_rate = max_tx_rate;
 error:
 	return ret;
 }
@@ -2272,7 +2279,8 @@ int i40e_ndo_get_vf_config(struct net_device *netdev,
 
 	memcpy(&ivi->mac, vf->default_lan_addr.addr, ETH_ALEN);
 
-	ivi->tx_rate = vf->tx_rate;
+	ivi->max_tx_rate = vf->tx_rate;
+	ivi->min_tx_rate = 0;
 	ivi->vlan = le16_to_cpu(vsi->info.pvid) & I40E_VLAN_MASK;
 	ivi->qos = (le16_to_cpu(vsi->info.pvid) & I40E_PRIORITY_MASK) >>
 		   I40E_VLAN_PRIORITY_SHIFT;

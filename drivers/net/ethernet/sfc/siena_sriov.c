@@ -1634,7 +1634,8 @@ int efx_sriov_get_vf_config(struct net_device *net_dev, int vf_i,
 
 	ivi->vf = vf_i;
 	memcpy(ivi->mac, vf->addr.mac_addr, ETH_ALEN);
-	ivi->tx_rate = 0;
+	ivi->max_tx_rate = 0;
+	ivi->min_tx_rate = 0;
 	tci = ntohs(vf->addr.tci);
 	ivi->vlan = tci & VLAN_VID_MASK;
 	ivi->qos = (tci >> VLAN_PRIO_SHIFT) & 0x7;
