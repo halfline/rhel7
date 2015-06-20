@@ -177,6 +177,7 @@ struct scsi_device {
 	 */
 	unsigned vpd_reserved:1;
 	unsigned xcopy_reserved:1;
+	RH_KABI_FILL_HOLE(unsigned lun_in_cdb:1) /* Store LUN bits in CDB[1] */
 
 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
 

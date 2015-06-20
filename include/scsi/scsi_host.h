@@ -721,6 +721,9 @@ struct Scsi_Host {
 
 	RH_KABI_EXTEND(unsigned use_blk_mq:1)
 
+	/* The transport requires the LUN bits NOT to be stored in CDB[1] */
+	RH_KABI_FILL_HOLE(unsigned no_scsi2_lun_in_cdb:1)
+
 	/*
 	 * Optional work queue to be utilized by the transport
 	 */
