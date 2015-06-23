@@ -180,6 +180,12 @@ struct cpuinfo_x86 boot_cpu_data __read_mostly = {
 	.wp_works_ok = -1,
 };
 EXPORT_SYMBOL(boot_cpu_data);
+/* KABI immune per_cpu data */
+struct rh_cpuinfo_x86 rh_boot_cpu_data __read_mostly = {
+	.x86_cache_max_rmid = -1,
+	.x86_cache_occ_scale = -1,
+};
+EXPORT_SYMBOL(rh_boot_cpu_data);
 
 unsigned int def_to_bigsmp;
 
@@ -204,6 +210,12 @@ struct cpuinfo_x86 boot_cpu_data __read_mostly = {
 	.x86_phys_bits = MAX_PHYSMEM_BITS,
 };
 EXPORT_SYMBOL(boot_cpu_data);
+/* KABI immune per_cpu data */
+struct rh_cpuinfo_x86 rh_boot_cpu_data __read_mostly = {
+	.x86_cache_max_rmid = -1,
+	.x86_cache_occ_scale = -1,
+};
+EXPORT_SYMBOL(rh_boot_cpu_data);
 #endif
 
 
