@@ -1244,14 +1244,14 @@ static inline void cqm_pick_event_reader(int cpu)
 static void intel_cqm_cpu_prepare(unsigned int cpu)
 {
 	struct intel_cqm_state *state = &per_cpu(cqm_state, cpu);
-	struct cpuinfo_x86 *c = &cpu_data(cpu);
+	struct rh_cpuinfo_x86 *rh_c = &rh_cpu_data(cpu);
 
 	raw_spin_lock_init(&state->lock);
 	state->rmid = 0;
 	state->cnt  = 0;
 
-	WARN_ON(c->x86_cache_max_rmid != cqm_max_rmid);
-	WARN_ON(c->x86_cache_occ_scale != cqm_l3_scale);
+	WARN_ON(rh_c->x86_cache_max_rmid != cqm_max_rmid);
+	WARN_ON(rh_c->x86_cache_occ_scale != cqm_l3_scale);
 }
 
 static void intel_cqm_cpu_exit(unsigned int cpu)
@@ -1309,7 +1309,7 @@ static int __init intel_cqm_init(void)
 	if (!x86_match_cpu(intel_cqm_match))
 		return -ENODEV;
 
-	cqm_l3_scale = boot_cpu_data.x86_cache_occ_scale;
+	cqm_l3_scale = rh_boot_cpu_data.x86_cache_occ_scale;
 
 	/*
 	 * It's possible that not all resources support the same number
@@ -1323,12 +1323,12 @@ static int __init intel_cqm_init(void)
 	cpu_notifier_register_begin();
 
 	for_each_online_cpu(cpu) {
-		struct cpuinfo_x86 *c = &cpu_data(cpu);
+		struct rh_cpuinfo_x86 *rh_c = &rh_cpu_data(cpu);
 
-		if (c->x86_cache_max_rmid < cqm_max_rmid)
-			cqm_max_rmid = c->x86_cache_max_rmid;
+		if (rh_c->x86_cache_max_rmid < cqm_max_rmid)
+			cqm_max_rmid = rh_c->x86_cache_max_rmid;
 
-		if (c->x86_cache_occ_scale != cqm_l3_scale) {
+		if (rh_c->x86_cache_occ_scale != cqm_l3_scale) {
 			pr_err("Multiple LLC scale values, disabling\n");
 			ret = -EINVAL;
 			goto out;
