@@ -340,6 +340,12 @@ static inline size_t iov_iter_count(struct iov_iter *i)
 	return i->count;
 }
 
+static inline void iov_iter_truncate(struct iov_iter *i, size_t count)
+{
+	if (i->count > count)
+		i->count = count;
+}
+
 /*
  * "descriptor" for what we're up to with a read.
  * This allows us to use the same read code yet
