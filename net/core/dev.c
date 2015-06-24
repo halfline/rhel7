@@ -6061,10 +6061,6 @@ free_all:
 
 free_pcpu:
 	free_percpu(dev->pcpu_refcnt);
-	netif_free_tx_queues(dev);
-#ifdef CONFIG_RPS
-	kfree(dev->_rx);
-#endif
 
 free_p:
 	kfree(p);
