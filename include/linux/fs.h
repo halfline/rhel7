@@ -1615,7 +1615,6 @@ struct file_operations {
 	long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
 	long (*compat_ioctl) (struct file *, unsigned int, unsigned long);
 	int (*mmap) (struct file *, struct vm_area_struct *);
-	void (*mremap)(struct file *, struct vm_area_struct *);
 	int (*open) (struct inode *, struct file *);
 	int (*flush) (struct file *, fl_owner_t id);
 	int (*release) (struct inode *, struct file *);
@@ -1634,6 +1633,15 @@ struct file_operations {
 			  loff_t len);
 	int (*show_fdinfo)(struct seq_file *m, struct file *f);
 };
+
+/* RH usage only, not for external modules use */
+struct file_operations_extend {
+	struct file_operations kabi_fops;
+	void (*mremap)(struct file *, struct vm_area_struct *);
+};
+
+#define to_fop_extend(fop)	\
+	container_of((fop), struct file_operations_extend, kabi_fops)
 
 struct inode_operations {
 	struct dentry * (*lookup) (struct inode *,struct dentry *, unsigned int);
