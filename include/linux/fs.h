@@ -1066,6 +1066,9 @@ extern int vfs_setlease(struct file *, long, struct file_lock **);
 extern int lease_modify(struct file_lock **, int);
 extern int lock_may_read(struct inode *, loff_t start, unsigned long count);
 extern int lock_may_write(struct inode *, loff_t start, unsigned long count);
+struct files_struct;
+extern void show_fd_locks(struct seq_file *f,
+			 struct file *filp, struct files_struct *files);
 #else /* !CONFIG_FILE_LOCKING */
 static inline int fcntl_getlk(struct file *file, struct flock __user *user)
 {
@@ -1206,6 +1209,10 @@ static inline int lock_may_write(struct inode *inode, loff_t start,
 {
 	return 1;
 }
+
+struct files_struct;
+static inline void show_fd_locks(struct seq_file *f,
+			struct file *filp, struct files_struct *files) {}
 #endif /* !CONFIG_FILE_LOCKING */
 
 

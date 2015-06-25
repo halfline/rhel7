@@ -2395,6 +2395,37 @@ static int locks_show(struct seq_file *f, void *v)
 	return 0;
 }
 
+void show_fd_locks(struct seq_file *f,
+		  struct file *filp, struct files_struct *files)
+{
+	struct inode *inode = file_inode(filp);
+	struct file_lock **before, *fl;
+	int id = 0;
+
+	spin_lock(&inode->i_lock);
+	for_each_lock(inode, before) {
+		fl = *before;
+
+		if (filp != fl->fl_file)
+			continue;
+		/*
+		 * Upstream does fl->fl_owner != filp in the second check,
+		 * but RHEL doesn't use ->fl_owner as "struct file *", it
+		 * is NULL if IS_FLOCK(). But in this case we rely on the
+		 * previous check, when upstream set ->fl_owner = filp it
+		 * matches ->fl_file.
+		 */
+		if (fl->fl_owner != files &&
+		    fl->fl_owner != NULL)
+			continue;
+
+		id++;
+		seq_puts(f, "lock:\t");
+		lock_get_status(f, fl, id, "");
+	}
+	spin_unlock(&inode->i_lock);
+}
+
 static void *locks_start(struct seq_file *f, loff_t *pos)
 {
 	struct locks_iterator *iter = f->private;
