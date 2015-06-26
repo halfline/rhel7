@@ -68,7 +68,7 @@ rh-clean-sources:
 
 rh-clean-rpmdirs:
 	@for i in $(RPM)/{BUILD,SRPMS,RPMS,SPECS}/*; do \
-		rm -rfv $$i; \
+		rm -rf $$i; \
 	done;
 
 rh-clean: rh-clean-sources rh-clean-configs rh-clean-rpmdirs
