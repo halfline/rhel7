@@ -14,6 +14,20 @@ struct tcp_fastopen_context __rcu *tcp_fastopen_ctx;
 
 static DEFINE_SPINLOCK(tcp_fastopen_ctx_lock);
 
+void tcp_fastopen_init_key_once(bool publish)
+{
+	static u8 key[TCP_FASTOPEN_KEY_LENGTH];
+
+	/* tcp_fastopen_reset_cipher publishes the new context
+	 * atomically, so we allow this race happening here.
+	 *
+	 * All call sites of tcp_fastopen_cookie_gen also check
+	 * for a valid cookie, so this is an acceptable risk.
+	 */
+	if (net_get_random_once(key, sizeof(key)) && publish)
+		tcp_fastopen_reset_cipher(key, sizeof(key));
+}
+
 static void tcp_fastopen_ctx_free(struct rcu_head *head)
 {
 	struct tcp_fastopen_context *ctx =
@@ -63,6 +77,8 @@ static bool __tcp_fastopen_cookie_gen(const void *path,
 {
 	struct tcp_fastopen_context *ctx;
 	bool ok = false;
+
+	tcp_fastopen_init_key_once(true);
 
 	rcu_read_lock();
 	ctx = rcu_dereference(tcp_fastopen_ctx);
@@ -281,14 +297,3 @@ fastopen:
 	return false;
 }
 EXPORT_SYMBOL(tcp_try_fastopen);
-
-static int __init tcp_fastopen_init(void)
-{
-	__u8 key[TCP_FASTOPEN_KEY_LENGTH];
-
-	get_random_bytes(key, sizeof(key));
-	tcp_fastopen_reset_cipher(key, sizeof(key));
-	return 0;
-}
-
-late_initcall(tcp_fastopen_init);
