@@ -344,7 +344,8 @@ static int __init htab_dt_scan_page_sizes(unsigned long node,
 
 			size -= 3; prop += 3;
 			base_idx = get_idx_from_shift(base_shift);
-			if (base_idx < 0) {
+			if (base_idx < 0 ||
+			    (base_idx == MMU_PAGE_16G && machine_is(powernv))) {
 				/*
 				 * skip the pte encoding also
 				 */
