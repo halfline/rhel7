@@ -108,7 +108,7 @@ int kvm_update_cpuid(struct kvm_vcpu *vcpu)
 		((best->eax & 0xff00) >> 8) != 0)
 		return -EINVAL;
 
-	kvm_pmu_cpuid_update(vcpu);
+	kvm_pmu_refresh(vcpu);
 	return 0;
 }
 
