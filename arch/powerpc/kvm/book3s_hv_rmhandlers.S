@@ -202,6 +202,7 @@ kvmppc_primary_no_guest:
 	li	r3, NAPPING_NOVCPU
 	stb	r3, HSTATE_NAPPING(r13)
 
+	li	r3, 0		/* Don't wake on privileged (OS) doorbell */
 	b	kvm_do_nap
 
 kvm_novcpu_wakeup:
@@ -2182,10 +2183,13 @@ END_FTR_SECTION_IFCLR(CPU_FTR_ARCH_206)
 	/* save FP state */
 	bl	kvmppc_save_fp
 
+	lis	r3, LPCR_PECEDP@h	/* Do wake on privileged doorbell */
+
 	/*
 	 * Take a nap until a decrementer or external or doobell interrupt
-	 * occurs, with PECE1, PECE0 and PECEDP set in LPCR. Also clear the
-	 * runlatch bit before napping.
+	 * occurs, with PECE1 and PECE0 set in LPCR.
+	 * On POWER8, if we are ceding, also set PECEDP.
+	 * Also clear the runlatch bit before napping.
 	 */
 kvm_do_nap:
 	mfspr	r2, SPRN_CTRLF
@@ -2197,7 +2201,7 @@ kvm_do_nap:
 	mfspr	r5,SPRN_LPCR
 	ori	r5,r5,LPCR_PECE0 | LPCR_PECE1
 BEGIN_FTR_SECTION
-	oris	r5,r5,LPCR_PECEDP@h
+	rlwimi	r5, r3, 0, LPCR_PECEDP
 END_FTR_SECTION_IFSET(CPU_FTR_ARCH_207S)
 	mtspr	SPRN_LPCR,r5
 	isync
