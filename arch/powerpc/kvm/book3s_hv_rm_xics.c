@@ -23,17 +23,10 @@
 
 #define DEBUG_PASSUP
 
-static inline void rm_writeb(unsigned long paddr, u8 val)
-{
-	__asm__ __volatile__("sync; stbcix %0,0,%1"
-		: : "r" (val), "r" (paddr) : "memory");
-}
-
 static void icp_rm_set_vcpu_irq(struct kvm_vcpu *vcpu,
 				struct kvm_vcpu *this_vcpu)
 {
 	struct kvmppc_icp *this_icp = this_vcpu->arch.icp;
-	unsigned long xics_phys;
 	int cpu;
 
 	/* Mark the target VCPU as having an interrupt pending */
@@ -56,9 +49,8 @@ static void icp_rm_set_vcpu_irq(struct kvm_vcpu *vcpu,
 	/* In SMT cpu will always point to thread 0, we adjust it */
 	cpu += vcpu->arch.ptid;
 
-	/* Not too hard, then poke the target */
-	xics_phys = paca[cpu].kvm_hstate.xics_phys;
-	rm_writeb(xics_phys + XICS_MFRR, IPI_PRIORITY);
+	smp_mb();
+	kvmhv_rm_send_ipi(cpu);
 }
 
 static void icp_rm_clr_vcpu_irq(struct kvm_vcpu *vcpu)
