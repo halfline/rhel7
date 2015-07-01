@@ -183,6 +183,9 @@ END_FTR_SECTION_IFSET(CPU_FTR_ARCH_206)
 
 kvmppc_primary_no_guest:
 	/* We handle this much like a ceded vcpu */
+	/* put the HDEC into the DEC, since HDEC interrupts don't wake us */
+	mfspr	r3, SPRN_HDEC
+	mtspr	SPRN_DEC, r3
 	/* set our bit in napping_threads */
 	ld	r5, HSTATE_KVM_VCORE(r13)
 	lbz	r7, HSTATE_PTID(r13)
@@ -233,6 +236,12 @@ kvm_novcpu_wakeup:
 	/* See if the wake reason means we need to exit */
 	cmpdi	r3, 0
 	bge	kvm_novcpu_exit
+
+	/* See if our timeslice has expired (HDEC is negative) */
+	mfspr	r0, SPRN_HDEC
+	li	r12, BOOK3S_INTERRUPT_HV_DECREMENTER
+	cmpwi	r0, 0
+	blt	kvm_novcpu_exit
 
 	/* Got an IPI but other vcpus aren't yet exiting, must be a latecomer */
 	ld	r4, HSTATE_KVM_VCPU(r13)
@@ -1596,10 +1605,10 @@ END_FTR_SECTION_IFSET(CPU_FTR_ARCH_201)
 	cmpwi	r3,0x100	/* Are we the first here? */
 	bge	43f
 	cmpwi	r12,BOOK3S_INTERRUPT_HV_DECREMENTER
-	beq	40f
+	beq	43f
 	li	r0,0
 	mtspr	SPRN_HDEC,r0
-40:
+
 	/*
 	 * Send an IPI to any napping threads, since an HDEC interrupt
 	 * doesn't wake CPUs up from nap.
@@ -2183,6 +2192,27 @@ END_FTR_SECTION_IFCLR(CPU_FTR_ARCH_206)
 	/* save FP state */
 	bl	kvmppc_save_fp
 
+	/*
+	 * Set DEC to the smaller of DEC and HDEC, so that we wake
+	 * no later than the end of our timeslice (HDEC interrupts
+	 * don't wake us from nap).
+	 */
+	mfspr	r3, SPRN_DEC
+	mfspr	r4, SPRN_HDEC
+	mftb	r5
+	cmpw	r3, r4
+	ble	67f
+	mtspr	SPRN_DEC, r4
+67:
+	/* save expiry time of guest decrementer */
+	extsw	r3, r3
+	add	r3, r3, r5
+	ld	r4, HSTATE_KVM_VCPU(r13)
+	ld	r5, HSTATE_KVM_VCORE(r13)
+	ld	r6, VCORE_TB_OFFSET(r5)
+	subf	r3, r6, r3	/* convert to host TB value */
+	std	r3, VCPU_DEC_EXPIRES(r4)
+
 	lis	r3, LPCR_PECEDP@h	/* Do wake on privileged doorbell */
 
 	/*
@@ -2228,6 +2258,15 @@ kvm_end_cede:
 
 	/* load up FP state */
 	bl	kvmppc_load_fp
+
+	/* Restore guest decrementer */
+	ld	r3, VCPU_DEC_EXPIRES(r4)
+	ld	r5, HSTATE_KVM_VCORE(r13)
+	ld	r6, VCORE_TB_OFFSET(r5)
+	add	r3, r3, r6	/* convert host TB to guest TB value */
+	mftb	r7
+	subf	r3, r7, r3
+	mtspr	SPRN_DEC, r3
 
 	/* Load NV GPRS */
 	ld	r14, VCPU_GPR(R14)(r4)
