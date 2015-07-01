@@ -875,14 +875,16 @@ int mlx4_ib_process_mad(struct ib_device *ibdev, int mad_flags, u8 port_num,
 {
 	const struct ib_mad *in_mad = (const struct ib_mad *)in;
 	struct ib_mad *out_mad = (struct ib_mad *)out;
+	struct mlx4_ib_dev *dev = to_mdev(ibdev);
 
 	BUG_ON(in_mad_size != sizeof(*in_mad) ||
 	       *out_mad_size != sizeof(*out_mad));
 
 	switch (rdma_port_get_link_layer(ibdev, port_num)) {
 	case IB_LINK_LAYER_INFINIBAND:
-		return ib_process_mad(ibdev, mad_flags, port_num, in_wc,
-				      in_grh, in_mad, out_mad);
+		if (!mlx4_is_slave(dev->dev))
+			return ib_process_mad(ibdev, mad_flags, port_num, in_wc,
+					      in_grh, in_mad, out_mad);
 	case IB_LINK_LAYER_ETHERNET:
 		return iboe_process_mad(ibdev, mad_flags, port_num, in_wc,
 					  in_grh, in_mad, out_mad);
