@@ -222,6 +222,7 @@ static void mlx4_slave_event(struct mlx4_dev *dev, int slave,
 	slave_event(dev, slave, eqe);
 }
 
+#if defined(CONFIG_SMP)
 static void mlx4_set_eq_affinity_hint(struct mlx4_priv *priv, int vec)
 {
 	int hint_err;
@@ -235,6 +236,7 @@ static void mlx4_set_eq_affinity_hint(struct mlx4_priv *priv, int vec)
 	if (hint_err)
 		mlx4_warn(dev, "irq_set_affinity_hint failed, err %d\n", hint_err);
 }
+#endif
 
 int mlx4_gen_pkey_eqe(struct mlx4_dev *dev, int slave, u8 port)
 {
@@ -1208,8 +1210,8 @@ int mlx4_init_eq_table(struct mlx4_dev *dev)
 					     MLX4_NUM_ASYNC_EQE + MLX4_NUM_SPARE_EQE,
 					     0, &priv->eq_table.eq[MLX4_EQ_ASYNC]);
 		} else {
-#ifdef CONFIG_RFS_ACCEL
 			struct mlx4_eq	*eq = &priv->eq_table.eq[i];
+#ifdef CONFIG_RFS_ACCEL
 			int port = find_first_bit(eq->actv_ports.ports,
 						  dev->caps.num_ports) + 1;
 
