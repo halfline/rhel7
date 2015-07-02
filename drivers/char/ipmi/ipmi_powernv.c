@@ -55,7 +55,8 @@ static void send_error_reply(struct ipmi_smi_powernv *smi,
 	ipmi_smi_msg_received(smi->intf, msg);
 }
 
-static void ipmi_powernv_send(void *send_info, struct ipmi_smi_msg *msg)
+static void ipmi_powernv_send(void *send_info, struct ipmi_smi_msg *msg,
+			      int priority)
 {
 	struct ipmi_smi_powernv *smi = send_info;
 	struct opal_ipmi_msg *opal_msg;
@@ -177,7 +178,7 @@ static void ipmi_powernv_request_events(void *send_info)
 }
 
 static void ipmi_powernv_set_run_to_completion(void *send_info,
-		bool run_to_completion)
+					       int run_to_completion)
 {
 }
 
