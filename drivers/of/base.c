@@ -173,7 +173,7 @@ static ssize_t of_node_property_read(struct file *filp, struct kobject *kobj,
 static const char *safe_name(struct kobject *kobj, const char *orig_name)
 {
 	const char *name = orig_name;
-	struct kernfs_node *kn;
+	struct sysfs_dirent *kn;
 	int i = 0;
 
 	/* don't be a hero. After 16 tries give up */
