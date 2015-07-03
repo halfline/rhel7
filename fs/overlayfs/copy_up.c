@@ -417,7 +417,7 @@ int ovl_copy_up(struct dentry *dentry)
 		struct kstat stat;
 		enum ovl_path_type type = ovl_path_type(dentry);
 
-		if (type != OVL_PATH_LOWER)
+		if (OVL_TYPE_UPPER(type))
 			break;
 
 		next = dget(dentry);
@@ -426,7 +426,7 @@ int ovl_copy_up(struct dentry *dentry)
 			parent = dget_parent(next);
 
 			type = ovl_path_type(parent);
-			if (type != OVL_PATH_LOWER)
+			if (OVL_TYPE_UPPER(type))
 				break;
 
 			dput(next);
