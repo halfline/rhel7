@@ -1562,8 +1562,7 @@ static int cbq_dump(struct Qdisc *sch, struct sk_buff *skb)
 		goto nla_put_failure;
 	if (cbq_dump_attr(skb, &q->link) < 0)
 		goto nla_put_failure;
-	nla_nest_end(skb, nest);
-	return skb->len;
+	return nla_nest_end(skb, nest);
 
 nla_put_failure:
 	nla_nest_cancel(skb, nest);
@@ -1598,8 +1597,7 @@ cbq_dump_class(struct Qdisc *sch, unsigned long arg,
 		goto nla_put_failure;
 	if (cbq_dump_attr(skb, cl) < 0)
 		goto nla_put_failure;
-	nla_nest_end(skb, nest);
-	return skb->len;
+	return nla_nest_end(skb, nest);
 
 nla_put_failure:
 	nla_nest_cancel(skb, nest);
