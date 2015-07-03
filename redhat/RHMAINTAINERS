@@ -416,7 +416,6 @@ F:	drivers/net/myri10ge/
 NETWORKING [GENERAL]
 M:	Jiri Benc <jbenc@redhat.com>
 M:	Rashid Khan <rkhan@redhat.com>
-M:	Andy Gospodarek <agospoda@redhat.com>
 M:	Neil Horman <nhorman@redhat.com>
 S:	Maintained
 F:	net/
@@ -513,7 +512,6 @@ F:	include/linux/openvswitch.h
 PCI SUBSYSTEM
 M:	Myron Stowe <mstowe@redhat.com>
 M:	Prarit Bhargava <prarit@redhat.com>
-M:	Andy Gospodarek <agospoda@redhat.com>
 S:	Maintained
 F:	drivers/pci/
 
