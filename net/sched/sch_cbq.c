@@ -381,7 +381,7 @@ cbq_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 #endif
 	if (cl == NULL) {
 		if (ret & __NET_XMIT_BYPASS)
-			sch->qstats.drops++;
+			qdisc_qstats_drop(sch);
 		kfree_skb(skb);
 		return ret;
 	}
@@ -399,7 +399,7 @@ cbq_enqueue(struct sk_buff *skb, struct Qdisc *sch)
 	}
 
 	if (net_xmit_drop_count(ret)) {
-		sch->qstats.drops++;
+		qdisc_qstats_drop(sch);
 		cbq_mark_toplevel(q, cl);
 		cl->qstats.drops++;
 	}
@@ -654,11 +654,11 @@ static int cbq_reshape_fail(struct sk_buff *skb, struct Qdisc *child)
 			return 0;
 		}
 		if (net_xmit_drop_count(ret))
-			sch->qstats.drops++;
+			qdisc_qstats_drop(sch);
 		return 0;
 	}
 
-	sch->qstats.drops++;
+	qdisc_qstats_drop(sch);
 	return -1;
 }
 #endif
@@ -1011,7 +1011,7 @@ cbq_dequeue(struct Qdisc *sch)
 	 */
 
 	if (sch->q.qlen) {
-		sch->qstats.overlimits++;
+		qdisc_qstats_overlimit(sch);
 		if (q->wd_expires)
 			qdisc_watchdog_schedule(&q->watchdog,
 						now + q->wd_expires);
