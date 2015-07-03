@@ -87,11 +87,6 @@ F:	include/linux/acpi.h
 F:	include/acpi/
 F:	arch/x86/kernel/acpi/
 
-AF_PACKET
-M:	Daniel Borkmann <dborkman@redhat.com>
-S:	Maintained
-F:	net/packet/
-
 AIO
 M:	Jeff Moyer <jmoyer@redhat.com>
 S:	Maintained
@@ -418,16 +413,8 @@ M:	Stanislaw Gruszka <sgruszka@redhat.com>
 S:	Maintained
 F:	drivers/net/myri10ge/
 
-NETLINK
-M:	Daniel Borkmann <dborkman@redhat.com>
-S:	Maintained
-F:	net/netlink/
-F:	include/linux/*netlink*
-F:	include/net/*netlink*
-
 NETWORKING [GENERAL]
 M:	Jiri Benc <jbenc@redhat.com>
-M:	Daniel Borkmann <dborkman@redhat.com>
 M:	Rashid Khan <rkhan@redhat.com>
 M:	Andy Gospodarek <agospoda@redhat.com>
 M:	Neil Horman <nhorman@redhat.com>
@@ -447,6 +434,7 @@ F:	include/linux/ipv6*
 F:	include/linux/llc.h
 F:	include/linux/mroute*
 F:	include/linux/net*
+F:	include/linux/*netlink*
 F:	include/linux/skbuff.h
 F:	include/linux/sock*
 F:	include/linux/tc_act/tc_defact.h
@@ -608,7 +596,7 @@ F:	drivers/target/
 F:	include/target/
 
 SCTP PROTOCOL
-M:	Daniel Borkmann <dborkman@redhat.com>
+M:	Marcelo Ricardo Leitner <mleitner@redhat.com>
 M:	Neil Horman <nhorman@redhat.com>
 S:	Maintained
 F:	net/sctp/
