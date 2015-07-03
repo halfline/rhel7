@@ -212,11 +212,6 @@ M:	Aristeu Rozanski <aris@redhat.com>
 S:	Maintained
 F:	drivers/edac/
 
-EHEA ETHERNET DRIVER (ehea)
-M:	Ameet Paranjape <aparanja@redhat.com>
-S:	Maintained
-F:	drivers/net/ethernet/ibm/ehea/
-
 FCOE STACK (Software libfc/fcoe)
 M:     Neil Horman <nhorman@redhat.com>
 S:     Maintained
@@ -321,11 +316,6 @@ F:	drivers/scsi/storvsc_drv.c
 F:	drivers/video/hyperv_fb.c
 F:	include/linux/hyperv.h
 F:	tools/hv/
-
-IBM IBMVETH ETHERNET DRIVER (ibmveth)
-M:	Brad Peters <bpeters@redhat.com>
-S:	Maintained
-F:	drivers/net/ethernet/ibm/ibmveth.*
 
 INFINIBAND SUBSYSTEM
 M:	Doug Ledford <dledford@redhat.com>
