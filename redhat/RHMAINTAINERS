@@ -165,7 +165,7 @@ S:	Maintained
 F:	drivers/net/ethernet/broadcom/tg3.*
 
 BONDING DRIVER
-M:	Nikolay Aleksandrov <naleksan@redhat.com>
+M:	Jarod Wilson <jarod@redhat.com>
 S:	Maintained
 F:	drivers/net/bonding/
 F:	include/linux/if_bonding.h
@@ -615,7 +615,7 @@ S:	Maintained
 F:	drivers/net/usb/sierra_net.c
 
 SFC NETWORK DRIVER
-M:	Nikolay Aleksandrov <naleksan@redhat.com>
+M:	Jarod Wilson <jarod@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/sfc/
 
@@ -640,8 +640,7 @@ S:	Maintained
 F:	drivers/net/ethernet/marvell/skge.*
 
 SKY2 10/100/1000 GIGABIT ETHERNET DRIVER
-M:	Nikolay Aleksandrov <naleksan@redhat.com>
-S:	Maintained
+S:	Orphan
 F:	drivers/net/ethernet/marvell/sky2.*
 
 SOFTWARE RAID (Multiple Disks, MD) SUPPORT
