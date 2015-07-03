@@ -65,17 +65,17 @@ F:	drivers/scsi/3w-9xxx*
 8169 10/100/1000 GIGABIT ETHERNET DRIVER (r8169)
 M:	Ivan Vecera <ivecera@redhat.com>
 S:	Maintained
-F:	drivers/net/r8169.c
+F:	drivers/net/ethernet/realtek/r8169.c
 
 8139CP 10/100/1000 GIGABIT ETHERNET DRIVER (8139cp)
 M:	Ivan Vecera <ivecera@redhat.com>
 S:	Maintained
-F:	drivers/net/8139cp.c
+F:	drivers/net/ethernet/realtek/8139cp.c
 
 8139TOO 10/100/1000 GIGABIT ETHERNET DRIVER (8139too)
 M:	Ivan Vecera <ivecera@redhat.com>
 S:	Maintained
-F:	drivers/net/8139too.c
+F:	drivers/net/ethernet/realtek/8139too.c
 
 ACPI SUBSYSTEM
 M:	Lenny Szubowicz <lszubowi@redhat.com>
@@ -111,7 +111,7 @@ F:	drivers/net/ethernet/atheros/
 BE2NET ETHERNET DRIVER (be2net)
 M:	Ivan Vecera <ivecera@redhat.com>
 S:	Maintained
-F:	drivers/net/benet/
+F:	drivers/net/ethernet/emulex/benet/
 
 BIOS ISSUES
 M:	Lenny Szubowicz <lszubowi@redhat.com>
@@ -130,19 +130,19 @@ S:	Maintained
 BROADCOM B44 10/100 ETHERNET DRIVER
 M:	Stanislaw Gruszka <sgruszka@redhat.com>
 S:	Maintained
-F:	drivers/net/b44.*
+F:	drivers/net/ethernet/broadcom/b44.*
 
 BROADCOM BNX2 GIGABIT ETHERNET DRIVER (bnx2)
 M:	Neil Horman <nhorman@redhat.com>
 S:	Maintained
-F:	drivers/net/bnx2.*
-F:	drivers/net/bnx2_*
+F:	drivers/net/ethernet/broadcom/bnx2.*
+F:	drivers/net/ethernet/broadcom/bnx2_*
 
 BROADCOM BNX2X GIGABIT ETHERNET DRIVER (bnx2x)
 M:	Michal Schmidt <mschmidt@redhat.com>
 S:	Maintained
-F:	drivers/net/bnx2x.*
-F:	drivers/net/bnx2x_*
+F:	drivers/net/ethernet/broadcom/bnx2x.*
+F:	drivers/net/ethernet/broadcom/bnx2x_*
 
 Broadcom NetXtreme II BCM5706/5708/5709/57710/57711/57712/57800/57810/57840 iSCSI Driver
 M:	Maurizio Lombardi <mlombard@redhat.com>
@@ -162,7 +162,7 @@ F:	drivers/net/ethernet/broadcom/cnic*
 BROADCOM TG3 GIGABIT ETHERNET DRIVER
 M:	Ivan Vecera <ivecera@redhat.com>
 S:	Maintained
-F:	drivers/net/tg3.*
+F:	drivers/net/ethernet/broadcom/tg3.*
 
 BONDING DRIVER
 M:	Nikolay Aleksandrov <naleksan@redhat.com>
@@ -190,12 +190,12 @@ F:	arch/x86/kernel/cpu/cpufreq/
 CXGB3 ETHERNET DRIVER (cxgb3)
 M:	Sai Vemuri <svemuri@redhat.com>
 S:	Maintained
-F:	drivers/net/cxgb3/
+F:	drivers/net/ethernet/chelsio/cxgb3/
 
 CXGB4 ETHERNET DRIVER (cxgb4)
 M:	Sai Vemuri <svemuri@redhat.com>
 S:	Maintained
-F:	drivers/net/cxgb4/
+F:	drivers/net/ethernet/chelsio/cxgb4/
 
 DIRECT IO
 M:	Jeff Moyer <jmoyer@redhat.com>
@@ -215,7 +215,7 @@ F:	drivers/edac/
 EHEA ETHERNET DRIVER (ehea)
 M:	Ameet Paranjape <aparanja@redhat.com>
 S:	Maintained
-F:	drivers/net/ehea/
+F:	drivers/net/ethernet/ibm/ehea/
 
 FCOE STACK (Software libfc/fcoe)
 M:     Neil Horman <nhorman@redhat.com>
@@ -226,7 +226,7 @@ F:     drivers/scsi/fcoe/
 FORCEDETH ETHERNET DRIVER (forcedeth)
 M:	Ivan Vecera <ivecera@redhat.com>
 S:	Maintained
-F:	drivers/net/forcedeth.c
+F:	drivers/net/ethernet/nvidia/forcedeth.c
 
 FIREWIRE SUBSYSTEM
 M:	Neil Horman <nhorman@redhat.com>
@@ -325,7 +325,7 @@ F:	tools/hv/
 IBM IBMVETH ETHERNET DRIVER (ibmveth)
 M:	Brad Peters <bpeters@redhat.com>
 S:	Maintained
-F:	drivers/net/ibmveth.*
+F:	drivers/net/ethernet/ibm/ibmveth.*
 
 INFINIBAND SUBSYSTEM
 M:	Doug Ledford <dledford@redhat.com>
@@ -406,12 +406,12 @@ F:	drivers/block/mtip32xx/mtip32xx.h
 MLX4 ETHERNET DRIVER (mlx4)
 M:	Doug Ledford <dledford@redhat.com>
 S:	Maintained
-F:	drivers/net/mlx4/
+F:	drivers/net/ethernet/mellanox/mlx4/
 
 MYRICOM MYRI-10G 10GbE DRIVER (MYRI10GE)
 M:	Stanislaw Gruszka <sgruszka@redhat.com>
 S:	Maintained
-F:	drivers/net/myri10ge/
+F:	drivers/net/ethernet/myricom/myri10ge/
 
 NETWORKING [GENERAL]
 M:	Jiri Benc <jbenc@redhat.com>
@@ -462,7 +462,7 @@ NETXEN (1/10) GbE SUPPORT
 M:	Chad Dupuis <cdupuis@redhat.com>
 M:	Tony Camuso <tcamuso@redhat.com>
 S:	Maintained
-F:	drivers/net/netxen/
+F:	drivers/net/ethernet/qlogic/netxen/
 
 NETWORK LOCK MANAGER (lockd)
 M:	Red Hat NFS Team <nfs-team@redhat.com>
@@ -552,12 +552,12 @@ QLOGIC QLA3XXX NETWORK DRIVER
 M:	Chad Dupuis <cdupuis@redhat.com>
 S:	Maintained
 F:	Documentation/networking/LICENSE.qla3xxx
-F:	drivers/net/qla3xxx.*
+F:	drivers/net/ethernet/qlogic/qla3xxx.*
 
 QLOGIC QLGE 10Gb ETHERNET DRIVER
 M:	Chad Dupuis <cdupuis@redhat.com>
 S:	Maintained
-F:	drivers/net/qlge/
+F:	drivers/net/ethernet/qlogic/qlge/
 
 RALINK RT2X00 WIRELESS LAN DRIVER
 M:	Stanislaw Gruszka <sgruszka@redhat.com>
@@ -617,7 +617,7 @@ F:	drivers/net/usb/sierra_net.c
 SFC NETWORK DRIVER
 M:	Nikolay Aleksandrov <naleksan@redhat.com>
 S:	Maintained
-F:	drivers/net/sfc/
+F:	drivers/net/ethernet/sfc/
 
 SGI SPECIFIC
 M:	George Beshers <gbeshers@redhat.com>
@@ -637,12 +637,12 @@ F:	arch/x86/platform/uv/
 SKGE 10/100/1000 GIGABIT ETHERNET DRIVER
 M:	Michal Schmidt <mschmidt@redhat.com>
 S:	Maintained
-F:	drivers/net/skge.*
+F:	drivers/net/ethernet/marvell/skge.*
 
 SKY2 10/100/1000 GIGABIT ETHERNET DRIVER
 M:	Nikolay Aleksandrov <naleksan@redhat.com>
 S:	Maintained
-F:	drivers/net/sky2.*
+F:	drivers/net/ethernet/marvell/sky2.*
 
 SOFTWARE RAID (Multiple Disks, MD) SUPPORT
 M:	Jes Sorensen <Jes.Sorensen@redhat.com>
