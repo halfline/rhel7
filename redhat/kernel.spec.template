@@ -1538,6 +1538,22 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Jul 06 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-291.el7]
+- [x86] perf: ibs: Update IBS MSRs and feature definitions (Jiri Olsa) [1135033]
+- [x86] Mark Intel Skylake-Y processor as supported (Steve Best) [1176665]
+- [edac] sb_edac: support for Broadwell -EP and -EX (Seth Jennings) [1223598]
+- [edac] sb_edac: Fix support for systems with two home agents per socket (Seth Jennings) [1223598]
+- [edac] sb_edac: Fix a typo and a thinko in address handling for Haswell (Seth Jennings) [1223598]
+- [edac] Remove arbitrary limit on number of channels (Seth Jennings) [1223598]
+- [edac] sb_edac: Fix detection on SNB machines (Seth Jennings) [1223598]
+- [edac] sb_edac: Fix erroneous bytes->gigabytes conversion (Seth Jennings) [1223598]
+- [edac] sb_edac: Claim a different PCI device (Seth Jennings) [1223598]
+- [edac] Move Intel SNB device ids from sb_edac to pci_ids.h (Seth Jennings) [1223598]
+- [edac] sb_edac: Mark get_mci_for_node_id as static (Seth Jennings) [1223598]
+- [kernel] genirq: Fix memory leak when calling irq_free_hwirqs() (Steve Best) [1237186]
+- [kernel] module: Call module notifier on failure after complete_formation() (Bandan Das) [1236273]
+- [documentation] intel_pstate: Improve legacy mode internal governors description (Prarit Bhargava) [1236586]
+
 * Thu Jul 02 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-290.el7]
 - [hv] fcopy: set .owner reference for file operations (Vitaly Kuznetsov) [1236557]
 - [md] dm-btree-remove: fix bug in redistribute3 (Mike Snitzer) [1236092]
