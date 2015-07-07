@@ -383,8 +383,13 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 
 ifneq ($(WITH_GCOV),1)
 ifeq ($(KBUILD_EXTMOD),)
-ifneq (,$(filter $(ARCH), x86 x86_64))
+ifneq (,$(filter $(ARCH), x86 x86_64 powerpc))
 KBUILD_CFLAGS   += $(call cc-ifversion, -eq, 0408, -Werror)
+endif
+# powerpc is compiled with -O3 and gcc 4.8.3 has some known problems
+# with compiler warnings when using -O3, so let's disable them:
+ifeq ($(ARCH)-$(call cc-fullversion),powerpc-040803)
+KBUILD_CFLAGS += -Wno-maybe-uninitialized -Wno-array-bounds
 endif
 endif
 endif
