@@ -18,6 +18,7 @@
 #include <linux/sched.h>
 #include <linux/namei.h>
 #include <linux/fdtable.h>
+#include <linux/ratelimit.h>
 #include "overlayfs.h"
 
 #define OVL_COPY_UP_CHUNK_SIZE (1 << 20)
@@ -33,7 +34,8 @@ static int ovl_check_fd(const void *data, struct file *f, unsigned fd)
 	const struct dentry *dentry = data;
 
 	if (f->f_path.dentry == dentry)
-		pr_warn("overlayfs: Copying up %pD, but open R/O on fd %u\n", f, fd);
+		pr_warn_ratelimited("overlayfs: Warning: Copying up %pD, but open R/O on fd %u which will cease to be coherent [pid=%d %s]\n",
+				    f, fd, current->pid, current->comm);
 	return 0;
 }
 
