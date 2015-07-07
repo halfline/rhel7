@@ -100,9 +100,7 @@ void ovs_flow_stats_update(struct sw_flow *flow, __be16 tcp_flags,
 
 				new_stats =
 					kmem_cache_alloc_node(flow_stats_cache,
-							      GFP_NOWAIT |
-							      __GFP_THISNODE |
-							      __GFP_NOWARN |
+							      GFP_THISNODE |
 							      __GFP_NOMEMALLOC,
 							      node);
 				if (likely(new_stats)) {
