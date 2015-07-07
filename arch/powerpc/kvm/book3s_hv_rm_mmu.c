@@ -26,11 +26,14 @@ static void *real_vmalloc_addr(void *x)
 {
 	unsigned long addr = (unsigned long) x;
 	pte_t *p;
-
-	p = find_linux_pte_or_hugepte(swapper_pg_dir, addr, NULL);
+	/*
+	 * assume we don't have huge pages in vmalloc space...
+	 * So don't worry about THP collapse/split. Called
+	 * Only in realmode, hence won't need irq_save/restore.
+	 */
+	p = __find_linux_pte_or_hugepte(swapper_pg_dir, addr, NULL);
 	if (!p || !pte_present(*p))
 		return NULL;
-	/* assume we don't have huge pages in vmalloc space... */
 	addr = (pte_pfn(*p) << PAGE_SHIFT) | (addr & ~PAGE_MASK);
 	return __va(addr);
 }
@@ -158,7 +161,7 @@ long kvmppc_do_h_enter(struct kvm *kvm, unsigned long flags,
 	pte_t *ptep;
 	unsigned int writing;
 	unsigned long mmu_seq;
-	unsigned long rcbits;
+	unsigned long rcbits, irq_flags = 0;
 
 	psize = hpte_page_size(pteh, ptel);
 	if (!psize)
@@ -215,7 +218,16 @@ long kvmppc_do_h_enter(struct kvm *kvm, unsigned long flags,
 	} else {
 		/* Translate to host virtual address */
 		hva = __gfn_to_hva_memslot(memslot, gfn);
-		ptep = find_linux_pte_or_hugepte(pgdir, hva, &hpage_shift);
+		/*
+		 * If we had a page table table change after lookup, we would
+		 * retry via mmu_notifier_retry.
+		 */
+		if (realmode)
+			ptep = __find_linux_pte_or_hugepte(pgdir, hva, &hpage_shift);
+		else {
+			local_irq_save(irq_flags);
+			ptep = find_linux_pte_or_hugepte(pgdir, hva, &hpage_shift);
+		}
 		if (ptep) {
 			pte_t pte;
 			unsigned int host_pte_size;
@@ -228,8 +240,12 @@ long kvmppc_do_h_enter(struct kvm *kvm, unsigned long flags,
 			 * We should always find the guest page size
 			 * to <= host page size, if host is using hugepage
 			 */
-			if (host_pte_size < psize)
+
+			if (host_pte_size < psize) {
+				if (!realmode)
+					local_irq_restore(flags);
 				return H_PARAMETER;
+			}
 
 			pte = kvmppc_read_update_linux_pte(ptep, writing, hpage_shift);
 			if (pte_present(pte) && !pte_numa(pte)) {
@@ -242,6 +258,8 @@ long kvmppc_do_h_enter(struct kvm *kvm, unsigned long flags,
 				pa |= gpa & ~PAGE_MASK;
 			}
 		}
+		if (!realmode)
+			local_irq_restore(irq_flags);
 	}
 
 	ptel &= ~(HPTE_R_PP0 - psize);
