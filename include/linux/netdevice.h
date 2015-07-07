@@ -1163,7 +1163,10 @@ struct net_device_ops {
 	RH_KABI_USE_P(3, int	(*ndo_set_vf_rate)(struct net_device *dev,
 						   int vf, int min_tx_rate,
 						   int max_tx_rate))
-	RH_KABI_RESERVE_P(4)
+	RH_KABI_USE_P(4, int	(*ndo_get_vf_stats)(struct net_device *dev,
+						    int vf,
+						    struct ifla_vf_stats
+						    *vf_stats))
 	RH_KABI_RESERVE_P(5)
 	RH_KABI_RESERVE_P(6)
 	RH_KABI_RESERVE_P(7)
