@@ -41,6 +41,7 @@ void hyperv_vector_handler(struct pt_regs *regs)
 	irq_enter();
 	exit_idle();
 
+	rh_inc_irq_stat(irq_hv_callback_count);
 	if (vmbus_handler)
 		vmbus_handler();
 
