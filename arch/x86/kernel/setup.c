@@ -880,6 +880,7 @@ static void rh_check_supported(void)
 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
 	    ((boot_cpu_data.x86 == 6))) {
 		switch (boot_cpu_data.x86_model) {
+		case 94: /* Skylake-S */
 		case 79: /* Broadwell-EP */
 		case 78: /* Skylake-Y */
 		case 77: /* Atom Avoton */
