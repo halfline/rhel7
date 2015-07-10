@@ -27,9 +27,6 @@
  *                       so append a '1' to the _orig name to avoid name
  *                       collision.  Assumption here is _orig will not be used
  *                       anymore.
- * RH_KABI_REPLACE_P - replacement of _orig pointer with _new pointer.  Pointers
- *                     don't work with anonymous unions and their sizes don't
- *                     change, so just do a straightforward replacement.
  * RH_KABI_DEPRECATE - mark the element as deprecated and make it unusable
  *		       by modules while preserving kABI checksums
  *
@@ -54,7 +51,6 @@
 
 # define _RH_KABI_REPLACE(_orig, _new)		_orig
 # define _RH_KABI_CHANGE_TYPE(_orig, _new)	_orig
-# define _RH_KABI_REPLACE_P(_orig, _new)	_orig
 # define _RH_KABI_DEPRECATE(_type, _orig)	_type _orig
 
 # define RH_KABI_EXTEND(_new)
@@ -75,8 +71,6 @@
 		_new;				\
 		_orig##1;			\
 	}
-# define _RH_KABI_REPLACE_P(_orig, _new)	_new
-
 # define _RH_KABI_DEPRECATE(_type, _orig)	_type rh_reserved_##_orig
 
 # define RH_KABI_EXTEND(_new)         		_new;
@@ -90,7 +84,6 @@
 /* colon added wrappers for the RH_KABI_REPLACE macros */
 #define RH_KABI_REPLACE(_orig, _new)		_RH_KABI_REPLACE(_orig, _new);
 #define RH_KABI_CHANGE_TYPE(_orig, _new)	_RH_KABI_CHANGE_TYPE(_orig, _new);
-#define RH_KABI_REPLACE_P(_orig, _new)		_RH_KABI_REPLACE_P(_orig, _new);
 #define RH_KABI_DEPRECATE(_type, _orig)		_RH_KABI_DEPRECATE(_type, _orig);
 
 /*
@@ -106,7 +99,7 @@
  * Simple wrappers to replace standard Red Hat reserved elements.
  */
 #define RH_KABI_USE(n, _new)		RH_KABI_REPLACE(_RH_KABI_RESERVE(n), _new)
-#define RH_KABI_USE_P(n, _new)		RH_KABI_REPLACE_P(_RH_KABI_RESERVE_P(n), _new)
+#define RH_KABI_USE_P(n, _new)		RH_KABI_REPLACE(_RH_KABI_RESERVE_P(n), _new)
 
 /*
  * Macro for breaking up a reserved element into two smaller chunks using an
