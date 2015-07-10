@@ -47,8 +47,8 @@ struct dst_entry {
 	void			*__pad1;
 #endif
 	int			(*input)(struct sk_buff *);
-	RH_KABI_REPLACE_P(int			(*output)(struct sk_buff *),
-		          int			(*output)(struct sock *sk, struct sk_buff *skb))
+	RH_KABI_REPLACE(int			(*output)(struct sk_buff *),
+			int			(*output)(struct sock *sk, struct sk_buff *skb))
 
 	unsigned short		flags;
 #define DST_HOST		0x0001

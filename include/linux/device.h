@@ -662,7 +662,7 @@ struct acpi_device;
 
 struct acpi_dev_node {
 #ifdef CONFIG_ACPI
-	RH_KABI_REPLACE_P(void	*handle,
+	RH_KABI_REPLACE(void	*handle,
 		          struct acpi_device *companion)
 
 #endif

@@ -110,7 +110,7 @@ struct bio {
 	 * The following padding has been replaced to allow extending
 	 * the structure, using struct bio_aux, while preserving ABI.
 	 */
-	RH_KABI_REPLACE_P(void *rh_reserved1, struct bio_aux *bio_aux)
+	RH_KABI_REPLACE(void *rh_reserved1, struct bio_aux *bio_aux)
 
 	/*
 	 * We can inline a number of vecs at the end of the bio, to avoid

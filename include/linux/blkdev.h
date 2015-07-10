@@ -360,7 +360,7 @@ struct request_queue {
 	unsigned int		*mq_map;
 
 	/* sw queues */
-	RH_KABI_REPLACE_P(struct blk_mq_ctx	*queue_ctx,
+	RH_KABI_REPLACE(struct blk_mq_ctx	*queue_ctx,
 		          struct blk_mq_ctx __percpu	*queue_ctx)
 
 	unsigned int		nr_queues;

@@ -10,8 +10,8 @@ struct blk_flush_queue;
 struct blk_mq_cpu_notifier {
 	struct list_head list;
 	void *data;
-	RH_KABI_REPLACE_P(void (*notify)(void *data, unsigned long action, unsigned int cpu),
-			  int (*notify)(void *data, unsigned long action, unsigned int cpu))
+	RH_KABI_REPLACE(void (*notify)(void *data, unsigned long action, unsigned int cpu),
+			int (*notify)(void *data, unsigned long action, unsigned int cpu))
 };
 
 struct blk_mq_ctxmap {
@@ -44,14 +44,14 @@ struct blk_mq_hw_ctx {
 	RH_KABI_REPLACE(unsigned int		nr_ctx_map,
 			atomic_t		wait_index)
 
-	RH_KABI_REPLACE_P(unsigned long		*ctx_map,
-		          unsigned long		*padding1)
+	RH_KABI_REPLACE(unsigned long		*ctx_map,
+			unsigned long		*padding1)
 
-	RH_KABI_REPLACE_P(struct request		**rqs,
-		          struct request		**padding2)
+	RH_KABI_REPLACE(struct request		**rqs,
+			struct request		**padding2)
 
-	RH_KABI_REPLACE(struct list_head		page_list,
-		        struct list_head		padding3)
+	RH_KABI_REPLACE(struct list_head	page_list,
+			struct list_head	padding3)
 
 	struct blk_mq_tags	*tags;
 
@@ -116,8 +116,11 @@ struct blk_mq_queue_data {
 };
 
 /* None of these function pointers are covered by RHEL kABI */
-RH_KABI_REPLACE_P(typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *),
-		  typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, const struct blk_mq_queue_data *))
+#ifdef __GENKSYMS__
+typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *);
+#else
+typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, const struct blk_mq_queue_data *);
+#endif
 
 typedef struct blk_mq_hw_ctx *(map_queue_fn)(struct request_queue *, const int);
 #ifdef __GENKSYMS__
@@ -149,7 +152,7 @@ struct blk_mq_ops {
 	/*
 	 * Called on request timeout
 	 */
-	RH_KABI_REPLACE_P(rq_timed_out_fn *timeout, timeout_fn *timeout)
+	RH_KABI_REPLACE(rq_timed_out_fn *timeout, timeout_fn *timeout)
 
 	softirq_done_fn		*complete;
 

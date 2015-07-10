@@ -213,9 +213,9 @@ struct scsi_device {
 
 #define SCSI_VPD_PG_LEN                255
 
-	RH_KABI_REPLACE_P(void *vpd_reserved1, unsigned char *vpd_pg83)
+	RH_KABI_REPLACE(void *vpd_reserved1, unsigned char *vpd_pg83)
 	RH_KABI_REPLACE(void *vpd_reserved2, int vpd_pg83_len)
-	RH_KABI_REPLACE_P(void *vpd_reserved3, unsigned char *vpd_pg80)
+	RH_KABI_REPLACE(void *vpd_reserved3, unsigned char *vpd_pg80)
 	RH_KABI_REPLACE(void *vpd_reserved4, int vpd_pg80_len)
 	char	vpd_reserved5;
 	char	vpd_reserved6;
