@@ -553,7 +553,11 @@ struct sk_buff {
 	};
 	__u32			priority;
 	kmemcheck_bitfield_begin(flags1);
-	__u8			_RH_KABI_REPLACE_P(local_df:1, ignore_df:1),
+#ifdef __GENKSYMS__
+	__u8			local_df:1,
+#else
+	__u8			ignore_df:1,
+#endif
 				cloned:1,
 				ip_summed:2,
 				nohdr:1,
@@ -596,8 +600,11 @@ struct sk_buff {
 #endif
 	__u8			pfmemalloc:1;
 	__u8			ooo_okay:1;
-	RH_KABI_REPLACE_P(__u8	l4_rxhash:1,
-			  __u8	l4_hash:1)
+#ifdef __GENKSYMS__
+	__u8			l4_rxhash:1;
+#else
+	__u8			l4_hash:1;
+#endif
 	__u8			wifi_acked_valid:1;
 	__u8			wifi_acked:1;
 	__u8			no_fcs:1;
