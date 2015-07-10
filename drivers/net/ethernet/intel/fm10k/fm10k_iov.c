@@ -506,7 +506,8 @@ int fm10k_ndo_get_vf_config(struct net_device *netdev,
 	vf_info = &iov_data->vf_info[vf_idx];
 
 	ivi->vf = vf_idx;
-	ivi->tx_rate = vf_info->rate;
+	ivi->max_tx_rate = vf_info->rate;
+	ivi->min_tx_rate = 0;
 	ether_addr_copy(ivi->mac, vf_info->mac);
 	ivi->vlan = vf_info->pf_vid;
 	ivi->qos = 0;
