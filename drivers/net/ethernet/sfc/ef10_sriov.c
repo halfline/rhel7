@@ -708,7 +708,8 @@ int efx_ef10_sriov_get_vf_config(struct efx_nic *efx, int vf_i,
 	vf = nic_data->vf + vf_i;
 
 	ivf->vf = vf_i;
-	ivf->tx_rate = 0;
+	ivf->min_tx_rate = 0;
+	ivf->max_tx_rate = 0;
 	ether_addr_copy(ivf->mac, vf->mac);
 	ivf->vlan = (vf->vlan == EFX_EF10_NO_VLAN) ? 0 : vf->vlan;
 	ivf->qos = 0;
