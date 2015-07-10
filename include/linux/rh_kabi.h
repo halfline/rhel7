@@ -10,6 +10,8 @@
 #ifndef _LINUX_RH_KABI_H
 #define _LINUX_RH_KABI_H
 
+#include <linux/compiler.h>
+
 /*
  * The RH_KABI_REPLACE* macros attempt to add the ability to use the '_new'
  * element while preserving size alignment and kabi agreement with the '_orig'
@@ -56,10 +58,12 @@
 
 #else
 
-# define _RH_KABI_REPLACE(_orig, _new)		\
-	union {					\
-		_new;				\
-		_orig;				\
+# define _RH_KABI_REPLACE(_orig, _new)			\
+	union {						\
+		_new;					\
+		struct {	\
+			_orig;				\
+		} __UNIQUE_ID(rh_kabi_hide);		\
 	}
 # define _RH_KABI_CHANGE_TYPE(_orig, _new)	\
 	union {					\
