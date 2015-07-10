@@ -102,9 +102,10 @@
 #define RH_KABI_USE_P(n, _new)		RH_KABI_REPLACE(_RH_KABI_RESERVE_P(n), _new)
 
 /*
- * Macro for breaking up a reserved element into two smaller chunks using an
+ * Macros for breaking up a reserved element into two smaller chunks using an
  * anonymous struct inside an anonymous union.
  */
 #define RH_KABI_USE2(n, _new1, _new2)	RH_KABI_REPLACE(_RH_KABI_RESERVE(n), struct{ _new1; _new2; })
+#define RH_KABI_USE2_P(n, _new1, _new2)	RH_KABI_REPLACE(_RH_KABI_RESERVE_P(n), struct{ _new1; _new2;})
 
 #endif /* _LINUX_RH_KABI_H */
