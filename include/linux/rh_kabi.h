@@ -37,6 +37,10 @@
  *                  preserving the kabi agreement (by wrapping with GENKSYMS).
  * RH_KABI_FILL_HOLE - simple macro for filling a hole in a struct while
  *                     preserving the kabi agreement (by wrapping with GENKSYMS).
+ * RH_KABI_RENAME - simple macro for renaming an element without changing its type
+ *                  while preserving thi kabi agreement (by wrapping with GENKSYMS).
+ *                  This macro can be used in bitfields, for example.
+ *                  NOTE: does not include the final ';'
  *
  * NOTE NOTE NOTE
  * Don't use ';' after these macros as it messes up the kabi checker by
@@ -55,6 +59,7 @@
 
 # define RH_KABI_EXTEND(_new)
 # define RH_KABI_FILL_HOLE(_new)
+# define RH_KABI_RENAME(_orig, _new)		_orig
 
 #else
 
@@ -78,6 +83,7 @@
 
 /* Warning, only use if a hole exists for _all_ arches. Use pahole to verify */
 # define RH_KABI_FILL_HOLE(_new)       	_new;
+# define RH_KABI_RENAME(_orig, _new)		_new
 
 #endif /* __GENKSYMS__ */
 
