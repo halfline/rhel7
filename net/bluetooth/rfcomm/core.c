@@ -1967,12 +1967,11 @@ static void rfcomm_process_sessions(void)
 			continue;
 		}
 
-		if (s->state == BT_LISTEN) {
+		switch (s->state) {
+		case BT_LISTEN:
 			rfcomm_accept_connection(s);
 			continue;
-		}
 
-		switch (s->state) {
 		case BT_BOUND:
 			s = rfcomm_check_connection(s);
 			break;
