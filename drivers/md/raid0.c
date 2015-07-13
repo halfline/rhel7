@@ -25,6 +25,11 @@
 #include "raid0.h"
 #include "raid5.h"
 
+static bool devices_discard_performance = false;
+module_param(devices_discard_performance, bool, 0644);
+MODULE_PARM_DESC(devices_discard_performance,
+		 "Set to Y if all devices in each array handles discard requests at proper speed");
+
 static int raid0_congested(struct mddev *mddev, int bits)
 {
 	struct r0conf *conf = mddev->private;
@@ -277,6 +282,21 @@ static int create_strip_zones(struct mddev *mddev, struct r0conf **private_conf)
 		blk_queue_io_opt(mddev->queue,
 				 (mddev->chunk_sectors << 9) * mddev->raid_disks);
 
+		/* Unfortunately, some devices have awful discard performance,
+		 * especially for small sized requests. This is particularly
+		 * bad for RAID0 with a small chunk size resulting in a small
+		 * DISCARD requests hitting the underlaying drives.
+		 * Only allow DISCARD if the sysadmin confirms that all devices
+		 * in use can handle small DISCARD requests at reasonable speed,
+		 * by setting a module parameter.
+		 */
+		if (!devices_discard_performance) {
+			if (discard_supported) {
+				pr_info("md/raid0: discard support disabled due to performance uncertainty.\n");
+				pr_info("Set raid0.devices_discard_performance=Y to override.\n");
+			}
+			discard_supported = false;
+		}
 		if (!discard_supported)
 			queue_flag_clear_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
 		else
