@@ -1912,6 +1912,10 @@ static void add_intree_flag(struct buffer *b, int is_intree)
 static void add_staging_flag(struct buffer *b, const char *name)
 {
 	static const char *staging_dir = "drivers/staging";
+	static const char *unisys_dir = "drivers/staging/unisys";
+
+	if (strncmp(unisys_dir, name, strlen(unisys_dir)) == 0)
+		return;
 
 	if (strncmp(staging_dir, name, strlen(staging_dir)) == 0)
 		buf_printf(b, "\nMODULE_INFO(staging, \"Y\");\n");
