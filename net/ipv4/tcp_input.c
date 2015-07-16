@@ -757,7 +757,7 @@ static void tcp_update_pacing_rate(struct sock *sk)
 	if (likely(tp->srtt_us))
 		do_div(rate, tp->srtt_us);
 
-	sk->sk_pacing_rate = min_t(u64, rate, ~0U);
+	sk->sk_pacing_rate = min_t(u64, rate, sk->sk_max_pacing_rate);
 }
 
 /* Calculate rto without backoff.  This is the second half of Van Jacobson's
