@@ -509,10 +509,10 @@ static ssize_t nfs_direct_read_schedule_segment(struct nfs_pageio_descriptor *de
 		if (!pagevec)
 			break;
 		if (uio) {
-			down_read(&current->mm->mmap_sem);
-			result = get_user_pages(current, current->mm, user_addr,
-					npages, 1, 0, pagevec, NULL);
-			up_read(&current->mm->mmap_sem);
+			result = get_user_pages_unlocked(current, current->mm,
+							 user_addr,
+							 npages, 1, 0,
+							 pagevec);
 			if (result < 0)
 				break;
 		} else {
@@ -884,10 +884,10 @@ static ssize_t nfs_direct_write_schedule_segment(struct nfs_pageio_descriptor *d
 			break;
 
 		if (uio) {
-			down_read(&current->mm->mmap_sem);
-			result = get_user_pages(current, current->mm, user_addr,
-						npages, 0, 0, pagevec, NULL);
-			up_read(&current->mm->mmap_sem);
+			result = get_user_pages_unlocked(current, current->mm,
+							 user_addr,
+							 npages, 0, 0,
+							 pagevec);
 			if (result < 0)
 				break;
 		} else {
