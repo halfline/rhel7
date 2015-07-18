@@ -3,8 +3,8 @@
 == Objective ==
 
 Userfaults allow the implementation of on-demand paging from userland
-and more generally they allow userland to take control various memory
-page faults, something otherwise only the kernel code could do.
+and more generally they allow userland to take control of various
+memory page faults, something otherwise only the kernel code could do.
 
 For example userfaults allows a proper and more optimal implementation
 of the PROT_NONE+SIGSEGV trick.
@@ -47,10 +47,10 @@ When first opened the userfaultfd must be enabled invoking the
 UFFDIO_API ioctl specifying a uffdio_api.api value set to UFFD_API (or
 a later API version) which will specify the read/POLLIN protocol
 userland intends to speak on the UFFD and the uffdio_api.features
-userland needs to be enabled. The UFFDIO_API ioctl if successful
-(i.e. if the requested uffdio_api.api is spoken also by the running
-kernel and the requested features are going to be enabled) will return
-into uffdio_api.features and uffdio_api.ioctls two 64bit bitmasks of
+userland requires. The UFFDIO_API ioctl if successful (i.e. if the
+requested uffdio_api.api is spoken also by the running kernel and the
+requested features are going to be enabled) will return into
+uffdio_api.features and uffdio_api.ioctls two 64bit bitmasks of
 respectively all the available features of the read(2) protocol and
 the generic ioctl available.
 
@@ -77,7 +77,9 @@ The primary ioctl to resolve userfaults is UFFDIO_COPY. That
 atomically copies a page into the userfault registered range and wakes
 up the blocked userfaults (unless uffdio_copy.mode &
 UFFDIO_COPY_MODE_DONTWAKE is set). Other ioctl works similarly to
-UFFDIO_COPY.
+UFFDIO_COPY. They're atomic as in guaranteeing that nothing can see an
+half copied page since it'll keep userfaulting until the copy has
+finished.
 
 == QEMU/KVM ==
 
