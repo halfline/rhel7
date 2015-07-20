@@ -2355,7 +2355,6 @@ static void nfs4_state_manager(struct nfs_client *clp)
 			status = nfs4_handle_migration(clp);
 			if (status < 0)
 				goto out_error;
-			continue;
 		}
 
 		if (test_and_clear_bit(NFS4CLNT_LEASE_MOVED, &clp->cl_state)) {
