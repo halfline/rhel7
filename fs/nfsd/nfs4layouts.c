@@ -176,7 +176,6 @@ nfsd4_layout_setlease(struct nfs4_layout_stateid *ls)
 		locks_free_lock(fl);
 		return status;
 	}
-	BUG_ON(fl != NULL);
 	return 0;
 }
 
