@@ -500,6 +500,7 @@ enum pnfs_layouttype {
 	LAYOUT_OSD2_OBJECTS = 2,
 	LAYOUT_BLOCK_VOLUME = 3,
 	LAYOUT_FLEX_FILES = 4,
+	LAYOUT_TYPE_MAX
 };
 
 /* used for both layout return and recall */
