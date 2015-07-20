@@ -1011,9 +1011,6 @@ struct netdev_phys_port_id {
  *
  * int (*ndo_set_vf_rate)(struct net_device *dev, int vf, int min_tx_rate,
  *			  int max_tx_rate);
- *
- * int (*ndo_get_slave)(struct net_device *slave_dev, struct sk_buff *skb);
- *	Called to fill netlink skb with slave info.
  */
 struct net_device_ops {
 	int			(*ndo_init)(struct net_device *dev);
@@ -1170,8 +1167,7 @@ struct net_device_ops {
 						    int vf,
 						    struct ifla_vf_stats
 						    *vf_stats))
-	RH_KABI_USE_P(5, int	(*ndo_get_slave)(struct net_device *slave_dev,
-						 struct sk_buff *skb))
+	RH_KABI_RESERVE_P(5)
 	RH_KABI_RESERVE_P(6)
 	RH_KABI_RESERVE_P(7)
 	RH_KABI_RESERVE_P(8)
