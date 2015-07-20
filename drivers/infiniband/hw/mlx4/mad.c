@@ -861,8 +861,9 @@ int mlx4_ib_process_mad(struct ib_device *ibdev, int mad_flags, u8 port_num,
 	struct ib_mad *out_mad = (struct ib_mad *)out;
 	struct mlx4_ib_dev *dev = to_mdev(ibdev);
 
-	BUG_ON(in_mad_size != sizeof(*in_mad) ||
-	       *out_mad_size != sizeof(*out_mad));
+	if (WARN_ON_ONCE(in_mad_size != sizeof(*in_mad) ||
+			 *out_mad_size != sizeof(*out_mad)))
+		return IB_MAD_RESULT_FAILURE;
 
 	switch (rdma_port_get_link_layer(ibdev, port_num)) {
 	case IB_LINK_LAYER_INFINIBAND:
