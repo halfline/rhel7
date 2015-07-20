@@ -3068,6 +3068,7 @@ static void nfsd4_init_file(struct nfs4_file *fp, struct knfsd_fh *fh)
 	memset(fp->fi_access, 0, sizeof(fp->fi_access));
 #ifdef CONFIG_NFSD_PNFS
 	INIT_LIST_HEAD(&fp->fi_lo_states);
+	atomic_set(&fp->fi_lo_recalls, 0);
 #endif
 	hlist_add_head(&fp->fi_hash, &file_hashtbl[hashval]);
 }
