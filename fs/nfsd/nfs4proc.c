@@ -42,6 +42,7 @@
 #include "current_stateid.h"
 #include "netns.h"
 #include "pnfs.h"
+#include "trace.h"
 
 #ifdef CONFIG_NFSD_V4_SECURITY_LABEL
 #include <linux/security.h>
@@ -1215,8 +1216,10 @@ nfsd4_layoutget(struct svc_rqst *rqstp,
 
 	nfserr = nfsd4_preprocess_layout_stateid(rqstp, cstate, &lgp->lg_sid,
 						true, lgp->lg_layout_type, &ls);
-	if (nfserr)
+	if (nfserr) {
+		trace_layout_get_lookup_fail(&lgp->lg_sid);
 		goto out;
+	}
 
 	nfserr = nfserr_recallconflict;
 	if (atomic_read(&ls->ls_stid.sc_file->fi_lo_recalls))
@@ -1276,6 +1279,7 @@ nfsd4_layoutcommit(struct svc_rqst *rqstp,
 						false, lcp->lc_layout_type,
 						&ls);
 	if (nfserr) {
+		trace_layout_commit_lookup_fail(&lcp->lc_sid);
 		/* fixup error code as per RFC5661 */
 		if (nfserr == nfserr_bad_stateid)
 			nfserr = nfserr_badlayout;
