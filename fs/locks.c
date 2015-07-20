@@ -134,7 +134,7 @@
 
 #define IS_POSIX(fl)	(fl->fl_flags & FL_POSIX)
 #define IS_FLOCK(fl)	(fl->fl_flags & FL_FLOCK)
-#define IS_LEASE(fl)	(fl->fl_flags & (FL_LEASE|FL_DELEG))
+#define IS_LEASE(fl)	(fl->fl_flags & (FL_LEASE|FL_DELEG|FL_LAYOUT))
 
 static bool lease_breaking(struct file_lock *fl)
 {
@@ -1309,6 +1309,8 @@ static void time_out_leases(struct inode *inode)
 
 static bool leases_conflict(struct file_lock *lease, struct file_lock *breaker)
 {
+	if ((breaker->fl_flags & FL_LAYOUT) != (lease->fl_flags & FL_LAYOUT))
+		return false;
 	if ((breaker->fl_flags & FL_DELEG) && (lease->fl_flags & FL_LEASE))
 		return false;
 	return locks_conflict(breaker, lease);
@@ -1498,10 +1500,13 @@ int fcntl_getlease(struct file *filp)
  * conflict with the lease we're trying to set.
  */
 static int
-check_conflicting_open(const struct dentry *dentry, const long arg)
+check_conflicting_open(const struct dentry *dentry, const long arg, int flags)
 {
 	int ret = 0;
 	struct inode *inode = dentry->d_inode;
+
+	if (flags & FL_LAYOUT)
+		return 0;
 
 	if ((arg == F_RDLCK) && (atomic_read(&inode->i_writecount) > 0))
 		return -EAGAIN;
@@ -1539,7 +1544,7 @@ static int generic_add_lease(struct file *filp, long arg, struct file_lock **flp
 		return -EINVAL;
 	}
 
-	error = check_conflicting_open(dentry, arg);
+	error = check_conflicting_open(dentry, arg, lease->fl_flags);
 	if (error)
 		goto out;
 
@@ -1595,7 +1600,7 @@ static int generic_add_lease(struct file *filp, long arg, struct file_lock **flp
 	 * precedes these checks.
 	 */
 	smp_mb();
-	error = check_conflicting_open(dentry, arg);
+	error = check_conflicting_open(dentry, arg, lease->fl_flags);
 	if (error)
 		locks_unlink_lock(flp);
 out:
