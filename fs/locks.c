@@ -1569,7 +1569,8 @@ generic_add_lease(struct file *filp, long arg, struct file_lock **flp, void **pr
 	for (before = &inode->i_flock;
 			((fl = *before) != NULL) && IS_LEASE(fl);
 			before = &fl->fl_next) {
-		if (fl->fl_file == filp) {
+		if (fl->fl_file == filp &&
+			fl->fl_owner == lease->fl_owner) {
 			my_before = before;
 			continue;
 		}
@@ -1621,7 +1622,7 @@ out_unlink:
 	goto out;
 }
 
-static int generic_delete_lease(struct file *filp)
+static int generic_delete_lease(struct file *filp, void *owner)
 {
 	int error = -EAGAIN;
 	struct file_lock *fl, **before;
@@ -1631,7 +1632,8 @@ static int generic_delete_lease(struct file *filp)
 	for (before = &inode->i_flock;
 			((fl = *before) != NULL) && IS_LEASE(fl);
 			before = &fl->fl_next) {
-		if (fl->fl_file == filp)
+		if (fl->fl_file == filp && 
+			fl->fl_owner == owner)
 			break;
 	}
 	trace_generic_delete_lease(inode, fl);
@@ -1671,7 +1673,7 @@ int generic_setlease(struct file *filp, long arg, struct file_lock **flp,
 
 	switch (arg) {
 	case F_UNLCK:
-		return generic_delete_lease(filp);
+		return generic_delete_lease(filp, *priv);
 	case F_RDLCK:
 	case F_WRLCK:
 		if (!(*flp)->fl_lmops->lm_break) {
@@ -1780,7 +1782,7 @@ out_free_fasync:
 int fcntl_setlease(unsigned int fd, struct file *filp, long arg)
 {
 	if (arg == F_UNLCK)
-		return vfs_setlease(filp, F_UNLCK, NULL, NULL);
+		return vfs_setlease(filp, F_UNLCK, NULL, (void **)&filp);
 	return do_fcntl_add_lease(fd, filp, arg);
 }
 
