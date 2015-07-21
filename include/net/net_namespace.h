@@ -131,6 +131,13 @@ struct net {
 	RH_KABI_EXTEND(spinlock_t	nsid_lock)
 	/* upstream has this as part of netns_ipv4 */
 	RH_KABI_EXTEND(struct sock  * __percpu *ipv4_tcp_sk)
+#ifdef CONFIG_XFRM
+	/* upstream has this as part of netns_xfrm */
+	RH_KABI_EXTEND(spinlock_t xfrm_state_lock)
+	RH_KABI_EXTEND(spinlock_t xfrm_policy_sk_bundle_lock)
+	RH_KABI_EXTEND(rwlock_t xfrm_policy_lock)
+	RH_KABI_EXTEND(struct mutex xfrm_cfg_mutex)
+#endif
 };
 
 /*
