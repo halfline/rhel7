@@ -38,6 +38,7 @@
  *                  while preserving thi kabi agreement (by wrapping with GENKSYMS).
  *                  This macro can be used in bitfields, for example.
  *                  NOTE: does not include the final ';'
+ * RH_KABI_REPLACE_UNSAFE - unsafe version of RH_KABI_REPLACE. Only use for typedefs.
  *
  * NOTE NOTE NOTE
  * Don't use ';' after these macros as it messes up the kabi checker by
@@ -50,6 +51,7 @@
 #ifdef __GENKSYMS__
 
 # define _RH_KABI_REPLACE(_orig, _new)		_orig
+# define _RH_KABI_REPLACE_UNSAFE(_orig, _new)	_orig
 # define _RH_KABI_CHANGE_TYPE(_orig, _new)	_orig
 # define _RH_KABI_DEPRECATE(_type, _orig)	_type _orig
 
@@ -66,6 +68,9 @@
 			_orig;				\
 		} __UNIQUE_ID(rh_kabi_hide);		\
 	}
+
+#define _RH_KABI_REPLACE_UNSAFE(_orig, _new)	_new
+
 # define _RH_KABI_CHANGE_TYPE(_orig, _new)	\
 	union {					\
 		_new;				\
@@ -83,6 +88,7 @@
 
 /* colon added wrappers for the RH_KABI_REPLACE macros */
 #define RH_KABI_REPLACE(_orig, _new)		_RH_KABI_REPLACE(_orig, _new);
+#define RH_KABI_REPLACE_UNSAFE(_orig, _new)	_RH_KABI_REPLACE_UNSAFE(_orig, _new);
 #define RH_KABI_CHANGE_TYPE(_orig, _new)	_RH_KABI_CHANGE_TYPE(_orig, _new);
 #define RH_KABI_DEPRECATE(_type, _orig)		_RH_KABI_DEPRECATE(_type, _orig);
 
