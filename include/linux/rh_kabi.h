@@ -61,12 +61,25 @@
 
 #else
 
+#if IS_BUILTIN(CONFIG_RH_KABI_SIZE_ALIGN_CHECKS)
+#define __RH_KABI_CHECK_SIZE_ALIGN(_orig, _new)				\
+	union {								\
+		_Static_assert(sizeof(struct{_new;}) <= sizeof(struct{_orig;}), \
+			       "kabi sizeof test panic");		\
+		_Static_assert(__alignof__(struct{_new;}) <= __alignof__(struct{_orig;}), \
+			       "kabi alignof test panic");		\
+	}
+#else
+#define __RH_KABI_CHECK_SIZE_ALIGN(_orig, _new)
+#endif
+
 # define _RH_KABI_REPLACE(_orig, _new)			\
 	union {						\
 		_new;					\
-		struct {	\
+		struct {				\
 			_orig;				\
 		} __UNIQUE_ID(rh_kabi_hide);		\
+		__RH_KABI_CHECK_SIZE_ALIGN(_orig, _new);	\
 	}
 
 #define _RH_KABI_REPLACE_UNSAFE(_orig, _new)	_new
@@ -75,6 +88,7 @@
 	union {					\
 		_new;				\
 		_orig##1;			\
+		__RH_KABI_CHECK_SIZE_ALIGN(_orig, _new); \
 	}
 # define _RH_KABI_DEPRECATE(_type, _orig)	_type rh_reserved_##_orig
 
