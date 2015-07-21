@@ -2923,6 +2923,7 @@ void cmdline(int argc, char **argv)
 		{"counter",	required_argument,	0, 'c'},
 		{"Dump",	no_argument,		0, 'D'},
 		{"debug",	no_argument,		0, 'd'},
+		{"verbose",	no_argument,		0, 'v'},
 		{"interval",	required_argument,	0, 'i'},
 		{"help",	no_argument,		0, 'h'},
 		{"Joules",	no_argument,		0, 'J'},
@@ -2932,13 +2933,13 @@ void cmdline(int argc, char **argv)
 		{"processor",	no_argument,		0, 'p'},
 		{"Summary",	no_argument,		0, 'S'},
 		{"TCC",		required_argument,	0, 'T'},
-		{"version",	no_argument,		0, 'v' },
+		{"version",	no_argument,		0, 'V' },
 		{0,		0,			0,  0 }
 	};
 
 	progname = argv[0];
 
-	while ((opt = getopt_long_only(argc, argv, "C:c:Ddhi:JM:m:PpST:v",
+	while ((opt = getopt_long_only(argc, argv, "C:c:Ddvhi:JM:m:PpST:V",
 				long_options, &option_index)) != -1) {
 		switch (opt) {
 		case 'C':
@@ -2951,6 +2952,7 @@ void cmdline(int argc, char **argv)
 			dump_only++;
 			break;
 		case 'd':
+		case 'v':
 			debug++;
 			break;
 		case 'h':
@@ -2981,7 +2983,7 @@ void cmdline(int argc, char **argv)
 		case 'T':
 			tcc_activation_temp_override = atoi(optarg);
 			break;
-		case 'v':
+		case 'V':
 			print_version();
 			exit(0);
 			break;
