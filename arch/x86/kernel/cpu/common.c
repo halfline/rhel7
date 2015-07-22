@@ -636,7 +636,9 @@ void get_cpu_cap(struct cpuinfo_x86 *c)
 	/* Additional Intel-defined flags: level 0x0000000F */
 	if (c->cpuid_level >= 0x0000000F) {
 		u32 eax, ebx, ecx, edx;
-		struct rh_cpuinfo_x86 *rh_c = &rh_cpu_data(c->cpu_index);
+		struct rh_cpuinfo_x86 *rh_c =
+			(c == &boot_cpu_data) ? &rh_boot_cpu_data
+			: &rh_cpu_data(c->cpu_index);
 
 		/* QoS sub-leaf, EAX=0Fh, ECX=0 */
 		cpuid_count(0x0000000F, 0, &eax, &ebx, &ecx, &edx);
