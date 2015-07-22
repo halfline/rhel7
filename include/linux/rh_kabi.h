@@ -22,11 +22,6 @@
  * not bigger than the '_orig' element).
  *
  * RH_KABI_REPLACE - simple replacement of _orig with a union of _orig and _new
- * RH_KABI_CHANGE_TYPE - replacement of _orig with _new of the same name but
- *                       different type.  This causes problems with a union
- *                       so append a '1' to the _orig name to avoid name
- *                       collision.  Assumption here is _orig will not be used
- *                       anymore.
  * RH_KABI_DEPRECATE - mark the element as deprecated and make it unusable
  *		       by modules while preserving kABI checksums
  *
@@ -52,7 +47,6 @@
 
 # define _RH_KABI_REPLACE(_orig, _new)		_orig
 # define _RH_KABI_REPLACE_UNSAFE(_orig, _new)	_orig
-# define _RH_KABI_CHANGE_TYPE(_orig, _new)	_orig
 # define _RH_KABI_DEPRECATE(_type, _orig)	_type _orig
 
 # define RH_KABI_EXTEND(_new)
@@ -84,12 +78,6 @@
 
 #define _RH_KABI_REPLACE_UNSAFE(_orig, _new)	_new
 
-# define _RH_KABI_CHANGE_TYPE(_orig, _new)	\
-	union {					\
-		_new;				\
-		_orig##1;			\
-		__RH_KABI_CHECK_SIZE_ALIGN(_orig, _new); \
-	}
 # define _RH_KABI_DEPRECATE(_type, _orig)	_type rh_reserved_##_orig
 
 # define RH_KABI_EXTEND(_new)         		_new;
@@ -103,7 +91,6 @@
 /* colon added wrappers for the RH_KABI_REPLACE macros */
 #define RH_KABI_REPLACE(_orig, _new)		_RH_KABI_REPLACE(_orig, _new);
 #define RH_KABI_REPLACE_UNSAFE(_orig, _new)	_RH_KABI_REPLACE_UNSAFE(_orig, _new);
-#define RH_KABI_CHANGE_TYPE(_orig, _new)	_RH_KABI_CHANGE_TYPE(_orig, _new);
 #define RH_KABI_DEPRECATE(_type, _orig)		_RH_KABI_DEPRECATE(_type, _orig);
 
 /*

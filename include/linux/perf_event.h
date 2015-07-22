@@ -695,7 +695,7 @@ struct perf_sample_data {
 	struct perf_raw_record		*raw;
 	struct perf_branch_stack	*br_stack;
 
-	RH_KABI_CHANGE_TYPE(struct perf_regs_user       regs_user,
+	RH_KABI_REPLACE(struct perf_regs_user       regs_user,
 			    struct perf_regs            regs_user)
 
 	u64				stack_user_size;

@@ -222,7 +222,7 @@ struct net_bridge
 	struct list_head		port_list;
 	struct net_device		*dev;
 
-	RH_KABI_CHANGE_TYPE(struct br_cpu_netstats __percpu *stats, struct pcpu_sw_netstats		__percpu *stats)
+	RH_KABI_REPLACE(struct br_cpu_netstats __percpu *stats, struct pcpu_sw_netstats		__percpu *stats)
 	spinlock_t			hash_lock;
 	struct hlist_head		hash[BR_HASH_SIZE];
 #ifdef CONFIG_BRIDGE_NETFILTER

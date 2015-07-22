@@ -83,7 +83,7 @@ struct scsi_device {
 	struct list_head    siblings;   /* list of all devices on this host */
 	struct list_head    same_target_siblings; /* just the devices sharing same target id */
 
-	RH_KABI_CHANGE_TYPE(unsigned int device_busy, atomic_t device_busy)
+	RH_KABI_REPLACE(unsigned int device_busy, atomic_t device_busy)
 					/* commands actually active on LLDD */
 	spinlock_t list_lock;
 	struct list_head cmd_list;	/* queue of in use SCSI Command structures */
@@ -186,7 +186,7 @@ struct scsi_device {
 	struct list_head event_list;	/* asserted events */
 	struct work_struct event_work;
 
-	RH_KABI_CHANGE_TYPE(unsigned int device_blocked, atomic_t device_blocked)
+	RH_KABI_REPLACE(unsigned int device_blocked, atomic_t device_blocked)
 					/* Device returned QUEUE_FULL. */
 
 	unsigned int max_device_blocked; /* what device_blocked counts down from  */
@@ -331,13 +331,13 @@ struct scsi_target {
 						 * a 3F/0E UA, other devices on
 						 * the same target will also. */
 	/* commands actually active on LLD. */
-	RH_KABI_CHANGE_TYPE(unsigned int target_busy, atomic_t target_busy)
+	RH_KABI_REPLACE(unsigned int target_busy, atomic_t target_busy)
 	/*
 	 * LLDs should set this in the slave_alloc host template callout.
 	 * If set to zero then there is not limit.
 	 */
 	unsigned int		can_queue;
-	RH_KABI_CHANGE_TYPE(unsigned int target_blocked, atomic_t target_blocked)
+	RH_KABI_REPLACE(unsigned int target_blocked, atomic_t target_blocked)
 	unsigned int		max_target_blocked;
 #define SCSI_DEFAULT_TARGET_BLOCKED	3
 

@@ -138,12 +138,11 @@ struct eeh_dev {
 	 * space for the extra 8 bits.  Instead, reserve the current space
 	 * and extend the struct at the end.
 	 */
-	RH_KABI_CHANGE_TYPE(u8 pcie_cap,	/* Saved PCIe capability        */
-			    u8 kabi_reserved)   /* Preserve alignment for kabi  */
+	RH_KABI_DEPRECATE(u8, pcie_cap)	/* Saved PCIe capability        */
 	struct eeh_pe *pe;		/* Associated PE		*/
 	struct list_head list;		/* Form link list in the PE	*/
 	struct pci_controller *phb;	/* Associated PHB		*/
-	RH_KABI_CHANGE_TYPE(struct device_node *dn, /* Associated device node */
+	RH_KABI_REPLACE(struct device_node *dn, /* Associated device node */
 			    struct pci_dn *pdn) /* Associated PCI device node */
 	struct pci_dev *pdev;		/* Associated PCI device	*/
 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/

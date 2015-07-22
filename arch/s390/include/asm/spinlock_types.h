@@ -14,7 +14,7 @@ typedef struct {
 #define __ARCH_SPIN_LOCK_UNLOCKED { .lock = 0, }
 
 typedef struct {
-	RH_KABI_CHANGE_TYPE(volatile unsigned int lock, unsigned int lock)
+	RH_KABI_REPLACE(volatile unsigned int lock, unsigned int lock)
 } arch_rwlock_t;
 
 #define __ARCH_RW_LOCK_UNLOCKED		{ .lock = 0 }

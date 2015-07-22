@@ -630,7 +630,7 @@ struct Scsi_Host {
 	struct blk_queue_tag	*bqt;
 #endif
 
-	RH_KABI_CHANGE_TYPE(unsigned int host_busy, atomic_t host_busy)
+	RH_KABI_REPLACE(unsigned int host_busy, atomic_t host_busy)
 					   /* commands actually active on low-level */
 	unsigned int host_failed;	   /* commands that failed.
 					      protected by host_lock */
@@ -738,7 +738,7 @@ struct Scsi_Host {
 	/*
 	 * Host has rejected a command because it was busy.
 	 */
-	RH_KABI_CHANGE_TYPE(unsigned int host_blocked, atomic_t host_blocked)
+	RH_KABI_REPLACE(unsigned int host_blocked, atomic_t host_blocked)
 
 	/*
 	 * Value host_blocked counts down from

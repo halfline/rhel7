@@ -1525,7 +1525,7 @@ struct net_device {
 	union {
 		void				*ml_priv;
 		struct pcpu_lstats __percpu	*lstats; /* loopback stats */
-		RH_KABI_CHANGE_TYPE(struct pcpu_tstats __percpu	*tstats, struct pcpu_sw_netstats __percpu	*tstats)
+		RH_KABI_REPLACE(struct pcpu_tstats __percpu	*tstats, struct pcpu_sw_netstats __percpu	*tstats)
 		struct pcpu_dstats __percpu	*dstats; /* dummy stats */
 		struct pcpu_vstats __percpu	*vstats; /* veth stats */
 	};

@@ -113,7 +113,7 @@ struct blkcg_gq {
 	 * module should be touching it. So it should be safe to use
 	 * __GENKSYMS__ trick.
 	 */
-	RH_KABI_CHANGE_TYPE(int refcnt, atomic_t refcnt)
+	RH_KABI_REPLACE(int refcnt, atomic_t refcnt)
 
 	/* is this blkg online? protected by both blkcg and q locks */
 	bool				online;
