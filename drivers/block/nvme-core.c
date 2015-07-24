@@ -476,6 +476,33 @@ static int nvme_error_status(u16 status)
 	}
 }
 
+#ifdef CONFIG_BLK_DEV_INTEGRITY
+static int nvme_noop_verify(struct blk_integrity_exchg *exg)
+{
+	return 0;
+}
+
+static void nvme_noop_generate(struct blk_integrity_exchg *exg)
+{
+}
+
+struct blk_integrity nvme_meta_noop = {
+	.name            = "NVME_META_NOOP",
+	.generate_fn        = nvme_noop_generate,
+	.verify_fn        = nvme_noop_verify,
+};
+static void nvme_init_integrity(struct nvme_ns *ns)
+{
+	nvme_meta_noop.tuple_size = ns->ms;
+	blk_integrity_register(ns->disk, &nvme_meta_noop);
+	blk_queue_max_integrity_segments(ns->queue, 1);
+}
+#else /* CONFIG_BLK_DEV_INTEGRITY */
+static void nvme_init_integrity(struct nvme_ns *ns)
+{
+}
+#endif
+
 static void req_completion(struct nvme_queue *nvmeq, void *ctx,
 						struct nvme_completion *cqe)
 {
@@ -1884,28 +1911,6 @@ static void nvme_config_discard(struct nvme_ns *ns)
 	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, ns->queue);
 }
 
-static int nvme_noop_verify(struct blk_integrity_exchg *exg)
-{
-	return 0;
-}
-
-static void nvme_noop_generate(struct blk_integrity_exchg *exg)
-{
-}
-
-struct blk_integrity nvme_meta_noop = {
-	.name			= "NVME_META_NOOP",
-	.generate_fn		= nvme_noop_generate,
-	.verify_fn		= nvme_noop_verify,
-};
-
-static void nvme_init_integrity(struct nvme_ns *ns)
-{
-	nvme_meta_noop.tuple_size = ns->ms;
-	blk_integrity_register(ns->disk, &nvme_meta_noop);
-	blk_queue_max_integrity_segments(ns->queue, 1);
-}
-
 static int nvme_revalidate_disk(struct gendisk *disk)
 {
 	struct nvme_ns *ns = disk->private_data;
@@ -1944,7 +1949,7 @@ static int nvme_revalidate_disk(struct gendisk *disk)
 		ns->lba_shift = 9;
 	bs = 1 << ns->lba_shift;
 
-	if (disk->integrity && (ns->ms != old_ms ||
+	if (blk_get_integrity(disk) && (ns->ms != old_ms ||
 				bs != queue_logical_block_size(disk->queue) ||
 				(ns->ms && id->flbas & NVME_NS_FLBAS_META_EXT)))
 		blk_integrity_unregister(disk);
@@ -1952,11 +1957,11 @@ static int nvme_revalidate_disk(struct gendisk *disk)
 	ns->pi_type = ns->ms == 8 ? id->dps & NVME_NS_DPS_PI_MASK : 0;
 	blk_queue_logical_block_size(ns->queue, bs);
 
-	if (ns->ms && !disk->integrity && (disk->flags & GENHD_FL_UP) &&
+	if (ns->ms && !blk_get_integrity(disk) && (disk->flags & GENHD_FL_UP) &&
 				!(id->flbas & NVME_NS_FLBAS_META_EXT))
 		nvme_init_integrity(ns);
 
-	if (id->ncap == 0 || (ns->ms && !disk->integrity &&
+	if (id->ncap == 0 || (ns->ms && !blk_get_integrity(disk) &&
 					!(ns->pi_type && ns->ms == 8)))
 		set_capacity(disk, 0);
 	else
@@ -2576,7 +2581,7 @@ static void nvme_dev_remove(struct nvme_dev *dev)
 
 	list_for_each_entry(ns, &dev->namespaces, list) {
 		if (ns->disk->flags & GENHD_FL_UP) {
-			if (ns->disk->integrity)
+			if (blk_get_integrity(ns->disk))
 				blk_integrity_unregister(ns->disk);
 			del_gendisk(ns->disk);
 		}
