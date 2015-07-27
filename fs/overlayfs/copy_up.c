@@ -22,7 +22,7 @@
 
 #define OVL_COPY_UP_CHUNK_SIZE (1 << 20)
 
-static unsigned ovl_check_copy_up;
+static unsigned ovl_check_copy_up = 1;
 module_param_named(check_copy_up, ovl_check_copy_up, uint,
 		   S_IWUSR | S_IRUGO);
 MODULE_PARM_DESC(ovl_check_copy_up,
