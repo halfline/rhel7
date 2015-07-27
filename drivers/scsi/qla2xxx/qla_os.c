@@ -957,7 +957,7 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
 	}
 
 	ql_dbg(ql_dbg_taskm, vha, 0x8002,
-	    "Aborting from RISC nexus=%ld:%d:%llu sp=%p cmd=%p handle=%x\n",
+	    "Aborting from RISC nexus=%ld:%d:%u sp=%p cmd=%p handle=%x\n",
 	    vha->host_no, id, lun, sp, cmd, sp->handle);
 
 	/* Get a reference to the sp and drop the lock.*/
@@ -966,14 +966,9 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
 	rval = ha->isp_ops->abort_command(sp);
 	if (rval) {
-		if (rval == QLA_FUNCTION_PARAMETER_ERROR) {
-			/*
-			 * Decrement the ref_count since we can't find the
-			 * command
-			 */
-			atomic_dec(&sp->ref_count);
+		if (rval == QLA_FUNCTION_PARAMETER_ERROR)
 			ret = SUCCESS;
-		} else
+		else
 			ret = FAILED;
 
 		ql_dbg(ql_dbg_taskm, vha, 0x8003,
