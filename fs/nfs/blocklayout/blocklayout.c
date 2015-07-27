@@ -904,6 +904,7 @@ static int __init nfs4blocklayout_init(void)
 	ret = bl_init_pipefs();
 	if (ret)
 		goto out_unregister;
+	mark_tech_preview("NFSv4 Block Layout Driver", NULL);
 	return 0;
 
 out_unregister:
