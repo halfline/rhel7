@@ -990,8 +990,8 @@ static struct nx842_driver nx842_pseries_driver = {
 	.decompress =	nx842_pseries_decompress,
 };
 
-static int __init nx842_probe(struct vio_dev *viodev,
-				  const struct vio_device_id *id)
+static int nx842_probe(struct vio_dev *viodev,
+		       const struct vio_device_id *id)
 {
 	struct nx842_devdata *old_devdata, *new_devdata = NULL;
 	unsigned long flags;
@@ -1063,7 +1063,7 @@ error:
 	return ret;
 }
 
-static int __exit nx842_remove(struct vio_dev *viodev)
+static int nx842_remove(struct vio_dev *viodev)
 {
 	struct nx842_devdata *old_devdata;
 	unsigned long flags;
@@ -1094,7 +1094,7 @@ static struct vio_device_id nx842_vio_driver_ids[] = {
 static struct vio_driver nx842_vio_driver = {
 	.name = KBUILD_MODNAME,
 	.probe = nx842_probe,
-	.remove = __exit_p(nx842_remove),
+	.remove = nx842_remove,
 	.get_desired_dma = nx842_get_desired_dma,
 	.id_table = nx842_vio_driver_ids,
 };
