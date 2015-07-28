@@ -1093,7 +1093,7 @@ static struct vio_driver nx842_vio_driver = {
 	.id_table = nx842_vio_driver_ids,
 };
 
-static int __init nx842_init(void)
+static int __init nx842_pseries_init(void)
 {
 	struct nx842_devdata *new_devdata;
 	int ret;
@@ -1129,9 +1129,9 @@ static int __init nx842_init(void)
 	return 0;
 }
 
-module_init(nx842_init);
+module_init(nx842_pseries_init);
 
-static void __exit nx842_exit(void)
+static void __exit nx842_pseries_exit(void)
 {
 	struct nx842_devdata *old_devdata;
 	unsigned long flags;
@@ -1150,5 +1150,5 @@ static void __exit nx842_exit(void)
 	vio_unregister_driver(&nx842_vio_driver);
 }
 
-module_exit(nx842_exit);
+module_exit(nx842_pseries_exit);
 
