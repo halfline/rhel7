@@ -48,7 +48,7 @@ struct pasid_state {
 	unsigned mmu_notifier_count;		/* Counting nested mmu_notifier
 						   calls */
 	struct mm_struct *mm;			/* mm_struct for the faults */
-	struct mmu_notifier mn;                 /* mmu_notifier handle */
+	struct mmu_notifier_rhel7 mn;		/* mmu_otifier handle */
 	struct pri_queue pri[PRI_QUEUE_SIZE];	/* PRI tag states */
 	struct device_state *device_state;	/* Link to our device_state */
 	int pasid;				/* PASID index */
@@ -91,13 +91,6 @@ static LIST_HEAD(state_list);
 static spinlock_t state_lock;
 
 static struct workqueue_struct *iommu_wq;
-
-/*
- * Empty page table - Used between
- * mmu_notifier_invalidate_range_start and
- * mmu_notifier_invalidate_range_end
- */
-static u64 *empty_page_table;
 
 static void free_pasid_states(struct device_state *dev_state);
 
@@ -364,7 +357,8 @@ static void free_pasid_states(struct device_state *dev_state)
 		 * This will call the mn_release function and
 		 * unbind the PASID
 		 */
-		mmu_notifier_unregister(&pasid_state->mn, pasid_state->mm);
+		mmu_notifier_unregister_rhel7(&pasid_state->mn,
+					      pasid_state->mm);
 
 		put_pasid_state_wait(pasid_state); /* Reference taken in
 						      amd_iommu_bind_pasid */
@@ -383,12 +377,12 @@ static void free_pasid_states(struct device_state *dev_state)
 	free_page((unsigned long)dev_state->states);
 }
 
-static struct pasid_state *mn_to_state(struct mmu_notifier *mn)
+static struct pasid_state *mn_to_state(struct mmu_notifier_rhel7 *mn)
 {
 	return container_of(mn, struct pasid_state, mn);
 }
 
-static void __mn_flush_page(struct mmu_notifier *mn,
+static void __mn_flush_page(struct mmu_notifier_rhel7 *mn,
 			    unsigned long address)
 {
 	struct pasid_state *pasid_state;
@@ -400,7 +394,7 @@ static void __mn_flush_page(struct mmu_notifier *mn,
 	amd_iommu_flush_page(dev_state->domain, pasid_state->pasid, address);
 }
 
-static int mn_clear_flush_young(struct mmu_notifier *mn,
+static int mn_clear_flush_young(struct mmu_notifier_rhel7 *mn,
 				struct mm_struct *mm,
 				unsigned long address)
 {
@@ -409,56 +403,31 @@ static int mn_clear_flush_young(struct mmu_notifier *mn,
 	return 0;
 }
 
-static void mn_invalidate_page(struct mmu_notifier *mn,
+static void mn_invalidate_page(struct mmu_notifier_rhel7 *mn,
 			       struct mm_struct *mm,
 			       unsigned long address)
 {
 	__mn_flush_page(mn, address);
 }
 
-static void mn_invalidate_range_start(struct mmu_notifier *mn,
-				      struct mm_struct *mm,
-				      unsigned long start, unsigned long end)
+static void mn_invalidate_range(struct mmu_notifier_rhel7 *mn,
+				struct mm_struct *mm,
+				unsigned long start, unsigned long end)
 {
 	struct pasid_state *pasid_state;
 	struct device_state *dev_state;
-	unsigned long flags;
 
 	pasid_state = mn_to_state(mn);
 	dev_state   = pasid_state->device_state;
 
-	spin_lock_irqsave(&pasid_state->lock, flags);
-	if (pasid_state->mmu_notifier_count == 0) {
-		amd_iommu_domain_set_gcr3(dev_state->domain,
-					  pasid_state->pasid,
-					  __pa(empty_page_table));
-	}
-	pasid_state->mmu_notifier_count += 1;
-	spin_unlock_irqrestore(&pasid_state->lock, flags);
+	if ((start ^ (end - 1)) < PAGE_SIZE)
+		amd_iommu_flush_page(dev_state->domain, pasid_state->pasid,
+				     start);
+	else
+		amd_iommu_flush_tlb(dev_state->domain, pasid_state->pasid);
 }
 
-static void mn_invalidate_range_end(struct mmu_notifier *mn,
-				    struct mm_struct *mm,
-				    unsigned long start, unsigned long end)
-{
-	struct pasid_state *pasid_state;
-	struct device_state *dev_state;
-	unsigned long flags;
-
-	pasid_state = mn_to_state(mn);
-	dev_state   = pasid_state->device_state;
-
-	spin_lock_irqsave(&pasid_state->lock, flags);
-	pasid_state->mmu_notifier_count -= 1;
-	if (pasid_state->mmu_notifier_count == 0) {
-		amd_iommu_domain_set_gcr3(dev_state->domain,
-					  pasid_state->pasid,
-					  __pa(pasid_state->mm->pgd));
-	}
-	spin_unlock_irqrestore(&pasid_state->lock, flags);
-}
-
-static void mn_release(struct mmu_notifier *mn, struct mm_struct *mm)
+static void mn_release(struct mmu_notifier_rhel7 *mn, struct mm_struct *mm)
 {
 	struct pasid_state *pasid_state;
 	struct device_state *dev_state;
@@ -476,12 +445,11 @@ static void mn_release(struct mmu_notifier *mn, struct mm_struct *mm)
 	unbind_pasid(pasid_state);
 }
 
-static struct mmu_notifier_ops iommu_mn = {
+static struct mmu_notifier_ops_rhel7 iommu_mn = {
 	.release		= mn_release,
 	.clear_flush_young      = mn_clear_flush_young,
 	.invalidate_page        = mn_invalidate_page,
-	.invalidate_range_start = mn_invalidate_range_start,
-	.invalidate_range_end   = mn_invalidate_range_end,
+	.invalidate_range       = mn_invalidate_range,
 };
 
 static void set_pri_tag_status(struct pasid_state *pasid_state,
@@ -671,7 +639,7 @@ int amd_iommu_bind_pasid(struct pci_dev *pdev, int pasid,
 	if (pasid_state->mm == NULL)
 		goto out_free;
 
-	mmu_notifier_register(&pasid_state->mn, mm);
+	mmu_notifier_register_rhel7(&pasid_state->mn, mm);
 
 	ret = set_pasid_state(dev_state, pasid_state, pasid);
 	if (ret)
@@ -698,7 +666,7 @@ out_clear_state:
 	clear_pasid_state(dev_state, pasid);
 
 out_unregister:
-	mmu_notifier_unregister(&pasid_state->mn, mm);
+	mmu_notifier_unregister_rhel7(&pasid_state->mn, mm);
 
 out_free:
 	mmput(mm);
@@ -746,7 +714,7 @@ void amd_iommu_unbind_pasid(struct pci_dev *pdev, int pasid)
 	 * Call mmu_notifier_unregister to drop our reference
 	 * to pasid_state->mm
 	 */
-	mmu_notifier_unregister(&pasid_state->mn, pasid_state->mm);
+	mmu_notifier_unregister_rhel7(&pasid_state->mn, pasid_state->mm);
 
 	put_pasid_state_wait(pasid_state); /* Reference taken in
 					      amd_iommu_bind_pasid */
@@ -952,17 +920,9 @@ static int __init amd_iommu_v2_init(void)
 	if (iommu_wq == NULL)
 		goto out;
 
-	ret = -ENOMEM;
-	empty_page_table = (u64 *)get_zeroed_page(GFP_KERNEL);
-	if (empty_page_table == NULL)
-		goto out_destroy_wq;
-
 	amd_iommu_register_ppr_notifier(&ppr_nb);
 
 	return 0;
-
-out_destroy_wq:
-	destroy_workqueue(iommu_wq);
 
 out:
 	return ret;
@@ -997,8 +957,6 @@ static void __exit amd_iommu_v2_exit(void)
 	}
 
 	destroy_workqueue(iommu_wq);
-
-	free_page((unsigned long)empty_page_table);
 }
 
 module_init(amd_iommu_v2_init);
