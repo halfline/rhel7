@@ -1616,8 +1616,6 @@ int fib_table_flush(struct fib_table *tb)
 		if (hlist_empty(&n->leaf)) {
 			put_child_root(pn, n->key, NULL);
 			node_free(n);
-		} else {
-			leaf_pull_suffix(pn, n);
 		}
 	}
 
