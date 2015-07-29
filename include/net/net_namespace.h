@@ -134,7 +134,6 @@ struct net {
 #ifdef CONFIG_XFRM
 	/* upstream has this as part of netns_xfrm */
 	RH_KABI_EXTEND(spinlock_t xfrm_state_lock)
-	RH_KABI_EXTEND(spinlock_t xfrm_policy_sk_bundle_lock)
 	RH_KABI_EXTEND(rwlock_t xfrm_policy_lock)
 	RH_KABI_EXTEND(struct mutex xfrm_cfg_mutex)
 	/* flow cache part */
