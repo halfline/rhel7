@@ -6,6 +6,7 @@
 #include <linux/workqueue.h>
 #include <linux/xfrm.h>
 #include <net/dst_ops.h>
+#include <net/flowcache.h>
 
 struct ctl_table_header;
 

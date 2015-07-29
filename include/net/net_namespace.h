@@ -137,6 +137,15 @@ struct net {
 	RH_KABI_EXTEND(spinlock_t xfrm_policy_sk_bundle_lock)
 	RH_KABI_EXTEND(rwlock_t xfrm_policy_lock)
 	RH_KABI_EXTEND(struct mutex xfrm_cfg_mutex)
+	/* flow cache part */
+	RH_KABI_EXTEND(struct flow_cache flow_cache_global)
+	RH_KABI_EXTEND(struct kmem_cache *flow_cachep)
+	RH_KABI_EXTEND(atomic_t flow_cache_genid)
+	RH_KABI_EXTEND(struct list_head flow_cache_gc_list)
+	RH_KABI_EXTEND(spinlock_t flow_cache_gc_lock)
+	RH_KABI_EXTEND(struct work_struct flow_cache_gc_work)
+	RH_KABI_EXTEND(struct work_struct flow_cache_flush_work)
+	RH_KABI_EXTEND(struct mutex flow_flush_sem)
 #endif
 };
 
