@@ -656,9 +656,11 @@ objlayout_init(void)
 		printk(KERN_INFO
 			"NFS: %s: Registering OSD pNFS Layout Driver failed: error=%d\n",
 			__func__, ret);
-	else
+	else {
 		printk(KERN_INFO "NFS: %s: Registered OSD pNFS Layout Driver\n",
 			__func__);
+		mark_tech_preview("OSD pNFS Layout Driver", NULL);
+	}
 	return ret;
 }
 
