@@ -266,7 +266,7 @@ static int acpi_processor_get_info(struct acpi_device *device)
 
 	phys_id = acpi_get_phys_id(pr->handle, device_declaration, pr->acpi_id);
 	if (phys_id < 0) {
-		acpi_handle_err(pr->handle, "failed to get CPU physical ID.\n");
+		acpi_handle_debug(pr->handle, "failed to get CPU physical ID.\n");
 		return -ENODEV;
 	}
 	pr->phys_id = phys_id;
