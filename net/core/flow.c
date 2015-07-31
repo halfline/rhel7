@@ -375,7 +375,7 @@ done:
 
 static void flow_cache_flush_task(struct work_struct *work)
 {
-	struct net *net = container_of(work, struct net, flow_cache_gc_work);
+	struct net *net = container_of(work, struct net, flow_cache_flush_work);
 
 	flow_cache_flush(net);
 }
