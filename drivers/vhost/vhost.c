@@ -18,7 +18,6 @@
 #include <linux/mmu_context.h>
 #include <linux/miscdevice.h>
 #include <linux/mutex.h>
-#include <linux/rcupdate.h>
 #include <linux/poll.h>
 #include <linux/file.h>
 #include <linux/highmem.h>
@@ -259,6 +258,7 @@ static void vhost_vq_reset(struct vhost_dev *dev,
 	vq->call_ctx = NULL;
 	vq->call = NULL;
 	vq->log_ctx = NULL;
+	vq->memory = NULL;
 	vq->is_le = virtio_legacy_is_little_endian();
 	vhost_vq_reset_user_be(vq);
 }
@@ -474,11 +474,18 @@ struct vhost_memory *vhost_dev_reset_owner_prepare(void)
 /* Caller should have device mutex */
 void vhost_dev_reset_owner(struct vhost_dev *dev, struct vhost_memory *memory)
 {
+	int i;
+
 	vhost_dev_cleanup(dev, true);
 
 	/* Restore memory to default empty mapping. */
 	memory->nregions = 0;
-	RCU_INIT_POINTER(dev->memory, memory);
+	dev->memory = memory;
+	/* We don't need VQ locks below since vhost_dev_cleanup makes sure
+	 * VQs aren't running.
+	 */
+	for (i = 0; i < dev->nvqs; ++i)
+		dev->vqs[i]->memory = memory;
 }
 
 void vhost_dev_stop(struct vhost_dev *dev)
@@ -519,10 +526,8 @@ void vhost_dev_cleanup(struct vhost_dev *dev, bool locked)
 		fput(dev->log_file);
 	dev->log_file = NULL;
 	/* No one will access memory at this point */
-	kfree(rcu_dereference_protected(dev->memory,
-					locked ==
-						lockdep_is_held(&dev->mutex)));
-	RCU_INIT_POINTER(dev->memory, NULL);
+	kfree(dev->memory);
+	dev->memory = NULL;
 	WARN_ON(!list_empty(&dev->work_list));
 	if (dev->worker) {
 		kthread_stop(dev->worker);
@@ -613,11 +618,7 @@ static int vq_access_ok(struct vhost_virtqueue *vq, unsigned int num,
 /* Caller should have device mutex but not vq mutex */
 int vhost_log_access_ok(struct vhost_dev *dev)
 {
-	struct vhost_memory *mp;
-
-	mp = rcu_dereference_protected(dev->memory,
-				       lockdep_is_held(&dev->mutex));
-	return memory_access_ok(dev, mp, 1);
+	return memory_access_ok(dev, dev->memory, 1);
 }
 
 /* Verify access for write logging. */
@@ -625,12 +626,9 @@ int vhost_log_access_ok(struct vhost_dev *dev)
 static int vq_log_access_ok(struct vhost_virtqueue *vq,
 			    void __user *log_base)
 {
-	struct vhost_memory *mp;
 	size_t s = vhost_has_feature(vq, VIRTIO_RING_F_EVENT_IDX) ? 2 : 0;
 
-	mp = rcu_dereference_protected(vq->dev->memory,
-				       lockdep_is_held(&vq->mutex));
-	return vq_memory_access_ok(log_base, mp,
+	return vq_memory_access_ok(log_base, vq->memory,
 				   vhost_has_feature(vq, VHOST_F_LOG_ALL)) &&
 		(!vq->log_used || log_access_ok(log_base, vq->log_addr,
 					sizeof *vq->used +
@@ -672,15 +670,13 @@ static long vhost_set_memory(struct vhost_dev *d, struct vhost_memory __user *m)
 		kfree(newmem);
 		return -EFAULT;
 	}
-	oldmem = rcu_dereference_protected(d->memory,
-					   lockdep_is_held(&d->mutex));
-	rcu_assign_pointer(d->memory, newmem);
+	oldmem = d->memory;
+	d->memory = newmem;
 
-	/* All memory accesses are done under some VQ mutex.
-	 * So below is a faster equivalent of synchronize_rcu()
-	 */
+	/* All memory accesses are done under some VQ mutex. */
 	for (i = 0; i < d->nvqs; ++i) {
 		mutex_lock(&d->vqs[i]->mutex);
+		d->vqs[i]->memory = newmem;
 		mutex_unlock(&d->vqs[i]->mutex);
 	}
 	kfree(oldmem);
@@ -1124,7 +1120,7 @@ int vhost_init_used(struct vhost_virtqueue *vq)
 	return 0;
 }
 
-static int translate_desc(struct vhost_dev *dev, u64 addr, u32 len,
+static int translate_desc(struct vhost_virtqueue *vq, u64 addr, u32 len,
 			  struct iovec iov[], int iov_size)
 {
 	const struct vhost_memory_region *reg;
@@ -1133,9 +1129,7 @@ static int translate_desc(struct vhost_dev *dev, u64 addr, u32 len,
 	u64 s = 0;
 	int ret = 0;
 
-	rcu_read_lock();
-
-	mem = rcu_dereference(dev->memory);
+	mem = vq->memory;
 	while ((u64)len > s) {
 		u64 size;
 		if (unlikely(ret >= iov_size)) {
@@ -1157,7 +1151,6 @@ static int translate_desc(struct vhost_dev *dev, u64 addr, u32 len,
 		++ret;
 	}
 
-	rcu_read_unlock();
 	return ret;
 }
 
@@ -1182,7 +1175,7 @@ static unsigned next_desc(struct vhost_virtqueue *vq, struct vring_desc *desc)
 	return next;
 }
 
-static int get_indirect(struct vhost_dev *dev, struct vhost_virtqueue *vq,
+static int get_indirect(struct vhost_virtqueue *vq,
 			struct iovec iov[], unsigned int iov_size,
 			unsigned int *out_num, unsigned int *in_num,
 			struct vhost_log *log, unsigned int *log_num,
@@ -1202,7 +1195,7 @@ static int get_indirect(struct vhost_dev *dev, struct vhost_virtqueue *vq,
 		return -EINVAL;
 	}
 
-	ret = translate_desc(dev, vhost64_to_cpu(vq, indirect->addr), len, vq->indirect,
+	ret = translate_desc(vq, vhost64_to_cpu(vq, indirect->addr), len, vq->indirect,
 			     UIO_MAXIOV);
 	if (unlikely(ret < 0)) {
 		vq_err(vq, "Translation failure %d in indirect.\n", ret);
@@ -1242,7 +1235,7 @@ static int get_indirect(struct vhost_dev *dev, struct vhost_virtqueue *vq,
 			return -EINVAL;
 		}
 
-		ret = translate_desc(dev, vhost64_to_cpu(vq, desc.addr),
+		ret = translate_desc(vq, vhost64_to_cpu(vq, desc.addr),
 				     vhost32_to_cpu(vq, desc.len), iov + iov_count,
 				     iov_size - iov_count);
 		if (unlikely(ret < 0)) {
@@ -1280,7 +1273,7 @@ static int get_indirect(struct vhost_dev *dev, struct vhost_virtqueue *vq,
  * This function returns the descriptor number found, or vq->num (which is
  * never a valid descriptor number) if none was found.  A negative code is
  * returned on error. */
-int vhost_get_vq_desc(struct vhost_dev *dev, struct vhost_virtqueue *vq,
+int vhost_get_vq_desc(struct vhost_virtqueue *vq,
 		      struct iovec iov[], unsigned int iov_size,
 		      unsigned int *out_num, unsigned int *in_num,
 		      struct vhost_log *log, unsigned int *log_num)
@@ -1359,7 +1352,7 @@ int vhost_get_vq_desc(struct vhost_dev *dev, struct vhost_virtqueue *vq,
 			return -EFAULT;
 		}
 		if (desc.flags & cpu_to_vhost16(vq, VRING_DESC_F_INDIRECT)) {
-			ret = get_indirect(dev, vq, iov, iov_size,
+			ret = get_indirect(vq, iov, iov_size,
 					   out_num, in_num,
 					   log, log_num, &desc);
 			if (unlikely(ret < 0)) {
@@ -1370,7 +1363,7 @@ int vhost_get_vq_desc(struct vhost_dev *dev, struct vhost_virtqueue *vq,
 			continue;
 		}
 
-		ret = translate_desc(dev, vhost64_to_cpu(vq, desc.addr),
+		ret = translate_desc(vq, vhost64_to_cpu(vq, desc.addr),
 				     vhost32_to_cpu(vq, desc.len), iov + iov_count,
 				     iov_size - iov_count);
 		if (unlikely(ret < 0)) {
