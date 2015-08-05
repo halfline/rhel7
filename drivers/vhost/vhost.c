@@ -82,7 +82,7 @@ static void vhost_init_is_le(struct vhost_virtqueue *vq)
 	 * explicit endianness, the default behavior is native endian, as
 	 * expected by legacy virtio.
 	 */
-	vq->is_le = vhost_has_feature(vq->dev, VIRTIO_F_VERSION_1) || !vq->user_be;
+	vq->is_le = vhost_has_feature(vq, VIRTIO_F_VERSION_1) || !vq->user_be;
 }
 #else
 static void vhost_vq_reset_user_be(struct vhost_virtqueue *vq)
@@ -102,7 +102,7 @@ static long vhost_get_vring_endian(struct vhost_virtqueue *vq, u32 idx,
 
 static void vhost_init_is_le(struct vhost_virtqueue *vq)
 {
-	if (vhost_has_feature(vq->dev, VIRTIO_F_VERSION_1))
+	if (vhost_has_feature(vq, VIRTIO_F_VERSION_1))
 		vq->is_le = true;
 }
 #endif /* CONFIG_VHOST_CROSS_ENDIAN_LEGACY */
@@ -251,6 +251,7 @@ static void vhost_vq_reset(struct vhost_dev *dev,
 	vq->log_used = false;
 	vq->log_addr = -1ull;
 	vq->private_data = NULL;
+	vq->acked_features = 0;
 	vq->log_base = NULL;
 	vq->error_ctx = NULL;
 	vq->error = NULL;
@@ -579,11 +580,13 @@ static int memory_access_ok(struct vhost_dev *d, struct vhost_memory *mem,
 
 	for (i = 0; i < d->nvqs; ++i) {
 		int ok;
+		bool log;
+
 		mutex_lock(&d->vqs[i]->mutex);
+		log = log_all || vhost_has_feature(d->vqs[i], VHOST_F_LOG_ALL);
 		/* If ring is inactive, will check when it's enabled. */
 		if (d->vqs[i]->private_data)
-			ok = vq_memory_access_ok(d->vqs[i]->log_base, mem,
-						 log_all);
+			ok = vq_memory_access_ok(d->vqs[i]->log_base, mem, log);
 		else
 			ok = 1;
 		mutex_unlock(&d->vqs[i]->mutex);
@@ -593,12 +596,12 @@ static int memory_access_ok(struct vhost_dev *d, struct vhost_memory *mem,
 	return 1;
 }
 
-static int vq_access_ok(struct vhost_dev *d, unsigned int num,
+static int vq_access_ok(struct vhost_virtqueue *vq, unsigned int num,
 			struct vring_desc __user *desc,
 			struct vring_avail __user *avail,
 			struct vring_used __user *used)
 {
-	size_t s = vhost_has_feature(d, VIRTIO_RING_F_EVENT_IDX) ? 2 : 0;
+	size_t s = vhost_has_feature(vq, VIRTIO_RING_F_EVENT_IDX) ? 2 : 0;
 	return access_ok(VERIFY_READ, desc, num * sizeof *desc) &&
 	       access_ok(VERIFY_READ, avail,
 			 sizeof *avail + num * sizeof *avail->ring + s) &&
@@ -619,16 +622,16 @@ int vhost_log_access_ok(struct vhost_dev *dev)
 
 /* Verify access for write logging. */
 /* Caller should have vq mutex and device mutex */
-static int vq_log_access_ok(struct vhost_dev *d, struct vhost_virtqueue *vq,
+static int vq_log_access_ok(struct vhost_virtqueue *vq,
 			    void __user *log_base)
 {
 	struct vhost_memory *mp;
-	size_t s = vhost_has_feature(d, VIRTIO_RING_F_EVENT_IDX) ? 2 : 0;
+	size_t s = vhost_has_feature(vq, VIRTIO_RING_F_EVENT_IDX) ? 2 : 0;
 
 	mp = rcu_dereference_protected(vq->dev->memory,
 				       lockdep_is_held(&vq->mutex));
 	return vq_memory_access_ok(log_base, mp,
-			    vhost_has_feature(vq->dev, VHOST_F_LOG_ALL)) &&
+				   vhost_has_feature(vq, VHOST_F_LOG_ALL)) &&
 		(!vq->log_used || log_access_ok(log_base, vq->log_addr,
 					sizeof *vq->used +
 					vq->num * sizeof *vq->used->ring + s));
@@ -638,8 +641,8 @@ static int vq_log_access_ok(struct vhost_dev *d, struct vhost_virtqueue *vq,
 /* Caller should have vq mutex and device mutex */
 int vhost_vq_access_ok(struct vhost_virtqueue *vq)
 {
-	return vq_access_ok(vq->dev, vq->num, vq->desc, vq->avail, vq->used) &&
-		vq_log_access_ok(vq->dev, vq, vq->log_base);
+	return vq_access_ok(vq, vq->num, vq->desc, vq->avail, vq->used) &&
+		vq_log_access_ok(vq, vq->log_base);
 }
 
 static long vhost_set_memory(struct vhost_dev *d, struct vhost_memory __user *m)
@@ -665,8 +668,7 @@ static long vhost_set_memory(struct vhost_dev *d, struct vhost_memory __user *m)
 		return -EFAULT;
 	}
 
-	if (!memory_access_ok(d, newmem,
-			      vhost_has_feature(d, VHOST_F_LOG_ALL))) {
+	if (!memory_access_ok(d, newmem, 0)) {
 		kfree(newmem);
 		return -EFAULT;
 	}
@@ -783,7 +785,7 @@ long vhost_vring_ioctl(struct vhost_dev *d, int ioctl, void __user *argp)
 		 * If it is not, we don't as size might not have been setup.
 		 * We will verify when backend is configured. */
 		if (vq->private_data) {
-			if (!vq_access_ok(d, vq->num,
+			if (!vq_access_ok(vq, vq->num,
 				(void __user *)(unsigned long)a.desc_user_addr,
 				(void __user *)(unsigned long)a.avail_user_addr,
 				(void __user *)(unsigned long)a.used_user_addr)) {
@@ -928,7 +930,7 @@ long vhost_dev_ioctl(struct vhost_dev *d, unsigned int ioctl, void __user *argp)
 			vq = d->vqs[i];
 			mutex_lock(&vq->mutex);
 			/* If ring is inactive, will check when it's enabled. */
-			if (vq->private_data && !vq_log_access_ok(d, vq, base))
+			if (vq->private_data && !vq_log_access_ok(vq, base))
 				r = -EFAULT;
 			else
 				vq->log_base = base;
@@ -1512,11 +1514,11 @@ static bool vhost_notify(struct vhost_dev *dev, struct vhost_virtqueue *vq)
 	 * interrupts. */
 	smp_mb();
 
-	if (vhost_has_feature(dev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
+	if (vhost_has_feature(vq, VIRTIO_F_NOTIFY_ON_EMPTY) &&
 	    unlikely(vq->avail_idx == vq->last_avail_idx))
 		return true;
 
-	if (!vhost_has_feature(dev, VIRTIO_RING_F_EVENT_IDX)) {
+	if (!vhost_has_feature(vq, VIRTIO_RING_F_EVENT_IDX)) {
 		__virtio16 flags;
 		if (__get_user(flags, &vq->avail->flags)) {
 			vq_err(vq, "Failed to get flags");
@@ -1574,7 +1576,7 @@ bool vhost_enable_notify(struct vhost_dev *dev, struct vhost_virtqueue *vq)
 	if (!(vq->used_flags & VRING_USED_F_NO_NOTIFY))
 		return false;
 	vq->used_flags &= ~VRING_USED_F_NO_NOTIFY;
-	if (!vhost_has_feature(dev, VIRTIO_RING_F_EVENT_IDX)) {
+	if (!vhost_has_feature(vq, VIRTIO_RING_F_EVENT_IDX)) {
 		r = vhost_update_used_flags(vq);
 		if (r) {
 			vq_err(vq, "Failed to enable notification at %p: %d\n",
@@ -1610,7 +1612,7 @@ void vhost_disable_notify(struct vhost_dev *dev, struct vhost_virtqueue *vq)
 	if (vq->used_flags & VRING_USED_F_NO_NOTIFY)
 		return;
 	vq->used_flags |= VRING_USED_F_NO_NOTIFY;
-	if (!vhost_has_feature(dev, VIRTIO_RING_F_EVENT_IDX)) {
+	if (!vhost_has_feature(vq, VIRTIO_RING_F_EVENT_IDX)) {
 		r = vhost_update_used_flags(vq);
 		if (r)
 			vq_err(vq, "Failed to enable notification at %p: %d\n",
