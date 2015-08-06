@@ -82,6 +82,8 @@ struct timekeeper {
 	u32			ntp_err_mult;
 	/* The sequence number of clock was set events */
 	unsigned int		clock_was_set_seq;
+	/* CLOCK_MONOTONIC time value of a pending leap-second */
+	ktime_t			next_leap_ktime;
 };
 
 static inline struct timespec64 tk_xtime(struct timekeeper *tk)
