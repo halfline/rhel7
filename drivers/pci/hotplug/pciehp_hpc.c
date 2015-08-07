@@ -110,6 +110,10 @@ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
 	u16 slot_status;
 
 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+	if (slot_status == (u16) ~0) {
+		ctrl_info(ctrl, "%s: no response from device\n", __func__);
+		return 0;
+	}
 	if (slot_status & PCI_EXP_SLTSTA_CC) {
 		pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
 					   PCI_EXP_SLTSTA_CC);
@@ -119,6 +123,12 @@ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
 		msleep(10);
 		timeout -= 10;
 		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+		if (slot_status == (u16) ~0) {
+			ctrl_info(ctrl, "%s: no response from device\n",
+				  __func__);
+			return 0;
+		}
+
 		if (slot_status & PCI_EXP_SLTSTA_CC) {
 			pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
 						   PCI_EXP_SLTSTA_CC);
@@ -190,6 +200,11 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
 	pcie_wait_cmd(ctrl);
 
 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+	if (slot_ctrl == (u16) ~0) {
+		ctrl_info(ctrl, "%s: no response from device\n", __func__);
+		goto out;
+	}
+
 	slot_ctrl &= ~mask;
 	slot_ctrl |= (cmd & mask);
 	ctrl->cmd_busy = 1;
@@ -205,6 +220,7 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
 	if (wait)
 		pcie_wait_cmd(ctrl);
 
+out:
 	mutex_unlock(&ctrl->ctrl_lock);
 }
 
@@ -543,6 +559,11 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
 	intr_loc = 0;
 	do {
 		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &detected);
+		if (detected == (u16) ~0) {
+			ctrl_info(ctrl, "%s: no response from device\n",
+				  __func__);
+			return IRQ_HANDLED;
+		}
 
 		detected &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
 			     PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
