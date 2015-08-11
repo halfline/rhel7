@@ -1085,7 +1085,6 @@ static inline void txq_advance(struct sge_txq *q, unsigned int n)
  */
 netdev_tx_t t4_eth_xmit(struct sk_buff *skb, struct net_device *dev)
 {
-	int len;
 	u32 wr_mid;
 	u64 cntrl, *end;
 	int qidx, credits;
@@ -1098,6 +1097,7 @@ netdev_tx_t t4_eth_xmit(struct sk_buff *skb, struct net_device *dev)
 	const struct skb_shared_info *ssi;
 	dma_addr_t addr[MAX_SKB_FRAGS + 1];
 	bool immediate = false;
+	int len, max_pkt_len;
 
 	/*
 	 * The chip min packet length is 10 octets but play safe and reject
@@ -1107,6 +1107,13 @@ netdev_tx_t t4_eth_xmit(struct sk_buff *skb, struct net_device *dev)
 out_free:	dev_kfree_skb_any(skb);
 		return NETDEV_TX_OK;
 	}
+
+	/* Discard the packet if the length is greater than mtu */
+	max_pkt_len = ETH_HLEN + dev->mtu;
+	if (skb_vlan_tag_present(skb)) 
+		max_pkt_len += VLAN_HLEN;
+	if (!skb_shinfo(skb)->gso_size && (unlikely(skb->len > max_pkt_len)))
+		goto out_free;
 
 	pi = netdev_priv(dev);
 	adap = pi->adapter;
