@@ -322,7 +322,7 @@ static void dcb_tx_queue_prio_enable(struct net_device *dev, int enable)
 		 * level") we need to issue the Set Parameters Commannd
 		 * without sleeping (timeout < 0).
 		 */
-		err = t4_set_params_timeout(adap, adap->mbox, adap->fn, 0, 1,
+		err = t4_set_params_timeout(adap, adap->mbox, adap->pf, 0, 1,
 					    &name, &value,
 					    -FW_CMD_MAX_TIMEOUT);
 
@@ -387,7 +387,7 @@ static int set_addr_filters(const struct net_device *dev, bool sleep)
 	int uc_cnt = netdev_uc_count(dev);
 	int mc_cnt = netdev_mc_count(dev);
 	const struct port_info *pi = netdev_priv(dev);
-	unsigned int mb = pi->adapter->fn;
+	unsigned int mb = pi->adapter->pf;
 
 	/* first do the secondary unicast addresses */
 	netdev_for_each_uc_addr(ha, dev) {
@@ -444,7 +444,7 @@ static int set_rxmode(struct net_device *dev, int mtu, bool sleep_ok)
 
 	ret = set_addr_filters(dev, sleep_ok);
 	if (ret == 0)
-		ret = t4_set_rxmode(pi->adapter, pi->adapter->fn, pi->viid, mtu,
+		ret = t4_set_rxmode(pi->adapter, pi->adapter->pf, pi->viid, mtu,
 				    (dev->flags & IFF_PROMISC) ? 1 : 0,
 				    (dev->flags & IFF_ALLMULTI) ? 1 : 0, 1, -1,
 				    sleep_ok);
@@ -461,7 +461,7 @@ static int link_start(struct net_device *dev)
 {
 	int ret;
 	struct port_info *pi = netdev_priv(dev);
-	unsigned int mb = pi->adapter->fn;
+	unsigned int mb = pi->adapter->pf;
 
 	/*
 	 * We do not set address filters and promiscuity here, the stack does
@@ -879,7 +879,7 @@ int cxgb4_write_rss(const struct port_info *pi, const u16 *queues)
 	for (i = 0; i < pi->rss_size; i++, queues++)
 		rss[i] = rxq[*queues].rspq.abs_id;
 
-	err = t4_config_rss_range(adapter, adapter->fn, pi->viid, 0,
+	err = t4_config_rss_range(adapter, adapter->pf, pi->viid, 0,
 				  pi->rss_size, rss, pi->rss_size);
 	/* If Tunnel All Lookup isn't specified in the global RSS
 	 * Configuration, then we need to specify a default Ingress
@@ -1415,8 +1415,8 @@ int cxgb4_set_rspq_intr_params(struct sge_rspq *q,
 			    FW_PARAMS_PARAM_X_V(
 					FW_PARAMS_PARAM_DMAQ_IQ_INTCNTTHRESH) |
 			    FW_PARAMS_PARAM_YZ_V(q->cntxt_id);
-			err = t4_set_params(adap, adap->fn, adap->fn, 0, 1, &v,
-					    &new_idx);
+			err = t4_set_params(adap, adap->mbox, adap->pf, 0, 1,
+					    &v, &new_idx);
 			if (err)
 				return err;
 		}
@@ -1437,7 +1437,7 @@ static int cxgb_set_features(struct net_device *dev, netdev_features_t features)
 	if (!(changed & NETIF_F_HW_VLAN_CTAG_RX))
 		return 0;
 
-	err = t4_set_rxmode(pi->adapter, pi->adapter->fn, pi->viid, -1,
+	err = t4_set_rxmode(pi->adapter, pi->adapter->pf, pi->viid, -1,
 			    -1, -1, -1,
 			    !!(features & NETIF_F_HW_VLAN_CTAG_RX), true);
 	if (unlikely(err))
@@ -2174,7 +2174,7 @@ int cxgb4_bar2_sge_qregs(struct net_device *dev,
 			 u64 *pbar2_qoffset,
 			 unsigned int *pbar2_qid)
 {
-	return cxgb4_t4_bar2_sge_qregs(netdev2adap(dev),
+	return t4_bar2_sge_qregs(netdev2adap(dev),
 				 qid,
 				 (qtype == CXGB4_BAR2_QTYPE_EGRESS
 				  ? T4_BAR2_QTYPE_EGRESS
@@ -2376,7 +2376,7 @@ static void process_db_drop(struct work_struct *work)
 		unsigned int bar2_qid;
 		int ret;
 
-		ret = cxgb4_t4_bar2_sge_qregs(adap, qid, T4_BAR2_QTYPE_EGRESS,
+		ret = t4_bar2_sge_qregs(adap, qid, T4_BAR2_QTYPE_EGRESS,
 					&bar2_qoffset, &bar2_qid);
 		if (ret)
 			dev_err(adap->pdev_dev, "doorbell drop recovery: "
@@ -2419,7 +2419,7 @@ static void uld_attach(struct adapter *adap, unsigned int uld)
 	unsigned short i;
 
 	lli.pdev = adap->pdev;
-	lli.pf = adap->fn;
+	lli.pf = adap->pf;
 	lli.l2t = adap->l2t;
 	lli.tids = &adap->tids;
 	lli.ports = adap->port;
@@ -2756,7 +2756,7 @@ static int cxgb_close(struct net_device *dev)
 
 	netif_tx_stop_all_queues(dev);
 	netif_carrier_off(dev);
-	return t4_enable_vi(adapter, adapter->fn, pi->viid, false, false);
+	return t4_enable_vi(adapter, adapter->pf, pi->viid, false, false);
 }
 
 /* Return an error number if the indicated filter isn't writable ...
@@ -2959,7 +2959,7 @@ static int cxgb_ioctl(struct net_device *dev, struct ifreq *req, int cmd)
 		} else
 			return -EINVAL;
 
-		mbox = pi->adapter->fn;
+		mbox = pi->adapter->pf;
 		if (cmd == SIOCGMIIREG)
 			ret = t4_mdio_rd(pi->adapter, mbox, prtad, devad,
 					 data->reg_num, &data->val_out);
@@ -2986,7 +2986,7 @@ static int cxgb_change_mtu(struct net_device *dev, int new_mtu)
 
 	if (new_mtu < 81 || new_mtu > MAX_MTU)         /* accommodate SACK */
 		return -EINVAL;
-	ret = t4_set_rxmode(pi->adapter, pi->adapter->fn, pi->viid, new_mtu, -1,
+	ret = t4_set_rxmode(pi->adapter, pi->adapter->pf, pi->viid, new_mtu, -1,
 			    -1, -1, -1, true);
 	if (!ret)
 		dev->mtu = new_mtu;
@@ -3002,7 +3002,7 @@ static int cxgb_set_mac_addr(struct net_device *dev, void *p)
 	if (!is_valid_ether_addr(addr->sa_data))
 		return -EADDRNOTAVAIL;
 
-	ret = t4_change_mac(pi->adapter, pi->adapter->fn, pi->viid,
+	ret = t4_change_mac(pi->adapter, pi->adapter->pf, pi->viid,
 			    pi->xact_addr_filt, addr->sa_data, true, true);
 	if (ret < 0)
 		return ret;
@@ -3099,7 +3099,7 @@ static int adap_init1(struct adapter *adap, struct fw_caps_config_cmd *c)
 	c->op_to_write = htonl(FW_CMD_OP_V(FW_CAPS_CONFIG_CMD) |
 			       FW_CMD_REQUEST_F | FW_CMD_READ_F);
 	c->cfvalid_to_len16 = htonl(FW_LEN16(*c));
-	ret = t4_wr_mbox(adap, adap->fn, c, sizeof(*c), c);
+	ret = t4_wr_mbox(adap, adap->mbox, c, sizeof(*c), c);
 	if (ret < 0)
 		return ret;
 
@@ -3115,18 +3115,18 @@ static int adap_init1(struct adapter *adap, struct fw_caps_config_cmd *c)
 	}
 	c->op_to_write = htonl(FW_CMD_OP_V(FW_CAPS_CONFIG_CMD) |
 			       FW_CMD_REQUEST_F | FW_CMD_WRITE_F);
-	ret = t4_wr_mbox(adap, adap->fn, c, sizeof(*c), NULL);
+	ret = t4_wr_mbox(adap, adap->mbox, c, sizeof(*c), NULL);
 	if (ret < 0)
 		return ret;
 
-	ret = t4_config_glbl_rss(adap, adap->fn,
+	ret = t4_config_glbl_rss(adap, adap->pf,
 				 FW_RSS_GLB_CONFIG_CMD_MODE_BASICVIRTUAL,
 				 FW_RSS_GLB_CONFIG_CMD_TNLMAPEN_F |
 				 FW_RSS_GLB_CONFIG_CMD_TNLALLLKP_F);
 	if (ret < 0)
 		return ret;
 
-	ret = t4_cfg_pfvf(adap, adap->fn, adap->fn, 0, adap->sge.egr_sz, 64,
+	ret = t4_cfg_pfvf(adap, adap->mbox, adap->pf, 0, adap->sge.egr_sz, 64,
 			  MAX_INGQ, 0, 0, 4, 0xf, 0xf, 16, FW_CMD_CAP_PF,
 			  FW_CMD_CAP_PF);
 	if (ret < 0)
@@ -3170,7 +3170,7 @@ static int adap_init1(struct adapter *adap, struct fw_caps_config_cmd *c)
 	}
 
 	/* get basic stuff going */
-	return t4_early_init(adap, adap->fn);
+	return t4_early_init(adap, adap->pf);
 }
 
 /*
@@ -3314,7 +3314,7 @@ static int adap_init0_phy(struct adapter *adap)
 	 * where we can load a PHY firmware file from the host if we want to
 	 * override the PHY firmware File in flash.
 	 */
-	ret = request_firmware_direct(&phyf, phy_info->phy_fw_file,
+	ret = request_firmware(&phyf, phy_info->phy_fw_file,
 				      adap->pdev_dev);
 	if (ret < 0) {
 		/* For adapters without FLASH attached to PHY for their
@@ -3433,7 +3433,7 @@ static int adap_init0_config(struct adapter *adapter, int reset)
 			params[0] = (FW_PARAMS_MNEM_V(FW_PARAMS_MNEM_DEV) |
 			     FW_PARAMS_PARAM_X_V(FW_PARAMS_PARAM_DEV_CF));
 			ret = t4_query_params(adapter, adapter->mbox,
-					      adapter->fn, 0, 1, params, val);
+					      adapter->pf, 0, 1, params, val);
 			if (ret == 0) {
 				/*
 				 * For t4_memory_rw() below addresses and
@@ -3722,7 +3722,7 @@ static int adap_init0(struct adapter *adap)
 	v =
 	    FW_PARAMS_MNEM_V(FW_PARAMS_MNEM_DEV) |
 	    FW_PARAMS_PARAM_X_V(FW_PARAMS_PARAM_DEV_PORTVEC);
-	ret = t4_query_params(adap, adap->mbox, adap->fn, 0, 1, &v, &port_vec);
+	ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 1, &v, &port_vec);
 	if (ret < 0)
 		goto bye;
 
@@ -3745,7 +3745,7 @@ static int adap_init0(struct adapter *adap)
 		 */
 		params[0] = (FW_PARAMS_MNEM_V(FW_PARAMS_MNEM_DEV) |
 			     FW_PARAMS_PARAM_X_V(FW_PARAMS_PARAM_DEV_CF));
-		ret = t4_query_params(adap, adap->mbox, adap->fn, 0, 1,
+		ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 1,
 				      params, val);
 
 		/* If the firmware doesn't support Configuration Files,
@@ -3804,7 +3804,7 @@ static int adap_init0(struct adapter *adap)
 	params[3] = FW_PARAM_PFVF(FILTER_START);
 	params[4] = FW_PARAM_PFVF(FILTER_END);
 	params[5] = FW_PARAM_PFVF(IQFLINT_START);
-	ret = t4_query_params(adap, adap->mbox, adap->fn, 0, 6, params, val);
+	ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 6, params, val);
 	if (ret < 0)
 		goto bye;
 	adap->sge.egr_start = val[0];
@@ -3822,7 +3822,7 @@ static int adap_init0(struct adapter *adap)
 	 */
 	params[0] = FW_PARAM_PFVF(EQ_END);
 	params[1] = FW_PARAM_PFVF(IQFLINT_END);
-	ret = t4_query_params(adap, adap->mbox, adap->fn, 0, 2, params, val);
+	ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 2, params, val);
 	if (ret < 0)
 		goto bye;
 	adap->sge.egr_sz = val[0] - adap->sge.egr_start + 1;
@@ -3870,7 +3870,7 @@ static int adap_init0(struct adapter *adap)
 
 	params[0] = FW_PARAM_PFVF(CLIP_START);
 	params[1] = FW_PARAM_PFVF(CLIP_END);
-	ret = t4_query_params(adap, adap->mbox, adap->fn, 0, 2, params, val);
+	ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 2, params, val);
 	if (ret < 0)
 		goto bye;
 	adap->clipt_start = val[0];
@@ -3879,7 +3879,7 @@ static int adap_init0(struct adapter *adap)
 	/* query params related to active filter region */
 	params[0] = FW_PARAM_PFVF(ACTIVE_FILTER_START);
 	params[1] = FW_PARAM_PFVF(ACTIVE_FILTER_END);
-	ret = t4_query_params(adap, adap->mbox, adap->fn, 0, 2, params, val);
+	ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 2, params, val);
 	/* If Active filter size is set we enable establishing
 	 * offload connection through firmware work request
 	 */
@@ -3896,7 +3896,7 @@ static int adap_init0(struct adapter *adap)
 	 */
 	params[0] = FW_PARAM_PFVF(CPLFW4MSG_ENCAP);
 	val[0] = 1;
-	(void) t4_set_params(adap, adap->mbox, adap->fn, 0, 1, params, val);
+	(void)t4_set_params(adap, adap->mbox, adap->pf, 0, 1, params, val);
 
 	/*
 	 * Find out whether we're allowed to use the T5+ ULPTX MEMWRITE DSGL
@@ -3908,7 +3908,7 @@ static int adap_init0(struct adapter *adap)
 		adap->params.ulptx_memwrite_dsgl = false;
 	} else {
 		params[0] = FW_PARAM_DEV(ULPTX_MEMWRITE_DSGL);
-		ret = t4_query_params(adap, adap->mbox, adap->fn, 0,
+		ret = t4_query_params(adap, adap->mbox, adap->pf, 0,
 				      1, params, val);
 		adap->params.ulptx_memwrite_dsgl = (ret == 0 && val[0] != 0);
 	}
@@ -3934,7 +3934,7 @@ static int adap_init0(struct adapter *adap)
 		params[3] = FW_PARAM_PFVF(TDDP_START);
 		params[4] = FW_PARAM_PFVF(TDDP_END);
 		params[5] = FW_PARAM_DEV(FLOWC_BUFFIFO_SZ);
-		ret = t4_query_params(adap, adap->mbox, adap->fn, 0, 6,
+		ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 6,
 				      params, val);
 		if (ret < 0)
 			goto bye;
@@ -3972,7 +3972,7 @@ static int adap_init0(struct adapter *adap)
 		params[3] = FW_PARAM_PFVF(RQ_END);
 		params[4] = FW_PARAM_PFVF(PBL_START);
 		params[5] = FW_PARAM_PFVF(PBL_END);
-		ret = t4_query_params(adap, adap->mbox, adap->fn, 0, 6,
+		ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 6,
 				      params, val);
 		if (ret < 0)
 			goto bye;
@@ -3989,7 +3989,7 @@ static int adap_init0(struct adapter *adap)
 		params[3] = FW_PARAM_PFVF(CQ_END);
 		params[4] = FW_PARAM_PFVF(OCQ_START);
 		params[5] = FW_PARAM_PFVF(OCQ_END);
-		ret = t4_query_params(adap, adap->mbox, adap->fn, 0, 6, params,
+		ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 6, params,
 				      val);
 		if (ret < 0)
 			goto bye;
@@ -4002,7 +4002,7 @@ static int adap_init0(struct adapter *adap)
 
 		params[0] = FW_PARAM_DEV(MAXORDIRD_QP);
 		params[1] = FW_PARAM_DEV(MAXIRD_ADAPTER);
-		ret = t4_query_params(adap, adap->mbox, adap->fn, 0, 2, params,
+		ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 2, params,
 				      val);
 		if (ret < 0) {
 			adap->params.max_ordird_qp = 8;
@@ -4020,7 +4020,7 @@ static int adap_init0(struct adapter *adap)
 	if (caps_cmd.iscsicaps) {
 		params[0] = FW_PARAM_PFVF(ISCSI_START);
 		params[1] = FW_PARAM_PFVF(ISCSI_END);
-		ret = t4_query_params(adap, adap->mbox, adap->fn, 0, 2,
+		ret = t4_query_params(adap, adap->mbox, adap->pf, 0, 2,
 				      params, val);
 		if (ret < 0)
 			goto bye;
@@ -4150,7 +4150,7 @@ static pci_ers_result_t eeh_slot_reset(struct pci_dev *pdev)
 
 	if (t4_wait_dev_ready(adap->regs) < 0)
 		return PCI_ERS_RESULT_DISCONNECT;
-	if (t4_fw_hello(adap, adap->fn, adap->fn, MASTER_MUST, NULL) < 0)
+	if (t4_fw_hello(adap, adap->mbox, adap->pf, MASTER_MUST, NULL) < 0)
 		return PCI_ERS_RESULT_DISCONNECT;
 	adap->flags |= FW_OK;
 	if (adap_init1(adap, &c))
@@ -4159,7 +4159,7 @@ static pci_ers_result_t eeh_slot_reset(struct pci_dev *pdev)
 	for_each_port(adap, i) {
 		struct port_info *p = adap2pinfo(adap, i);
 
-		ret = t4_alloc_vi(adap, adap->fn, p->tx_chan, adap->fn, 0, 1,
+		ret = t4_alloc_vi(adap, adap->mbox, p->tx_chan, adap->pf, 0, 1,
 				  NULL, NULL);
 		if (ret < 0)
 			return PCI_ERS_RESULT_DISCONNECT;
@@ -4538,7 +4538,7 @@ static void free_some_resources(struct adapter *adapter)
 			free_netdev(adapter->port[i]);
 		}
 	if (adapter->flags & FW_OK)
-		t4_fw_bye(adapter, adapter->fn);
+		t4_fw_bye(adapter, adapter->pf);
 }
 
 #define TSO_FLAGS (NETIF_F_TSO | NETIF_F_TSO6 | NETIF_F_TSO_ECN)
@@ -4629,7 +4629,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 	adapter->pdev = pdev;
 	adapter->pdev_dev = &pdev->dev;
 	adapter->mbox = func;
-	adapter->fn = func;
+	adapter->pf = func;
 	adapter->msg_enable = dflt_msg_enable;
 	memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
 
@@ -4648,7 +4648,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 	if (!is_t4(adapter->params.chip)) {
 		s_qpp = (QUEUESPERPAGEPF0_S +
 			(QUEUESPERPAGEPF1_S - QUEUESPERPAGEPF0_S) *
-			adapter->fn);
+			adapter->pf);
 		qpp = 1 << QUEUESPERPAGEPF0_G(t4_read_reg(adapter,
 		      SGE_EGRESS_QUEUES_PER_PAGE_PF_A) >> s_qpp);
 		num_seg = PAGE_SIZE / SEGMENT_SIZE;
