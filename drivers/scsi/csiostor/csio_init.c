@@ -1177,7 +1177,7 @@ static struct pci_error_handlers csio_err_handler = {
  *  Macros needed to support the PCI Device ID Table ...
  */
 #define CH_PCI_DEVICE_ID_TABLE_DEFINE_BEGIN \
-	static struct pci_device_id csio_pci_tbl[] = {
+	static const struct pci_device_id csio_pci_tbl[] = {
 /* Define for iSCSI uses PF5, FCoE uses PF6 */
 #define CH_PCI_DEVICE_ID_FUNCTION	0x5
 #define CH_PCI_DEVICE_ID_FUNCTION2	0x6
