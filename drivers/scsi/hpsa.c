@@ -1711,17 +1711,32 @@ static int hpsa_slave_alloc(struct scsi_device *sdev)
 	struct hpsa_scsi_dev_t *sd;
 	unsigned long flags;
 	struct ctlr_info *h;
+	int queue_depth;
 
 	h = sdev_to_hba(sdev);
 	spin_lock_irqsave(&h->devlock, flags);
 	sd = lookup_hpsa_scsi_dev(h, sdev_channel(sdev),
 		sdev_id(sdev), sdev->lun);
+
 	if (likely(sd)) {
 		atomic_set(&sd->ioaccel_cmds_out, 0);
 		sdev->hostdata = (sd->expose_state & HPSA_SCSI_ADD) ? sd : NULL;
-	} else
+		queue_depth = sd->queue_depth != 0 ?
+			sd->queue_depth : sdev->host->can_queue;
+	} else {
 		sdev->hostdata = NULL;
+		queue_depth = sdev->host->can_queue;
+	}
+
+	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), queue_depth);
+
+	if (!shost_use_blk_mq(sdev->host)) {
+		sdev->tagged_supported = 1;
+		scsi_set_tag_type(sdev, MSG_SIMPLE_TAG);
+		scsi_activate_tcq(sdev, queue_depth);
+	}
 	spin_unlock_irqrestore(&h->devlock, flags);
+
 	return 0;
 }
 
@@ -1729,18 +1744,10 @@ static int hpsa_slave_alloc(struct scsi_device *sdev)
 static int hpsa_slave_configure(struct scsi_device *sdev)
 {
 	struct hpsa_scsi_dev_t *sd;
-	int queue_depth;
 
 	sd = sdev->hostdata;
 	sdev->no_uld_attach = !sd || !(sd->expose_state & HPSA_ULD_ATTACH);
 
-	if (sd)
-		queue_depth = sd->queue_depth != 0 ?
-			sd->queue_depth : sdev->host->can_queue;
-	else
-		queue_depth = sdev->host->can_queue;
-
-	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), queue_depth);
 
 	return 0;
 }
@@ -4662,7 +4669,14 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
 	/* Get the ptr to our adapter structure out of cmd->host. */
 	h = sdev_to_hba(cmd->device);
 
-	BUG_ON(cmd->request->tag < 0);
+	if (cmd->request->tag < 0) {
+		dev_crit(&h->pdev->dev,
+			"sdev %p scmd %p: bad tag %d -- rejecting\n",
+			cmd->device, cmd, cmd->request->tag);
+		cmd->result = DID_NO_CONNECT << 16;
+		cmd->scsi_done(cmd);
+		return 0;
+	}
 
 	dev = cmd->device->hostdata;
 	if (!dev) {
@@ -4803,13 +4817,15 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
 	sh->hostdata[0] = (unsigned long) h;
 	sh->irq = h->intr[h->intr_mode];
 	sh->unique_id = sh->irq;
-	error = scsi_init_shared_tag_map(sh, sh->can_queue);
-	if (error) {
-		dev_err(&h->pdev->dev,
-			"%s: scsi_init_shared_tag_map failed for controller %d\n",
-			__func__, h->ctlr);
-			scsi_host_put(sh);
-			return error;
+	if (!shost_use_blk_mq(sh)) {
+		error = scsi_init_shared_tag_map(sh, sh->can_queue);
+		if (error) {
+			dev_err(&h->pdev->dev,
+				"%s: scsi_init_shared_tag_map failed for ctlr %d\n",
+				__func__, h->ctlr);
+				scsi_host_put(sh);
+				return error;
+		}
 	}
 	h->scsi_host = sh;
 	return 0;
