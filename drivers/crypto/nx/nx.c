@@ -585,13 +585,9 @@ static int nx_register_algs(void)
 	if (rc)
 		goto out_unreg_ecb;
 
-	rc = nx_register_alg(&nx_ctr_aes_alg, NX_FC_AES, NX_MODE_AES_CTR);
-	if (rc)
-		goto out_unreg_cbc;
-
 	rc = nx_register_alg(&nx_ctr3686_aes_alg, NX_FC_AES, NX_MODE_AES_CTR);
 	if (rc)
-		goto out_unreg_ctr;
+		goto out_unreg_cbc;
 
 	rc = nx_register_alg(&nx_gcm_aes_alg, NX_FC_AES, NX_MODE_AES_GCM);
 	if (rc)
@@ -642,8 +638,6 @@ out_unreg_gcm:
 	nx_unregister_alg(&nx_gcm_aes_alg, NX_FC_AES, NX_MODE_AES_GCM);
 out_unreg_ctr3686:
 	nx_unregister_alg(&nx_ctr3686_aes_alg, NX_FC_AES, NX_MODE_AES_CTR);
-out_unreg_ctr:
-	nx_unregister_alg(&nx_ctr_aes_alg, NX_FC_AES, NX_MODE_AES_CTR);
 out_unreg_cbc:
 	nx_unregister_alg(&nx_cbc_aes_alg, NX_FC_AES, NX_MODE_AES_CBC);
 out_unreg_ecb:
@@ -803,7 +797,6 @@ static int nx_remove(struct vio_dev *viodev)
 				   NX_FC_AES, NX_MODE_AES_GCM);
 		nx_unregister_alg(&nx_ctr3686_aes_alg,
 				  NX_FC_AES, NX_MODE_AES_CTR);
-		nx_unregister_alg(&nx_ctr_aes_alg, NX_FC_AES, NX_MODE_AES_CTR);
 		nx_unregister_alg(&nx_cbc_aes_alg, NX_FC_AES, NX_MODE_AES_CBC);
 		nx_unregister_alg(&nx_ecb_aes_alg, NX_FC_AES, NX_MODE_AES_ECB);
 	}
