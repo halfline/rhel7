@@ -54,13 +54,14 @@
 #include <linux/vmalloc.h>
 #include <linux/highmem.h>
 #include <linux/io.h>
+#include <linux/aio.h>
 #include <linux/jiffies.h>
 #include <asm/pgtable.h>
 #include <linux/delay.h>
 #include <linux/export.h>
 #include <linux/module.h>
 #include <linux/cred.h>
-#include <linux/uio.h>
+#include <linux/aio.h>
 
 #include "hfi.h"
 #include "pio.h"
@@ -82,7 +83,8 @@ static int hfi1_file_open(struct inode *, struct file *);
 static int hfi1_file_close(struct inode *, struct file *);
 static ssize_t hfi1_file_write(struct file *, const char __user *,
 			       size_t, loff_t *);
-static ssize_t hfi1_write_iter(struct kiocb *, struct iov_iter *);
+static ssize_t hfi1_aio_write(struct kiocb *, const struct iovec *,
+			      unsigned long, loff_t);
 static unsigned int hfi1_poll(struct file *, struct poll_table_struct *);
 static int hfi1_file_mmap(struct file *, struct vm_area_struct *);
 
@@ -112,7 +114,7 @@ static void unlock_exp_tids(struct hfi1_ctxtdata *);
 static const struct file_operations hfi1_file_ops = {
 	.owner = THIS_MODULE,
 	.write = hfi1_file_write,
-	.write_iter = hfi1_write_iter,
+	.aio_write = hfi1_aio_write,
 	.open = hfi1_file_open,
 	.release = hfi1_file_close,
 	.poll = hfi1_poll,
@@ -429,12 +431,12 @@ bail:
 	return ret;
 }
 
-static ssize_t hfi1_write_iter(struct kiocb *kiocb, struct iov_iter *from)
+static ssize_t hfi1_aio_write(struct kiocb *kiocb, const struct iovec *iovec,
+			      unsigned long dim, loff_t offset)
 {
 	struct hfi1_user_sdma_pkt_q *pq;
 	struct hfi1_user_sdma_comp_q *cq;
 	int ret = 0, done = 0, reqs = 0;
-	unsigned long dim = from->nr_segs;
 
 	if (!user_sdma_comp_fp(kiocb->ki_filp) ||
 	    !user_sdma_pkt_fp(kiocb->ki_filp)) {
@@ -442,7 +444,7 @@ static ssize_t hfi1_write_iter(struct kiocb *kiocb, struct iov_iter *from)
 		goto done;
 	}
 
-	if (!iter_is_iovec(from) || !dim) {
+	if (!dim) {
 		ret = -EINVAL;
 		goto done;
 	}
@@ -462,7 +464,7 @@ static ssize_t hfi1_write_iter(struct kiocb *kiocb, struct iov_iter *from)
 		unsigned long count = 0;
 
 		ret = hfi1_user_sdma_process_request(
-			kiocb->ki_filp,	(struct iovec *)(from->iov + done),
+			kiocb->ki_filp,	(struct iovec *)(iovec + done),
 			dim, &count);
 		if (ret)
 			goto done;
