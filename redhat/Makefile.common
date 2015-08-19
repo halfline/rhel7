@@ -18,7 +18,13 @@ SOURCES:=$(RPM)/SOURCES
 TESTPATCH:=$(REDHAT)/linux-kernel-test.patch
 FILTERDIFF:=/usr/bin/filterdiff -x '*redhat/*' -x '*/.gitignore' -x '*/makefile' -x '*/Makefile'
 
-RELEASED_KERNEL := 1
+# RELEASED_KERNEL: swaps between the pre-release secureboot keys and
+# 		   the release one, for vmlinux signing.
+#
+#	0 : pre-release (devel) secureboot keys are used for signing
+#	1 " release (RC/GA) secureboot keys are used for signing
+#
+RELEASED_KERNEL := 0
 STAMP_VERSION := $(KVERSION)
 
 LOCVERFILE:=../localversion
