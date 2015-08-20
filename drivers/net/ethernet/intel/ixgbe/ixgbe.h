@@ -948,4 +948,5 @@ void ixgbe_ptp_check_pps_event(struct ixgbe_adapter *adapter, u32 eicr);
 void ixgbe_sriov_reinit(struct ixgbe_adapter *adapter);
 #endif
 
+u32 ixgbe_rss_indir_tbl_entries(struct ixgbe_adapter *adapter);
 #endif /* _IXGBE_H_ */
