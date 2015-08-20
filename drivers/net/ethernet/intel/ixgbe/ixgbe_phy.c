@@ -630,8 +630,6 @@ s32 ixgbe_write_phy_reg_generic(struct ixgbe_hw *hw, u32 reg_addr,
 s32 ixgbe_setup_phy_link_generic(struct ixgbe_hw *hw)
 {
 	s32 status = 0;
-	u32 time_out;
-	u32 max_time_out = 10;
 	u16 autoneg_reg = IXGBE_MII_AUTONEG_REG;
 	bool autoneg = false;
 	ixgbe_link_speed speed;
@@ -698,25 +696,6 @@ s32 ixgbe_setup_phy_link_generic(struct ixgbe_hw *hw)
 
 	hw->phy.ops.write_reg(hw, MDIO_CTRL1,
 			      MDIO_MMD_AN, autoneg_reg);
-
-	/* Wait for autonegotiation to finish */
-	for (time_out = 0; time_out < max_time_out; time_out++) {
-		udelay(10);
-		/* Restart PHY autonegotiation and wait for completion */
-		status = hw->phy.ops.read_reg(hw, MDIO_STAT1,
-					      MDIO_MMD_AN,
-					      &autoneg_reg);
-
-		autoneg_reg &= MDIO_AN_STAT1_COMPLETE;
-		if (autoneg_reg == MDIO_AN_STAT1_COMPLETE) {
-			break;
-		}
-	}
-
-	if (time_out == max_time_out) {
-		hw_dbg(hw, "ixgbe_setup_phy_link_generic: time out\n");
-		return IXGBE_ERR_LINK_SETUP;
-	}
 
 	return status;
 }
@@ -849,8 +828,6 @@ s32 ixgbe_check_phy_link_tnx(struct ixgbe_hw *hw, ixgbe_link_speed *speed,
 s32 ixgbe_setup_phy_link_tnx(struct ixgbe_hw *hw)
 {
 	s32 status;
-	u32 time_out;
-	u32 max_time_out = 10;
 	u16 autoneg_reg = IXGBE_MII_AUTONEG_REG;
 	bool autoneg = false;
 	ixgbe_link_speed speed;
@@ -915,24 +892,6 @@ s32 ixgbe_setup_phy_link_tnx(struct ixgbe_hw *hw)
 
 	hw->phy.ops.write_reg(hw, MDIO_CTRL1,
 			      MDIO_MMD_AN, autoneg_reg);
-
-	/* Wait for autonegotiation to finish */
-	for (time_out = 0; time_out < max_time_out; time_out++) {
-		udelay(10);
-		/* Restart PHY autonegotiation and wait for completion */
-		status = hw->phy.ops.read_reg(hw, MDIO_STAT1,
-					      MDIO_MMD_AN,
-					      &autoneg_reg);
-
-		autoneg_reg &= MDIO_AN_STAT1_COMPLETE;
-		if (autoneg_reg == MDIO_AN_STAT1_COMPLETE)
-			break;
-	}
-
-	if (time_out == max_time_out) {
-		hw_dbg(hw, "ixgbe_setup_phy_link_tnx: time out\n");
-		return IXGBE_ERR_LINK_SETUP;
-	}
 
 	return status;
 }
