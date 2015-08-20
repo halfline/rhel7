@@ -5509,6 +5509,17 @@ err_setup_tx:
 	return err;
 }
 
+static void ixgbe_close_suspend(struct ixgbe_adapter *adapter)
+{
+	ixgbe_ptp_suspend(adapter);
+
+	ixgbe_down(adapter);
+	ixgbe_free_irq(adapter);
+
+	ixgbe_free_all_tx_resources(adapter);
+	ixgbe_free_all_rx_resources(adapter);
+}
+
 /**
  * ixgbe_close - Disables a network interface
  * @netdev: network interface device structure
@@ -5526,13 +5537,9 @@ static int ixgbe_close(struct net_device *netdev)
 
 	ixgbe_ptp_stop(adapter);
 
-	ixgbe_down(adapter);
-	ixgbe_free_irq(adapter);
+	ixgbe_close_suspend(adapter);
 
 	ixgbe_fdir_filter_exit(adapter);
-
-	ixgbe_free_all_tx_resources(adapter);
-	ixgbe_free_all_rx_resources(adapter);
 
 	ixgbe_release_hw_control(adapter);
 
@@ -5600,12 +5607,8 @@ static int __ixgbe_shutdown(struct pci_dev *pdev, bool *enable_wake)
 	netif_device_detach(netdev);
 
 	rtnl_lock();
-	if (netif_running(netdev)) {
-		ixgbe_down(adapter);
-		ixgbe_free_irq(adapter);
-		ixgbe_free_all_tx_resources(adapter);
-		ixgbe_free_all_rx_resources(adapter);
-	}
+	if (netif_running(netdev))
+		ixgbe_close_suspend(adapter);
 	rtnl_unlock();
 
 	ixgbe_clear_interrupt_scheme(adapter);
