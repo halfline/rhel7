@@ -623,24 +623,24 @@ int ixgbe_vf_configuration(struct pci_dev *pdev, unsigned int event_mask)
 }
 
 static inline void ixgbe_write_qde(struct ixgbe_adapter *adapter, u32 vf,
-                                   u32 qde)
+				   u32 qde)
 {
-        struct ixgbe_hw *hw = &adapter->hw;
-        struct ixgbe_ring_feature *vmdq = &adapter->ring_feature[RING_F_VMDQ];
-        u32 q_per_pool = __ALIGN_MASK(1, ~vmdq->mask);
-        int i;
+	struct ixgbe_hw *hw = &adapter->hw;
+	struct ixgbe_ring_feature *vmdq = &adapter->ring_feature[RING_F_VMDQ];
+	u32 q_per_pool = __ALIGN_MASK(1, ~vmdq->mask);
+	int i;
 
-        for (i = vf * q_per_pool; i < ((vf + 1) * q_per_pool); i++) {
-                u32 reg;
+	for (i = vf * q_per_pool; i < ((vf + 1) * q_per_pool); i++) {
+		u32 reg;
 
-                /* flush previous write */
-                IXGBE_WRITE_FLUSH(hw);
+		/* flush previous write */
+		IXGBE_WRITE_FLUSH(hw);
 
-                /* indicate to hardware that we want to set drop enable */
-                reg = IXGBE_QDE_WRITE | IXGBE_QDE_ENABLE;
-                reg |= i <<  IXGBE_QDE_IDX_SHIFT;
-                IXGBE_WRITE_REG(hw, IXGBE_QDE, reg);
-        }
+		/* indicate to hardware that we want to set drop enable */
+		reg = IXGBE_QDE_WRITE | IXGBE_QDE_ENABLE;
+		reg |= i <<  IXGBE_QDE_IDX_SHIFT;
+		IXGBE_WRITE_REG(hw, IXGBE_QDE, reg);
+	}
 }
 
 static int ixgbe_vf_reset_msg(struct ixgbe_adapter *adapter, u32 vf)
@@ -672,15 +672,7 @@ static int ixgbe_vf_reset_msg(struct ixgbe_adapter *adapter, u32 vf)
 	IXGBE_WRITE_REG(hw, IXGBE_VFTE(reg_offset), reg);
 
 	/* force drop enable for all VF Rx queues */
-	for (i = vf * q_per_pool; i < ((vf + 1) * q_per_pool); i++) {
-		/* flush previous write */
-		IXGBE_WRITE_FLUSH(hw);
-
-		/* indicate to hardware that we want to set drop enable */
-		reg = IXGBE_QDE_WRITE | IXGBE_QDE_ENABLE;
-		reg |= i <<  IXGBE_QDE_IDX_SHIFT;
-		IXGBE_WRITE_REG(hw, IXGBE_QDE, reg);
-	}
+	ixgbe_write_qde(adapter, vf, IXGBE_QDE_ENABLE);
 
 	/* enable receive for vf */
 	reg = IXGBE_READ_REG(hw, IXGBE_VFRE(reg_offset));
