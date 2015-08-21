@@ -436,7 +436,7 @@ struct sock {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-	RH_KABI_USE_P(1, __u32	sk_txhash; u32 sk_max_pacing_rate)
+	RH_KABI_USE2_P(1, __u32	sk_txhash, u32 sk_max_pacing_rate)
 	RH_KABI_RESERVE_P(2)
 	RH_KABI_RESERVE_P(3)
 	RH_KABI_RESERVE_P(4)
