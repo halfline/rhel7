@@ -1538,6 +1538,24 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Aug 21 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-308.el7]
+- [fs] inotify: don't add consecutive overflow events to the queue (Eric Sandeen) [1168465]
+- [md] dm-stats: report precise_timestamps and histogram in @stats_list output (Mike Snitzer) [1254801]
+- [md] dm-stats: add support for request-based DM devices (Mike Snitzer) [1254801]
+- [md] dm-stats: collect and report histogram of IO latencies (Mike Snitzer) [1254801]
+- [md] dm-stats: support precise timestamps (Mike Snitzer) [1254801]
+- [md] dm-stats: fix divide by zero if 'number_of_areas' arg is zero (Mike Snitzer) [1254801]
+- [md] dm-stats: Use kvfree() in dm_kvfree() (Mike Snitzer) [1254801]
+- [net] bridge: mdb: fix double add notification (Xin Long) [1245012]
+- [net] ipt_ulog: do not fail init after creating socket (Thadeu Lima de Souza Cascardo) [1235978]
+- [net] ipv4: off-by-one in continuation handling in /proc/net/route (Alexander Duyck) [1253783]
+- [x86] kernel: Allocate enough low memory when crashkernel=high (Baoquan He) [1123039]
+- [vfio] Fix lockdep issue (Alex Williamson) [1250237]
+- [idle] intel_idle: Skylake Client Support (Steve Best) [1189910]
+- [netdrv] mlx5_core: Set log_uar_page_sz for non 4K page size architecture (Honggang Li) [1248676]
+- [netdrv] igbvf: clear buffer_info->dma after dma_unmap_single() (Stefan Assmann) [1248335]
+- [netdrv] ibmveth: add support for TSO6 (Gustavo Duarte) [1251393]
+
 * Thu Aug 20 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-307.el7]
 - [firmware] dmi_scan: Coding style cleanups (Jarod Wilson) [853192]
 - [firmware] dmi_scan: Trim DMI table length before exporting it (Jarod Wilson) [853192]
