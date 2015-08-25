@@ -188,6 +188,7 @@ struct enic {
 	____cacheline_aligned struct vnic_cq cq[ENIC_CQ_MAX];
 	unsigned int cq_count;
 	struct enic_rfs_flw_tbl rfs_h;
+	u32 rx_copybreak;
 	struct vnic_gen_stats gen_stats;
 };
 
