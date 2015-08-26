@@ -1645,6 +1645,22 @@ nfsd4_decode_layoutreturn(struct nfsd4_compoundargs *argp,
 #endif /* CONFIG_NFSD_PNFS */
 
 static __be32
+nfsd4_decode_seek(struct nfsd4_compoundargs *argp, struct nfsd4_seek *seek)
+{
+	DECODE_HEAD;
+
+	status = nfsd4_decode_stateid(argp, &seek->seek_stateid);
+	if (status)
+		return status;
+
+	READ_BUF(8 + 4);
+	p = xdr_decode_hyper(p, &seek->seek_offset);
+	seek->seek_whence = be32_to_cpup(p);
+
+	DECODE_TAIL;
+}
+
+static __be32
 nfsd4_decode_noop(struct nfsd4_compoundargs *argp, void *p)
 {
 	return nfs_ok;
@@ -1737,7 +1753,7 @@ static nfsd4_dec nfsd4_dec_ops[] = {
 	[OP_OFFLOAD_CANCEL]	= (nfsd4_dec)nfsd4_decode_notsupp,
 	[OP_OFFLOAD_STATUS]	= (nfsd4_dec)nfsd4_decode_notsupp,
 	[OP_READ_PLUS]		= (nfsd4_dec)nfsd4_decode_notsupp,
-	[OP_SEEK]		= (nfsd4_dec)nfsd4_decode_notsupp,
+	[OP_SEEK]		= (nfsd4_dec)nfsd4_decode_seek,
 	[OP_WRITE_SAME]		= (nfsd4_dec)nfsd4_decode_notsupp,
 };
 
@@ -4095,6 +4111,22 @@ nfsd4_encode_layoutreturn(struct nfsd4_compoundres *resp, __be32 nfserr,
 #endif /* CONFIG_NFSD_PNFS */
 
 static __be32
+nfsd4_encode_seek(struct nfsd4_compoundres *resp, __be32 nfserr,
+		  struct nfsd4_seek *seek)
+{
+	__be32 *p;
+
+	if (nfserr)
+		return nfserr;
+
+	p = xdr_reserve_space(&resp->xdr, 4 + 8);
+	*p++ = cpu_to_be32(seek->seek_eof);
+	p = xdr_encode_hyper(p, seek->seek_pos);
+
+	return nfserr;
+}
+
+static __be32
 nfsd4_encode_noop(struct nfsd4_compoundres *resp, __be32 nfserr, void *p)
 {
 	return nfserr;
@@ -4186,7 +4218,7 @@ static nfsd4_enc nfsd4_enc_ops[] = {
 	[OP_OFFLOAD_CANCEL]	= (nfsd4_enc)nfsd4_encode_noop,
 	[OP_OFFLOAD_STATUS]	= (nfsd4_enc)nfsd4_encode_noop,
 	[OP_READ_PLUS]		= (nfsd4_enc)nfsd4_encode_noop,
-	[OP_SEEK]		= (nfsd4_enc)nfsd4_encode_noop,
+	[OP_SEEK]		= (nfsd4_enc)nfsd4_encode_seek,
 	[OP_WRITE_SAME]		= (nfsd4_enc)nfsd4_encode_noop,
 };
 

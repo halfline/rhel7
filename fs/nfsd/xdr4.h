@@ -483,6 +483,17 @@ struct nfsd4_layoutreturn {
 	u32			lrs_present;	/* response */
 };
 
+struct nfsd4_seek {
+	/* request */
+	stateid_t	seek_stateid;
+	loff_t		seek_offset;
+	u32		seek_whence;
+
+	/* response */
+	u32		seek_eof;
+	loff_t		seek_pos;
+};
+
 struct nfsd4_op {
 	int					opnum;
 	__be32					status;
@@ -532,6 +543,9 @@ struct nfsd4_op {
 		struct nfsd4_layoutget		layoutget;
 		struct nfsd4_layoutcommit	layoutcommit;
 		struct nfsd4_layoutreturn	layoutreturn;
+
+		/* NFSv4.2 */
+		struct nfsd4_seek		seek;
 	} u;
 	struct nfs4_replay *			replay;
 };
