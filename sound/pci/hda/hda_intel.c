@@ -979,14 +979,16 @@ static int azx_runtime_resume(struct device *dev)
 	if (!azx_has_pm_runtime(chip))
 		return 0;
 
-	if (chip->driver_caps & AZX_DCAPS_I915_POWERWELL
-		&& hda->need_i915_power) {
-		bus =  azx_bus(chip);
-		snd_hdac_display_power(bus, true);
-		haswell_set_bclk(hda);
-		/* toggle codec wakeup bit for STATESTS read */
-		snd_hdac_set_codec_wakeup(bus, true);
-		snd_hdac_set_codec_wakeup(bus, false);
+	if (chip->driver_caps & AZX_DCAPS_I915_POWERWELL) {
+		bus = azx_bus(chip);
+		if (hda->need_i915_power) {
+			snd_hdac_display_power(bus, true);
+			haswell_set_bclk(hda);
+		} else {
+			/* toggle codec wakeup bit for STATESTS read */
+			snd_hdac_set_codec_wakeup(bus, true);
+			snd_hdac_set_codec_wakeup(bus, false);
+		}
 	}
 
 	/* Read STATESTS before controller reset */
@@ -1986,8 +1988,17 @@ static int azx_probe_continue(struct azx *chip)
 			hda->need_i915_power = 1;
 
 		err = snd_hdac_i915_init(bus);
-		if (err < 0)
-			goto i915_power_fail;
+		if (err < 0) {
+			/* if the controller is bound only with HDMI/DP
+			 * (for HSW and BDW), we need to abort the probe;
+			 * for other chips, still continue probing as other
+			 * codecs can be on the same link.
+			 */
+			if (CONTROLLER_IN_GPU(pci))
+				goto out_free;
+			else
+				goto skip_i915;
+		}
 
 		err = snd_hdac_display_power(bus, true);
 		if (err < 0) {
@@ -1997,6 +2008,7 @@ static int azx_probe_continue(struct azx *chip)
 		}
 	}
 
+skip_i915:
 	err = azx_first_init(chip);
 	if (err < 0)
 		goto out_free;
