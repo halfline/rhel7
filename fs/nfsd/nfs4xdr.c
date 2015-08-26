@@ -1645,6 +1645,23 @@ nfsd4_decode_layoutreturn(struct nfsd4_compoundargs *argp,
 #endif /* CONFIG_NFSD_PNFS */
 
 static __be32
+nfsd4_decode_fallocate(struct nfsd4_compoundargs *argp,
+		       struct nfsd4_fallocate *fallocate)
+{
+	DECODE_HEAD;
+
+	status = nfsd4_decode_stateid(argp, &fallocate->falloc_stateid);
+	if (status)
+		return status;
+
+	READ_BUF(16);
+	p = xdr_decode_hyper(p, &fallocate->falloc_offset);
+	xdr_decode_hyper(p, &fallocate->falloc_length);
+
+	DECODE_TAIL;
+}
+
+static __be32
 nfsd4_decode_seek(struct nfsd4_compoundargs *argp, struct nfsd4_seek *seek)
 {
 	DECODE_HEAD;
@@ -1743,7 +1760,7 @@ static nfsd4_dec nfsd4_dec_ops[] = {
 	[OP_RECLAIM_COMPLETE]	= (nfsd4_dec)nfsd4_decode_reclaim_complete,
 
 	/* new operations for NFSv4.2 */
-	[OP_ALLOCATE]		= (nfsd4_dec)nfsd4_decode_notsupp,
+	[OP_ALLOCATE]		= (nfsd4_dec)nfsd4_decode_fallocate,
 	[OP_COPY]		= (nfsd4_dec)nfsd4_decode_notsupp,
 	[OP_COPY_NOTIFY]	= (nfsd4_dec)nfsd4_decode_notsupp,
 	[OP_DEALLOCATE]		= (nfsd4_dec)nfsd4_decode_notsupp,

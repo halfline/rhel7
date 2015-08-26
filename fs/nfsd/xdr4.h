@@ -483,6 +483,13 @@ struct nfsd4_layoutreturn {
 	u32			lrs_present;	/* response */
 };
 
+struct nfsd4_fallocate {
+	/* request */
+	stateid_t	falloc_stateid;
+	loff_t		falloc_offset;
+	u64		falloc_length;
+};
+
 struct nfsd4_seek {
 	/* request */
 	stateid_t	seek_stateid;
@@ -545,6 +552,7 @@ struct nfsd4_op {
 		struct nfsd4_layoutreturn	layoutreturn;
 
 		/* NFSv4.2 */
+		struct nfsd4_fallocate		allocate;
 		struct nfsd4_seek		seek;
 	} u;
 	struct nfs4_replay *			replay;
