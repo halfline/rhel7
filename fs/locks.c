@@ -1283,7 +1283,6 @@ int lease_modify(struct file_lock **before, int arg)
 	}
 	return 0;
 }
-
 EXPORT_SYMBOL(lease_modify);
 
 static bool past_time(unsigned long then)
@@ -1525,7 +1524,8 @@ check_conflicting_open(const struct dentry *dentry, const long arg, int flags)
 	return ret;
 }
 
-static int generic_add_lease(struct file *filp, long arg, struct file_lock **flp)
+static int
+generic_add_lease(struct file *filp, long arg, struct file_lock **flp, void **priv)
 {
 	struct file_lock *fl, **before, **my_before = NULL, *lease;
 	struct dentry *dentry = filp->f_path.dentry;
@@ -1611,11 +1611,14 @@ static int generic_add_lease(struct file *filp, long arg, struct file_lock **flp
 	smp_mb();
 	error = check_conflicting_open(dentry, arg, lease->fl_flags);
 	if (error)
-		locks_unlink_lock(flp);
+		goto out_unlink;
 out:
 	if (is_deleg)
 		mutex_unlock(&inode->i_mutex);
 	return error;
+out_unlink:
+	locks_unlink_lock(before);
+	goto out;
 }
 
 static int generic_delete_lease(struct file *filp)
@@ -1642,13 +1645,15 @@ static int generic_delete_lease(struct file *filp)
  *	@filp: file pointer
  *	@arg: type of lease to obtain
  *	@flp: input - file_lock to use, output - file_lock inserted
+ *	@priv: private data for lm_setup
  *
  *	The (input) flp->fl_lmops->lm_break function is required
  *	by break_lease().
  *
  *	Called with inode->i_lock held.
  */
-int generic_setlease(struct file *filp, long arg, struct file_lock **flp)
+int generic_setlease(struct file *filp, long arg, struct file_lock **flp,
+			void **priv)
 {
 	struct dentry *dentry = filp->f_path.dentry;
 	struct inode *inode = dentry->d_inode;
@@ -1673,55 +1678,44 @@ int generic_setlease(struct file *filp, long arg, struct file_lock **flp)
 			WARN_ON_ONCE(1);
 			return -ENOLCK;
 		}
-		return generic_add_lease(filp, arg, flp);
+		return generic_add_lease(filp, arg, flp, priv);
 	default:
 		return -EINVAL;
 	}
 }
 EXPORT_SYMBOL(generic_setlease);
 
-static int __vfs_setlease(struct file *filp, long arg, struct file_lock **lease)
+static int
+__vfs_setlease(struct file *filp, long arg, struct file_lock **lease, void **priv)
 {
 	if (filp->f_op && filp->f_op->setlease)
-		return filp->f_op->setlease(filp, arg, lease);
+		return filp->f_op->setlease(filp, arg, lease, priv);
 	else
-		return generic_setlease(filp, arg, lease);
+		return generic_setlease(filp, arg, lease, priv);
 }
 
 /**
- *	vfs_setlease        -       sets a lease on an open file
- *	@filp: file pointer
- *	@arg: type of lease to obtain
- *	@lease: file_lock to use
+ * vfs_setlease        -       sets a lease on an open file
+ * @filp: file pointer
+ * @arg: type of lease to obtain
+ * @lease: file_lock to use when adding a lease
+ * @priv: private info for lm_setup when adding a lease
  *
- *	Call this to establish a lease on the file.
- *	The (*lease)->fl_lmops->lm_break operation must be set; if not,
- *	break_lease will oops!
- *
- *	This will call the filesystem's setlease file method, if
- *	defined.  Note that there is no getlease method; instead, the
- *	filesystem setlease method should call back to setlease() to
- *	add a lease to the inode's lease list, where fcntl_getlease() can
- *	find it.  Since fcntl_getlease() only reports whether the current
- *	task holds a lease, a cluster filesystem need only do this for
- *	leases held by processes on this node.
- *
- *	There is also no break_lease method; filesystems that
- *	handle their own leases should break leases themselves from the
- *	filesystem's open, create, and (on truncate) setattr methods.
- *
- *	Warning: the only current setlease methods exist only to disable
- *	leases in certain cases.  More vfs changes may be required to
- *	allow a full filesystem lease implementation.
+ * Call this to establish a lease on the file. The "lease" argument is not
+ * used for F_UNLCK requests and may be NULL. For commands that set or alter
+ * an existing lease, the (*lease)->fl_lmops->lm_break operation must be set;
+ * if not, this function will return -ENOLCK (and generate a scary-looking
+ * stack trace).
  */
 
-int vfs_setlease(struct file *filp, long arg, struct file_lock **lease)
+int
+vfs_setlease(struct file *filp, long arg, struct file_lock **lease, void **priv)
 {
 	struct inode *inode = file_inode(filp);
 	int error;
 
 	spin_lock(&inode->i_lock);
-	error = __vfs_setlease(filp, arg, lease);
+	error = __vfs_setlease(filp, arg, lease, priv);
 	spin_unlock(&inode->i_lock);
 
 	return error;
@@ -1746,7 +1740,7 @@ static int do_fcntl_add_lease(unsigned int fd, struct file *filp, long arg)
 	}
 	ret = fl;
 	spin_lock(&inode->i_lock);
-	error = __vfs_setlease(filp, arg, &ret);
+	error = __vfs_setlease(filp, arg, &ret, NULL);
 	if (error) {
 		spin_unlock(&inode->i_lock);
 		locks_free_lock(fl);
@@ -1786,7 +1780,7 @@ out_free_fasync:
 int fcntl_setlease(unsigned int fd, struct file *filp, long arg)
 {
 	if (arg == F_UNLCK)
-		return vfs_setlease(filp, F_UNLCK, NULL);
+		return vfs_setlease(filp, F_UNLCK, NULL, NULL);
 	return do_fcntl_add_lease(fd, filp, arg);
 }
 

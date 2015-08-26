@@ -977,7 +977,7 @@ static ssize_t gfs2_file_splice_write(struct pipe_inode_info *pipe,
  * Returns: errno
  */
 
-static int gfs2_setlease(struct file *file, long arg, struct file_lock **fl)
+static int gfs2_setlease(struct file *file, long arg, struct file_lock **fl, void **priv)
 {
 	return -EINVAL;
 }

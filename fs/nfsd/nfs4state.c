@@ -689,7 +689,7 @@ static void nfs4_put_deleg_lease(struct nfs4_file *fp)
 	spin_unlock(&fp->fi_lock);
 
 	if (filp) {
-		vfs_setlease(filp, F_UNLCK, NULL);
+		vfs_setlease(filp, F_UNLCK, NULL, NULL);
 		fput(filp);
 	}
 }
@@ -3837,7 +3837,8 @@ static int nfs4_setlease(struct nfs4_delegation *dp)
 		return -EBADF;
 	}
 	fl->fl_file = filp;
-	status = vfs_setlease(filp, fl->fl_type, &fl);
+	ret = fl;
+	status = vfs_setlease(filp, fl->fl_type, &fl, NULL);
 	if (status) {
 		locks_free_lock(fl);
 		goto out_fput;
