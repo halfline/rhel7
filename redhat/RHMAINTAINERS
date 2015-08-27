@@ -98,6 +98,14 @@ M:	John Feeney <jfeeney@redhat.com>
 M:	Jaroslav Kysela <jkysela@redhat.com>
 S:	Maintained
 
+AMD IOMMU (AMD-VI)
+M:	Myron Stowe <myron.stowe@redhat.com>
+M:	Alex Williamson <alex.williamson@redhat.com>
+M:	Don Dutile <ddutile@redhat.com>
+S:	Maintained
+F:	drivers/iommu/amd_iommu*.[ch]
+F:	include/linux/amd-iommu.h
+
 ARECA (ARC11xx/12xx/16xx/1880) SATA/SAS RAID Host Bus Adapter (arcmsr)
 M:      Tomas Henzl <thenzl@redhat.com>
 S:      Maintained
@@ -270,6 +278,14 @@ M:	Stefan Assmann <sassmann@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/intel/igbvf/
 
+INTEL IOMMU (VT-d)
+M:	Myron Stowe <myron.stowe@redhat.com>
+M:	Alex Williamson <alex.williamson@redhat.com>
+M:	Don Dutile <ddutile@redhat.com>
+S:	Maintained
+F:	drivers/iommu/intel_iommu.c
+F:	include/linux/intel-iommu.h
+
 INTEL IXGBE ETHERNET DRIVER (ixgbe)
 M:	John Greene <jogreene@redhat.com>
 S:	Maintained
@@ -321,6 +337,13 @@ INFINIBAND SUBSYSTEM
 M:	Doug Ledford <dledford@redhat.com>
 S:	Maintained
 F:	drivers/infiniband/
+
+IOMMU DRIVERS
+M:	Myron Stowe <myron.stowe@redhat.com>
+M:	Alex Williamson <alex.williamson@redhat.com>
+M:	Don Dutile <ddutile@redhat.com>
+S:	Maintained
+F:	drivers/iommu/
 
 IPMI SUBSYSTEM
 M:	Tony Camuso <tcamuso@redhat.com>
@@ -507,13 +530,14 @@ F:	net/openvswitch/
 F:	include/linux/openvswitch.h
 
 PCI SUBSYSTEM
-M:	Myron Stowe <mstowe@redhat.com>
+M:	Myron Stowe <myron.stowe@redhat.com>
 M:	Prarit Bhargava <prarit@redhat.com>
 S:	Maintained
 F:	drivers/pci/
 
 PCI HOTPLUG
 M:	Prarit Bhargava <prarit@redhat.com>
+M:	Myron Stowe <myron.stowe@redhat.com>
 S:	Maintained
 F:	drivers/pci/hotplug/
 
@@ -681,7 +705,6 @@ F:	drivers/staging/unisys
 
 UNIVERSAL EXTENSIBLE FIRMWARE INTERFACE (UEFI/EFI)
 M:	Lenny Szubowicz <lszubowi@redhat.com>
-M:	Myron Stowe <mstowe@redhat.com>
 M:	Prarit Bhargava <prarit@redhat.com>
 S:	Maintained
 F:	arch/x86/kernel/efi*
