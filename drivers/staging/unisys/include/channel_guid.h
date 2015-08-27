@@ -26,6 +26,8 @@
 static const uuid_le spar_vhba_channel_protocol_uuid =
 	SPAR_VHBA_CHANNEL_PROTOCOL_UUID;
 
+#define SPAR_VHBA_CHANNEL_PROTOCOL_UUID_STR \
+       "414815ed-c58c-11da-95a9-00e08161165f"
 /* Used in IOChannel
  * {8cd5994d-c58e-11da-95a9-00e08161165f}
  */
@@ -35,6 +37,8 @@ static const uuid_le spar_vhba_channel_protocol_uuid =
 static const uuid_le spar_vnic_channel_protocol_uuid =
 	SPAR_VNIC_CHANNEL_PROTOCOL_UUID;
 
+#define SPAR_VNIC_CHANNEL_PROTOCOL_UUID_STR \
+       "8cd5994d-c58e-11da-95a9-00e08161165f"
 /* Used in IOChannel
  * {72120008-4AAB-11DC-8530-444553544200}
  */
