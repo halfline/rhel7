@@ -4646,6 +4646,9 @@ static int megasas_init_fw(struct megasas_instance *instance)
 		"current msix/online cpus\t: (%d/%d)\n",
 		instance->msix_vectors, (unsigned int)num_online_cpus());
 
+	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
+		(unsigned long)instance);
+
 	if (instance->msix_vectors ?
 		megasas_setup_irqs_msix(instance, 1) :
 		megasas_setup_irqs_ioapic(instance))
@@ -4665,9 +4668,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
 	/* Get operational params, sge flags, send init cmd to controller */
 	if (instance->instancet->init_adapter(instance))
 		goto fail_init_adapter;
-
-	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
-		(unsigned long)instance);
 
 	instance->instancet->enable_intr(instance);
 
