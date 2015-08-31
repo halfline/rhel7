@@ -1637,7 +1637,7 @@ static int generic_delete_lease(struct file *filp, void *owner)
 			break;
 	}
 	trace_generic_delete_lease(inode, fl);
-	if (fl)
+	if (fl && IS_LEASE(fl))
 		error = fl->fl_lmops->lm_change(before, F_UNLCK);
 	return error;
 }
