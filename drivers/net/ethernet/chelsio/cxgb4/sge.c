@@ -1206,12 +1206,12 @@ out_free:	dev_kfree_skb_any(skb);
 			cntrl = hwcsum(skb) | TXPKT_IPCSUM_DIS_F;
 			q->tx_cso++;
 		} else
-			cntrl = TXPKT_L4CSUM_DIS | TXPKT_IPCSUM_DIS;
+			cntrl = TXPKT_L4CSUM_DIS_F | TXPKT_IPCSUM_DIS_F;
 	}
 
 	if (skb_vlan_tag_present(skb)) {
 		q->vlan_ins++;
-		cntrl |= TXPKT_VLAN_VLD | TXPKT_VLAN(skb_vlan_tag_get(skb));
+		cntrl |= TXPKT_VLAN_VLD_F | TXPKT_VLAN_V(skb_vlan_tag_get(skb));
 	}
 
 	cpl->ctrl0 = htonl(TXPKT_OPCODE_V(CPL_TX_PKT_XT) |
