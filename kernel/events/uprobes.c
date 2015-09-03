@@ -74,15 +74,6 @@ struct uprobe {
 	struct arch_uprobe	arch;
 };
 
-struct return_instance {
-	struct uprobe		*uprobe;
-	unsigned long		func;
-	unsigned long		orig_ret_vaddr; /* original return address */
-	bool			chained;	/* true, if instance is nested */
-
-	struct return_instance	*next;		/* keep as stack */
-};
-
 /*
  * valid_vma: Verify if the specified vma is an executable vma
  * Relax restrictions while unregistering: vm_flags might have
@@ -1761,6 +1752,11 @@ static void handle_trampoline(struct pt_regs *regs)
 	uprobe_warn(current, "handle uretprobe, sending SIGILL.");
 	force_sig_info(SIGILL, SEND_SIG_FORCED, current);
 
+}
+
+bool __weak arch_uretprobe_is_alive(struct return_instance *ret, struct pt_regs *regs)
+{
+	return true;
 }
 
 /*
