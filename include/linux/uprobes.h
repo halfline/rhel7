@@ -92,6 +92,11 @@ struct return_instance {
 	struct return_instance	*next;		/* keep as stack */
 };
 
+enum rp_check {
+	RP_CHECK_CALL,
+	RP_CHECK_RET,
+};
+
 /*
  * On a breakpoint hit, thread contests for a slot.  It frees the
  * slot after singlestep. Currently a fixed number of slots are
@@ -139,7 +144,7 @@ extern int uprobe_pre_sstep_notifier(struct pt_regs *regs);
 extern void uprobe_notify_resume(struct pt_regs *regs);
 extern bool uprobe_deny_signal(void);
 extern bool __weak arch_uprobe_skip_sstep(struct arch_uprobe *aup, struct pt_regs *regs);
-extern bool arch_uretprobe_is_alive(struct return_instance *ret, struct pt_regs *regs);
+extern bool arch_uretprobe_is_alive(struct return_instance *ret, enum rp_check ctx, struct pt_regs *regs);
 extern void uprobe_clear_state(struct mm_struct *mm);
 #else /* !CONFIG_UPROBES */
 struct uprobes_state {
