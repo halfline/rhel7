@@ -1319,6 +1319,14 @@ unsigned long __weak uprobe_get_swbp_addr(struct pt_regs *regs)
 	return instruction_pointer(regs) - UPROBE_SWBP_INSN_SIZE;
 }
 
+static struct return_instance *free_ret_instance(struct return_instance *ri)
+{
+	struct return_instance *next = ri->next;
+	put_uprobe(ri->uprobe);
+	kfree(ri);
+	return next;
+}
+
 /*
  * Called with no locks held.
  * Called in context of a exiting or a exec-ing thread.
@@ -1326,7 +1334,7 @@ unsigned long __weak uprobe_get_swbp_addr(struct pt_regs *regs)
 void uprobe_free_utask(struct task_struct *t)
 {
 	struct uprobe_task *utask = t->utask;
-	struct return_instance *ri, *tmp;
+	struct return_instance *ri;
 
 	if (!utask)
 		return;
@@ -1335,13 +1343,8 @@ void uprobe_free_utask(struct task_struct *t)
 		put_uprobe(utask->active_uprobe);
 
 	ri = utask->return_instances;
-	while (ri) {
-		tmp = ri;
-		ri = ri->next;
-
-		put_uprobe(tmp->uprobe);
-		kfree(tmp);
-	}
+	while (ri)
+		ri = free_ret_instance(ri);
 
 	xol_free_insn_slot(t);
 	kfree(utask);
@@ -1720,7 +1723,7 @@ handle_uretprobe_chain(struct return_instance *ri, struct pt_regs *regs)
 static bool handle_trampoline(struct pt_regs *regs)
 {
 	struct uprobe_task *utask;
-	struct return_instance *ri, *tmp;
+	struct return_instance *ri;
 	bool chained;
 
 	utask = current->utask;
@@ -1742,11 +1745,7 @@ static bool handle_trampoline(struct pt_regs *regs)
 		handle_uretprobe_chain(ri, regs);
 
 		chained = ri->chained;
-		put_uprobe(ri->uprobe);
-
-		tmp = ri;
-		ri = ri->next;
-		kfree(tmp);
+		ri = free_ret_instance(ri);
 		utask->depth--;
 
 		if (!chained)
