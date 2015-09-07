@@ -146,6 +146,7 @@ struct net {
 	RH_KABI_EXTEND(struct mutex flow_flush_sem)
 	/* netns_xfrm */
 	RH_KABI_EXTEND(struct xfrm_policy_hash_ext policy_bydst[XFRM_POLICY_MAX * 2])
+	RH_KABI_EXTEND(struct xfrm_policy_hthresh policy_hthresh)
 #endif
 };
 
