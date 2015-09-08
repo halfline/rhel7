@@ -370,7 +370,7 @@ S:	Maintained
 F:	drivers/i2c/busses/i2c-ismt.c
 
 Lenovo Hardware Support
-M:	Adrian Huang <ahuang@redhat.com>
+M:	Ocean He <ohe@redhat.com>
 S:	Maintained
 F:	drivers/gpu/drm/ast/
 
