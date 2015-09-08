@@ -1293,6 +1293,7 @@ END_FTR_SECTION_IFSET(CPU_FTR_ARCH_206)
 	cmpwi	r12, BOOK3S_INTERRUPT_H_DOORBELL
 	bne	3f
 	lbz	r0, HSTATE_HOST_IPI(r13)
+	cmpwi	r0, 0
 	beq	4f
 	b	guest_exit_cont
 3:
