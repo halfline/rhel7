@@ -156,7 +156,8 @@ static int apply_constraint(struct dev_pm_qos_request *req,
 					   &req->data.pnode, action, value);
 		if (ret) {
 			value = pm_qos_read_value(&qos->latency_tolerance);
-			req->dev->power.set_latency_tolerance(req->dev, value);
+			req->dev->device_rh->power.set_latency_tolerance(
+							       req->dev, value);
 		}
 		break;
 	case DEV_PM_QOS_FLAGS:
@@ -288,7 +289,7 @@ static bool dev_pm_qos_invalid_request(struct device *dev,
 				       struct dev_pm_qos_request *req)
 {
 	return !req || (req->type == DEV_PM_QOS_LATENCY_TOLERANCE
-			&& !dev->power.set_latency_tolerance);
+			&& !dev->device_rh->power.set_latency_tolerance);
 }
 
 static int __dev_pm_qos_add_request(struct device *dev,

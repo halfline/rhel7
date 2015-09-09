@@ -563,6 +563,10 @@ struct dev_pm_info {
 #endif
 	struct pm_subsys_data	*subsys_data;  /* Owned by the subsystem. */
 	struct dev_pm_qos	*qos;
+};
+
+/* This struct is never under KABI restrictions */
+struct dev_pm_info_rh {
 	RH_KABI_EXTEND(void (*set_latency_tolerance)(struct device *, s32))
 };
 

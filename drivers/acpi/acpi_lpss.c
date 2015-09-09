@@ -660,14 +660,14 @@ static void acpi_lpss_bind(struct device *dev)
 		return;
 
 	if (pdata->mmio_size >= pdata->dev_desc->prv_offset + LPSS_LTR_SIZE)
-		dev->power.set_latency_tolerance = acpi_lpss_set_ltr;
+		dev->device_rh->power.set_latency_tolerance = acpi_lpss_set_ltr;
 	else
 		dev_err(dev, "MMIO size insufficient to access LTR\n");
 }
 
 static void acpi_lpss_unbind(struct device *dev)
 {
-	dev->power.set_latency_tolerance = NULL;
+	dev->device_rh->power.set_latency_tolerance = NULL;
 }
 
 static struct acpi_scan_handler lpss_handler = {

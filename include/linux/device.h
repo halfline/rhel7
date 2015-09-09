@@ -809,8 +809,7 @@ struct device {
  * going forward.  This structure will never be under KABI restrictions.
  */
 struct device_rh {
-#ifndef __GENKSYMS__
-#endif
+	RH_KABI_EXTEND(struct dev_pm_info_rh power)
 };
 
 static inline struct device *kobj_to_dev(struct kobject *kobj)
