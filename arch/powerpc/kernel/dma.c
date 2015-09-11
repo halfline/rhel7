@@ -227,6 +227,28 @@ u64 dma_get_required_mask(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(dma_get_required_mask);
 
+static void arch_dma_devres_release(struct device *dev, void *res) { }
+
+int arch_dma_init(struct device *dev)
+{
+	if (!dev->archdata.hybrid_dma_data)
+		dev->archdata.hybrid_dma_data =
+			devres_alloc(arch_dma_devres_release,
+				     sizeof(struct dev_arch_dmadata), GFP_KERNEL);
+
+	if (!dev->archdata.hybrid_dma_data)
+		return -ENOMEM;
+	return 0;
+}
+
+static int __init arch_platform_init(void)
+{
+	platform_notify = arch_dma_init;
+	return 0;
+}
+
+arch_initcall(arch_platform_init);
+
 static int __init dma_init(void)
 {
 	dma_debug_init(PREALLOC_DMA_DEBUG_ENTRIES);

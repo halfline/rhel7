@@ -1420,6 +1420,11 @@ struct vio_dev *vio_register_device_node(struct device_node *of_node)
 	viodev->dev.bus = &vio_bus_type;
 	viodev->dev.release = vio_dev_release;
 
+	device_initialize(&viodev->dev);
+
+	if (arch_dma_init(&viodev->dev))
+		goto fail;
+
 	if (of_get_property(viodev->dev.of_node, "ibm,my-dma-window", NULL)) {
 		if (firmware_has_feature(FW_FEATURE_CMO))
 			vio_cmo_set_dma_ops(viodev);
@@ -1436,15 +1441,16 @@ struct vio_dev *vio_register_device_node(struct device_node *of_node)
 	}
 
 	/* register with generic device framework */
-	if (device_register(&viodev->dev)) {
-		printk(KERN_ERR "%s: failed to register device %s\n",
-				__func__, dev_name(&viodev->dev));
-		put_device(&viodev->dev);
-		return NULL;
-	}
+	if (device_add(&viodev->dev))
+		goto fail;
 
 	return viodev;
 
+fail:
+	printk(KERN_ERR "%s: failed to register device %s\n",
+			__func__, dev_name(&viodev->dev));
+	put_device(&viodev->dev);
+	return NULL;
 out:	/* Use this exit point for any return prior to device_register */
 	kfree(viodev);
 
