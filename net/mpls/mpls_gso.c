@@ -67,6 +67,7 @@ out:
 
 static struct packet_offload mpls_mc_offload = {
 	.type = cpu_to_be16(ETH_P_MPLS_MC),
+	.priority = 15,
 	.callbacks = {
 		.gso_segment    =	mpls_gso_segment,
 	},
@@ -74,6 +75,7 @@ static struct packet_offload mpls_mc_offload = {
 
 static struct packet_offload mpls_uc_offload = {
 	.type = cpu_to_be16(ETH_P_MPLS_UC),
+	.priority = 15,
 	.callbacks = {
 		.gso_segment    =	mpls_gso_segment,
 	},
