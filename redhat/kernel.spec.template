@@ -1538,6 +1538,21 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Sep 15 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-316.el7]
+- [fs] Set UID in sess_auth_rawntlmssp_authenticate too (Sachin Prabhu) [1258490]
+- [drm] radeon: fix hotplug race at startup (Dave Airlie) [1262218]
+- [net] fix NULL pointer dereference in skb_copy_and_csum_datagram_iovec when using NFS (Sabrina Dubroca) [1258907]
+- [net] ipv4: suppress NETDEV_UP notification on address lifetime update (Aaron Conole) [1250705]
+- [lib] radix-tree: handle allocation failure in radix_tree_insert() (Seth Jennings) [1260613]
+- [x86] efi: Use all 64 bit of efi_memmap in setup_e820() (Larry Woodman) [1248452]
+- [x86] Fix misapplied XSTATE_LAZY patch (Prarit Bhargava) [1258840]
+- [netdrv] r8169: Fix sleeping function called during get_stats64 (Corinna Vinschen) [1261973]
+- [netdrv] ixgbe: Remove bimodal SR-IOV disabling (Alex Williamson) [1243821]
+- [powerpc] kvm: book3s-hv: Exit on H_DOORBELL if HOST_IPI is set (David Gibson) [1259571]
+- [powerpc] kvm: book3s-hv: Fix race in starting secondary threads (David Gibson) [1259571]
+- [powerpc] powernv/pci-ioda: fix kdump with non-power-of-2 crashkernel= (Gustavo Duarte) [1258491]
+- [powerpc] powernv/pci-ioda: fix 32-bit TCE table init in kdump kernel (Gustavo Duarte) [1258491]
+
 * Tue Sep 08 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-315.el7]
 - [unisys] Add modalias files to visorbus devices (Erik Arfvidson) [1259509]
 - [net] tcp: use dctcp if enabled on the route to the initiator (Florian Westphal) [1254839]
