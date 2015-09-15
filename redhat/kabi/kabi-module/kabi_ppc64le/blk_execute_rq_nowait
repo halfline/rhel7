@@ -1,2 +1,2 @@
 #1-
-0x6b04f0b8	blk_execute_rq_nowait	vmlinux	EXPORT_SYMBOL_GPL
+0xf24764fd	blk_execute_rq_nowait	vmlinux	EXPORT_SYMBOL_GPL

@@ -1,2 +1,2 @@
 #1-
-0x19ef077a	pci_unregister_driver	vmlinux	EXPORT_SYMBOL
+0xe1fb8004	pci_unregister_driver	vmlinux	EXPORT_SYMBOL

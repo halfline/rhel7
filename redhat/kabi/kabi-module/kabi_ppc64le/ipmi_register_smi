@@ -1,2 +1,2 @@
 #1-
-0xc7f96430	ipmi_register_smi	drivers/char/ipmi/ipmi_msghandler	EXPORT_SYMBOL
+0x8e7a9569	ipmi_register_smi	drivers/char/ipmi/ipmi_msghandler	EXPORT_SYMBOL

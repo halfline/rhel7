@@ -1,2 +1,2 @@
 #1-
-0x0b543e89	mutex_lock	vmlinux	EXPORT_SYMBOL
+0xb06badf2	mutex_lock	vmlinux	EXPORT_SYMBOL

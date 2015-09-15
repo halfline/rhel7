@@ -1,2 +1,2 @@
 #1-
-0x791db7cb	mutex_trylock	vmlinux	EXPORT_SYMBOL
+0xa544431c	mutex_trylock	vmlinux	EXPORT_SYMBOL

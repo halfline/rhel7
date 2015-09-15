@@ -1,2 +1,2 @@
 #1-
-0x2ec345e4	netdev_rx_handler_unregister	vmlinux	EXPORT_SYMBOL_GPL
+0x527897b9	netdev_rx_handler_unregister	vmlinux	EXPORT_SYMBOL_GPL
