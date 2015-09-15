@@ -146,10 +146,6 @@ Summary: The Linux kernel
 %define with_sparse 0
 %endif
 
-%ifarch ppc64le
-%define with_kabichk 0
-%endif
-
 # Per-arch tweaks
 
 %ifarch i686
