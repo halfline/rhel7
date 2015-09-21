@@ -58,7 +58,8 @@ struct fib_rules_ops {
 					   struct nlattr **);
 	int			(*fill)(struct fib_rule *, struct sk_buff *,
 					struct fib_rule_hdr *);
-	u32			(*default_pref)(struct fib_rules_ops *ops);
+	RH_KABI_REPLACE(u32     (*default_pref)(struct fib_rules_ops *ops),
+	                void    *rh_reserved_default_pref)
 	size_t			(*nlmsg_payload)(struct fib_rule *);
 
 	/* Called after modifications to the rules set, must flush
@@ -109,5 +110,4 @@ extern int			fib_rules_lookup(struct fib_rules_ops *,
 extern int			fib_default_rule_add(struct fib_rules_ops *,
 						     u32 pref, u32 table,
 						     u32 flags);
-extern u32			fib_default_rule_pref(struct fib_rules_ops *ops);
 #endif
