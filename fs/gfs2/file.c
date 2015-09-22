@@ -813,8 +813,7 @@ static void calc_max_reserv(struct gfs2_inode *ip, loff_t *len,
 	}
 }
 
-static long gfs2_fallocate(struct file *file, int mode, loff_t offset,
-			   loff_t len)
+static long __gfs2_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
 {
 	struct inode *inode = file_inode(file);
 	struct gfs2_sbd *sdp = GFS2_SB(inode);
@@ -828,13 +827,8 @@ static long gfs2_fallocate(struct file *file, int mode, loff_t offset,
 	loff_t bsize_mask = ~((loff_t)sdp->sd_sb.sb_bsize - 1);
 	loff_t next = (offset + len - 1) >> sdp->sd_sb.sb_bsize_shift;
 	loff_t max_chunk_size = UINT_MAX & bsize_mask;
-	struct gfs2_holder gh;
 
 	next = (next + 1) << sdp->sd_sb.sb_bsize_shift;
-
-	/* We only support the FALLOC_FL_KEEP_SIZE mode */
-	if ((mode & ~FALLOC_FL_KEEP_SIZE) || gfs2_is_jdata(ip))
-		return -EOPNOTSUPP;
 
 	offset &= bsize_mask;
 
@@ -845,17 +839,6 @@ static long gfs2_fallocate(struct file *file, int mode, loff_t offset,
 	bytes &= bsize_mask;
 	if (bytes == 0)
 		bytes = sdp->sd_sb.sb_bsize;
-
-	error = gfs2_rs_alloc(ip);
-	if (error)
-		return error;
-
-	mutex_lock(&inode->i_mutex);
-
-	gfs2_holder_init(ip->i_gl, LM_ST_EXCLUSIVE, 0, &gh);
-	error = gfs2_glock_nq(&gh);
-	if (unlikely(error))
-		goto out_uninit;
 
 	gfs2_size_hint(file, offset, len);
 
@@ -886,7 +869,7 @@ static long gfs2_fallocate(struct file *file, int mode, loff_t offset,
 
 		error = gfs2_quota_lock_check(ip, &ap);
 		if (error)
-			goto out_unlock;
+			return error;
 		/* ap.allowed tells us how many blocks quota will allow
 		 * us to write. Check if this reduces max_blks */
 		if (ap.allowed && ap.allowed < max_blks)
@@ -930,18 +913,59 @@ static long gfs2_fallocate(struct file *file, int mode, loff_t offset,
 
 	if (error == 0)
 		error = generic_write_sync(file, pos, count);
-	goto out_unlock;
+	return error;
 
 out_trans_fail:
 	gfs2_inplace_release(ip);
 out_qunlock:
 	gfs2_quota_unlock(ip);
+	return error;
+}
+
+static long gfs2_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+{
+	struct inode *inode = file_inode(file);
+	struct gfs2_inode *ip = GFS2_I(inode);
+	struct gfs2_holder gh;
+	int ret;
+
+	/* We only support the FALLOC_FL_KEEP_SIZE mode */
+	if ((mode & ~FALLOC_FL_KEEP_SIZE) || gfs2_is_jdata(ip))
+		return -EOPNOTSUPP;
+
+	mutex_lock(&inode->i_mutex);
+
+	gfs2_holder_init(ip->i_gl, LM_ST_EXCLUSIVE, 0, &gh);
+	ret = gfs2_glock_nq(&gh);
+	if (ret)
+		goto out_uninit;
+
+	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
+	    (offset + len) > inode->i_size) {
+		ret = inode_newsize_ok(inode, offset + len);
+		if (ret)
+			goto out_unlock;
+	}
+
+	ret = get_write_access(inode);
+	if (ret)
+		goto out_unlock;
+
+	ret = gfs2_rs_alloc(ip);
+	if (ret)
+		goto out_putw;
+
+	ret = __gfs2_fallocate(file, mode, offset, len);
+	if (ret)
+		gfs2_rs_deltree(ip->i_res);
+out_putw:
+	put_write_access(inode);
 out_unlock:
 	gfs2_glock_dq(&gh);
 out_uninit:
 	gfs2_holder_uninit(&gh);
 	mutex_unlock(&inode->i_mutex);
-	return error;
+	return ret;
 }
 
 static ssize_t gfs2_file_splice_write(struct pipe_inode_info *pipe,
