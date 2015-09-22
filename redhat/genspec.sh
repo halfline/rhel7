@@ -171,10 +171,18 @@ if [ "$LENGTH" = 0 ]; then
 	rm -f $clogf.rev; touch $clogf.rev
 fi
 
+# add extra description if localdesc file is found. useful for
+# test builds that go to customer (added disclaimer)
+EXTRA_DESC=../localdesc
+if [ -f "$EXTRA_DESC" ]; then
+       sed -i -e "/%%EXTRA_DESC/r $EXTRA_DESC" $SPECFILE
+fi
+
 test -n "$SPECFILE" &&
         sed -i -e "
 	/%%CHANGELOG%%/r $clogf.rev
 	/%%CHANGELOG%%/d
+	/%%EXTRA_DESC%%/d
 	s/%%RPMVERSION%%/$RPMVERSION/
 	s/%%PKGRELEASE%%/$PKGRELEASE/
 	s/%%SPECRELEASE%%/$SPECRELEASE/
