@@ -1054,6 +1054,12 @@ static int __initdata no_hwp;
 static int __initdata hwp_only;
 static unsigned int force_load;
 
+/* RHEL7: disable HWP for Skylake-S processors */
+static struct x86_cpu_id __initdata hwp_quirk_cpu_ids[] = {
+	{ .vendor = X86_VENDOR_INTEL, .family = 6, .model = 0x5e },
+	{}
+};
+
 static int intel_pstate_msrs_not_valid(void)
 {
 	if (!pstate_funcs.get_max() ||
@@ -1231,6 +1237,16 @@ static int __init intel_pstate_init(void)
 	all_cpu_data = vzalloc(sizeof(void *) * num_possible_cpus());
 	if (!all_cpu_data)
 		return -ENOMEM;
+
+	/*
+	 * RHEL7: We are having issues with the Skylake-S hanging
+	 * when HWP is enabled so check for Skylake-S and
+	 * disable HWP if found
+	 */
+	if (x86_match_cpu(hwp_quirk_cpu_ids)) {
+		pr_info("intel_pstate Skylake-S detected. disabling HWP\n");
+		no_hwp = 1;
+	}
 
 	if (cpu_has(c,X86_FEATURE_HWP) && !no_hwp)
 		intel_pstate_hwp_enable();
