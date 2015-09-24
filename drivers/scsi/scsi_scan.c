@@ -689,9 +689,10 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
 	 * strings.
 	 */
 	if (sdev->inquiry_len < 36) {
-		sdev_printk(KERN_INFO, sdev,
-			    "scsi scan: INQUIRY result too short (%d),"
-			    " using 36\n", sdev->inquiry_len);
+		printk_once(KERN_INFO
+			    "%s %s: scsi scan: INQUIRY result too short (%d),"
+			    " using 36\n", dev_driver_string(&sdev->sdev_gendev),
+			    dev_name(&sdev->sdev_gendev), sdev->inquiry_len);
 		sdev->inquiry_len = 36;
 	}
 
