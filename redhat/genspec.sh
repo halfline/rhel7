@@ -7,6 +7,7 @@ RPMVERSION=$4
 RELEASED_KERNEL=$5
 SPECRELEASE=$6
 DISTRO_BUILD=$7
+ZSTREAM_FLAG=$8
 clogf="$SOURCES/changelog"
 # hide [redhat] entries from changelog
 HIDE_REDHAT=1;
@@ -24,7 +25,7 @@ echo "Gathering new log entries since $lasttag"
 git format-patch --first-parent --no-renames -k --stdout ${lasttag}.. | awk '
 BEGIN{TYPE="PATCHJUNK"; }
 	# add an entry to changelog
-	function changelog(subjectline, nameline)
+	function changelog(subjectline, nameline, zstream)
 	{
 		subj = substr(subjectline, 10);
 		gsub(/%/, "", subj)
@@ -32,9 +33,20 @@ BEGIN{TYPE="PATCHJUNK"; }
 		pos=match(name, /</);
 		name=substr(name,1,pos-2);
 		bz=substr(BZ,11);
+		zbz=substr(ZBZ,13);
 		meta = "";
-		if (bz != "") {
-			meta = " [" bz "]";
+		if (zstream == "no") {
+			if (bz != "") {
+				meta = " [" bz "]";
+			}
+		} else {
+			if (zbz != "") {
+				if (bz != "") {
+					meta = " [" zbz " " bz "]";
+				} else {
+					meta = " [" zbz "]";
+				}
+			}
 		}
 		cve = substr(CVE, 6);
 		if (cve != "") {
@@ -83,16 +95,18 @@ BEGIN{TYPE="PATCHJUNK"; }
 	# partially attempt to deal with RFC2822 continuation lines in headers
 	/^\ / { if (TYPE=="HEADER") { if (LASTHDR=="SUBJ") { SUBJECTLINE=(SUBJECTLINE $0); } next; } }
 	/^Bugzilla: / { if (TYPE=="META") {BZ=$0; } }
+	/^Z-Bugzilla: / { if (TYPE=="META") {ZBZ=$0; } }
 	/^CVE: / { if (TYPE=="META") {CVE=$0; } }
 
 	#blank line triggers end of header and to begin processing
 	/^$/ { 
 	    if (TYPE=="META") {
 		#create the dynamic changelog entry
-		changelog(SUBJECTLINE, NAMELINE);
+		changelog(SUBJECTLINE, NAMELINE, ZSTREAM);
 		#reset cve values because they do not always exist
 		CVE="";
 		BZ="";
+		ZBZ="";
 		TYPE="BODY";
 	    }
 	    if (TYPE=="HEADER") {
@@ -106,10 +120,11 @@ BEGIN{TYPE="PATCHJUNK"; }
 		if (TYPE=="META") {
 			# no meta data found, just use the subject line to fill
 			# the changelog
-			changelog(SUBJECTLINE, NAMELINE);
+			changelog(SUBJECTLINE, NAMELINE, ZSTREAM);
 			#reset cve values because they do not always exist
 			CVE="";
 			BZ="";
+			ZBZ="";
 			TYPE="BODY";
 		}
 		if (TYPE=="BODY") {
@@ -124,7 +139,7 @@ BEGIN{TYPE="PATCHJUNK"; }
 	{ if (TYPE == "PATCHJUNK") { next; } }
 	{ if (TYPE == "HEADER") { next; } }
 
-' SOURCES=$SOURCES SPECFILE=$SPECFILE CLOGF=$clogf
+' SOURCES=$SOURCES SPECFILE=$SPECFILE CLOGF=$clogf ZSTREAM=$ZSTREAM_FLAG
 
 cat $clogf | grep -v "tagging $RPM_VERSION" > $clogf.stripped
 cp $clogf.stripped $clogf

@@ -2,8 +2,10 @@
 
 # Outputs a ready to use commit message for dist-git
 # $1: spec file
+# $2: zstream flag
 
 spec=$1;
+zstream_flag=$2;
 tmp=$(mktemp);
 
 function die
@@ -32,9 +34,21 @@ if [ -z "$version" ]; then
 fi
 
 # extracting the BZs to create the "Resolves" line
-cat $tmp |
-	grep ^- |
-	sed -n -e "s/.*\[\([0-9\ ]\+\)\].*/\1/p" |
+if [ "$zstream_flag" == "no" ]; then
+	bzs=$(cat $tmp |
+		grep ^- |
+		sed -n -e "s/.*\[\([0-9]\+\)[0-9 ]*\].*/\1/p")
+else
+	bzs=$(awk '/^-/ {
+		if(match($0, /\[([0-9]+ [0-9]+ )*[0-9]+ [0-9]+\]/)) {
+			n = split(substr($0, RSTART + 1, RLENGTH - 2), bzs)
+			for(i = 1; i <= n/2; i++)
+				print bzs[i]
+		}
+	}' $tmp)
+fi
+
+echo $bzs |
 	tr ' ' '\n' |
 	sort -u |
 	tr '\n' ',' |

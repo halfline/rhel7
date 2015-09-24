@@ -6,6 +6,16 @@ LANG=C
 BUILD_DEFAULT_TARGET = rhel-${RHELMAJOR}.${RHELMINOR}-test-pesign
 BUILD_SCRATCH_TARGET = rhel-${RHELMAJOR}.${RHELMINOR}-test-pesign
 
+ifeq ("$(ZSTREAM)", "yes")
+  ifeq ("$(origin RHDISTGIT_BRANCH)", "command line")
+    __ZSTREAM = branch
+  else
+    __ZSTREAM = yes
+  endif
+else
+  __ZSTREAM = no
+endif
+
 #ifeq ($(shell git diff --quiet HEAD && git describe --exact-match 2>/dev/null && echo ok),)
 BUILD_TARGET ?= --scratch $(BUILD_SCRATCH_TARGET)
 #else
@@ -92,7 +102,7 @@ $(KABI_TARBALL):
 
 setup-source: rh-clean-sources
 	@cp $(REDHAT)/$(SPECFILE).template $(SOURCES)/$(SPECFILE)
-	@$(REDHAT)/genspec.sh $(SOURCES) $(SOURCES)/$(SPECFILE) $(PKGRELEASE) $(RPMVERSION) $(RELEASED_KERNEL) $(SPECRELEASE) $(DISTRO_BUILD)
+	@$(REDHAT)/genspec.sh $(SOURCES) $(SOURCES)/$(SPECFILE) $(PKGRELEASE) $(RPMVERSION) $(RELEASED_KERNEL) $(SPECRELEASE) $(DISTRO_BUILD) $(__ZSTREAM)
 	@cp $(SOURCES)/$(SPECFILE) $(SOURCES)/../SPECS/
 
 sources-rh: $(TARBALL)
@@ -156,7 +166,7 @@ rh-release-finish: setup-source
 	@$(MAKE) rh-kabi
 	@$(MAKE) sources-rh
 rh-release: rh-clean-sources
-	@$(REDHAT)/scripts/new_release.sh $(REDHAT)
+	@$(REDHAT)/scripts/new_release.sh $(REDHAT) $(__ZSTREAM)
 	@$(MAKE) rh-release-finish
 rh-release-tag:
 	@git tag -a -m "kernel-$(STAMP_VERSION)-$(PKGRELEASE)" kernel-$(STAMP_VERSION)-$(PKGRELEASE)
@@ -181,7 +191,7 @@ rh-dist-git: $(REDHAT)/rpm/SOURCES/kernel.spec $(TARBALL) $(KABI_TARBALL)
 ifeq ("$(RHDISTGIT_BRANCH)", "")
  $(error RHDISTGIT_BRANCH unset)
 endif
-	$(REDHAT)/scripts/rh-dist-git.sh "$(RHDISTGIT_BRANCH)" "$(RHDISTGIT_CACHE)" "$(RHDISTGIT_TMP)" "$(RHDISTGIT)" "$(TARBALL)" "$(KABI_TARBALL)"
+	$(REDHAT)/scripts/rh-dist-git.sh "$(RHDISTGIT_BRANCH)" "$(RHDISTGIT_CACHE)" "$(RHDISTGIT_TMP)" "$(RHDISTGIT)" "$(TARBALL)" "$(KABI_TARBALL)" "$(__ZSTREAM)"
 
 rh-rtg: rh-release
 	@$(MAKE) rh-release-tag
