@@ -1538,6 +1538,31 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Sep 28 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-320.el7]
+- [md] raid1: Avoid raid1 resync getting stuck (Jes Sorensen) [1256954]
+- [fs] gfs2: fallocate: do not rely on file_update_time to mark the inode dirty (Andrew Price) [1264521]
+- [fs] gfs2: Update timestamps on fallocate (Andrew Price) [1264521]
+- [fs] gfs2: Update i_size properly on fallocate (Andrew Price) [1264521]
+- [fs] gfs2: Use inode_newsize_ok and get_write_access in fallocate (Andrew Price) [1264521]
+- [fs] revert "nfs: Make close(2) asynchronous when closing NFS O_DIRECT files" (Benjamin Coddington) [1263385]
+- [fs] gfs2: Average in only non-zero round-trip times for congestion stats (Robert S Peterson) [1162821]
+- [fs] lockd: fix rpcbind crash on lockd startup failure ("J. Bruce Fields") [1253782]
+- [fs] Failing to send a CLOSE if file is opened WRONLY and server reboots on a 4.x mount (Benjamin Coddington) [1263376]
+- [fs] fsnotify: fix oops in fsnotify_clear_marks_by_group_flags() (Lukas Czerner) [1247436]
+- [net] sctp: fix race on protocol/netns initialization (Marcelo Leitner) [1251807] {CVE-2015-5283}
+- [x86] Mark Broadwell-DE SoC Supported (Prarit Bhargava) [1131685]
+- [kernel] sched,numa: limit amount of virtual memory scanned in task_numa_work (Rik van Riel) [1261722]
+- [drivers] base: show nohz_full cpus in sysfs (Rik van Riel) [1212618]
+- [drivers] base: show isolated cpus in sysfs (Rik van Riel) [1212618]
+- [cpufreq] intel_pstate: add quirk to disable HWP on Skylake-S processors (Jerry Snitselaar) [1263069]
+- [drivers] core: Add symlink to device-tree from devices with an OF node (Gustavo Duarte) [1258828]
+- [powerpc] device: Add dev_of_node() accessor (Gustavo Duarte) [1258828]
+- [powerpc] iommu: Support "hybrid" iommu/direct DMA ops for coherent_mask < dma_mask (Gustavo Duarte) [1246880]
+- [powerpc] iommu: Cleanup setting of DMA base/offset (Gustavo Duarte) [1246880]
+- [powerpc] iommu: Remove dma_data union (Gustavo Duarte) [1246880]
+- [powerpc] kvm: book3s-hv: Fix handling of interrupted VCPUs (Thomas Huth) [1263568]
+- [powerpc] kvm: Take the kvm->srcu lock in kvmppc_h_logical_ci_load/store() (Thomas Huth) [1263577]
+
 * Tue Sep 22 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-319.el7]
 - [netdrv] cxgb4: Make necessary changes after reverting FCoE (Sai Vemuri) [1258657]
 - [netdrv] revert "cxgb4: add cxgb4_fcoe.c for FCoE" (Sai Vemuri) [1258657]
