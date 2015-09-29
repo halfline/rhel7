@@ -8055,7 +8055,6 @@ static int i40e_ndo_fdb_add(struct ndmsg *ndm, struct nlattr *tb[],
 	return err;
 }
 
-#ifdef HAVE_BRIDGE_ATTRIBS
 /**
  * i40e_ndo_bridge_setlink - Set the hardware bridge mode
  * @dev: the netdev being configured
@@ -8140,14 +8139,9 @@ static int i40e_ndo_bridge_setlink(struct net_device *dev,
  * Return the mode in which the hardware bridge is operating in
  * i.e VEB or VEPA.
  **/
-#ifdef HAVE_BRIDGE_FILTER
 static int i40e_ndo_bridge_getlink(struct sk_buff *skb, u32 pid, u32 seq,
 				   struct net_device *dev,
 				   u32 __always_unused filter_mask)
-#else
-static int i40e_ndo_bridge_getlink(struct sk_buff *skb, u32 pid, u32 seq,
-				   struct net_device *dev)
-#endif /* HAVE_BRIDGE_FILTER */
 {
 	struct i40e_netdev_priv *np = netdev_priv(dev);
 	struct i40e_vsi *vsi = np->vsi;
@@ -8168,9 +8162,8 @@ static int i40e_ndo_bridge_getlink(struct sk_buff *skb, u32 pid, u32 seq,
 	if (!veb)
 		return 0;
 
-	return ndo_dflt_bridge_getlink(skb, pid, seq, dev, veb->bridge_mode);
+	return ndo_dflt_bridge_getlink(skb, pid, seq, dev, veb->bridge_mode, 0, 0);
 }
-#endif /* HAVE_BRIDGE_ATTRIBS */
 
 #define I40E_MAX_TUNNEL_HDR_LEN 80
 /**
@@ -8226,10 +8219,8 @@ static const struct net_device_ops i40e_netdev_ops = {
 	.ndo_get_phys_port_id	= i40e_get_phys_port_id,
 	.ndo_fdb_add		= i40e_ndo_fdb_add,
 	.ndo_features_check	= i40e_features_check,
-#ifdef HAVE_BRIDGE_ATTRIBS
 	.ndo_bridge_getlink	= i40e_ndo_bridge_getlink,
 	.ndo_bridge_setlink	= i40e_ndo_bridge_setlink,
-#endif /* HAVE_BRIDGE_ATTRIBS */
 };
 
 /**
