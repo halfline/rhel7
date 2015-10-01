@@ -1022,8 +1022,8 @@ static void drm_dp_check_port_guid(struct drm_dp_mst_branch *mstb,
 	}
 }
 
-static void build_mst_prop_path(struct drm_dp_mst_port *port,
-				struct drm_dp_mst_branch *mstb,
+static void build_mst_prop_path(const struct drm_dp_mst_branch *mstb,
+				int pnum,
 				char *proppath,
 				size_t proppath_size)
 {
@@ -1036,7 +1036,7 @@ static void build_mst_prop_path(struct drm_dp_mst_port *port,
 		snprintf(temp, sizeof(temp), "-%d", port_num);
 		strlcat(proppath, temp, proppath_size);
 	}
-	snprintf(temp, sizeof(temp), "-%d", port->port_num);
+	snprintf(temp, sizeof(temp), "-%d", pnum);
 	strlcat(proppath, temp, proppath_size);
 }
 
@@ -1108,7 +1108,8 @@ static void drm_dp_add_port(struct drm_dp_mst_branch *mstb,
 
 	if (created && !port->input) {
 		char proppath[255];
-		build_mst_prop_path(port, mstb, proppath, sizeof(proppath));
+
+		build_mst_prop_path(mstb, port->port_num, proppath, sizeof(proppath));
 		port->connector = (*mstb->mgr->cbs->add_connector)(mstb->mgr, port, proppath);
 
 		if (port->port_num >= 8) {
