@@ -416,6 +416,7 @@ F:	drivers/block/mtip32xx/mtip32xx.c
 F:	drivers/block/mtip32xx/mtip32xx.h
 
 MLX4 ETHERNET DRIVER (mlx4)
+M:	Kamal Heib <kheib@redhat.com>
 M:	Doug Ledford <dledford@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/mellanox/mlx4/
