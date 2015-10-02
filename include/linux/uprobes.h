@@ -82,6 +82,7 @@ struct uprobe_task {
 	unsigned long			vaddr;
 };
 
+#ifndef __GENKSYMS__
 struct return_instance {
 	struct uprobe		*uprobe;
 	unsigned long		func;
@@ -91,6 +92,7 @@ struct return_instance {
 
 	struct return_instance	*next;		/* keep as stack */
 };
+#endif
 
 enum rp_check {
 	RP_CHECK_CALL,
