@@ -1538,6 +1538,27 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Oct 05 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-322.el7]
+- [fs] nfs: fix v4.2 SEEK on files over 2 gigs ("J. Bruce Fields") [1262181]
+- [fs] nfs: verify open flags before allowing open (Benjamin Coddington) [1164431]
+- [fs] nfsv4.1: Fix pnfs_put_lseg races (Benjamin Coddington) [1263155]
+- [fs] nfsv4.1: pnfs_send_layoutreturn should use GFP_NOFS (Benjamin Coddington) [1263155]
+- [fs] nfsv4.1: Pin the inode and super block in asynchronous layoutreturns (Benjamin Coddington) [1263155]
+- [fs] nfsv4.1: Pin the inode and super block in asynchronous layoutcommit (Benjamin Coddington) [1263155]
+- [md] raid0: apply base queue limits *before* disk_stack_limits (Jes Sorensen) [1265182]
+- [net] revert "ipv6: Don't reduce hop limit for an interface" (Sabrina Dubroca) [1258324]
+- [x86] kvmclock: abolish PVCLOCK_COUNTS_FROM_ZERO (Radim Krcmar) [1263030]
+- [x86] revert "kvm: x86: zero kvmclock_offset when vcpu0 initializes kvmclock system MSR" (Radim Krcmar) [1263030]
+- [x86] kvm: svm: reset mmu on VCPU reset (Igor Mammedov) [1255217]
+- [edac] sb_edac: correctly fetch DIMM width on Ivy Bridge and Haswell (Aristeu Rozanski) [1112413]
+- [edac] sb_edac: look harder for DDRIO on Haswell systems (Aristeu Rozanski) [1112413]
+- [tools] perf-trace: Fix race condition at the end of started workloads (Jiri Olsa) [1250068]
+- [netdrv] cxgb4: Fix tx flit calculation (Sai Vemuri) [1266248]
+- [netdrv] igb: assume MSI-X interrupts during initialization (Stefan Assmann) [1263625]
+- [cpufreq] intel_pstate: disable Skylake processors (Prarit Bhargava) [1267343]
+- [infiniband] mlx4: Report checksum offload cap for RAW QP when query device (Doug Ledford) [1265795]
+- [infiniband] core: Add support of checksum capability reporting for RC and RAW (Doug Ledford) [1265795]
+
 * Wed Sep 30 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-321.el7]
 - [netdrv] i40e/i40evf: check for stopped admin queue (Stefan Assmann) [1267255]
 - [netdrv] i40e/i40evf: refactor tx timeout logic (Stefan Assmann) [1267255]
