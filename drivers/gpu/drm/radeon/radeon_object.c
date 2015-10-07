@@ -33,6 +33,7 @@
 #include <linux/slab.h>
 #include <drm/drmP.h>
 #include <drm/radeon_drm.h>
+#include <drm/drm_cache.h>
 #include "radeon.h"
 #include "radeon_trace.h"
 
@@ -92,6 +93,15 @@ bool radeon_ttm_bo_is_radeon_bo(struct ttm_buffer_object *bo)
 	return false;
 }
 
+static inline bool radeon_placement_can_wc(struct radeon_bo *rbo)
+{
+	if ((rbo->flags & RADEON_GEM_GTT_WC) && drm_arch_can_wc_memory())
+		return true;
+	if (rbo->rdev->flags & RADEON_IS_AGP)
+		return true;
+	return false;
+}
+
 void radeon_ttm_placement_from_domain(struct radeon_bo *rbo, u32 domain)
 {
 	u32 c = 0, i;
@@ -123,8 +133,7 @@ void radeon_ttm_placement_from_domain(struct radeon_bo *rbo, u32 domain)
 			rbo->placements[c++].flags = TTM_PL_FLAG_UNCACHED |
 				TTM_PL_FLAG_TT;
 
-		} else if ((rbo->flags & RADEON_GEM_GTT_WC) ||
-			   (rbo->rdev->flags & RADEON_IS_AGP)) {
+		} else if (radeon_placement_can_wc(rbo)) {
 			rbo->placements[c].fpfn = 0;
 			rbo->placements[c++].flags = TTM_PL_FLAG_WC |
 				TTM_PL_FLAG_UNCACHED |
@@ -142,8 +151,7 @@ void radeon_ttm_placement_from_domain(struct radeon_bo *rbo, u32 domain)
 			rbo->placements[c++].flags = TTM_PL_FLAG_UNCACHED |
 				TTM_PL_FLAG_SYSTEM;
 
-		} else if ((rbo->flags & RADEON_GEM_GTT_WC) ||
-		    rbo->rdev->flags & RADEON_IS_AGP) {
+		} else if (radeon_placement_can_wc(rbo)) {
 			rbo->placements[c].fpfn = 0;
 			rbo->placements[c++].flags = TTM_PL_FLAG_WC |
 				TTM_PL_FLAG_UNCACHED |
