@@ -1496,7 +1496,21 @@ struct page *follow_page_mask(struct vm_area_struct *vma,
 
 	page = follow_huge_addr(mm, address, flags & FOLL_WRITE);
 	if (!IS_ERR(page)) {
-		BUG_ON(flags & FOLL_GET);
+		/*
+		 * RHEL: BZ1268999 quick-and-dirty-fix
+		 *
+		 * On powerpc a race between a THP pmd clear path and
+		 * follow_huge_addr() can result in follow_huge_addr()
+		 * returning NULL when a THP PMD has just been cleared
+		 * - usually follow_huge_addr() should return
+		 * ERR_PTR(-EINVAL) on a THP PMD.  This hack avoids
+		 * the BUG_ON() while waiting for a proper upstream
+		 * fix.  It will mean follow_page_mask() fails, but
+		 * should trigger a fall back to a faultin path which
+		 * should populate the pages.
+		 */
+		if (page)
+			BUG_ON(flags & FOLL_GET);
 		goto out;
 	}
 
