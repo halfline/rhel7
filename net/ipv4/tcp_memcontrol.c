@@ -79,7 +79,6 @@ static int tcp_update_limit(struct mem_cgroup *memcg, u64 val)
 	struct net *net = current->nsproxy->net_ns;
 	struct tcp_memcontrol *tcp;
 	struct cg_proto *cg_proto;
-	u64 old_lim;
 	int i;
 	int ret;
 
@@ -92,7 +91,6 @@ static int tcp_update_limit(struct mem_cgroup *memcg, u64 val)
 
 	tcp = tcp_from_cgproto(cg_proto);
 
-	old_lim = res_counter_read_u64(&tcp->tcp_memory_allocated, RES_LIMIT);
 	ret = res_counter_set_limit(&tcp->tcp_memory_allocated, val);
 	if (ret)
 		return ret;
