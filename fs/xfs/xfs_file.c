@@ -609,6 +609,7 @@ xfs_file_aio_write_checks(
 	struct xfs_inode	*ip = XFS_I(inode);
 	int			error = 0;
 	unsigned long		flags;
+	bool			drained_dio = false;
 
 restart:
 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
@@ -639,11 +640,12 @@ restart:
 		bool	zero = false;
 
 		spin_unlock_irqrestore(&ip->i_size_lock, flags);
-		if (*iolock == XFS_IOLOCK_SHARED) {
-			xfs_rw_iunlock(ip, *iolock);
-			*iolock = XFS_IOLOCK_EXCL;
-			xfs_rw_ilock(ip, *iolock);
-
+		if (!drained_dio) {
+			if (*iolock == XFS_IOLOCK_SHARED) {
+				xfs_rw_iunlock(ip, *iolock);
+				*iolock = XFS_IOLOCK_EXCL;
+				xfs_rw_ilock(ip, *iolock);
+			}
 			/*
 			 * We now have an IO submission barrier in place, but
 			 * AIO can do EOF updates during IO completion and hence
@@ -653,6 +655,7 @@ restart:
 			 * no-op.
 			 */
 			inode_dio_wait(inode);
+			drained_dio = true;
 			goto restart;
 		}
 		error = xfs_zero_eof(ip, *pos, i_size_read(inode), &zero);
