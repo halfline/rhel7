@@ -1006,6 +1006,7 @@ static int tcp_transmit_skb(struct sock *sk, struct sk_buff *skb, int clone_it,
 		TCP_ADD_STATS(sock_net(sk), TCP_MIB_OUTSEGS,
 			      tcp_skb_pcount(skb));
 
+	tp->segs_out += tcp_skb_pcount(skb);
 	/* Our usage of tstamp should remain private */
 	skb->tstamp.tv64 = 0;
 	err = icsk->icsk_af_ops->queue_xmit(skb, &inet->cork.fl);
