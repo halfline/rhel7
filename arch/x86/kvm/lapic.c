@@ -347,6 +347,8 @@ void kvm_apic_update_irr(struct kvm_vcpu *vcpu, u32 *pir)
 		if (pir_val)
 			*((u32 *)(apic->regs + APIC_IRR + i * 0x10)) |= pir_val;
 	}
+
+	kvm_make_request(KVM_REQ_EVENT, vcpu);
 }
 EXPORT_SYMBOL_GPL(kvm_apic_update_irr);
 
