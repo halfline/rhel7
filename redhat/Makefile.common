@@ -22,10 +22,11 @@ FILTERDIFF:=/usr/bin/filterdiff -x '*redhat/*' -x '*/.gitignore' -x '*/makefile'
 # 		   the release one, for vmlinux signing.
 #
 #	0 : pre-release (devel) secureboot keys are used for signing
-#	1 " release (RC/GA) secureboot keys are used for signing
+#	1 : release (RC/GA) secureboot keys are used for signing
 #
-RELEASED_KERNEL := 0
-STAMP_VERSION := $(KVERSION)
+RELEASED_KERNEL:=1
+
+STAMP_VERSION:=$(KVERSION)
 
 LOCVERFILE:=../localversion
 # create an empty localversion file if you don't want a local buildid
