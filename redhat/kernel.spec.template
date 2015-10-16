@@ -1534,6 +1534,29 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Oct 16 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-325.el7]
+- [fs] nfsd: ensure that delegation stateid hash references are only put once ("J. Bruce Fields") [1233284]
+- [fs] nfsd: ensure that the ol stateid hash reference is only put once ("J. Bruce Fields") [1233284]
+- [fs] nfsv4: Fix a nograce recovery hang (Benjamin Coddington) [1264478]
+- [fs] vfs: Test for and handle paths that are unreachable from their mnt_root ("Eric W. Biederman") [1209371] {CVE-2015-2925}
+- [fs] dcache: Handle escaped paths in prepend_path ("Eric W. Biederman") [1209371] {CVE-2015-2925}
+- [fs] xfs: add an xfs_zero_eof() tracepoint (Brian Foster) [1260383]
+- [fs] xfs: always drain dio before extending aio write submission (Brian Foster) [1260383]
+- [md] dm-cache: fix NULL pointer when switching from cleaner policy (Mike Snitzer) [1269959]
+- [mm] Temporary fix for BUG_ON() triggered by THP vs. gup() race (David Gibson) [1268999]
+- [hid] usbhid: improve handling of Clear-Halt and reset (Don Zickus) [1260123]
+- [drm] qxl: fix framebuffer dirty rectangle tracking (Gerd Hoffmann) [1268293]
+- [s390] hmcdrv: fix interrupt registration (Hendrik Brueckner) [1262735]
+- [block] blk-mq: fix deadlock when reading cpu_list (Jeff Moyer) [1260615]
+- [block] blk-mq: avoid inserting requests before establishing new mapping (Jeff Moyer) [1260615]
+- [block] blk-mq: fix q->mq_usage_counter access race (Jeff Moyer) [1260615]
+- [block] blk-mq: Fix use after of free q->mq_map (Jeff Moyer) [1260615]
+- [block] blk-mq: fix sysfs registration/unregistration race (Jeff Moyer) [1260615]
+- [block] blk-mq: avoid setting hctx->tags->cpumask before allocation (Jeff Moyer) [1260615]
+- [netdrv] cxgb4: Enhance driver to update FW, when FW is too old (Sai Vemuri) [1077966]
+- [netdrv] cxgb4: Force uninitialized state if FW in adapter is unsupported (Sai Vemuri) [1077966]
+- [powerpc] revert "Use the POWER8 Micro Partition Prefetch Engine in KVM HV on POWER8" (Thomas Huth) [1269653]
+
 * Tue Oct 13 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-324.el7]
 - [netdrv] i40e/i40evf: set AQ count after memory allocation (Neil Horman) [1267663]
 - [netdrv] i40e: fix offload of GRE tunnels (Neil Horman) [1267663]
