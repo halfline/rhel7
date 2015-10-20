@@ -509,6 +509,7 @@ static void req_completion(struct nvme_queue *nvmeq, void *ctx,
 	struct nvme_iod *iod = ctx;
 	struct request *req = iod_get_private(iod);
 	struct nvme_cmd_info *cmd_rq = blk_mq_rq_to_pdu(req);
+	bool requeue = false;
 
 	u16 status = le16_to_cpup(&cqe->status) >> 1;
 
@@ -517,12 +518,13 @@ static void req_completion(struct nvme_queue *nvmeq, void *ctx,
 		    && (jiffies - req->start_time) < req->timeout) {
 			unsigned long flags;
 
+			requeue = true;
 			blk_mq_requeue_request(req);
 			spin_lock_irqsave(req->q->queue_lock, flags);
 			if (!blk_queue_stopped(req->q))
 				blk_mq_kick_requeue_list(req->q);
 			spin_unlock_irqrestore(req->q->queue_lock, flags);
-			return;
+			goto release_iod;
 		}
 		req->errors = nvme_error_status(status);
 	} else
@@ -533,6 +535,7 @@ static void req_completion(struct nvme_queue *nvmeq, void *ctx,
 			"completing aborted command with status:%04x\n",
 			status);
 
+ release_iod:
 	if (iod->nents) {
 		dma_unmap_sg(&nvmeq->dev->pci_dev->dev, iod->sg, iod->nents,
 			rq_data_dir(req) ? DMA_TO_DEVICE : DMA_FROM_DEVICE);
@@ -542,7 +545,8 @@ static void req_completion(struct nvme_queue *nvmeq, void *ctx,
 	}
 	nvme_free_iod(nvmeq->dev, iod);
 
-	blk_mq_complete_request(req);
+	if (likely(!requeue))
+		blk_mq_complete_request(req);
 }
 
 /* length is in bytes.  gfp flags indicates whether we may sleep. */
