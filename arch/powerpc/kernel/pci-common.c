@@ -987,6 +987,8 @@ void pcibios_setup_bus_self(struct pci_bus *bus)
 
 static void pcibios_setup_device(struct pci_dev *dev)
 {
+	arch_dma_init(&dev->dev);
+
 	/* Fixup NUMA node as it may not be setup yet by the generic
 	 * code and is needed by the DMA init
 	 */
