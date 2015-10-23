@@ -1534,6 +1534,18 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Oct 23 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-326.el7]
+- [md] dm-cache: the CLEAN_SHUTDOWN flag was not being set (Mike Snitzer) [1274450]
+- [md] dm-btree: fix leak of bufio-backed block in btree_split_beneath error path (Mike Snitzer) [1274393]
+- [md] dm-btree-remove: fix a bug when rebalancing nodes after removal (Mike Snitzer) [1274396]
+- [fs] nfsd: fix duplicated destroy_delegation code introduced by backport ("J. Bruce Fields") [1273228]
+- [fs] xfs: validate transaction header length on log recovery (Brian Foster) [1164135]
+- [net] ipv6: don't use CHECKSUM_PARTIAL on MSG_MORE/UDP_CORK sockets (Hannes Frederic Sowa) [1271759]
+- [net] add length argument to skb_copy_and_csum_datagram_iovec (Sabrina Dubroca) [1269228]
+- [x86] kvm: fix edge EOI and IOAPIC reconfig race (Radim Krcmar) [1271333]
+- [x86] kvm: set KVM_REQ_EVENT when updating IRR (Radim Krcmar) [1271333]
+- [kernel] Initialize msg/shm IPC objects before doing ipc_addid() (Lennert Buytenhek) [1271507] {CVE-2015-7613}
+
 * Fri Oct 16 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-325.el7]
 - [fs] nfsd: ensure that delegation stateid hash references are only put once ("J. Bruce Fields") [1233284]
 - [fs] nfsd: ensure that the ol stateid hash reference is only put once ("J. Bruce Fields") [1233284]
