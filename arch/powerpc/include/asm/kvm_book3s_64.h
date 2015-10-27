@@ -430,6 +430,7 @@ static inline struct kvm_memslots *kvm_memslots_raw(struct kvm *kvm)
 }
 
 extern void kvmhv_rm_send_ipi(int cpu);
+extern void kvmppc_mmu_debugfs_init(struct kvm *kvm);
 
 #endif /* CONFIG_KVM_BOOK3S_HV_POSSIBLE */
 

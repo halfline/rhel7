@@ -257,6 +257,8 @@ struct kvm_arch {
 	spinlock_t slot_phys_lock;
 	cpumask_t need_tlb_flush;
 	int hpt_cma_alloc;
+	struct dentry *debugfs_dir;
+	struct dentry *htab_dentry;
 #endif /* CONFIG_KVM_BOOK3S_HV_POSSIBLE */
 #ifdef CONFIG_KVM_BOOK3S_PR_POSSIBLE
 	struct mutex hpt_mutex;
