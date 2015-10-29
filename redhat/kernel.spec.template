@@ -1534,6 +1534,11 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Oct 29 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-327.el7]
+- [mm] free compound page with correct order (Andrea Arcangeli) [1274867]
+- [netdrv] revert "ixgbe: Refactor busy poll socket code to address multiple issues" (John Greene) [1261275]
+- [powerpc] dma: dma_set_coherent_mask() should not be GPL only (Gustavo Duarte) [1275976]
+
 * Fri Oct 23 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-326.el7]
 - [md] dm-cache: the CLEAN_SHUTDOWN flag was not being set (Mike Snitzer) [1274450]
 - [md] dm-btree: fix leak of bufio-backed block in btree_split_beneath error path (Mike Snitzer) [1274393]
