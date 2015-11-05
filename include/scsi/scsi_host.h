@@ -727,6 +727,8 @@ struct Scsi_Host {
 	/* Host responded with short (<36 bytes) INQUIRY result */
 	RH_KABI_FILL_HOLE(unsigned short_inquiry:1)
 
+	RH_KABI_FILL_HOLE(unsigned use_cmd_list:1)
+
 	/*
 	 * Optional work queue to be utilized by the transport
 	 */
