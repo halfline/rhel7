@@ -20,6 +20,8 @@
 #include <linux/syscalls.h>
 #include <linux/mmu_notifier.h>
 #include <linux/sched/sysctl.h>
+#include <linux/uaccess.h>
+#include <linux/mm-arch-hooks.h>
 
 #include <asm/uaccess.h>
 #include <asm/cacheflush.h>
@@ -268,10 +270,15 @@ static unsigned long move_vma(struct vm_area_struct *vma,
 		old_len = new_len;
 		old_addr = new_addr;
 		new_addr = -ENOMEM;
-	} else if (vm_flags & VM_FOP_EXTEND) {
-		struct file_operations_extend *fop = to_fop_extend(vma->vm_file->f_op);
-		if (fop->mremap)
-			fop->mremap(vma->vm_file, new_vma);
+	} else {
+		if (vm_flags & VM_FOP_EXTEND) {
+			struct file_operations_extend *fop = to_fop_extend(vma->vm_file->f_op);
+			if (fop->mremap)
+				fop->mremap(vma->vm_file, new_vma);
+		
+		}
+		arch_remap(mm, old_addr, old_addr + old_len,
+			   new_addr, new_addr + new_len);
 	}
 
 	/* Conceal VM_ACCOUNT so old reservation is not undone */
