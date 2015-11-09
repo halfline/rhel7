@@ -1534,6 +1534,22 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Nov 09 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-328.el7]
+- [md] raid10: don't clear bitmap bit when bad-block-list write fails (Jes Sorensen) [1267652]
+- [md] raid1: don't clear bitmap bit when bad-block-list write fails (Jes Sorensen) [1267652]
+- [md] raid10: submit_bio_wait() returns 0 on success (Jes Sorensen) [1267652]
+- [md] raid1: submit_bio_wait() returns 0 on success (Jes Sorensen) [1267652]
+- [md] crash in md-raid1 and md-raid10 due to incorrect list manipulation (Jes Sorensen) [1267652]
+- [md] raid10: ensure device failure recorded before write request returns (Jes Sorensen) [1267652]
+- [md] raid1: ensure device failure recorded before write request returns (Jes Sorensen) [1267652]
+- [x86] kvm: mmu: fix validation of mmio page fault (Bandan Das) [1267128]
+- [block] nvme: Fix memory leak on retried commands (David Milburn) [1271860]
+- [netdrv] macvtap: unbreak receiving of gro skb with frag list (Jason Wang) [1273737]
+- [cpufreq] intel_pstate: fix PCT_TO_HWP macro (Prarit Bhargava) [1264990]
+- [cpufreq] revert "intel_pstate: add quirk to disable HWP on Skylake-S processors" (Prarit Bhargava) [1264990]
+- [cpufreq] revert "intel_pstate: disable Skylake processors" (Prarit Bhargava) [1264990]
+- [powerpc] pci: initialize hybrid_dma_data before use (Laurent Vivier) [1270717]
+
 * Thu Oct 29 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-327.el7]
 - [mm] free compound page with correct order (Andrea Arcangeli) [1274867]
 - [netdrv] revert "ixgbe: Refactor busy poll socket code to address multiple issues" (John Greene) [1261275]
