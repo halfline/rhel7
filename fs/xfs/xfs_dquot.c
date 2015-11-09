@@ -75,9 +75,9 @@ xfs_qm_dqdestroy(
 	ASSERT(list_empty(&dqp->q_lru));
 
 	mutex_destroy(&dqp->q_qlock);
-	kmem_zone_free(xfs_qm_dqzone, dqp);
 
-	XFS_STATS_DEC(xs_qm_dquot);
+	XFS_STATS_DEC(dqp->q_mount, xs_qm_dquot);
+	kmem_zone_free(xfs_qm_dqzone, dqp);
 }
 
 /*
@@ -607,7 +607,7 @@ xfs_qm_dqread(
 		break;
 	}
 
-	XFS_STATS_INC(xs_qm_dquot);
+	XFS_STATS_INC(mp, xs_qm_dquot);
 
 	trace_xfs_dqread(dqp);
 
@@ -751,12 +751,12 @@ restart:
 		mutex_unlock(&qi->qi_tree_lock);
 
 		trace_xfs_dqget_hit(dqp);
-		XFS_STATS_INC(xs_qm_dqcachehits);
+		XFS_STATS_INC(mp, xs_qm_dqcachehits);
 		*O_dqpp = dqp;
 		return 0;
 	}
 	mutex_unlock(&qi->qi_tree_lock);
-	XFS_STATS_INC(xs_qm_dqcachemisses);
+	XFS_STATS_INC(mp, xs_qm_dqcachemisses);
 
 	/*
 	 * Dquot cache miss. We don't want to keep the inode lock across
@@ -810,7 +810,7 @@ restart:
 		mutex_unlock(&qi->qi_tree_lock);
 		trace_xfs_dqget_dup(dqp);
 		xfs_qm_dqdestroy(dqp);
-		XFS_STATS_INC(xs_qm_dquot_dups);
+		XFS_STATS_INC(mp, xs_qm_dquot_dups);
 		goto restart;
 	}
 
@@ -853,7 +853,7 @@ xfs_qm_dqput(
 		if (list_empty(&dqp->q_lru)) {
 			list_add_tail(&dqp->q_lru, &qi->qi_lru_list);
 			qi->qi_lru_count++;
-			XFS_STATS_INC(xs_qm_dquot_unused);
+			XFS_STATS_INC(dqp->q_mount, xs_qm_dquot_unused);
 		}
 		mutex_unlock(&qi->qi_lru_lock);
 

@@ -947,9 +947,9 @@ xfs_trans_commit(
 	 */
 	if (sync) {
 		error = _xfs_log_force_lsn(mp, commit_lsn, XFS_LOG_SYNC, NULL);
-		XFS_STATS_INC(xs_trans_sync);
+		XFS_STATS_INC(mp, xs_trans_sync);
 	} else {
-		XFS_STATS_INC(xs_trans_async);
+		XFS_STATS_INC(mp, xs_trans_async);
 	}
 
 	return error;
@@ -972,7 +972,7 @@ out_unreserve:
 	xfs_trans_free_items(tp, NULLCOMMITLSN, error ? XFS_TRANS_ABORT : 0);
 	xfs_trans_free(tp);
 
-	XFS_STATS_INC(xs_trans_empty);
+	XFS_STATS_INC(mp, xs_trans_empty);
 	return error;
 }
 

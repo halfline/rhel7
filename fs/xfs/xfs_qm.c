@@ -185,7 +185,7 @@ xfs_qm_dqpurge(
 	ASSERT(!list_empty(&dqp->q_lru));
 	list_del_init(&dqp->q_lru);
 	qi->qi_lru_count--;
-	XFS_STATS_DEC(xs_qm_dquot_unused);
+	XFS_STATS_DEC(mp, xs_qm_dquot_unused);
 	mutex_unlock(&qi->qi_lru_lock);
 
 	xfs_qm_dqdestroy(dqp);
@@ -1461,11 +1461,11 @@ xfs_qm_dqreclaim_one(
 		xfs_dqunlock(dqp);
 
 		trace_xfs_dqreclaim_want(dqp);
-		XFS_STATS_INC(xs_qm_dqwants);
+		XFS_STATS_INC(mp, xs_qm_dqwants);
 
 		list_del_init(&dqp->q_lru);
 		qi->qi_lru_count--;
-		XFS_STATS_DEC(xs_qm_dquot_unused);
+		XFS_STATS_DEC(mp, xs_qm_dquot_unused);
 		return;
 	}
 
@@ -1507,10 +1507,10 @@ xfs_qm_dqreclaim_one(
 	ASSERT(dqp->q_nrefs == 0);
 	list_move_tail(&dqp->q_lru, dispose_list);
 	qi->qi_lru_count--;
-	XFS_STATS_DEC(xs_qm_dquot_unused);
+	XFS_STATS_DEC(mp, xs_qm_dquot_unused);
 
 	trace_xfs_dqreclaim_done(dqp);
-	XFS_STATS_INC(xs_qm_dqreclaims);
+	XFS_STATS_INC(mp, xs_qm_dqreclaims);
 	return;
 
 	/*
@@ -1521,7 +1521,7 @@ out_unlock_move_tail:
 out_move_tail:
 	list_move_tail(&dqp->q_lru, &qi->qi_lru_list);
 	trace_xfs_dqreclaim_busy(dqp);
-	XFS_STATS_INC(xs_qm_dqreclaim_misses);
+	XFS_STATS_INC(mp, xs_qm_dqreclaim_misses);
 }
 
 STATIC int
