@@ -354,7 +354,8 @@ static int qlcnic_set_mac(struct net_device *netdev, void *p)
 	if (!is_valid_ether_addr(addr->sa_data))
 		return -EINVAL;
 
-	if (!memcmp(adapter->mac_addr, addr->sa_data, ETH_ALEN))
+	if (!memcmp(adapter->mac_addr, addr->sa_data, ETH_ALEN) &&
+	    !memcmp(netdev->dev_addr, addr->sa_data, ETH_ALEN))
 		return 0;
 
 	if (test_bit(__QLCNIC_DEV_UP, &adapter->state)) {
