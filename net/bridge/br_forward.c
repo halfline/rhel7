@@ -54,6 +54,7 @@ int br_dev_queue_push_xmit(struct sock *sk, struct sk_buff *skb)
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(br_dev_queue_push_xmit);
 
 int br_forward_finish(struct sock *sk, struct sk_buff *skb)
 {
@@ -62,6 +63,7 @@ int br_forward_finish(struct sock *sk, struct sk_buff *skb)
 		       br_dev_queue_push_xmit);
 
 }
+EXPORT_SYMBOL_GPL(br_forward_finish);
 
 static void __br_deliver(const struct net_bridge_port *to, struct sk_buff *skb)
 {

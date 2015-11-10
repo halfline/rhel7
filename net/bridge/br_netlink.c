@@ -664,7 +664,7 @@ out:
 	return err;
 }
 
-void __exit br_netlink_fini(void)
+void br_netlink_fini(void)
 {
 	br_mdb_uninit();
 	rtnl_af_unregister(&br_af_ops);
