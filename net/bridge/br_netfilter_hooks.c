@@ -669,6 +669,7 @@ static unsigned int br_nf_pre_routing_ipv6(const struct nf_hook_ops *ops,
 					   const struct nf_hook_state *state)
 {
 	struct nf_bridge_info *nf_bridge;
+
 	if (br_validate_ipv6(skb))
 		return NF_DROP;
 
