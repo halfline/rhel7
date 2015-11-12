@@ -183,7 +183,8 @@ struct nf_bridge_info {
 	unsigned long		data[32 / sizeof(unsigned long)];
 #else
 	char			neigh_header[8];
-	char			rh_unused[24];
+	__be32			ipv4_daddr;
+	char			rh_unused[20];
 #endif
 };
 #endif
