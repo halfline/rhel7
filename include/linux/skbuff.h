@@ -181,6 +181,8 @@ struct nf_bridge_info {
 	__u16			frag_max_size;
 #endif
 	struct net_device	*physindev;
+
+	/* always valid & non-NULL from FORWARD on, for physdev match */
 	struct net_device	*physoutdev;
 #ifdef __GENKSYMS__
 	unsigned long		data[32 / sizeof(unsigned long)];
