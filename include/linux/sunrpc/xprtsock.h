@@ -43,6 +43,8 @@ struct sock_xprt {
 	 * Connection of transports
 	 */
 	struct delayed_work	connect_worker;
+	struct work_struct	recv_worker;
+	struct mutex		recv_mutex;
 	struct sockaddr_storage	srcaddr;
 	unsigned short		srcport;
 

@@ -827,6 +827,7 @@ static void xs_reset_transport(struct sock_xprt *transport)
 	if (sk == NULL)
 		return;
 
+	mutex_lock(&transport->recv_mutex);
 	write_lock_bh(&sk->sk_callback_lock);
 	transport->inet = NULL;
 	transport->sock = NULL;
@@ -836,6 +837,7 @@ static void xs_reset_transport(struct sock_xprt *transport)
 	xs_restore_old_callbacks(transport, sk);
 	write_unlock_bh(&sk->sk_callback_lock);
 	xs_sock_reset_connection_flags(xprt);
+	mutex_unlock(&transport->recv_mutex);
 
 	trace_rpc_socket_close(xprt, sock);
 	sock_release(sock);
@@ -887,6 +889,7 @@ static void xs_destroy(struct rpc_xprt *xprt)
 
 	cancel_delayed_work_sync(&transport->connect_worker);
 	xs_close(xprt);
+	cancel_work_sync(&transport->recv_worker);
 	xs_xprt_free(xprt);
 	module_put(THIS_MODULE);
 }
@@ -1246,12 +1249,12 @@ static inline int xs_tcp_read_reply(struct rpc_xprt *xprt,
 	dprintk("RPC:       read reply XID %08x\n", ntohl(transport->tcp_xid));
 
 	/* Find and lock the request corresponding to this xid */
-	spin_lock(&xprt->transport_lock);
+	spin_lock_bh(&xprt->transport_lock);
 	req = xprt_lookup_rqst(xprt, transport->tcp_xid);
 	if (!req) {
 		dprintk("RPC:       XID %08x request not found!\n",
 				ntohl(transport->tcp_xid));
-		spin_unlock(&xprt->transport_lock);
+		spin_unlock_bh(&xprt->transport_lock);
 		return -1;
 	}
 
@@ -1260,7 +1263,7 @@ static inline int xs_tcp_read_reply(struct rpc_xprt *xprt,
 	if (!(transport->tcp_flags & TCP_RCV_COPY_DATA))
 		xprt_complete_rqst(req->rq_task, transport->tcp_copied);
 
-	spin_unlock(&xprt->transport_lock);
+	spin_unlock_bh(&xprt->transport_lock);
 	return 0;
 }
 
@@ -1280,10 +1283,10 @@ static int xs_tcp_read_callback(struct rpc_xprt *xprt,
 	struct rpc_rqst *req;
 
 	/* Look up and lock the request corresponding to the given XID */
-	spin_lock(&xprt->transport_lock);
+	spin_lock_bh(&xprt->transport_lock);
 	req = xprt_lookup_bc_request(xprt, transport->tcp_xid);
 	if (req == NULL) {
-		spin_unlock(&xprt->transport_lock);
+		spin_unlock_bh(&xprt->transport_lock);
 		printk(KERN_WARNING "Callback slot table overflowed\n");
 		xprt_force_disconnect(xprt);
 		return -1;
@@ -1294,7 +1297,7 @@ static int xs_tcp_read_callback(struct rpc_xprt *xprt,
 
 	if (!(transport->tcp_flags & TCP_RCV_COPY_DATA))
 		xprt_complete_bc_request(req, transport->tcp_copied);
-	spin_unlock(&xprt->transport_lock);
+	spin_unlock_bh(&xprt->transport_lock);
 
 	return 0;
 }
@@ -1405,17 +1408,31 @@ static void xs_tcp_data_receive(struct sock_xprt *transport)
 	unsigned long total = 0;
 	int read = 0;
 
+	mutex_lock(&transport->recv_mutex);
 	sk = transport->inet;
+	if (sk == NULL)
+		goto out;
 
 	/* We use rd_desc to pass struct xprt to xs_tcp_data_recv */
 	for (;;) {
+		lock_sock(sk);
 		read = tcp_read_sock(sk, &rd_desc, xs_tcp_data_recv);
+		release_sock(sk);
 		if (read <= 0)
 			break;
 		total += read;
 		rd_desc.count = 65536;
 	}
+out:
+	mutex_unlock(&transport->recv_mutex);
 	trace_xs_tcp_data_ready(xprt, read, total);
+}
+
+static void xs_tcp_data_receive_workfn(struct work_struct *work)
+{
+	struct sock_xprt *transport =
+		container_of(work, struct sock_xprt, recv_worker);
+	xs_tcp_data_receive(transport);
 }
 
 /**
@@ -1441,8 +1458,8 @@ static void xs_tcp_data_ready(struct sock *sk, int bytes)
 	 */
 	if (xprt->reestablish_timeout)
 		xprt->reestablish_timeout = 0;
+	queue_work(rpciod_workqueue, &transport->recv_worker);
 
-	xs_tcp_data_receive(transport);
 out:
 	read_unlock_bh(&sk->sk_callback_lock);
 }
@@ -1838,6 +1855,10 @@ static inline void xs_reclassify_socket(int family, struct socket *sock)
 {
 }
 #endif
+
+static void xs_dummy_data_receive_workfn(struct work_struct *work)
+{
+}
 
 static void xs_dummy_setup_socket(struct work_struct *work)
 {
@@ -2597,6 +2618,7 @@ static struct rpc_xprt *xs_setup_xprt(struct xprt_create *args,
 	}
 
 	new = container_of(xprt, struct sock_xprt, xprt);
+	mutex_init(&new->recv_mutex);
 	memcpy(&xprt->addr, args->dstaddr, args->addrlen);
 	xprt->addrlen = args->addrlen;
 	if (args->srcaddr)
@@ -2650,6 +2672,7 @@ static struct rpc_xprt *xs_setup_local(struct xprt_create *args)
 	xprt->ops = &xs_local_ops;
 	xprt->timeout = &xs_local_default_timeout;
 
+	INIT_WORK(&transport->recv_worker, xs_dummy_data_receive_workfn);
 	INIT_DELAYED_WORK(&transport->connect_worker,
 			xs_dummy_setup_socket);
 
@@ -2721,21 +2744,20 @@ static struct rpc_xprt *xs_setup_udp(struct xprt_create *args)
 
 	xprt->timeout = &xs_udp_default_timeout;
 
+	INIT_WORK(&transport->recv_worker, xs_dummy_data_receive_workfn);
+	INIT_DELAYED_WORK(&transport->connect_worker, xs_udp_setup_socket);
+
 	switch (addr->sa_family) {
 	case AF_INET:
 		if (((struct sockaddr_in *)addr)->sin_port != htons(0))
 			xprt_set_bound(xprt);
 
-		INIT_DELAYED_WORK(&transport->connect_worker,
-					xs_udp_setup_socket);
 		xs_format_peer_addresses(xprt, "udp", RPCBIND_NETID_UDP);
 		break;
 	case AF_INET6:
 		if (((struct sockaddr_in6 *)addr)->sin6_port != htons(0))
 			xprt_set_bound(xprt);
 
-		INIT_DELAYED_WORK(&transport->connect_worker,
-					xs_udp_setup_socket);
 		xs_format_peer_addresses(xprt, "udp", RPCBIND_NETID_UDP6);
 		break;
 	default:
@@ -2800,21 +2822,20 @@ static struct rpc_xprt *xs_setup_tcp(struct xprt_create *args)
 	xprt->ops = &xs_tcp_ops;
 	xprt->timeout = &xs_tcp_default_timeout;
 
+	INIT_WORK(&transport->recv_worker, xs_tcp_data_receive_workfn);
+	INIT_DELAYED_WORK(&transport->connect_worker, xs_tcp_setup_socket);
+
 	switch (addr->sa_family) {
 	case AF_INET:
 		if (((struct sockaddr_in *)addr)->sin_port != htons(0))
 			xprt_set_bound(xprt);
 
-		INIT_DELAYED_WORK(&transport->connect_worker,
-					xs_tcp_setup_socket);
 		xs_format_peer_addresses(xprt, "tcp", RPCBIND_NETID_TCP);
 		break;
 	case AF_INET6:
 		if (((struct sockaddr_in6 *)addr)->sin6_port != htons(0))
 			xprt_set_bound(xprt);
 
-		INIT_DELAYED_WORK(&transport->connect_worker,
-					xs_tcp_setup_socket);
 		xs_format_peer_addresses(xprt, "tcp", RPCBIND_NETID_TCP6);
 		break;
 	default:
