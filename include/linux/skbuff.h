@@ -176,7 +176,8 @@ struct nf_bridge_info {
 		BRNF_PROTO_PPPOE
 	} orig_proto:8;
 	u8			pkt_otherhost:1;
-	__u16			mask;
+	u8			mask:7;
+	__u16			frag_max_size;
 #endif
 	struct net_device	*physindev;
 	struct net_device	*physoutdev;
