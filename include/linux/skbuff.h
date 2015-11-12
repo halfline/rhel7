@@ -166,7 +166,16 @@ struct nf_conntrack {
 #if IS_ENABLED(CONFIG_BRIDGE_NETFILTER)
 struct nf_bridge_info {
 	atomic_t		use;
+#ifdef __GENKSYMS__
 	unsigned int		mask;
+#else
+	enum {
+		BRNF_PROTO_UNCHANGED,
+		BRNF_PROTO_8021Q,
+		BRNF_PROTO_PPPOE
+	} orig_proto:8;
+	unsigned int		mask:24;
+#endif
 	struct net_device	*physindev;
 	struct net_device	*physoutdev;
 #ifdef __GENKSYMS__
