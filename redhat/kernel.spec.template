@@ -1534,6 +1534,17 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Nov 12 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-330.el7]
+- [of] implement of_node_to_nid as a weak function (Steve Best) [1273978]
+- [pci] Use function 0 VPD for identical functions, regular VPD for others (Myron Stowe) [1258319]
+- [pci] Fix devfn for VPD access through function 0 (Myron Stowe) [1258319]
+- [pci] Add VPD function 0 quirk for Intel Ethernet devices (Myron Stowe) [1258319]
+- [pci] Add dev_flags bit to access VPD through function 0 (Myron Stowe) [1258319]
+- [net] ipv6: drop frames with attached skb->sk in forwarding (Hannes Frederic Sowa) [1243966]
+- [net] ipv6: ip6_forward: perform skb->pkt_type check at the beginning (Hannes Frederic Sowa) [1243966]
+- [x86] kvm: svm: unconditionally intercept #DB (Paolo Bonzini) [1279470] {CVE-2015-8104}
+- [cpufreq] intel_pstate: fix rounding error in max_freq_pct (Prarit Bhargava) [1263866]
+
 * Wed Nov 11 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-329.el7]
 - [mm] let mm_find_pmd fix buggy race with THP fault (Larry Woodman) [1273993]
 - [mm] ksm: unstable_tree_search_insert error checking cleanup (Andrea Arcangeli) [1274871]
