@@ -1966,6 +1966,7 @@ alloc_skb:
 		 * this - does no harm
 		 */
 		consume_skb(newskb);
+		newskb = NULL;
 	}
 
 	if (skb_append_pagefrags(skb, page, offset, size)) {
