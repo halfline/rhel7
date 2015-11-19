@@ -1534,6 +1534,23 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Nov 19 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-332.el7]
+- [x86] paravirt: Replace the paravirt nop with a bona fide empty function (Mateusz Guzik) [1259583] {CVE-2015-5157}
+- [x86] nmi: Fix a paravirt stack-clobbering bug in the NMI code (Mateusz Guzik) [1259583] {CVE-2015-5157}
+- [x86] nmi: Use DF to avoid userspace RSP confusing nested NMI detection (Mateusz Guzik) [1259583] {CVE-2015-5157}
+- [x86] nmi: Reorder nested NMI checks (Mateusz Guzik) [1259583] {CVE-2015-5157}
+- [x86] nmi: Improve nested NMI comments (Mateusz Guzik) [1259583] {CVE-2015-5157}
+- [x86] nmi: Switch stacks on userspace NMI entry (Mateusz Guzik) [1259583] {CVE-2015-5157}
+- [x86] cpufeatures: Enable cpuid for Intel SHA extensions (Prarit Bhargava) [1260249]
+- [kernel] tick: broadcast: Prevent livelock from event handler (Prarit Bhargava) [1265283]
+- [kernel] clockevents: Serialize calls to clockevents_update_freq() in the core (Prarit Bhargava) [1265283]
+- [kernel] sched: Robustify topology setup (Gustavo Duarte) [1278875]
+- [kernel] sched: Don't set sd->child to NULL when it is already NULL (Gustavo Duarte) [1278875]
+- [cpufreq] pcc-cpufreq: Fix wait_event() under spinlock (Linda Knippers) [1275327]
+- [security] keys: Don't permit request_key() to construct a new keyring (David Howells) [1273465] {CVE-2015-7872}
+- [security] keys: Fix crash when attempt to garbage collect an uninstantiated keyring (David Howells) [1273465] {CVE-2015-7872}
+- [security] keys: Fix race between key destruction and finding a keyring by name (David Howells) [1273465] {CVE-2015-7872}
+
 * Wed Nov 18 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-331.el7]
 - [ata] ahci: Add Device ID for Intel Sunrise Point PCH (Charles Rose) [1278402]
 - [s390] pci: handle events for unused functions (Hendrik Brueckner) [1272098]
