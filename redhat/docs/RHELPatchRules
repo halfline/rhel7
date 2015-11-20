@@ -342,7 +342,7 @@ For patchsets, the build and testing status can be mentioned a single time in
 the cover letter.
 
 e) Conflicts:
-[Suggested]: A short explanation of how the patch differs from upstream.
+[Suggested] A short explanation of how the patch differs from upstream.
 
     If the submitted patch differs from the original upstream patch, a
 short description of those changes should be included to aid reviewers in
