@@ -1534,6 +1534,37 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Nov 23 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-333.el7]
+- [fs] sunrpc: Fix stupid typo in xs_sock_set_reuseport (Steve Dickson) [1270038]
+- [fs] sunrpc: Define xs_tcp_fin_timeout only if CONFIG_SUNRPC_DEBUG (Steve Dickson) [1270038]
+- [fs] sunrpc: Handle connection reset more efficiently (Steve Dickson) [1270038]
+- [fs] sunrpc: Remove the redundant XPRT_CONNECTION_CLOSE flag (Steve Dickson) [1270038]
+- [fs] sunrpc: Make xs_tcp_close() do a socket shutdown rather than a sock_release (Steve Dickson) [1270038]
+- [fs] sunrpc: Ensure xs_tcp_shutdown() requests a full close of the connection (Steve Dickson) [1270038]
+- [fs] sunrpc: Cleanup to remove remaining uses of XPRT_CONNECTION_ABORT (Steve Dickson) [1270038]
+- [fs] sunrpc: Remove TCP socket linger code (Steve Dickson) [1270038]
+- [fs] sunrpc: Remove TCP client connection reset hack (Steve Dickson) [1270038]
+- [fs] sunrpc: TCP/UDP always close the old socket before reconnecting (Steve Dickson) [1270038]
+- [fs] sunrpc: Add helpers to prevent socket create from racing (Steve Dickson) [1270038]
+- [fs] sunrpc: Ensure xs_reset_transport() resets the close connection flags (Steve Dickson) [1270038]
+- [fs] sunrpc: Do not clear the source port in xs_reset_transport (Steve Dickson) [1270038]
+- [fs] sunrpc: Handle EADDRINUSE on connect (Steve Dickson) [1270038]
+- [fs] sunrpc: Set SO_REUSEPORT socket option for TCP connections (Steve Dickson) [1270038]
+- [fs] xfs: stats are no longer dependent on CONFIG_PROC_FS (Bill O'Donnell) [1269281]
+- [fs] xfs: fix an error code in xfs_fs_fill_super() (Bill O'Donnell) [1269281]
+- [fs] xfs: per-filesystem stats counter implementation (Bill O'Donnell) [1269281]
+- [fs] xfs: per-filesystem stats in sysfs (Bill O'Donnell) [1269281]
+- [fs] xfs: pass xfsstats structures to handlers and macros (Bill O'Donnell) [1269281]
+- [fs] xfs: consolidate sysfs ops (Bill O'Donnell) [1269281]
+- [fs] xfs: remove unused procfs code (Bill O'Donnell) [1269281]
+- [fs] xfs: create symlink proc/fs/xfs/stat to sys/fs/xfs/stats (Bill O'Donnell) [1269281]
+- [fs] xfs: create global stats and stats_clear in sysfs (Bill O'Donnell) [1269281]
+- [fs] xfs: add mssing inode cache attempts counter increment (Bill O'Donnell) [1269281]
+- [fs] dlm: print error from kernel_sendpage (Robert S Peterson) [1267339]
+- [fs] svcrdma: Add zero padding if the client doesn't send it (Sachin Prabhu) [1272151]
+- [fs] xfs: return errors from partial I/O failures to files (David Jeffery) [1256940]
+- [fs] nfsv4: don't set SETATTR for O_RDONLY|O_EXCL (Benjamin Coddington) [1269974]
+
 * Thu Nov 19 2015 Rafael Aquini <aquini@redhat.com> [3.10.0-332.el7]
 - [x86] paravirt: Replace the paravirt nop with a bona fide empty function (Mateusz Guzik) [1259583] {CVE-2015-5157}
 - [x86] nmi: Fix a paravirt stack-clobbering bug in the NMI code (Mateusz Guzik) [1259583] {CVE-2015-5157}
