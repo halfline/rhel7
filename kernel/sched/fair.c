@@ -6287,10 +6287,10 @@ static int load_balance(int this_cpu, struct rq *this_rq,
 
 	schedstat_inc(sd, lb_count[idle]);
 
+redo:
 	if (!(*should_balance = should_we_balance(&env)))
 		goto out_balanced;
 
-redo:
 	group = find_busiest_group(&env);
 	if (!group) {
 		schedstat_inc(sd, lb_nobusyg[idle]);
