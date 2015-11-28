@@ -1060,7 +1060,8 @@ int audit_rule_change(int type, __u32 portid, int seq, void *data,
 		audit_log_rule_change("remove_rule", &entry->rule, !err);
 		break;
 	default:
-		return -EINVAL;
+		err = -EINVAL;
+		WARN_ON(1);
 	}
 
 	if (err || type == AUDIT_DEL_RULE)
