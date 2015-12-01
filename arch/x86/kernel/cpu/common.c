@@ -168,6 +168,22 @@ static int __init x86_xsaves_setup(char *s)
 }
 __setup("noxsaves", x86_xsaves_setup);
 
+static int __init x86_mpx_setup(char *s)
+{
+	/* require an exact match without trailing characters */
+	if (strlen(s))
+		return 0;
+
+	/* do not emit a message if the feature is not present */
+	if (!boot_cpu_has(X86_FEATURE_MPX))
+		return 1;
+
+	setup_clear_cpu_cap(X86_FEATURE_MPX);
+	pr_info("nompx: Intel Memory Protection Extensions (MPX) disabled\n");
+	return 1;
+}
+__setup("nompx", x86_mpx_setup);
+
 #ifdef CONFIG_X86_32
 static int cachesize_override = -1;
 static int disable_x86_serial_nr = 1;

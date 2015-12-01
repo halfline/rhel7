@@ -2051,6 +2051,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
 			parameter, xsave area per process might occupy more
 			memory on xsaves enabled systems.
 
+	nompx           [X86] Disables Intel Memory Protection Extensions.
+			See Documentation/x86/intel_mpx.txt for more
+			information about the feature.
+
 	eagerfpu=	[X86]
 			on	enable eager fpu restore
 			off	disable eager fpu restore
