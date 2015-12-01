@@ -477,7 +477,13 @@ struct mm_struct {
 #else
 	struct list_head iommu_group_mem_list;
 #endif
+
+#ifdef CONFIG_X86_INTEL_MPX
+	RH_KABI_USE(3, void __user *bd_addr)
+#else
+	/* RHEL7: consumed by x86, avoid re-use by other arches */
 	RH_KABI_RESERVE(3)
+#endif
 	RH_KABI_RESERVE(4)
 	RH_KABI_RESERVE(5)
 	RH_KABI_RESERVE(6)
