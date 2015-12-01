@@ -93,10 +93,10 @@
 # define SET_TSC_CTL(a)		(-EINVAL)
 #endif
 #ifndef MPX_ENABLE_MANAGEMENT
-# define MPX_ENABLE_MANAGEMENT(a)	(-EINVAL)
+# define MPX_ENABLE_MANAGEMENT()	(-EINVAL)
 #endif
 #ifndef MPX_DISABLE_MANAGEMENT
-# define MPX_DISABLE_MANAGEMENT(a)	(-EINVAL)
+# define MPX_DISABLE_MANAGEMENT()	(-EINVAL)
 #endif
 
 /*
@@ -2471,10 +2471,10 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
 		up_write(&me->mm->mmap_sem);
 		break;
 	case PR_MPX_ENABLE_MANAGEMENT:
-		error = MPX_ENABLE_MANAGEMENT(me);
+		error = MPX_ENABLE_MANAGEMENT();
 		break;
 	case PR_MPX_DISABLE_MANAGEMENT:
-		error = MPX_DISABLE_MANAGEMENT(me);
+		error = MPX_DISABLE_MANAGEMENT();
 		break;
 	default:
 		error = -EINVAL;
