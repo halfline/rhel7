@@ -402,8 +402,10 @@ struct bndcsr_struct {
 
 struct xsave_hdr_struct {
 	u64 xstate_bv;
-	u64 reserved1[2];
-	u64 reserved2[5];
+	RH_KABI_DEPRECATE(u64, reserved1[2])
+	RH_KABI_DEPRECATE(u64, reserved2[5])
+	RH_KABI_EXTEND(u64 xcomp_bv)
+	RH_KABI_EXTEND(u64 reserved[6])
 } __attribute__((packed));
 
 struct xsave_struct {
