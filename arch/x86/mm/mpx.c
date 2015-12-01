@@ -18,6 +18,9 @@
 #include <asm/processor.h>
 #include <asm/fpu-internal.h>
 
+#define CREATE_TRACE_POINTS
+#include <asm/trace/mpx.h>
+
 static struct vm_operations_struct mpx_vma_ops = {
 	/* RHEL7: just an empty place holder */
 };
