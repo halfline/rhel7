@@ -268,9 +268,9 @@ bad_opcode:
  * The caller is expected to kfree() the returned siginfo_t.
  */
 siginfo_t *mpx_generate_siginfo(struct pt_regs *regs,
-				struct xsave_struct *xsave_buf)
+				struct task_struct *tsk)
 {
-	struct bndreg *bndregs, *bndreg;
+	const struct bndreg *bndregs, *bndreg;
 	siginfo_t *info = NULL;
 	struct insn insn;
 	uint8_t bndregno;
@@ -290,8 +290,8 @@ siginfo_t *mpx_generate_siginfo(struct pt_regs *regs,
 		err = -EINVAL;
 		goto err_out;
 	}
-	/* get the bndregs _area_ of the xsave structure */
-	bndregs = get_xsave_addr(xsave_buf, XSTATE_BNDREGS);
+	/* get bndregs field from current task's xsave area */
+	bndregs = get_xsave_field_ptr(XSTATE_BNDREGS);
 	if (!bndregs) {
 		err = -EINVAL;
 		goto err_out;
@@ -338,7 +338,7 @@ err_out:
 
 static __user void *task_get_bounds_dir(struct task_struct *tsk)
 {
-	struct bndcsr *bndcsr;
+	const struct bndcsr *bndcsr;
 
 	if (!cpu_feature_enabled(X86_FEATURE_MPX))
 		return MPX_INVALID_BOUNDS_DIR;
@@ -353,8 +353,7 @@ static __user void *task_get_bounds_dir(struct task_struct *tsk)
 	 * The bounds directory pointer is stored in a register
 	 * only accessible if we first do an xsave.
 	 */
-	fpu_save_init(&tsk->thread.fpu);
-	bndcsr = get_xsave_addr(&tsk->thread.fpu.state->xsave, XSTATE_BNDCSR);
+	bndcsr = get_xsave_field_ptr(XSTATE_BNDCSR);
 	if (!bndcsr)
 		return MPX_INVALID_BOUNDS_DIR;
 
@@ -385,9 +384,10 @@ int mpx_enable_management(struct task_struct *tsk)
 	 * directory into XSAVE/XRSTOR Save Area and enable MPX through
 	 * XRSTOR instruction.
 	 *
-	 * fpu_xsave() is expected to be very expensive. Storing the bounds
-	 * directory here means that we do not have to do xsave in the unmap
-	 * path; we can just use mm->bd_addr instead.
+	 * The copy_xregs_to_kernel() beneath get_xsave_field_ptr() is
+	 * expected to be relatively expensive. Storing the bounds
+	 * directory here means that we do not have to do xsave in the
+	 * unmap path; we can just use mm->bd_addr instead.
 	 */
 	bd_base = task_get_bounds_dir(tsk);
 	down_write(&mm->mmap_sem);
@@ -493,12 +493,12 @@ out_unmap:
  * bound table is 16KB. With 64-bit mode, the size of BD is 2GB,
  * and the size of each bound table is 4MB.
  */
-static int do_mpx_bt_fault(struct xsave_struct *xsave_buf)
+static int do_mpx_bt_fault(struct task_struct *tsk)
 {
 	unsigned long bd_entry, bd_base;
-	struct bndcsr *bndcsr;
+	const struct bndcsr *bndcsr;
 
-	bndcsr = get_xsave_addr(xsave_buf, XSTATE_BNDCSR);
+	bndcsr = get_xsave_field_ptr(XSTATE_BNDCSR);
 	if (!bndcsr)
 		return -EINVAL;
 	/*
@@ -521,7 +521,7 @@ static int do_mpx_bt_fault(struct xsave_struct *xsave_buf)
 	return allocate_bt((long __user *)bd_entry);
 }
 
-int mpx_handle_bd_fault(struct xsave_struct *xsave_buf)
+int mpx_handle_bd_fault(struct task_struct *tsk)
 {
 	/*
 	 * Userspace never asked us to manage the bounds tables,
@@ -530,7 +530,7 @@ int mpx_handle_bd_fault(struct xsave_struct *xsave_buf)
 	if (!kernel_managing_mpx_tables(current->mm))
 		return -EINVAL;
 
-	if (do_mpx_bt_fault(xsave_buf)) {
+	if (do_mpx_bt_fault(tsk)) {
 		force_sig(SIGSEGV, current);
 		/*
 		 * The force_sig() is essentially "handling" this
