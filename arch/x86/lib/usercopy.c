@@ -23,7 +23,7 @@ copy_from_user_nmi(void *to, const void __user *from, unsigned long n)
 	int ret;
 
 	if (__range_not_ok(from, n, TASK_SIZE))
-		return len;
+		return 0;
 
 	do {
 		ret = __get_user_pages_fast(addr, 1, 0, &page);
@@ -44,6 +44,12 @@ copy_from_user_nmi(void *to, const void __user *from, unsigned long n)
 
 	} while (len < n);
 
-	return len;
+	/*
+	 * RHEL7: upstream has changed this to return bytes not copied.
+	 * Future perf changes will change this function.  For now,
+	 * just return bytes not copied.  See upstream commit
+	 * 0a196848 ("perf: Fix arch_perf_out_copy_user default")
+	 */
+	return (n - len);
 }
 EXPORT_SYMBOL_GPL(copy_from_user_nmi);
