@@ -90,10 +90,19 @@ static inline void br_drop_fake_rtable(struct sk_buff *skb)
 		skb_dst_drop(skb);
 }
 
+static inline bool nf_bridge_in_prerouting(const struct sk_buff *skb)
+{
+	return skb->nf_bridge &&
+	       skb->nf_bridge->mask & BRNF_NF_BRIDGE_PREROUTING;
+}
 #else
 #define nf_bridge_maybe_copy_header(skb)	(0)
 #define nf_bridge_pad(skb)			(0)
 #define br_drop_fake_rtable(skb)	        do { } while (0)
+static inline bool nf_bridge_in_prerouting(const struct sk_buff *skb)
+{
+	return false;
+}
 #endif /* CONFIG_BRIDGE_NETFILTER */
 
 #endif
