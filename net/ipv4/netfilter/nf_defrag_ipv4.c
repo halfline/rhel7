@@ -44,10 +44,13 @@ static enum ip_defrag_users nf_ct_defrag_user(unsigned int hooknum,
 					      struct sk_buff *skb)
 {
 	u16 zone_id = NF_CT_DEFAULT_ZONE_ID;
-
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
-	if (skb->nfct)
-		zone_id = nf_ct_zone((struct nf_conn *)skb->nfct)->id;
+	if (skb->nfct) {
+		enum ip_conntrack_info ctinfo;
+		const struct nf_conn *ct = nf_ct_get(skb, &ctinfo);
+
+		zone_id = nf_ct_zone_id(nf_ct_zone(ct), CTINFO2DIR(ctinfo));
+	}
 #endif
 	if (nf_bridge_in_prerouting(skb))
 		return IP_DEFRAG_CONNTRACK_BRIDGE_IN + zone_id;
