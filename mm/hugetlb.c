@@ -1441,6 +1441,10 @@ static struct page *alloc_huge_page(struct vm_area_struct *vma,
 				hugepage_subpool_put_pages(spool, 1);
 			return ERR_PTR(-ENOSPC);
 		}
+		if (!avoid_reserve && vma_has_reserves(vma, chg)) {
+			SetPagePrivate(page);
+			h->resv_huge_pages--;
+		}
 		spin_lock(&hugetlb_lock);
 		list_move(&page->lru, &h->hugepage_activelist);
 		/* Fall through */
