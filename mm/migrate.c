@@ -1062,7 +1062,7 @@ static int unmap_and_move_huge_page(new_page_t get_new_page,
 out:
 	if (rc != -EAGAIN)
 		putback_active_hugepage(hpage);
-	put_page(new_hpage);
+	putback_active_hugepage(new_hpage);
 	if (result) {
 		if (rc)
 			*result = rc;
