@@ -2655,6 +2655,7 @@ int copy_hugetlb_page_range(struct mm_struct *dst, struct mm_struct *src,
 				mmu_notifier_invalidate_range(src, mmun_start,
 							      mmun_end);
 			}
+			entry = huge_ptep_get(src_pte);
 			ptepage = pte_page(entry);
 			get_page(ptepage);
 			page_dup_rmap(ptepage);
