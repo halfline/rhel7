@@ -39,8 +39,7 @@ cifs_dump_mem(char *label, void *data, int length)
 	char *charptr = data;
 	char buf[10], line[80];
 
-	printk(KERN_DEBUG "%s: dump of %d bytes of data at 0x%p\n",
-		label, length, data);
+	pr_debug("%s: dump of %d bytes of data at 0x%p\n", label, length, data);
 	for (i = 0; i < length; i += 16) {
 		line[0] = 0;
 		for (j = 0; (j < 4) && (i + j * 4 < length); j++) {
@@ -68,7 +67,7 @@ void cifs_vfs_err(const char *fmt, ...)
 	vaf.fmt = fmt;
 	vaf.va = &args;
 
-	printk(KERN_ERR "CIFS VFS: %pV", &vaf);
+	pr_err("CIFS VFS: %pV", &vaf);
 
 	va_end(args);
 }
