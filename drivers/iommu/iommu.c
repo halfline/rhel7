@@ -37,6 +37,10 @@ static struct kset *iommu_group_kset;
 static struct ida iommu_group_ida;
 static struct mutex iommu_group_mutex;
 
+struct iommu_callback_data {
+	struct iommu_ops *ops;
+};
+
 struct iommu_group {
 	struct kobject kobj;
 	struct kobject *devices_kobj;
@@ -729,7 +733,8 @@ struct iommu_group *iommu_group_get_for_dev(struct device *dev)
 
 static int add_iommu_group(struct device *dev, void *data)
 {
-	struct iommu_ops *ops = data;
+	struct iommu_callback_data *cb = data;
+	struct iommu_ops *ops = cb->ops;
 
 	if (!ops->add_device)
 		return -ENODEV;
@@ -800,8 +805,12 @@ static struct notifier_block iommu_bus_nb = {
 
 static void iommu_bus_init(struct bus_type *bus, struct iommu_ops *ops)
 {
+	struct iommu_callback_data cb = {
+		.ops = ops,
+	};
+
 	bus_register_notifier(bus, &iommu_bus_nb);
-	bus_for_each_dev(bus, NULL, ops, add_iommu_group);
+	bus_for_each_dev(bus, NULL, &cb, add_iommu_group);
 }
 
 /**
