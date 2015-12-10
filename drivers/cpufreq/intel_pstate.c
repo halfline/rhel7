@@ -978,6 +978,7 @@ static int intel_pstate_set_policy(struct cpufreq_policy *policy)
 	limits.max_policy_pct = clamp_t(int, limits.max_policy_pct, 0 , 100);
 	limits.max_perf_pct = min(limits.max_policy_pct, limits.max_sysfs_pct);
 	limits.max_perf = div_fp(int_tofp(limits.max_perf_pct), int_tofp(100));
+	limits.max_perf = round_up(limits.max_perf, 8);
 
 	if (hwp_active)
 		intel_pstate_hwp_set();
