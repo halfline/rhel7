@@ -144,8 +144,8 @@ struct task_group {
 	unsigned long shares;
 
 	atomic_t load_weight;
-	atomic64_t load_avg;
-	atomic_t runnable_avg;
+	RH_KABI_DEPRECATE(atomic64_t, load_avg)
+	RH_KABI_DEPRECATE(atomic_t, runnable_avg)
 #endif
 
 #ifdef CONFIG_RT_GROUP_SCHED
@@ -167,6 +167,15 @@ struct task_group {
 #endif
 
 	struct cfs_bandwidth cfs_bandwidth;
+
+#if defined(CONFIG_FAIR_GROUP_SCHED)
+	/*
+	 * Put load_avg/runnable_avg in its own cacheline to avoid
+	 * interfering with the other fields in this structure.
+	 */
+	RH_KABI_EXTEND(atomic64_t load_avg ____cacheline_aligned_in_smp)
+	RH_KABI_EXTEND(atomic_t runnable_avg)
+#endif
 };
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
