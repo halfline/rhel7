@@ -533,13 +533,13 @@ static void ceph_sync_write_unsafe(struct ceph_osd_request *req, bool unsafe)
  */
 static ssize_t
 ceph_sync_direct_write(struct kiocb *iocb, const struct iovec *iov,
-		       unsigned long nr_segs, size_t count)
+		       unsigned long nr_segs, size_t count,
+		       struct ceph_snap_context *snapc)
 {
 	struct file *file = iocb->ki_filp;
 	struct inode *inode = file_inode(file);
 	struct ceph_inode_info *ci = ceph_inode(inode);
 	struct ceph_fs_client *fsc = ceph_inode_to_client(inode);
-	struct ceph_snap_context *snapc;
 	struct ceph_vino vino;
 	struct ceph_osd_request *req;
 	struct page **pages;
@@ -581,7 +581,6 @@ ceph_sync_direct_write(struct kiocb *iocb, const struct iovec *iov,
 
 		page_align = (unsigned long)data & ~PAGE_MASK;
 
-		snapc = ci->i_snap_realm->cached_context;
 		vino = ceph_vino(inode);
 		req = ceph_osdc_new_request(&fsc->client->osdc, &ci->i_layout,
 					    vino, pos, &len, 0,
@@ -656,13 +655,13 @@ out:
  * objects, rollback on failure, etc.)
  */
 static ssize_t ceph_sync_write(struct kiocb *iocb, const struct iovec *iov,
-			       unsigned long nr_segs, size_t count)
+			       unsigned long nr_segs, size_t count,
+			       struct ceph_snap_context *snapc)
 {
 	struct file *file = iocb->ki_filp;
 	struct inode *inode = file_inode(file);
 	struct ceph_inode_info *ci = ceph_inode(inode);
 	struct ceph_fs_client *fsc = ceph_inode_to_client(inode);
-	struct ceph_snap_context *snapc;
 	struct ceph_vino vino;
 	struct ceph_osd_request *req;
 	struct page **pages;
@@ -702,7 +701,6 @@ static ssize_t ceph_sync_write(struct kiocb *iocb, const struct iovec *iov,
 		size_t left;
 		int n;
 
-		snapc = ci->i_snap_realm->cached_context;
 		vino = ceph_vino(inode);
 		req = ceph_osdc_new_request(&fsc->client->osdc, &ci->i_layout,
 					    vino, pos, &len, 0, 1,
@@ -1047,12 +1045,30 @@ retry_snap:
 
 	if ((got & (CEPH_CAP_FILE_BUFFER|CEPH_CAP_FILE_LAZYIO)) == 0 ||
 	    (file->f_flags & O_DIRECT) || (fi->flags & CEPH_F_SYNC)) {
+		struct ceph_snap_context *snapc;
 		mutex_unlock(&inode->i_mutex);
+
+		spin_lock(&ci->i_ceph_lock);
+		if (__ceph_have_pending_cap_snap(ci)) {
+			struct ceph_cap_snap *capsnap =
+					list_last_entry(&ci->i_cap_snaps,
+							struct ceph_cap_snap,
+							ci_item);
+			snapc = ceph_get_snap_context(capsnap->context);
+		} else {
+			BUG_ON(!ci->i_head_snapc);
+			snapc = ceph_get_snap_context(ci->i_head_snapc);
+		}
+		spin_unlock(&ci->i_ceph_lock);
+
 		if (file->f_flags & O_DIRECT)
 			written = ceph_sync_direct_write(iocb, iov,
-							 nr_segs, count);
+							 nr_segs, count,
+							 snapc);
 		else
-			written = ceph_sync_write(iocb, iov, nr_segs, count);
+			written = ceph_sync_write(iocb, iov, nr_segs, count,
+						  snapc);
+
 		if (written == -EOLDSNAPC) {
 			dout("aio_write %p %llx.%llx %llu~%u"
 				"got EOLDSNAPC, retrying\n",
@@ -1061,6 +1077,7 @@ retry_snap:
 			mutex_lock(&inode->i_mutex);
 			goto retry_snap;
 		}
+		ceph_put_snap_context(snapc);
 	} else {
 		/*
 		 * No need to acquire the i_truncate_mutex. Because
