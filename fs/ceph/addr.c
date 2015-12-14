@@ -1282,11 +1282,16 @@ static int ceph_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
 	struct inode *inode = file_inode(vma->vm_file);
 	struct ceph_inode_info *ci = ceph_inode(inode);
 	struct ceph_file_info *fi = vma->vm_file->private_data;
+	struct ceph_cap_flush *prealloc_cf;
 	struct page *page = vmf->page;
 	loff_t off = page_offset(page);
 	loff_t size = i_size_read(inode);
 	size_t len;
 	int want, got, ret;
+
+	prealloc_cf = ceph_alloc_cap_flush();
+	if (!prealloc_cf)
+		return VM_FAULT_SIGBUS;
 
 	if (ci->i_inline_version != CEPH_INLINE_NONE) {
 		struct page *locked_page = NULL;
@@ -1297,8 +1302,10 @@ static int ceph_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
 		ret = ceph_uninline_data(vma->vm_file, locked_page);
 		if (locked_page)
 			unlock_page(locked_page);
-		if (ret < 0)
-			return VM_FAULT_SIGBUS;
+		if (ret < 0) {
+			ret = VM_FAULT_SIGBUS;
+			goto out_free;
+		}
 	}
 
 	if (off + PAGE_CACHE_SIZE <= size)
@@ -1320,7 +1327,8 @@ static int ceph_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
 			break;
 		if (ret != -ERESTARTSYS) {
 			WARN_ON(1);
-			return VM_FAULT_SIGBUS;
+			ret = VM_FAULT_SIGBUS;
+			goto out_free;
 		}
 	}
 	dout("page_mkwrite %p %llu~%zd got cap refs on %s\n",
@@ -1355,7 +1363,8 @@ out:
 		int dirty;
 		spin_lock(&ci->i_ceph_lock);
 		ci->i_inline_version = CEPH_INLINE_NONE;
-		dirty = __ceph_mark_dirty_caps(ci, CEPH_CAP_FILE_WR);
+		dirty = __ceph_mark_dirty_caps(ci, CEPH_CAP_FILE_WR,
+					       &prealloc_cf);
 		spin_unlock(&ci->i_ceph_lock);
 		if (dirty)
 			__mark_inode_dirty(inode, dirty);
@@ -1364,6 +1373,8 @@ out:
 	dout("page_mkwrite %p %llu~%zd dropping cap refs on %s ret %d\n",
 	     inode, off, len, ceph_cap_string(got), ret);
 	ceph_put_cap_refs(ci, got);
+out_free:
+	ceph_free_cap_flush(prealloc_cf);
 
 	return ret;
 }

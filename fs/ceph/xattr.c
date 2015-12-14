@@ -891,6 +891,7 @@ int ceph_setxattr(struct dentry *dentry, const char *name,
 	struct ceph_vxattr *vxattr;
 	struct ceph_inode_info *ci = ceph_inode(inode);
 	struct ceph_mds_client *mdsc = ceph_sb_to_client(dentry->d_sb)->mdsc;
+	struct ceph_cap_flush *prealloc_cf = NULL;
 	int issued;
 	int err;
 	int dirty = 0;
@@ -935,6 +936,10 @@ int ceph_setxattr(struct dentry *dentry, const char *name,
 	if (!xattr)
 		goto out;
 
+	prealloc_cf = ceph_alloc_cap_flush();
+	if (!prealloc_cf)
+		goto out;
+
 	spin_lock(&ci->i_ceph_lock);
 retry:
 	issued = __ceph_caps_issued(ci, NULL);
@@ -976,7 +981,8 @@ retry:
 			  flags, value ? 1 : -1, &xattr);
 
 	if (!err) {
-		dirty = __ceph_mark_dirty_caps(ci, CEPH_CAP_XATTR_EXCL);
+		dirty = __ceph_mark_dirty_caps(ci, CEPH_CAP_XATTR_EXCL,
+					       &prealloc_cf);
 		ci->i_xattrs.dirty = true;
 		inode->i_ctime = CURRENT_TIME;
 	}
@@ -986,6 +992,7 @@ retry:
 		up_read(&mdsc->snap_rwsem);
 	if (dirty)
 		__mark_inode_dirty(inode, dirty);
+	ceph_free_cap_flush(prealloc_cf);
 	return err;
 
 do_sync:
@@ -995,6 +1002,7 @@ do_sync_unlocked:
 		up_read(&mdsc->snap_rwsem);
 	err = ceph_sync_setxattr(dentry, name, value, size, flags);
 out:
+	ceph_free_cap_flush(prealloc_cf);
 	kfree(newname);
 	kfree(newval);
 	kfree(xattr);
@@ -1032,6 +1040,7 @@ int ceph_removexattr(struct dentry *dentry, const char *name)
 	struct ceph_vxattr *vxattr;
 	struct ceph_inode_info *ci = ceph_inode(inode);
 	struct ceph_mds_client *mdsc = ceph_sb_to_client(dentry->d_sb)->mdsc;
+	struct ceph_cap_flush *prealloc_cf = NULL;
 	int issued;
 	int err;
 	int required_blob_size;
@@ -1051,6 +1060,10 @@ int ceph_removexattr(struct dentry *dentry, const char *name)
 	/* pass any unhandled ceph.* xattrs through to the MDS */
 	if (!strncmp(name, XATTR_CEPH_PREFIX, XATTR_CEPH_PREFIX_LEN))
 		goto do_sync_unlocked;
+
+	prealloc_cf = ceph_alloc_cap_flush();
+	if (!prealloc_cf)
+		return -ENOMEM;
 
 	err = -ENOMEM;
 	spin_lock(&ci->i_ceph_lock);
@@ -1093,7 +1106,8 @@ retry:
 
 	err = __remove_xattr_by_name(ceph_inode(inode), name);
 
-	dirty = __ceph_mark_dirty_caps(ci, CEPH_CAP_XATTR_EXCL);
+	dirty = __ceph_mark_dirty_caps(ci, CEPH_CAP_XATTR_EXCL,
+				       &prealloc_cf);
 	ci->i_xattrs.dirty = true;
 	inode->i_ctime = CURRENT_TIME;
 	spin_unlock(&ci->i_ceph_lock);
@@ -1101,12 +1115,14 @@ retry:
 		up_read(&mdsc->snap_rwsem);
 	if (dirty)
 		__mark_inode_dirty(inode, dirty);
+	ceph_free_cap_flush(prealloc_cf);
 	return err;
 do_sync:
 	spin_unlock(&ci->i_ceph_lock);
 do_sync_unlocked:
 	if (lock_snap_rwsem)
 		up_read(&mdsc->snap_rwsem);
+	ceph_free_cap_flush(prealloc_cf);
 	err = ceph_send_removexattr(dentry, name);
 	return err;
 }
