@@ -142,6 +142,8 @@ enum {
 	Opt_nodcache,
 	Opt_ino32,
 	Opt_noino32,
+	Opt_poolperm,
+	Opt_nopoolperm,
 };
 
 static match_table_t fsopt_tokens = {
@@ -167,6 +169,8 @@ static match_table_t fsopt_tokens = {
 	{Opt_nodcache, "nodcache"},
 	{Opt_ino32, "ino32"},
 	{Opt_noino32, "noino32"},
+	{Opt_poolperm, "poolperm"},
+	{Opt_nopoolperm, "nopoolperm"},
 	{-1, NULL}
 };
 
@@ -259,6 +263,12 @@ static int parse_fsopt_token(char *c, void *private)
 		break;
 	case Opt_noino32:
 		fsopt->flags &= ~CEPH_MOUNT_OPT_INO32;
+		break;
+	case Opt_poolperm:
+		fsopt->flags &= ~CEPH_MOUNT_OPT_NOPOOLPERM;
+		break;
+	case Opt_nopoolperm:
+		fsopt->flags |= CEPH_MOUNT_OPT_NOPOOLPERM;
 		break;
 	default:
 		BUG_ON(token);
@@ -418,6 +428,8 @@ static int ceph_show_options(struct seq_file *m, struct dentry *root)
 		seq_puts(m, ",noasyncreaddir");
 	if ((fsopt->flags & CEPH_MOUNT_OPT_DCACHE) == 0)
 		seq_puts(m, ",nodcache");
+	if (fsopt->flags & CEPH_MOUNT_OPT_NOPOOLPERM)
+		seq_puts(m, ",nopoolperm");
 
 	if (fsopt->wsize)
 		seq_printf(m, ",wsize=%d", fsopt->wsize);
