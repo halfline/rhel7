@@ -75,7 +75,7 @@ static int ceph_init_file(struct inode *inode, struct file *file, int fmode)
 	case S_IFDIR:
 		dout("init_file %p %p 0%o (regular)\n", inode, file,
 		     inode->i_mode);
-		cf = kmem_cache_alloc(ceph_file_cachep, GFP_NOFS | __GFP_ZERO);
+		cf = kmem_cache_alloc(ceph_file_cachep, GFP_KERNEL | __GFP_ZERO);
 		if (cf == NULL) {
 			ceph_put_fmode(ceph_inode(inode), fmode); /* clean up */
 			return -ENOMEM;
@@ -450,7 +450,7 @@ static ssize_t ceph_sync_read(struct kiocb *iocb, struct iov_iter *i,
 		}
 	} else {
 		num_pages = calc_pages_for(off, len);
-		pages = ceph_alloc_page_vector(num_pages, GFP_NOFS);
+		pages = ceph_alloc_page_vector(num_pages, GFP_KERNEL);
 		if (IS_ERR(pages))
 			return PTR_ERR(pages);
 		ret = striped_read(inode, off, len, pages,
@@ -719,7 +719,7 @@ static ssize_t ceph_sync_write(struct kiocb *iocb, const struct iovec *iov,
 		 */
 		num_pages = (len + PAGE_CACHE_SIZE - 1) >> PAGE_CACHE_SHIFT;
 
-		pages = ceph_alloc_page_vector(num_pages, GFP_NOFS);
+		pages = ceph_alloc_page_vector(num_pages, GFP_KERNEL);
 		if (IS_ERR(pages)) {
 			ret = PTR_ERR(pages);
 			goto out;
@@ -923,7 +923,7 @@ out:
 		struct page *page = NULL;
 		loff_t i_size;
 		if (retry_op == READ_INLINE) {
-			page = __page_cache_alloc(GFP_NOFS);
+			page = __page_cache_alloc(GFP_KERNEL);
 			if (!page)
 				return -ENOMEM;
 		}
