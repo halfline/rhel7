@@ -1648,11 +1648,10 @@ retry_locked:
 	 * If we fail, it's because pages are locked.... try again later.
 	 */
 	if ((!is_delayed || mdsc->stopping) &&
-	    ci->i_wrbuffer_ref == 0 &&               /* no dirty pages... */
-	    inode->i_data.nrpages &&                 /* have cached pages */
-	    (file_wanted == 0 ||                     /* no open files */
-	     (revoking & (CEPH_CAP_FILE_CACHE|
-			  CEPH_CAP_FILE_LAZYIO))) && /*  or revoking cache */
+	    ci->i_wrbuffer_ref == 0 &&		/* no dirty pages... */
+	    inode->i_data.nrpages &&		/* have cached pages */
+	    (revoking & (CEPH_CAP_FILE_CACHE|
+			 CEPH_CAP_FILE_LAZYIO)) && /*  or revoking cache */
 	    !tried_invalidate) {
 		dout("check_caps trying to invalidate on %p\n", inode);
 		if (try_nonblocking_invalidate(inode) < 0) {
