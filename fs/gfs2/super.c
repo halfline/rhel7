@@ -80,6 +80,8 @@ enum {
 	Opt_nobarrier,
 	Opt_rgrplvb,
 	Opt_norgrplvb,
+	Opt_loccookie,
+	Opt_noloccookie,
 	Opt_error,
 };
 
@@ -119,6 +121,8 @@ static const match_table_t tokens = {
 	{Opt_nobarrier, "nobarrier"},
 	{Opt_rgrplvb, "rgrplvb"},
 	{Opt_norgrplvb, "norgrplvb"},
+	{Opt_loccookie, "loccookie"},
+	{Opt_noloccookie, "noloccookie"},
 	{Opt_error, NULL}
 };
 
@@ -276,6 +280,12 @@ int gfs2_mount_args(struct gfs2_args *args, char *options)
 			break;
 		case Opt_norgrplvb:
 			args->ar_rgrplvb = 0;
+			break;
+		case Opt_loccookie:
+			args->ar_loccookie = 1;
+			break;
+		case Opt_noloccookie:
+			args->ar_loccookie = 0;
 			break;
 		case Opt_error:
 		default:
@@ -1376,6 +1386,8 @@ static int gfs2_show_options(struct seq_file *s, struct dentry *root)
 		seq_printf(s, ",demote_interface_used");
 	if (args->ar_rgrplvb)
 		seq_printf(s, ",rgrplvb");
+	if (args->ar_loccookie)
+		seq_printf(s, ",loccookie");
 	return 0;
 }
 
