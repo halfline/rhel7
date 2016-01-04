@@ -34,6 +34,7 @@
 #include <linux/netdev_features.h>
 #include <linux/sched.h>
 #include <net/flow_keys.h>
+#include <linux/in6.h>
 
 #include <linux/rh_kabi.h>
 
@@ -183,8 +184,11 @@ struct nf_bridge_info {
 	unsigned long		data[32 / sizeof(unsigned long)];
 #else
 	char			neigh_header[8];
-	__be32			ipv4_daddr;
-	char			rh_unused[20];
+	union {
+		__be32          ipv4_daddr;
+		struct in6_addr ipv6_daddr;
+	};
+	char			rh_unused[8];
 #endif
 };
 #endif
