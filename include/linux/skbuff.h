@@ -176,7 +176,8 @@ struct nf_bridge_info {
 		BRNF_PROTO_PPPOE
 	} orig_proto:8;
 	u8			pkt_otherhost:1;
-	u8			mask:7;
+	u8			in_prerouting:1;
+	u8			bridged_dnat:1;
 	__u16			frag_max_size;
 #endif
 	struct net_device	*physindev;
@@ -184,14 +185,38 @@ struct nf_bridge_info {
 #ifdef __GENKSYMS__
 	unsigned long		data[32 / sizeof(unsigned long)];
 #else
-	char			neigh_header[8];
 	union {
-		__be32          ipv4_daddr;
-		struct in6_addr ipv6_daddr;
+		union {
+			/* prerouting: detect dnat in orig/reply direction */
+			__be32          ipv4_daddr;
+			struct in6_addr ipv6_daddr;
+
+			/* after prerouting + nat detected: store original source
+			 * mac since neigh resolution overwrites it, only used while
+			 * skb is out in neigh layer.
+			 */
+			char neigh_header[8];
+		};
+
+		/* KABI: keep size of nf_bridge_info constant */
+		unsigned long rh_unused[32 / sizeof(unsigned long)];
 	};
-	char			rh_unused[8];
 #endif
 };
+
+/* KABI: ensure that the exposed fields of nf_bridge_info are not moved around */
+#ifndef __GENKSYMS__
+#ifdef CONFIG_64BIT
+#define OLD_PHYSOUTDEV_OFFSET 16
+#else
+#define OLD_PHYSOUTDEV_OFFSET 12
+#endif
+_Static_assert(offsetof(struct nf_bridge_info, physindev) == 8,
+	       "KABI breakage: physindev changed position");
+_Static_assert(offsetof(struct nf_bridge_info, physoutdev) == OLD_PHYSOUTDEV_OFFSET,
+	       "KABI breakage: physoutdev changed position");
+#endif
+
 #endif
 
 struct sk_buff_head {
