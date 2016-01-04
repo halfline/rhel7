@@ -169,7 +169,12 @@ struct nf_bridge_info {
 	unsigned int		mask;
 	struct net_device	*physindev;
 	struct net_device	*physoutdev;
+#ifdef __GENKSYMS__
 	unsigned long		data[32 / sizeof(unsigned long)];
+#else
+	char			neigh_header[8];
+	char			rh_unused[24];
+#endif
 };
 #endif
 
