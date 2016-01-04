@@ -317,6 +317,7 @@ static int br_nf_pre_routing_finish_bridge(struct sock *sk, struct sk_buff *skb)
 							 ETH_HLEN-ETH_ALEN);
 			/* tell br_dev_xmit to continue with forwarding */
 			nf_bridge->mask |= BRNF_BRIDGED_DNAT;
+			/* FIXME Need to refragment */
 			ret = neigh->output(neigh, skb);
 		}
 		neigh_release(neigh);
@@ -372,6 +373,10 @@ static int br_nf_pre_routing_finish(struct sock *sk, struct sk_buff *skb)
 	struct nf_bridge_info *nf_bridge = skb->nf_bridge;
 	struct rtable *rt;
 	int err;
+	int frag_max_size;
+
+	frag_max_size = IPCB(skb)->frag_max_size;
+	BR_INPUT_SKB_CB(skb)->frag_max_size = frag_max_size;
 
 	if (nf_bridge->mask & BRNF_PKT_TYPE) {
 		skb->pkt_type = PACKET_OTHERHOST;
@@ -799,13 +804,19 @@ static int br_nf_ip_fragment(struct sock *sk, struct sk_buff *skb,
 static int br_nf_dev_queue_xmit(struct sock *sk, struct sk_buff *skb)
 {
 	int ret;
+	int frag_max_size;
 
+	/* This is wrong! We should preserve the original fragment
+	 * boundaries by preserving frag_list rather than refragmenting.
+	 */
 	if (skb->protocol == htons(ETH_P_IP) &&
 	    skb->len + nf_bridge_mtu_reduction(skb) > skb->dev->mtu &&
 	    !skb_is_gso(skb)) {
+		frag_max_size = BR_INPUT_SKB_CB(skb)->frag_max_size;
 		if (br_parse_ip_options(skb))
 			/* Drop invalid packet */
 			return NF_DROP;
+		IPCB(skb)->frag_max_size = frag_max_size;
 		ret = br_nf_ip_fragment(sk, skb, br_dev_queue_push_xmit);
 	} else
 		ret = br_dev_queue_push_xmit(sk, skb);
