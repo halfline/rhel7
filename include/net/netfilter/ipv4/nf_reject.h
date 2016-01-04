@@ -6,6 +6,7 @@
 #include <net/route.h>
 #include <net/dst.h>
 #include <net/icmp.h>
+#include <linux/netfilter_bridge.h>
 
 static inline void nf_send_unreach(struct sk_buff *skb_in, int code)
 {
@@ -108,7 +109,8 @@ static void nf_send_reset(struct sk_buff *oldskb, int hook)
 	 */
 	if (oldskb->nf_bridge) {
 		struct ethhdr *oeth = eth_hdr(oldskb);
-		nskb->dev = oldskb->nf_bridge->physindev;
+
+		nskb->dev = nf_bridge_get_physindev(oldskb);
 		niph->tot_len = htons(nskb->len);
 		ip_send_check(niph);
 		if (dev_hard_header(nskb, nskb->dev, ntohs(nskb->protocol),

@@ -6,6 +6,7 @@
 #include <net/ip6_fib.h>
 #include <net/ip6_checksum.h>
 #include <linux/netfilter_ipv6.h>
+#include <linux/netfilter_bridge.h>
 
 static inline void
 nf_send_unreach6(struct net *net, struct sk_buff *skb_in, unsigned char code,
@@ -156,7 +157,8 @@ static void nf_send_reset6(struct net *net, struct sk_buff *oldskb, int hook)
 	 */
 	if (oldskb->nf_bridge) {
 		struct ethhdr *oeth = eth_hdr(oldskb);
-		nskb->dev = oldskb->nf_bridge->physindev;
+
+		nskb->dev = nf_bridge_get_physindev(oldskb);
 		nskb->protocol = htons(ETH_P_IPV6);
 		ip6h->payload_len = htons(sizeof(struct tcphdr));
 		if (dev_hard_header(nskb, nskb->dev, ntohs(nskb->protocol),
