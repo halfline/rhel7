@@ -35,7 +35,7 @@
 
 #include <linux/atomic.h>
 
-#ifdef CONFIG_BRIDGE_NETFILTER
+#if IS_ENABLED(CONFIG_BRIDGE_NETFILTER)
 #include "../bridge/br_private.h"
 #endif
 
@@ -268,7 +268,7 @@ nfqnl_build_packet_message(struct nfqnl_instance *queue,
 		+ nla_total_size(sizeof(struct nfqnl_msg_packet_hdr))
 		+ nla_total_size(sizeof(u_int32_t))	/* ifindex */
 		+ nla_total_size(sizeof(u_int32_t))	/* ifindex */
-#ifdef CONFIG_BRIDGE_NETFILTER
+#if IS_ENABLED(CONFIG_BRIDGE_NETFILTER)
 		+ nla_total_size(sizeof(u_int32_t))	/* ifindex */
 		+ nla_total_size(sizeof(u_int32_t))	/* ifindex */
 #endif
@@ -341,7 +341,7 @@ nfqnl_build_packet_message(struct nfqnl_instance *queue,
 
 	indev = entry->state.in;
 	if (indev) {
-#ifndef CONFIG_BRIDGE_NETFILTER
+#if !IS_ENABLED(CONFIG_BRIDGE_NETFILTER)
 		if (nla_put_be32(skb, NFQA_IFINDEX_INDEV, htonl(indev->ifindex)))
 			goto nla_put_failure;
 #else
@@ -371,7 +371,7 @@ nfqnl_build_packet_message(struct nfqnl_instance *queue,
 	}
 
 	if (outdev) {
-#ifndef CONFIG_BRIDGE_NETFILTER
+#if !IS_ENABLED(CONFIG_BRIDGE_NETFILTER)
 		if (nla_put_be32(skb, NFQA_IFINDEX_OUTDEV, htonl(outdev->ifindex)))
 			goto nla_put_failure;
 #else
@@ -525,7 +525,7 @@ nf_queue_entry_dup(struct nf_queue_entry *e)
 	return NULL;
 }
 
-#ifdef CONFIG_BRIDGE_NETFILTER
+#if IS_ENABLED(CONFIG_BRIDGE_NETFILTER)
 /* When called from bridge netfilter, skb->data must point to MAC header
  * before calling skb_gso_segment(). Else, original MAC header is lost
  * and segmented skbs will be sent to wrong destination.
@@ -724,7 +724,7 @@ dev_cmp(struct nf_queue_entry *entry, unsigned long ifindex)
 	if (entry->state.out)
 		if (entry->state.out->ifindex == ifindex)
 			return 1;
-#ifdef CONFIG_BRIDGE_NETFILTER
+#if IS_ENABLED(CONFIG_BRIDGE_NETFILTER)
 	if (entry->skb->nf_bridge) {
 		if (entry->skb->nf_bridge->physindev &&
 		    entry->skb->nf_bridge->physindev->ifindex == ifindex)
