@@ -3496,6 +3496,11 @@ static inline bool netif_is_bond_slave(struct net_device *dev)
 	return dev->flags & IFF_SLAVE && dev->priv_flags & IFF_BONDING;
 }
 
+static inline bool netif_is_bridge_port(const struct net_device *dev)
+{
+	return dev->priv_flags & IFF_BRIDGE_PORT;
+}
+
 static inline bool netif_supports_nofcs(struct net_device *dev)
 {
 	return dev->priv_flags & IFF_SUPP_NOFCS;
