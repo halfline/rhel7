@@ -1534,6 +1534,28 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Jan 07 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-337.el7]
+- [powerpc] kvm: Fix emulation of H_SET_DABR/X on POWER8 (Thomas Huth) [1219234]
+- [hwmon] coretemp: Increase limit of maximum core ID from 32 to 128 (Prarit Bhargava) [1262752]
+- [block] Return EBUSY from BLKRRPART for mounted whole-dev fs (Eric Sandeen) [1285549]
+- [block] nvme: Fix filesystem deadlock on removal (David Milburn) [1279699]
+- [x86] fix KABI wreckage in xsave_hdr_struct (Prarit Bhargava) [1296120]
+- [x86] acpi: Enhance error injection tolerance level (Steve Best) [1271809]
+- [x86] cpu: Fix trivial printk formatting issues with dmesg (Stanislav Kozina) [1232441]
+- [fs] nfsd4: fix gss-proxy 4.1 mounts for some AD principals ("J. Bruce Fields") [1283341]
+- [fs] nfsd: fix unlikely NULL deref in mach_creds_match ("J. Bruce Fields") [1283341]
+- [fs] nfsd: minor consolidation of mach_cred handling code ("J. Bruce Fields") [1283341]
+- [fs] nfsd: helper for dup of possibly NULL string ("J. Bruce Fields") [1283341]
+- [fs] svcrpc: move some initialization to common code ("J. Bruce Fields") [1283341]
+- [fs] gfs2: Protect freeing directory hash table with i_lock spin_lock (Robert S Peterson) [1276477]
+- [fs] nfs: Fix a NULL pointer dereference of migration recovery ops for v4.2 client (Benjamin Coddington) [1290679]
+- [fs] ext4: fix race between truncate and __ext4_journalled_writepage() (Lukas Czerner) [1169730]
+- [fs] cache: make cache flushing more reliable ("J. Bruce Fields") [1274897]
+- [md] dm-thin: fix race condition when destroying thin pool workqueue (Mike Snitzer) [1292603]
+- [md] dm: fix AB-BA deadlock in __dm_destroy() (Mike Snitzer) [1292481]
+- [md] dm-thin: fix regression in advertised discard limits (Mike Snitzer) [1284833]
+- [md] dm-thin-metadata: fix bug in dm_thin_remove_range() (Mike Snitzer) [1284833]
+
 * Tue Jan 05 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-336.el7]
 - [x86] mpx: Do not set ->vm_ops on MPX VMAs (Rui Wang) [1138650]
 - [x86] remove trailing slash from define to please debugedit (Rui Wang) [1138650]
