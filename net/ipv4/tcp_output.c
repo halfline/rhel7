@@ -2728,8 +2728,10 @@ begin_fwd:
 /* We allow to exceed memory limits for FIN packets to expedite
  * connection tear down and (memory) recovery.
  * Otherwise tcp_send_fin() could loop forever.
+ * In general, we want to allow one skb per socket to avoid hangs
+ * with edge trigger epoll()
  */
-static void sk_forced_wmem_schedule(struct sock *sk, int size)
+void sk_forced_mem_schedule(struct sock *sk, int size)
 {
 	int amt, status;
 
