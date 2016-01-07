@@ -1396,11 +1396,11 @@ static bool pnfs_within_mdsthreshold(struct nfs_open_context *ctx,
 /* stop waiting if someone clears NFS_LAYOUT_RETRY_LAYOUTGET bit. */
 static int pnfs_layoutget_retry_bit_wait(void *_key)
 {
-	struct wait_bit_key *key = _key;
+	unsigned long *flags = _key;
 
-	if (!test_bit(NFS_LAYOUT_RETRY_LAYOUTGET, key->flags))
+	if (!test_bit(NFS_LAYOUT_RETRY_LAYOUTGET, flags))
 		return 1;
-	return nfs_wait_bit_killable(_key);
+	return nfs_wait_bit_killable(flags);
 }
 
 static bool pnfs_prepare_to_retry_layoutget(struct pnfs_layout_hdr *lo)
