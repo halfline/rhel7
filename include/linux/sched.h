@@ -693,6 +693,7 @@ struct user_struct {
 #ifdef CONFIG_PERF_EVENTS
 	atomic_long_t locked_vm;
 #endif
+	RH_KABI_EXTEND(unsigned long unix_inflight)	/* How many files in flight in unix sockets */
 };
 
 extern int uids_sysfs_init(void);
