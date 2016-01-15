@@ -1335,6 +1335,9 @@ static struct dentry *gfs2_mount(struct file_system_type *fs_type, int flags,
 
 	if (s->s_root)
 		blkdev_put(bdev, mode);
+	else
+		/* s_mode must be set before deactivate_locked_super calls */
+		s->s_mode = mode;
 
 	memset(&args, 0, sizeof(args));
 	args.ar_quota = GFS2_QUOTA_DEFAULT;
@@ -1357,7 +1360,6 @@ static struct dentry *gfs2_mount(struct file_system_type *fs_type, int flags,
 	} else {
 		char b[BDEVNAME_SIZE];
 
-		s->s_mode = mode;
 		strlcpy(s->s_id, bdevname(bdev, b), sizeof(s->s_id));
 		sb_set_blocksize(s, block_size(bdev));
 		error = fill_super(s, &args, flags & MS_SILENT ? 1 : 0);
