@@ -1124,6 +1124,8 @@ static size_t module_flags_taint(struct module *mod, char *buf)
 		buf[l++] = 'C';
 	if (mod->taints & (1 << TAINT_UNSIGNED_MODULE))
 		buf[l++] = 'E';
+	if (mod->taints & (1 << TAINT_TECH_PREVIEW))
+		buf[l++] = 'T';
 	/*
 	 * TAINT_FORCED_RMMOD: could be added.
 	 * TAINT_UNSAFE_SMP, TAINT_MACHINE_CHECK, TAINT_BAD_PAGE don't
