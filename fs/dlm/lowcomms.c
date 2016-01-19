@@ -126,6 +126,7 @@ struct connection {
 	struct connection *othercon;
 	struct work_struct rwork; /* Receive workqueue */
 	struct work_struct swork; /* Send workqueue */
+	bool try_new_addr;
 	void (*orig_error_report)(struct sock *sk);
 };
 #define sock2con(x) ((struct connection *)(x)->sk_user_data)
@@ -145,6 +146,7 @@ struct dlm_node_addr {
 	struct list_head list;
 	int nodeid;
 	int addr_count;
+	int curr_addr_index;
 	struct sockaddr_storage *addr[DLM_MAX_ADDR_COUNT];
 };
 
@@ -311,7 +313,7 @@ static int addr_compare(struct sockaddr_storage *x, struct sockaddr_storage *y)
 }
 
 static int nodeid_to_addr(int nodeid, struct sockaddr_storage *sas_out,
-			  struct sockaddr *sa_out)
+			  struct sockaddr *sa_out, bool try_new_addr)
 {
 	struct sockaddr_storage sas;
 	struct dlm_node_addr *na;
@@ -321,8 +323,16 @@ static int nodeid_to_addr(int nodeid, struct sockaddr_storage *sas_out,
 
 	spin_lock(&dlm_node_addrs_spin);
 	na = find_node_addr(nodeid);
-	if (na && na->addr_count)
-		memcpy(&sas, na->addr[0], sizeof(struct sockaddr_storage));
+	if (na && na->addr_count) {
+		if (try_new_addr) {
+			na->curr_addr_index++;
+			if (na->curr_addr_index == na->addr_count)
+				na->curr_addr_index = 0;
+		}
+
+		memcpy(&sas, na->addr[na->curr_addr_index ],
+			sizeof(struct sockaddr_storage));
+	}
 	spin_unlock(&dlm_node_addrs_spin);
 
 	if (!na)
@@ -354,19 +364,22 @@ static int addr_to_nodeid(struct sockaddr_storage *addr, int *nodeid)
 {
 	struct dlm_node_addr *na;
 	int rv = -EEXIST;
+	int addr_i;
 
 	spin_lock(&dlm_node_addrs_spin);
 	list_for_each_entry(na, &dlm_node_addrs, list) {
 		if (!na->addr_count)
 			continue;
 
-		if (!addr_compare(na->addr[0], addr))
-			continue;
-
-		*nodeid = na->nodeid;
-		rv = 0;
-		break;
+		for (addr_i = 0; addr_i < na->addr_count; addr_i++) {
+			if (addr_compare(na->addr[addr_i], addr)) {
+				*nodeid = na->nodeid;
+				rv = 0;
+				goto unlock;
+			}
+		}
 	}
+unlock:
 	spin_unlock(&dlm_node_addrs_spin);
 	return rv;
 }
@@ -475,7 +488,7 @@ static void lowcomms_error_report(struct sock *sk)
 	struct connection *con = sock2con(sk);
 	struct sockaddr_storage saddr;
 
-	if (nodeid_to_addr(con->nodeid, &saddr, NULL)) {
+	if (nodeid_to_addr(con->nodeid, &saddr, NULL, false)) {
 		printk_ratelimited(KERN_ERR "dlm: node %d: socket error "
 				   "sending to node %d, port %d, "
 				   "sk_err=%d/%d\n", dlm_our_nodeid(),
@@ -601,6 +614,21 @@ static void sctp_send_shutdown(sctp_assoc_t associd)
 
 static void sctp_init_failed_foreach(struct connection *con)
 {
+
+	/*
+	 * Don't try to recover base con and handle race where the
+	 * other node's assoc init creates a assoc and we get that
+	 * notification, then we get a notification that our attempt
+	 * failed due. This happens when we are still trying the primary
+	 * address, but the other node has already tried secondary addrs
+	 * and found one that worked.
+	 */
+	if (!con->nodeid || con->sctp_assoc)
+		return;
+
+	log_print("Retrying SCTP association init for node %d\n", con->nodeid);
+
+	con->try_new_addr = true;
 	con->sctp_assoc = 0;
 	if (test_and_clear_bit(CF_INIT_PENDING, &con->flags)) {
 		if (!test_and_set_bit(CF_WRITE_PENDING, &con->flags))
@@ -703,6 +731,7 @@ static void process_sctp_notification(struct connection *con,
 				 nodeid, (int)sn->sn_assoc_change.sac_assoc_id);
 
 			new_con->sctp_assoc = sn->sn_assoc_change.sac_assoc_id;
+			new_con->try_new_addr = false;
 			/* Send any pending writes */
 			clear_bit(CF_CONNECT_PENDING, &new_con->flags);
 			clear_bit(CF_INIT_PENDING, &new_con->flags);
@@ -1024,7 +1053,8 @@ static void sctp_init_assoc(struct connection *con)
 	if (con->retries++ > MAX_CONNECT_RETRIES)
 		return;
 
-	if (nodeid_to_addr(con->nodeid, NULL, (struct sockaddr *)&rem_addr)) {
+	if (nodeid_to_addr(con->nodeid, NULL, (struct sockaddr *)&rem_addr,
+			   con->try_new_addr)) {
 		log_print("no address for nodeid %d", con->nodeid);
 		return;
 	}
@@ -1056,6 +1086,14 @@ static void sctp_init_assoc(struct connection *con)
 	iov[0].iov_base = page_address(e->page)+offset;
 	iov[0].iov_len = len;
 
+	if (rem_addr.ss_family == AF_INET) {
+		struct sockaddr_in *sin = (struct sockaddr_in *)&rem_addr;
+		log_print("Trying to connect to %pI4", &sin->sin_addr.s_addr);
+	} else {
+		struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&rem_addr;
+		log_print("Trying to connect to %pI6", &sin6->sin6_addr);
+	}
+
 	cmsg = CMSG_FIRSTHDR(&outmessage);
 	cmsg->cmsg_level = IPPROTO_SCTP;
 	cmsg->cmsg_type = SCTP_SNDRCV;
@@ -1064,6 +1102,7 @@ static void sctp_init_assoc(struct connection *con)
 	memset(sinfo, 0x00, sizeof(struct sctp_sndrcvinfo));
 	sinfo->sinfo_ppid = cpu_to_le32(dlm_our_nodeid());
 	outmessage.msg_controllen = cmsg->cmsg_len;
+	sinfo->sinfo_flags |= SCTP_ADDR_OVER;
 
 	ret = kernel_sendmsg(base_con->sock, &outmessage, iov, 1, len);
 	if (ret < 0) {
@@ -1116,7 +1155,7 @@ static void tcp_connect_to_sock(struct connection *con)
 		goto out_err;
 
 	memset(&saddr, 0, sizeof(saddr));
-	result = nodeid_to_addr(con->nodeid, &saddr, NULL);
+	result = nodeid_to_addr(con->nodeid, &saddr, NULL, false);
 	if (result < 0) {
 		log_print("no address for nodeid %d", con->nodeid);
 		goto out_err;
