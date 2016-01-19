@@ -231,6 +231,11 @@ static inline int inet_is_reserved_local_port(int port)
 	return test_bit(port, sysctl_local_reserved_ports);
 }
 
+static inline bool sysctl_dev_name_is_allowed(const char *name)
+{
+	return strcmp(name, "default") != 0  && strcmp(name, "all") != 0;
+}
+
 /* From inetpeer.c */
 extern int inet_peer_threshold;
 extern int inet_peer_minttl;
