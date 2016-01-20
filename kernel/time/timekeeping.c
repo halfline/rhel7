@@ -178,8 +178,7 @@ static inline s64 timekeeping_get_ns(struct timekeeper *tk)
 	/* calculate the delta since the last update_wall_time: */
 	delta = clocksource_delta(cycle_now, clock->cycle_last, clock->mask);
 
-	nsec = delta * tk->mult + tk->xtime_nsec;
-	nsec >>= tk->shift;
+	nsec = (delta * tk->mult + tk->xtime_nsec) >> tk->shift;
 
 	/* If arch requires, add in get_arch_timeoffset() */
 	return nsec + get_arch_timeoffset();
