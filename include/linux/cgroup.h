@@ -46,6 +46,14 @@ extern int proc_cgroup_show(struct seq_file *, void *);
  * Define the enumeration of all cgroup subsystems.
  *
  * We define ids for builtin subsystems and then modular ones.
+ *
+ * NOTE: Theres some real hackery going on here.  Initially in RHEL7, the
+ * netprio cgroup was built as a module, but in 7.3 we had need to make it
+ * builtin.  The cgroup design caused this move to create LOTS of false positive
+ * ABI breaks.  AS such, we use this ENABLE_NETPRIO_NOW macro to direct where in
+ * the cgroup_subsys_id ennumeration the netprio subsys id is defined, thereby
+ * avoiding those false positives.  Please be very careful making further
+ * modifications to this ennumeration
  */
 #define SUBSYS(_x) _x ## _subsys_id,
 enum cgroup_subsys_id {
@@ -57,7 +65,9 @@ enum cgroup_subsys_id {
 	__CGROUP_SUBSYS_TEMP_PLACEHOLDER = CGROUP_BUILTIN_SUBSYS_COUNT - 1,
 
 #define IS_SUBSYS_ENABLED(option) IS_MODULE(option)
+#define ENABLE_NETPRIO_NOW
 #include <linux/cgroup_subsys.h>
+#undef ENABLE_NETPRIO_NOW
 #undef IS_SUBSYS_ENABLED
 	CGROUP_SUBSYS_COUNT,
 };
@@ -637,8 +647,10 @@ struct cgroup_subsys {
 };
 
 #define SUBSYS(_x) extern struct cgroup_subsys _x ## _subsys;
+#define ENABLE_NETPRIO_NOW
 #define IS_SUBSYS_ENABLED(option) IS_BUILTIN(option)
 #include <linux/cgroup_subsys.h>
+#undef ENABLE_NETPRIO_NOW
 #undef IS_SUBSYS_ENABLED
 #undef SUBSYS
 
