@@ -1102,7 +1102,7 @@ static ssize_t gfs2_direct_IO(int rw, struct kiocb *iocb,
 	 * the first place, mapping->nr_pages will always be zero.
 	 */
 	if (mapping->nrpages) {
-		loff_t lstart = offset & (PAGE_CACHE_SIZE - 1);
+		loff_t lstart = offset & ~(PAGE_CACHE_SIZE - 1);
 		loff_t len = iov_length(iov, nr_segs);
 		loff_t end = PAGE_ALIGN(offset + len) - 1;
 
