@@ -126,6 +126,12 @@ static __always_inline unsigned long long rdtsc(void)
 	return EAX_EDX_VAL(val, low, high);
 }
 
+/*
+ * RHEL7: This is only defined to maintain KABI.  New code in the kernel should
+ * not use this function.
+ */
+extern unsigned long long native_read_tsc(void);
+
 /**
  * rdtsc_ordered() - read the current TSC in program order
  *
