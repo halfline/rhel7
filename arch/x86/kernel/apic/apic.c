@@ -484,7 +484,7 @@ static int lapic_next_deadline(unsigned long delta,
 {
 	u64 tsc;
 
-	tsc = native_read_tsc();
+	tsc = rdtsc();
 	wrmsrl(MSR_IA32_TSC_DEADLINE, tsc + (((u64) delta) * TSC_DIVISOR));
 	return 0;
 }
@@ -619,7 +619,7 @@ static void __init lapic_cal_handler(struct clock_event_device *dev)
 	unsigned long pm = acpi_pm_read_early();
 
 	if (cpu_has_tsc)
-		tsc = native_read_tsc();
+		tsc = rdtsc();
 
 	switch (lapic_cal_loops++) {
 	case 0:
@@ -1297,7 +1297,7 @@ void setup_local_APIC(void)
 	long long max_loops = cpu_khz;
 
 	if (cpu_has_tsc)
-		tsc = native_read_tsc();
+		tsc = rdtsc();
 
 	if (disable_apic) {
 		disable_ioapic_support();
@@ -1392,7 +1392,7 @@ void setup_local_APIC(void)
 		}
 		if (queued) {
 			if (cpu_has_tsc) {
-				ntsc = native_read_tsc();
+				ntsc = rdtsc();
 				max_loops = (cpu_khz << 10) - (ntsc - tsc);
 			} else
 				max_loops--;
