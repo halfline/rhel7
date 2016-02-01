@@ -775,7 +775,7 @@ static struct clocksource clocksource_tsc;
  */
 static cycle_t read_tsc(struct clocksource *cs)
 {
-	return (cycle_t)get_cycles();
+	return (cycle_t)rdtsc_ordered();
 }
 
 /*
