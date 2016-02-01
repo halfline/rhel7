@@ -23,6 +23,7 @@
 #include <asm/unistd.h>
 #include <asm/io.h>
 #include <asm/pvclock.h>
+#include <asm/msr.h>
 
 #define gtod (&VVAR(vsyscall_gtod_data))
 
@@ -39,7 +40,7 @@ notrace static cycle_t vread_tsc(void)
 	 * but no one has ever seen it happen.
 	 */
 	rdtsc_barrier();
-	ret = (cycle_t)vget_cycles();
+	ret = (cycle_t)native_read_tsc();
 
 	last = VVAR(vsyscall_gtod_data).clock.cycle_last;
 
