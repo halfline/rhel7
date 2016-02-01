@@ -1102,6 +1102,7 @@ static void hv_kexec_handler(void)
 {
 	int cpu;
 
+	hv_synic_clockevents_cleanup();
 	vmbus_initiate_unload();
 	for_each_online_cpu(cpu)
 		smp_call_function_single(cpu, hv_synic_cleanup, NULL, 1);
