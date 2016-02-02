@@ -381,6 +381,7 @@ int mei_watchdog_register(struct mei_device *dev)
 {
 	int ret;
 
+	amt_wd_dev.parent = &dev->pdev->dev;
 	/* unlock to perserve correct locking order */
 	mutex_unlock(&dev->device_lock);
 	ret = watchdog_register_device(&amt_wd_dev);
