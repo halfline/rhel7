@@ -4312,6 +4312,9 @@ static void ipmi_panic_request_and_wait(ipmi_smi_t           intf,
 			    0, 1); /* Don't retry, and don't wait. */
 	if (rv)
 		atomic_sub(2, &panic_done_count);
+	else if (shadow_smi_handlers.flush_messages)
+		shadow_smi_handlers.flush_messages(intf->send_info);
+
 	while (atomic_read(&panic_done_count) != 0)
 		ipmi_poll(intf);
 }
