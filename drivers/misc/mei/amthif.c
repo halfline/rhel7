@@ -20,7 +20,6 @@
 #include <linux/types.h>
 #include <linux/fcntl.h>
 #include <linux/aio.h>
-#include <linux/pci.h>
 #include <linux/init.h>
 #include <linux/ioctl.h>
 #include <linux/cdev.h>
@@ -30,6 +29,7 @@
 #include <linux/uuid.h>
 #include <linux/jiffies.h>
 #include <linux/uaccess.h>
+#include <linux/slab.h>
 
 #include <linux/mei.h>
 
