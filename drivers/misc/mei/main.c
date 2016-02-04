@@ -113,13 +113,10 @@ static int mei_release(struct inode *inode, struct file *file)
 		cl_dbg(dev, cl, "disconnecting\n");
 		rets = mei_cl_disconnect(cl);
 	}
-	mei_cl_flush_queues(cl);
+	mei_cl_flush_queues(cl, file);
 	cl_dbg(dev, cl, "removing\n");
 
 	mei_cl_unlink(cl);
-
-	mei_io_cb_free(cl->read_cb);
-	cl->read_cb = NULL;
 
 	file->private_data = NULL;
 
@@ -144,8 +141,8 @@ static ssize_t mei_read(struct file *file, char __user *ubuf,
 			size_t length, loff_t *offset)
 {
 	struct mei_cl *cl = file->private_data;
-	struct mei_cl_cb *cb = NULL;
 	struct mei_device *dev;
+	struct mei_cl_cb *cb = NULL;
 	int rets;
 	int err;
 
@@ -172,7 +169,7 @@ static ssize_t mei_read(struct file *file, char __user *ubuf,
 		goto out;
 	}
 
-	cb = cl->read_cb;
+	cb = mei_cl_read_cb(cl, file);
 	if (cb) {
 		/* read what left */
 		if (cb->buf_idx > *offset)
@@ -197,9 +194,7 @@ static ssize_t mei_read(struct file *file, char __user *ubuf,
 		goto out;
 	}
 
-	if (MEI_READ_COMPLETE != cl->reading_state &&
-		!waitqueue_active(&cl->rx_wait)) {
-
+	if (list_empty(&cl->rd_completed) && !waitqueue_active(&cl->rx_wait)) {
 		if (file->f_flags & O_NONBLOCK) {
 			rets = -EAGAIN;
 			goto out;
@@ -208,7 +203,7 @@ static ssize_t mei_read(struct file *file, char __user *ubuf,
 		mutex_unlock(&dev->device_lock);
 
 		if (wait_event_interruptible(cl->rx_wait,
-				MEI_READ_COMPLETE == cl->reading_state ||
+				(!list_empty(&cl->rd_completed)) ||
 				mei_cl_is_transitioning(cl))) {
 
 			if (signal_pending(current))
@@ -223,14 +218,8 @@ static ssize_t mei_read(struct file *file, char __user *ubuf,
 		}
 	}
 
-	cb = cl->read_cb;
-
+	cb = mei_cl_read_cb(cl, file);
 	if (!cb) {
-		rets = -ENODEV;
-		goto out;
-	}
-
-	if (cl->reading_state != MEI_READ_COMPLETE) {
 		rets = 0;
 		goto out;
 	}
@@ -267,9 +256,7 @@ copy_buffer:
 
 free:
 	mei_io_cb_free(cb);
-	cl->read_cb = NULL;
 
-	cl->reading_state = MEI_IDLE;
 out:
 	dev_dbg(dev->dev, "end mei read rets= %d\n", rets);
 	mutex_unlock(&dev->device_lock);
@@ -336,8 +323,7 @@ static ssize_t mei_write(struct file *file, const char __user *ubuf,
 			timeout = write_cb->read_time +
 				mei_secs_to_jiffies(MEI_IAMTHIF_READ_TIMER);
 
-			if (time_after(jiffies, timeout) ||
-			    cl->reading_state == MEI_READ_COMPLETE) {
+			if (time_after(jiffies, timeout)) {
 				*offset = 0;
 				mei_io_cb_free(write_cb);
 				write_cb = NULL;
@@ -345,19 +331,7 @@ static ssize_t mei_write(struct file *file, const char __user *ubuf,
 		}
 	}
 
-	/* free entry used in read */
-	if (cl->reading_state == MEI_READ_COMPLETE) {
-		*offset = 0;
-		write_cb = mei_cl_find_read_cb(cl);
-		if (write_cb) {
-			mei_io_cb_free(write_cb);
-			write_cb = NULL;
-			cl->read_cb = NULL;
-			cl->reading_state = MEI_IDLE;
-		}
-	} else if (cl->reading_state == MEI_IDLE)
-		*offset = 0;
-
+	*offset = 0;
 	write_cb = mei_cl_alloc_cb(cl, length, MEI_FOP_WRITE, file);
 	if (!write_cb) {
 		rets = -ENOMEM;
