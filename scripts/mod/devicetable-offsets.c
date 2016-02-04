@@ -176,6 +176,7 @@ int main(void)
 
 	DEVID(mei_cl_device_id);
 	DEVID_FIELD(mei_cl_device_id, name);
+	DEVID_FIELD(mei_cl_device_id, uuid);
 
 	return 0;
 }
