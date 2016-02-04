@@ -4100,7 +4100,7 @@ static void check_msg_timeout(ipmi_smi_t intf, struct seq_table *ent,
 				ipmi_inc_stat(intf,
 					      retransmitted_ipmb_commands);
 
-			smi_send(intf, intf->handlers, smi_msg, 0);
+			smi_send(intf, handlers, smi_msg, 0);
 		} else
 			ipmi_free_smi_msg(smi_msg);
 
