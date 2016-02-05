@@ -23,6 +23,7 @@
 enum {
 	MEMBLOCK_NONE		= 0x0,	/* No special request */
 	MEMBLOCK_HOTPLUG	= 0x1,	/* hotpluggable region */
+	MEMBLOCK_MIRROR		= 0x2,	/* mirrored region */
 };
 
 struct memblock_region {
@@ -73,6 +74,8 @@ int memblock_reserve(phys_addr_t base, phys_addr_t size);
 void memblock_trim_memory(phys_addr_t align);
 int memblock_mark_hotplug(phys_addr_t base, phys_addr_t size);
 int memblock_clear_hotplug(phys_addr_t base, phys_addr_t size);
+int memblock_mark_mirror(phys_addr_t base, phys_addr_t size);
+ulong choose_memblock_flags(void);
 
 /* Low level functions */
 int memblock_add_range(struct memblock_type *type,
@@ -154,6 +157,11 @@ static inline bool movable_node_is_enabled(void)
 	return false;
 }
 #endif
+
+static inline bool memblock_is_mirror(struct memblock_region *m)
+{
+	return m->flags & MEMBLOCK_MIRROR;
+}
 
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
 void __next_mem_pfn_range(int *idx, int nid, unsigned long *out_start_pfn,
