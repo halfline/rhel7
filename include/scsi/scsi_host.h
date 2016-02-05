@@ -724,6 +724,9 @@ struct Scsi_Host {
 	/* The transport requires the LUN bits NOT to be stored in CDB[1] */
 	RH_KABI_FILL_HOLE(unsigned no_scsi2_lun_in_cdb:1)
 
+	/* Host responded with short (<36 bytes) INQUIRY result */
+	RH_KABI_FILL_HOLE(unsigned short_inquiry:1)
+
 	/*
 	 * Optional work queue to be utilized by the transport
 	 */
