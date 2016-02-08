@@ -207,6 +207,7 @@ struct perf_event;
 #define PERF_PMU_CAP_NO_INTERRUPT		0x01
 #define PERF_PMU_CAP_AUX_NO_SG			0x04
 #define PERF_PMU_CAP_AUX_SW_DOUBLEBUF		0x08
+#define PERF_PMU_CAP_EXCLUSIVE			0x10
 
 /**
  * struct pmu - generic performance monitoring unit
@@ -332,6 +333,7 @@ struct pmu {
 	 * Free pmu-private AUX data structures
 	 */
 	RH_KABI_EXTEND(void (*free_aux)		(void *aux)) /* optional */
+	RH_KABI_EXTEND(atomic_t			exclusive_cnt) /* < 0: cpu; > 0: tsk */
 };
 
 /**
