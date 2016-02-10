@@ -67,6 +67,7 @@ struct record_opts {
 	const char   *auxtrace_snapshot_opts;
 	bool	     sample_transaction;
 	unsigned     initial_delay;
+	unsigned int proc_map_timeout;
 };
 
 struct option;

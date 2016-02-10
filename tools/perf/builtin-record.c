@@ -598,7 +598,8 @@ static int __cmd_record(struct record *rec, int argc, const char **argv)
 	}
 
 	err = __machine__synthesize_threads(machine, tool, &opts->target, rec->evlist->threads,
-					    process_synthesized_event, opts->sample_address);
+					    process_synthesized_event, opts->sample_address,
+					    opts->proc_map_timeout);
 	if (err != 0)
 		goto out_child;
 
@@ -875,6 +876,7 @@ static struct record record = {
 			.uses_mmap   = true,
 			.default_per_cpu = true,
 		},
+		.proc_map_timeout     = 500,
 	},
 	.tool = {
 		.sample		= process_sample_event,
@@ -979,6 +981,8 @@ struct option __record_options[] = {
 		    "Record running/enabled time of read (:S) events"),
 	OPT_STRING_OPTARG('S', "snapshot", &record.opts.auxtrace_snapshot_opts,
 			  "opts", "AUX area tracing Snapshot Mode", ""),
+	OPT_UINTEGER(0, "proc-map-timeout", &record.opts.proc_map_timeout,
+			"per thread proc mmap processing timeout in ms"),
 	OPT_END()
 };
 
