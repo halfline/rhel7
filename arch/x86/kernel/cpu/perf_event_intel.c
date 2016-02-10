@@ -1909,7 +1909,6 @@ intel_start_scheduling(struct cpu_hw_events *cpuc)
 	 * in stop_event_scheduling()
 	 * makes scheduling appear as a transaction
 	 */
-	WARN_ON_ONCE(!irqs_disabled());
 	raw_spin_lock(&excl_cntrs->lock);
 
 	/*
@@ -2191,7 +2190,7 @@ static void intel_commit_scheduling(struct cpu_hw_events *cpuc, int idx, int cnt
 
 	xl = &excl_cntrs->states[tid];
 
-	WARN_ON_ONCE(!raw_spin_is_locked(&excl_cntrs->lock));
+	lockdep_assert_held(&excl_cntrs->lock);
 
 	if (cntr >= 0) {
 		if (c->flags & PERF_X86_EVENT_EXCL)
