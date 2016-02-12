@@ -34,6 +34,10 @@
 #include <linux/edd.h>
 #include <linux/crash_dump.h>
 
+#ifdef CONFIG_KEXEC
+#include <linux/kexec.h>
+#endif
+
 #include <xen/xen.h>
 #include <xen/events.h>
 #include <xen/interface/xen.h>
@@ -1704,6 +1708,21 @@ static struct notifier_block xen_hvm_cpu_notifier = {
 	.notifier_call	= xen_hvm_cpu_notify,
 };
 
+#ifdef CONFIG_KEXEC
+static void xen_hvm_shutdown(void)
+{
+	native_machine_shutdown();
+	if (kexec_in_progress)
+		xen_reboot(SHUTDOWN_soft_reset);
+}
+
+static void xen_hvm_crash_shutdown(struct pt_regs *regs)
+{
+	native_machine_crash_shutdown(regs);
+	xen_reboot(SHUTDOWN_soft_reset);
+}
+#endif
+
 static void __init xen_hvm_guest_init(void)
 {
 	init_hvm_pv_info();
@@ -1720,17 +1739,41 @@ static void __init xen_hvm_guest_init(void)
 	x86_init.irqs.intr_init = xen_init_IRQ;
 	xen_hvm_init_time_ops();
 	xen_hvm_init_mmu_ops();
+#ifdef CONFIG_KEXEC
+	if (xen_running_on_version_or_later(3, 2)) {
+		machine_ops.shutdown = xen_hvm_shutdown;
+		machine_ops.crash_shutdown = xen_hvm_crash_shutdown;
+	}
+#endif
 }
 
 static uint32_t __init xen_hvm_platform(void)
 {
+	uint32_t eax, ebx, ecx, edx, base;
+	int major, minor;
+
 	if (xen_pv_domain())
 		return 0;
 
-	if (is_kdump_kernel())
-		return 0;
+	/*
+	 * RHEL-only: old Xen versions (e.g. RHEL5 Xen) allow booting pure HVM
+	 * kernel after kdump but for newer versions this trick won't work and
+	 * we must reestablish PV interfaces if we ever used them. We hope that
+	 * crashing kernel did SHUTDOWN_soft_reset call and that this call is
+	 * supported by the hypervisor.
+	 */
 
-	return xen_cpuid_base();
+	base = xen_cpuid_base();
+
+	if (base && is_kdump_kernel()) {
+		cpuid(base + 1, &eax, &ebx, &ecx, &edx);
+		major = eax >> 16;
+		minor = eax & 0xffff;
+		if (major == 3 && minor < 2)
+			return 0;
+	}
+
+	return base;
 }
 
 bool xen_hvm_need_lapic(void)
