@@ -2700,8 +2700,7 @@ enum {
 	/* filesystem does not support filling holes */
 	DIO_SKIP_HOLES	= 0x02,
 
-	/* inode/fs/bdev does not need truncate protection */
-	DIO_IGNORE_TRUNCATE = 0x04,
+	/* gap, was DIO_IGNORE_TRUNCATE */
 
 	/* filesystem can handle aio writes beyond i_size */
 	DIO_ASYNC_EXTEND = 0x08,
@@ -2725,7 +2724,6 @@ static inline ssize_t blockdev_direct_IO(int rw, struct kiocb *iocb,
 #endif
 
 void inode_dio_wait(struct inode *inode);
-void __inode_dio_done(struct inode *inode);
 void inode_dio_done(struct inode *inode);
 
 extern void inode_set_flags(struct inode *inode, unsigned int flags,
