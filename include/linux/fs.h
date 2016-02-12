@@ -2705,7 +2705,8 @@ enum {
 	/* filesystem does not support filling holes */
 	DIO_SKIP_HOLES	= 0x02,
 
-	/* gap, was DIO_IGNORE_TRUNCATE */
+	/* inode/fs/bdev does not need truncate protection */
+	DIO_SKIP_DIO_COUNT = 0x04,
 
 	/* filesystem can handle aio writes beyond i_size */
 	DIO_ASYNC_EXTEND = 0x08,
@@ -2729,7 +2730,31 @@ static inline ssize_t blockdev_direct_IO(int rw, struct kiocb *iocb,
 #endif
 
 void inode_dio_wait(struct inode *inode);
-void inode_dio_done(struct inode *inode);
+
+/*
+ * inode_dio_begin - signal start of a direct I/O requests
+ * @inode: inode the direct I/O happens on
+ *
+ * This is called once we've finished processing a direct I/O request,
+ * and is used to wake up callers waiting for direct I/O to be quiesced.
+ */
+static inline void inode_dio_begin(struct inode *inode)
+{
+	atomic_inc(&inode->i_dio_count);
+}
+
+/*
+ * inode_dio_end - signal finish of a direct I/O requests
+ * @inode: inode the direct I/O happens on
+ *
+ * This is called once we've finished processing a direct I/O request,
+ * and is used to wake up callers waiting for direct I/O to be quiesced.
+ */
+static inline void inode_dio_end(struct inode *inode)
+{
+	if (atomic_dec_and_test(&inode->i_dio_count))
+		wake_up_bit(&inode->i_state, __I_DIO_WAKEUP);
+}
 
 extern void inode_set_flags(struct inode *inode, unsigned int flags,
 			    unsigned int mask);

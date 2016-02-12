@@ -8011,7 +8011,7 @@ static ssize_t btrfs_direct_IO(int rw, struct kiocb *iocb,
 			    offset, nr_segs))
 		return 0;
 
-	atomic_inc(&inode->i_dio_count);
+	inode_dio_begin(inode);
 	smp_mb__after_atomic_inc();
 
 	/*
@@ -8041,7 +8041,7 @@ static ssize_t btrfs_direct_IO(int rw, struct kiocb *iocb,
 			goto out;
 	} else if (test_bit(BTRFS_INODE_READDIO_NEED_LOCK,
 				     &BTRFS_I(inode)->runtime_flags)) {
-		inode_dio_done(inode);
+		inode_dio_end(inode);
 		flags = DIO_LOCKING | DIO_SKIP_HOLES;
 		wakeup = false;
 	}
@@ -8061,7 +8061,7 @@ static ssize_t btrfs_direct_IO(int rw, struct kiocb *iocb,
 	}
 out:
 	if (wakeup)
-		inode_dio_done(inode);
+		inode_dio_end(inode);
 	if (relock)
 		mutex_lock(&inode->i_mutex);
 

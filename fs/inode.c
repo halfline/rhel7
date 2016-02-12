@@ -1941,13 +1941,11 @@ EXPORT_SYMBOL(inode_dio_wait);
  * inode_dio_done - signal finish of a direct I/O requests
  * @inode: inode the direct I/O happens on
  *
- * This is called once we've finished processing a direct I/O request,
- * and is used to wake up callers waiting for direct I/O to be quiesced.
+ * DEPRECATED: use inode_dio_start/end
  */
 void inode_dio_done(struct inode *inode)
 {
-	if (atomic_dec_and_test(&inode->i_dio_count))
-		wake_up_bit(&inode->i_state, __I_DIO_WAKEUP);
+	inode_dio_end(inode);
 }
 EXPORT_SYMBOL(inode_dio_done);
 

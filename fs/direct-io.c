@@ -228,7 +228,8 @@ static void dio_iodone_helper(struct dio *dio, loff_t offset,
 		dio->end_io(dio->iocb, offset, transferred,
 			    dio->private, ret, is_async);
 	} else {
-		inode_dio_done(dio->inode);
+		if (!(dio->flags & DIO_SKIP_DIO_COUNT))
+			inode_dio_end(dio->inode);
 		if (is_async)
 			aio_complete(dio->iocb, ret, 0);
 	}
@@ -241,7 +242,9 @@ static void dio_iodone2_helper(struct dio *dio, loff_t offset,
 		dio->end_io(dio->iocb, offset,
 				transferred, dio->private, ret, is_async);
 
-	inode_dio_done(dio->inode);
+	if (!(dio->flags & DIO_SKIP_DIO_COUNT))
+		inode_dio_end(dio->inode);
+
 	if (is_async) {
 		if (dio->rw & WRITE) {
 			int err;
@@ -1268,7 +1271,8 @@ do_blockdev_direct_IO(int rw, struct kiocb *iocb, struct inode *inode,
 	/*
 	 * Will be decremented at I/O completion time.
 	 */
-	atomic_inc(&inode->i_dio_count);
+	if (!(dio->flags & DIO_SKIP_DIO_COUNT))
+		inode_dio_begin(inode);
 
 	retval = 0;
 	sdio.blkbits = blkbits;
