@@ -46,6 +46,7 @@ struct vfsmount;
 struct cred;
 struct swap_info_struct;
 struct seq_file;
+struct workqueue_struct;
 
 extern void __init inode_init(void);
 extern void __init inode_init_early(void);
@@ -1392,6 +1393,9 @@ struct super_block {
 
 	/* Being remounted read-only */
 	int s_readonly_remount;
+
+	/* AIO completions deferred from interrupt context */
+	RH_KABI_EXTEND(struct workqueue_struct *s_dio_done_wq)
 };
 
 extern const unsigned super_block_wrapper_version;
@@ -1949,6 +1953,7 @@ struct file_system_type {
 #define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */
 #define FS_HAS_RM_XQUOTA	256	/* KABI: fs has the rm_xquota quota op */
 #define FS_HAS_INVALIDATE_RANGE	512	/* FS has new ->invalidatepage with length arg */
+#define FS_HAS_DIO_IODONE2	1024	/* KABI: fs supports new iodone */
 #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
 	struct dentry *(*mount) (struct file_system_type *, int,
 		       const char *, void *);

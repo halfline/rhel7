@@ -40,6 +40,8 @@ enum bh_state_bits {
 	BH_PrivateStart,/* not a state bit, but the first bit available
 			 * for private allocation by other entities
 			 */
+	BH_Defer_Completion = BITS_PER_LONG-1,/* Defer AIO completion to
+					       * workqueue */
 };
 
 #define MAX_BUF_PER_PAGE (PAGE_CACHE_SIZE / 512)
@@ -128,6 +130,7 @@ BUFFER_FNS(Write_EIO, write_io_error)
 BUFFER_FNS(Unwritten, unwritten)
 BUFFER_FNS(Meta, meta)
 BUFFER_FNS(Prio, prio)
+BUFFER_FNS(Defer_Completion, defer_completion)
 
 #define bh_offset(bh)		((unsigned long)(bh)->b_data & ~PAGE_MASK)
 
