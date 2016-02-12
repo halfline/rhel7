@@ -242,8 +242,18 @@ static void dio_iodone2_helper(struct dio *dio, loff_t offset,
 				transferred, dio->private, ret, is_async);
 
 	inode_dio_done(dio->inode);
-	if (is_async)
+	if (is_async) {
+		if (dio->rw & WRITE) {
+			int err;
+
+			err = generic_write_sync(dio->iocb->ki_filp, offset,
+						 transferred);
+			if (err < 0 && ret > 0)
+				ret = err;
+		}
+
 		aio_complete(dio->iocb, ret, 0);
+	}
 }
 
 /**
@@ -1220,11 +1230,6 @@ do_blockdev_direct_IO(int rw, struct kiocb *iocb, struct inode *inode,
 	}
 
 	/*
-	 * Will be decremented at I/O completion time.
-	 */
-	atomic_inc(&inode->i_dio_count);
-
-	/*
 	 * For file extending writes updating i_size before data writeouts
 	 * complete can expose uninitialized blocks in dumb filesystems.
 	 * In that case we need to wait for I/O completion even if asked
@@ -1238,10 +1243,34 @@ do_blockdev_direct_IO(int rw, struct kiocb *iocb, struct inode *inode,
 	else
 		dio->is_async = true;
 
-	retval = 0;
-
 	dio->inode = inode;
 	dio->rw = rw;
+
+	/*
+	 * For AIO O_(D)SYNC writes we need to defer completions to a workqueue
+	 * so that we can call ->fsync.
+	 */
+	if ((dio->inode->i_sb->s_type->fs_flags & FS_HAS_DIO_IODONE2) &&
+	    dio->is_async && (rw & WRITE) &&
+	    ((iocb->ki_filp->f_flags & O_DSYNC) ||
+	     IS_SYNC(iocb->ki_filp->f_mapping->host))) {
+		retval = dio_set_defer_completion(dio);
+		if (retval) {
+			/*
+			 * We grab i_mutex only for reads so we don't have
+			 * to release it here
+			 */
+			kmem_cache_free(dio_cache, dio);
+			goto out;
+		}
+	}
+
+	/*
+	 * Will be decremented at I/O completion time.
+	 */
+	atomic_inc(&inode->i_dio_count);
+
+	retval = 0;
 	sdio.blkbits = blkbits;
 	sdio.blkfactor = i_blkbits - blkbits;
 	sdio.block_in_file = offset >> blkbits;
