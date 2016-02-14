@@ -4,7 +4,7 @@
 #include <linux/pci.h>
 
 /* Address Translation Service */
-struct pci_ats {
+struct pci_ats {        /* Depricated - DO NOT USE */
 	int pos;        /* capability position */
 	int stu;        /* Smallest Translation Unit */
 	int qdep;       /* Invalidate Queue Depth */
@@ -26,7 +26,7 @@ int pci_ats_queue_depth(struct pci_dev *dev);
  */
 static inline int pci_ats_enabled(struct pci_dev *dev)
 {
-	return dev->ats && dev->ats->is_enabled;
+	return dev->pci_dev_rh->ats_cap && dev->pci_dev_rh->ats_enabled;
 }
 
 #else /* CONFIG_PCI_ATS */

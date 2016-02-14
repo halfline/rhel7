@@ -380,7 +380,7 @@ struct pci_dev {
 		struct pci_sriov *sriov;	/* SR-IOV capability related */
 		struct pci_dev *physfn;	/* the PF this VF is associated with */
 	};
-	struct pci_ats	*ats;	/* Address Translation Service */
+	struct pci_ats	*ats;		/* Depricated - DO NOT USE */
 #endif
 	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
 	size_t romlen; /* Length of ROM if it's not from the BAR */
@@ -400,6 +400,13 @@ struct pci_dev_rh {
 	RH_KABI_EXTEND(char *driver_override) /* Driver name to force a match */
 #ifdef CONFIG_PPC64
 	RH_KABI_EXTEND(struct pci_dn *pci_data) /* PCI device node*/
+#endif
+	RH_KABI_EXTEND(unsigned int ats_enabled:1) /* Address Translation Svc */
+#ifdef CONFIG_PCI_ATS
+	RH_KABI_EXTEND(int ats_cap)	/* ATS Capability offset */
+	RH_KABI_EXTEND(int ats_stu)	/* ATS Smallest Translation Unit */
+	RH_KABI_EXTEND(int ats_qdep)	/* ATs Invalidate Queue Depth */
+	RH_KABI_EXTEND(atomic_t ats_ref_cnt)  /* num of VFs with ATS enabled */
 #endif
 };
 
@@ -1318,10 +1325,8 @@ void ht_destroy_irq(unsigned int irq);
 #ifdef CONFIG_PCI_ATS
 /* Address Translation Service */
 void pci_ats_init(struct pci_dev *dev);
-void pci_ats_free(struct pci_dev *dev);
 #else
 static inline void pci_ats_init(struct pci_dev *dev) { }
-static inline void pci_ats_free(struct pci_dev *dev) { }
 #endif
 
 void pci_cfg_access_lock(struct pci_dev *dev);
