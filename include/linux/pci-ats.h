@@ -12,46 +12,6 @@ struct pci_ats {        /* Depricated - DO NOT USE */
 	unsigned int is_enabled:1;      /* Enable bit is set */
 };
 
-#ifdef CONFIG_PCI_ATS
-
-int pci_enable_ats(struct pci_dev *dev, int ps);
-void pci_disable_ats(struct pci_dev *dev);
-int pci_ats_queue_depth(struct pci_dev *dev);
-
-/**
- * pci_ats_enabled - query the ATS status
- * @dev: the PCI device
- *
- * Returns 1 if ATS capability is enabled, or 0 if not.
- */
-static inline int pci_ats_enabled(struct pci_dev *dev)
-{
-	return dev->pci_dev_rh->ats_cap && dev->pci_dev_rh->ats_enabled;
-}
-
-#else /* CONFIG_PCI_ATS */
-
-static inline int pci_enable_ats(struct pci_dev *dev, int ps)
-{
-	return -ENODEV;
-}
-
-static inline void pci_disable_ats(struct pci_dev *dev)
-{
-}
-
-static inline int pci_ats_queue_depth(struct pci_dev *dev)
-{
-	return -ENODEV;
-}
-
-static inline int pci_ats_enabled(struct pci_dev *dev)
-{
-	return 0;
-}
-
-#endif /* CONFIG_PCI_ATS */
-
 #ifdef CONFIG_PCI_PRI
 
 int pci_enable_pri(struct pci_dev *pdev, u32 reqs);
