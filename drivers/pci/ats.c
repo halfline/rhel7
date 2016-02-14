@@ -136,13 +136,13 @@ EXPORT_SYMBOL_GPL(pci_restore_ats_state);
  */
 int pci_ats_queue_depth(struct pci_dev *dev)
 {
+	if (!dev->pci_dev_rh->ats_cap)
+		return -EINVAL;
+
 	if (dev->is_virtfn)
 		return 0;
 
-	if (dev->pci_dev_rh->ats_cap)
-		return dev->pci_dev_rh->ats_qdep;
-
-	return -ENODEV;
+	return dev->pci_dev_rh->ats_qdep;
 }
 EXPORT_SYMBOL_GPL(pci_ats_queue_depth);
 
