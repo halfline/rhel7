@@ -3011,6 +3011,7 @@ static int __init init_dmars(void)
 {
 	struct dmar_drhd_unit *drhd;
 	struct dmar_rmrr_unit *rmrr;
+	bool copied_tables = false;
 	struct device *dev;
 	struct intel_iommu *iommu;
 	int i, ret;
@@ -3101,6 +3102,7 @@ static int __init init_dmars(void)
 			} else {
 				pr_info("Copied translation tables from previous kernel for %s\n",
 					iommu->name);
+				copied_tables = true;
 			}
 		}
 
@@ -3127,6 +3129,15 @@ static int __init init_dmars(void)
 	}
 
 	check_tylersburg_isoch();
+
+	/*
+	 * If we copied translations from a previous kernel in the kdump
+	 * case, we can not assign the devices to domains now, as that
+	 * would eliminate the old mappings. So skip this part and defer
+	 * the assignment to device driver initialization time.
+	 */
+	if (copied_tables)
+		goto domains_done;
 
 	/*
 	 * If pass through is not set or not enabled, setup context entries for
@@ -3166,6 +3177,8 @@ static int __init init_dmars(void)
 	}
 
 	iommu_prepare_isa();
+
+domains_done:
 
 	/*
 	 * for each drhd
