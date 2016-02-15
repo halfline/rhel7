@@ -2236,6 +2236,23 @@ static void intel_pebs_aliases_snb(struct perf_event *event)
 	}
 }
 
+static unsigned long intel_pmu_free_running_flags(struct perf_event *event)
+{
+	unsigned long flags = x86_pmu.free_running_flags;
+
+	/*
+	 * RHEL7 ommiting following upstream bit unset,
+	 * because we dont support use_clockid yet.
+	 *
+
+	if (event->attr.use_clockid)
+		flags &= ~PERF_SAMPLE_TIME;
+
+	*/
+
+	return flags;
+}
+
 static int intel_pmu_hw_config(struct perf_event *event)
 {
 	int ret = x86_pmu_hw_config(event);
@@ -2246,7 +2263,8 @@ static int intel_pmu_hw_config(struct perf_event *event)
 	if (event->attr.precise_ip) {
 		if (!event->attr.freq) {
 			event->hw.flags |= PERF_X86_EVENT_AUTO_RELOAD;
-			if (!(event->attr.sample_type & ~PEBS_FREERUNNING_FLAGS))
+			if (!(event->attr.sample_type &
+			      ~intel_pmu_free_running_flags(event)))
 				event->hw.flags |= PERF_X86_EVENT_FREERUNNING;
 		}
 		if (x86_pmu.pebs_aliases)
@@ -2677,6 +2695,8 @@ static __initconst const struct x86_pmu core_pmu = {
 	.event_map		= intel_pmu_event_map,
 	.max_events		= ARRAY_SIZE(intel_perfmon_event_map),
 	.apic			= 1,
+	.free_running_flags	= PEBS_FREERUNNING_FLAGS,
+
 	/*
 	 * Intel PMCs cannot be accessed sanely above 32-bit width,
 	 * so we install an artificial 1<<31 period regardless of
@@ -2715,6 +2735,7 @@ static __initconst const struct x86_pmu intel_pmu = {
 	.event_map		= intel_pmu_event_map,
 	.max_events		= ARRAY_SIZE(intel_perfmon_event_map),
 	.apic			= 1,
+	.free_running_flags	= PEBS_FREERUNNING_FLAGS,
 	/*
 	 * Intel PMCs cannot be accessed sanely above 32 bit width,
 	 * so we install an artificial 1<<31 period regardless of
