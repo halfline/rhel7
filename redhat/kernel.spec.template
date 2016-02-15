@@ -1425,6 +1425,7 @@ fi
 %{_libdir}/traceevent
 %{_mandir}/man[1-8]/perf*
 %{_sysconfdir}/bash_completion.d/perf
+%{_datadir}/perf-core/strace/groups
 
 %files -n python-perf
 %defattr(-,root,root)
