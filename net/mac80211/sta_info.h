@@ -573,8 +573,9 @@ u32 sta_addr_hash(const void *key, u32 length, u32 seed);
 	/* compare address and run code only if it matches */		\
 	if (ether_addr_equal(_sta->sta.addr, (_addr)))
 #else
+/* XXX: This is broken, just compiles so rhashtable can be bisected */
 #define _sta_bucket_idx(_l, _tbl, _a)					\
-	_tbl->buckets[rhashtable_hashfn(&_l->sta_hash, _a, ETH_ALEN)]
+	_tbl->buckets[0]
 
 #define for_each_sta_info(local, tbl, _addr, _sta, _tmp)		\
 	(void) _tmp;  /* workaround unused variable error */		\
