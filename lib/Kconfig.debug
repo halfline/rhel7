@@ -1354,6 +1354,14 @@ config INTERVAL_TREE_TEST
 	help
 	  A benchmark measuring the performance of the interval tree library
 
+config TEST_RHASHTABLE
+	bool "Perform selftest on resizable hash table"
+	default n
+	help
+	  Enable this option to test the rhashtable functions at boot.
+
+	  If unsure, say N.
+
 config PROVIDE_OHCI1394_DMA_INIT
 	bool "Remote debugging over FireWire early on boot"
 	depends on PCI && X86
