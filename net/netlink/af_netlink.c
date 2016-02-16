@@ -115,15 +115,6 @@ static atomic_t nl_table_users = ATOMIC_INIT(0);
 DEFINE_MUTEX(nl_sk_hash_lock);
 EXPORT_SYMBOL_GPL(nl_sk_hash_lock);
 
-static int lockdep_nl_sk_hash_is_held(void)
-{
-#ifdef CONFIG_LOCKDEP
-	if (debug_locks)
-		return lockdep_is_held(&nl_sk_hash_lock) || lockdep_is_held(&nl_table_lock);
-#endif
-	return 1;
-}
-
 static ATOMIC_NOTIFIER_HEAD(netlink_chain);
 
 static DEFINE_SPINLOCK(netlink_tap_lock);
@@ -1060,7 +1051,8 @@ static int netlink_insert(struct sock *sk, struct net *net, u32 portid)
 		goto err;
 
 	err = -ENOMEM;
-	if (BITS_PER_LONG > 32 && unlikely(table->hash.nelems >= UINT_MAX))
+	if (BITS_PER_LONG > 32 &&
+	    unlikely(atomic_read(&table->hash.nelems) >= UINT_MAX))
 		goto err;
 
 	nlk_sk(sk)->portid = portid;
@@ -3140,7 +3132,6 @@ static int __init netlink_proto_init(void)
 		.max_shift = 16, /* 64K */
 		.grow_decision = rht_grow_above_75,
 		.shrink_decision = rht_shrink_below_30,
-		.mutex_is_held = lockdep_nl_sk_hash_is_held,
 	};
 
 	if (err != 0)

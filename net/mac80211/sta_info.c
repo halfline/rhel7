@@ -64,14 +64,6 @@
  * freed before they are done using it.
  */
 
-#if 1 /* in RHEL */
-static int sta_info_mutex_is_held(void)
-{
-	/* lockdep_assert_held(&local->sta_mtx); */
-	return 1;
-}
-#endif
-
 static struct rhashtable_params sta_rht_params = {
 	.nelem_hint = 3, /* start small */
 #if 0 /* Not in RHEL */
@@ -81,9 +73,6 @@ static struct rhashtable_params sta_rht_params = {
 	.key_offset = offsetof(struct sta_info, sta.addr),
 	.key_len = ETH_ALEN,
 	.hashfn = sta_addr_hash,
-#if 1 /* in RHEL */
-	.mutex_is_held = sta_info_mutex_is_held,
-#endif
 };
 
 /* Caller must hold local->sta_mtx */
