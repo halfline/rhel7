@@ -18,13 +18,12 @@
 #include <linux/sched.h>
 #include <linux/statfs.h>
 #include <linux/seq_file.h>
+#include <linux/magic.h>
 #include "overlayfs.h"
 
 MODULE_AUTHOR("Miklos Szeredi <miklos@szeredi.hu>");
 MODULE_DESCRIPTION("Overlay filesystem");
 MODULE_LICENSE("GPL");
-
-#define OVERLAYFS_SUPER_MAGIC 0x794c7630
 
 struct ovl_config {
 	char *lowerdir;
