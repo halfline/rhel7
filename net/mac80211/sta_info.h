@@ -562,7 +562,6 @@ struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
 
 u32 sta_addr_hash(const void *key, u32 length, u32 seed);
 
-#if 0 /* Not in RHEL */
 #define _sta_bucket_idx(_tbl, _a)					\
 	rht_bucket_index(_tbl, sta_addr_hash(_a, ETH_ALEN, (_tbl)->hash_rnd))
 
@@ -572,14 +571,6 @@ u32 sta_addr_hash(const void *key, u32 length, u32 seed);
 			       hash_node)				\
 	/* compare address and run code only if it matches */		\
 	if (ether_addr_equal(_sta->sta.addr, (_addr)))
-#else
-/* XXX: This is broken, just compiles so rhashtable can be bisected */
-#define for_each_sta_info(local, tbl, _addr, _sta, _tmp)		\
-	rht_for_each_entry_rcu(_sta, _tmp, tbl, 0,                      \
-			       hash_node)				\
-	/* compare address and run code only if it matches */		\
-	if (ether_addr_equal(_sta->sta.addr, (_addr)))
-#endif
 
 /*
  * Get STA info by index, BROKEN!

@@ -79,14 +79,8 @@ static struct rhashtable_params sta_rht_params = {
 static int sta_info_hash_del(struct ieee80211_local *local,
 			     struct sta_info *sta)
 {
-#if 0 /* Not in RHEL */
 	return rhashtable_remove_fast(&local->sta_hash, &sta->hash_node,
 				      sta_rht_params);
-#else
-	if (!rhashtable_remove(&local->sta_hash, &sta->hash_node))
-		return -ENOENT;
-	return 0;
-#endif
 }
 
 static void __cleanup_single_sta(struct sta_info *sta)
@@ -263,12 +257,8 @@ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
 static void sta_info_hash_add(struct ieee80211_local *local,
 			      struct sta_info *sta)
 {
-#if 0 /* Not in RHEL */
 	rhashtable_insert_fast(&local->sta_hash, &sta->hash_node,
 			       sta_rht_params);
-#else
-	rhashtable_insert(&local->sta_hash, &sta->hash_node);
-#endif
 }
 
 static void sta_deliver_ps_frames(struct work_struct *wk)
