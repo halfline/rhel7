@@ -1295,6 +1295,7 @@ struct net_device_ops {
  * @IFF_LIVE_ADDR_CHANGE: device supports hardware address
  *	change when it's running
  * @IFF_MACVLAN: Macvlan device
+ * @IFF_NO_QUEUE: device can run without qdisc attached
  * @IFF_RXFH_CONFIGURED: device has had Rx Flow indirection table configured
  */
 enum netdev_priv_flags {
@@ -1322,6 +1323,7 @@ enum netdev_priv_flags {
 	IFF_MACVLAN			= 1<<21,
 	IFF_XMIT_DST_RELEASE_PERM	= 1<<22,
 	IFF_RXFH_CONFIGURED		= 1<<25,
+	IFF_NO_QUEUE			= 1<<26,
 };
 
 #define IFF_802_1Q_VLAN			IFF_802_1Q_VLAN
@@ -1347,6 +1349,7 @@ enum netdev_priv_flags {
 #define IFF_LIVE_ADDR_CHANGE		IFF_LIVE_ADDR_CHANGE
 #define IFF_MACVLAN			IFF_MACVLAN
 #define IFF_XMIT_DST_RELEASE_PERM	IFF_XMIT_DST_RELEASE_PERM
+#define IFF_NO_QUEUE			IFF_NO_QUEUE
 #define IFF_RXFH_CONFIGURED		IFF_RXFH_CONFIGURED
 
 /*
