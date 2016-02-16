@@ -160,6 +160,16 @@ struct dentry_operations {
 	int (*d_manage)(struct dentry *, bool);
 } ____cacheline_aligned;
 
+typedef struct inode* (*dop_select_inode_t) (struct dentry *, unsigned);
+
+struct dentry_operations_wrapper {
+	struct dentry_operations ops;
+	size_t size;
+
+	struct inode *(*d_select_inode)(struct dentry *, unsigned);
+
+} ____cacheline_aligned;
+
 /*
  * Locking rules for dentry_operations callbacks are to be found in
  * Documentation/filesystems/Locking. Keep it updated!
@@ -217,6 +227,7 @@ struct dentry_operations {
 #define DCACHE_AUTODIR_TYPE		0x02000000 /* Lookupless directory (presumed automount) */
 #define DCACHE_SYMLINK_TYPE		0x03000000 /* Symlink */
 #define DCACHE_FILE_TYPE		0x04000000 /* Other file type */
+#define DCACHE_OP_SELECT_INODE		0x08000000 /* Unioned entry: dcache op selects inode */
 
 extern seqlock_t rename_lock;
 

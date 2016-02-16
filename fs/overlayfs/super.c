@@ -314,14 +314,21 @@ static int ovl_dentry_weak_revalidate(struct dentry *dentry, unsigned int flags)
 	return ret;
 }
 
-static const struct dentry_operations ovl_dentry_operations = {
-	.d_release = ovl_dentry_release,
+static const struct dentry_operations_wrapper ovl_dentry_operations = {
+	.ops = {
+		.d_release = ovl_dentry_release,
+	},
+	.size = sizeof(struct dentry_operations_wrapper),
+	.d_select_inode = ovl_d_select_inode,
 };
 
-static const struct dentry_operations ovl_reval_dentry_operations = {
-	.d_release = ovl_dentry_release,
-	.d_revalidate = ovl_dentry_revalidate,
-	.d_weak_revalidate = ovl_dentry_weak_revalidate,
+static const struct dentry_operations_wrapper ovl_reval_dentry_operations = {
+	.ops = {
+		.d_release = ovl_dentry_release,
+		.d_revalidate = ovl_dentry_revalidate,
+		.d_weak_revalidate = ovl_dentry_weak_revalidate,
+	},
+	.size = sizeof(struct dentry_operations_wrapper),
 };
 
 static struct ovl_entry *ovl_alloc_entry(unsigned int numlower)
@@ -1049,9 +1056,9 @@ static int ovl_fill_super(struct super_block *sb, void *data, int silent)
 		sb->s_flags |= MS_RDONLY;
 
 	if (remote)
-		sb->s_d_op = &ovl_reval_dentry_operations;
+		sb->s_d_op = &ovl_reval_dentry_operations.ops;
 	else
-		sb->s_d_op = &ovl_dentry_operations;
+		sb->s_d_op = &ovl_dentry_operations.ops;
 
 	err = -ENOMEM;
 	oe = ovl_alloc_entry(numlower);
@@ -1129,6 +1136,7 @@ static struct file_system_type ovl_fs_type = {
 	.name		= "overlay",
 	.mount		= ovl_mount,
 	.kill_sb	= kill_anon_super,
+	.fs_flags	= FS_HAS_DOPS_WRAPPER,
 };
 MODULE_ALIAS_FS("overlay");
 

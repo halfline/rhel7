@@ -699,11 +699,11 @@ int open_check_o_direct(struct file *f)
 }
 
 static int do_dentry_open(struct file *f,
+			  struct inode *inode,
 			  int (*open)(struct inode *, struct file *),
 			  const struct cred *cred)
 {
 	static const struct file_operations empty_fops = {};
-	struct inode *inode;
 	int error;
 
 	f->f_mode = OPEN_FMODE(f->f_flags) | FMODE_LSEEK |
@@ -713,7 +713,7 @@ static int do_dentry_open(struct file *f,
 		f->f_mode = FMODE_PATH;
 
 	path_get(&f->f_path);
-	inode = f->f_inode = f->f_path.dentry->d_inode;
+	f->f_inode = inode;
 	if (f->f_mode & FMODE_WRITE) {
 		error = __get_file_write_access(inode, f->f_path.mnt);
 		if (error)
@@ -811,7 +811,8 @@ int finish_open(struct file *file, struct dentry *dentry,
 	BUG_ON(*opened & FILE_OPENED); /* once it's opened, it's opened */
 
 	file->f_path.dentry = dentry;
-	error = do_dentry_open(file, open, current_cred());
+	error = do_dentry_open(file, dentry->d_inode, open,
+			       current_cred());
 	if (!error)
 		*opened |= FILE_OPENED;
 
@@ -880,6 +881,7 @@ EXPORT_SYMBOL(dentry_open);
 int vfs_open(const struct path *path, struct file *filp,
 	     const struct cred *cred)
 {
+	struct dentry *dentry = path->dentry;
 	struct inode *inode = path->dentry->d_inode;
 	iop_dentry_open_t dentry_open = get_dentry_open_iop(inode);
 
@@ -887,7 +889,12 @@ int vfs_open(const struct path *path, struct file *filp,
 		return dentry_open(path->dentry, filp, cred);
 	else {
 		filp->f_path = *path;
-		return do_dentry_open(filp, NULL, cred);
+		if (dentry->d_flags & DCACHE_OP_SELECT_INODE) {
+			inode = (get_select_inode_dop(dentry))(dentry, filp->f_flags);
+			if (IS_ERR(inode))
+				return PTR_ERR(inode);
+		}
+		return do_dentry_open(filp, inode, NULL, cred);
 	}
 }
 EXPORT_SYMBOL(vfs_open);
