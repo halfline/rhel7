@@ -94,7 +94,7 @@ static int sta_info_hash_del(struct ieee80211_local *local,
 	return rhashtable_remove_fast(&local->sta_hash, &sta->hash_node,
 				      sta_rht_params);
 #else
-	if (!rhashtable_remove(&local->sta_hash, &sta->hash_node, GFP_KERNEL))
+	if (!rhashtable_remove(&local->sta_hash, &sta->hash_node))
 		return -ENOENT;
 	return 0;
 #endif
@@ -278,7 +278,7 @@ static void sta_info_hash_add(struct ieee80211_local *local,
 	rhashtable_insert_fast(&local->sta_hash, &sta->hash_node,
 			       sta_rht_params);
 #else
-	rhashtable_insert(&local->sta_hash, &sta->hash_node, GFP_KERNEL);
+	rhashtable_insert(&local->sta_hash, &sta->hash_node);
 #endif
 }
 
