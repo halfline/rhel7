@@ -804,7 +804,14 @@ struct Scsi_Host {
 	RH_KABI_RESERVE_P(5)
 	RH_KABI_RESERVE_P(6)
 
-	unsigned int scsi_mq_reserved1;
+	/*
+	 * In scsi-mq mode, the number of hardware queues supported by the LLD.
+	 *
+	 * Note: it is assumed that each hardware queue has a queue depth of
+	 * can_queue. In other words, the total queue depth per host
+	 * is nr_hw_queues * can_queue.
+	 */
+	RH_KABI_REPLACE(unsigned int scsi_mq_reserved1, unsigned nr_hw_queues)
 	unsigned int scsi_mq_reserved2;
 	void *scsi_mq_reserved3;
 	void *scsi_mq_reserved4;
