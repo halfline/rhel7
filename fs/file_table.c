@@ -207,8 +207,7 @@ EXPORT_SYMBOL(alloc_file);
 static void drop_file_write_access(struct file *file)
 {
 	struct vfsmount *mnt = file->f_path.mnt;
-	struct dentry *dentry = file->f_path.dentry;
-	struct inode *inode = dentry->d_inode;
+	struct inode *inode = file->f_inode;
 
 	put_write_access(inode);
 
@@ -226,7 +225,7 @@ static void __fput(struct file *file)
 {
 	struct dentry *dentry = file->f_path.dentry;
 	struct vfsmount *mnt = file->f_path.mnt;
-	struct inode *inode = dentry->d_inode;
+	struct inode *inode = file->f_inode;
 
 	might_sleep();
 
