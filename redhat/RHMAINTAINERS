@@ -319,6 +319,7 @@ F:	mm/hwpoison-inject.c
 Hyper-V CORE AND DRIVERS
 M:	Jason Wang <jasowang@redhat.com>
 M:	Vitaly Kuznetsov <vkuznets@redhat.com>
+M:	Cathy Avery <cavery@redhat.com>
 S:	Maintained
 F:	arch/x86/include/asm/mshyperv.h
 F:	arch/x86/include/uapi/asm/hyperv.h
