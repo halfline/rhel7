@@ -113,6 +113,11 @@ enum {
 };
 #define MLX4_EN_MAX_RX_FRAGS	4
 
+#ifndef CONFIG_GENERIC_HARDIRQS
+/* Minimum packet number till arming the CQ */
+#define MLX4_EN_MIN_RX_ARM	2097152
+#endif
+
 /* Maximum ring sizes */
 #define MLX4_EN_MAX_TX_SIZE	8192
 #define MLX4_EN_MAX_RX_SIZE	8192
@@ -346,6 +351,9 @@ struct mlx4_en_cq {
 	u16 moder_cnt;
 	struct mlx4_cqe *buf;
 #define MLX4_EN_OPCODE_ERROR	0x1e
+#ifndef CONFIG_GENERIC_HARDIRQS
+	u32 tot_rx;
+#endif
 
 #ifdef CONFIG_NET_RX_BUSY_POLL
 	unsigned int state;
