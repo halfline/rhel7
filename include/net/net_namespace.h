@@ -148,6 +148,7 @@ struct net {
 	RH_KABI_EXTEND(struct xfrm_policy_hash_ext policy_bydst[XFRM_POLICY_MAX * 2])
 	RH_KABI_EXTEND(struct xfrm_policy_hthresh policy_hthresh)
 #endif
+	RH_KABI_EXTEND(bool ip_local_ports_warned)
 };
 
 /*

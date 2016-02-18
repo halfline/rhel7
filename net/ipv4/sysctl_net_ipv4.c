@@ -47,7 +47,13 @@ static int rhel_unused_sysctl __read_mostly;
 /* Update system visible IP port range */
 static void set_local_port_range(struct net *net, int range[2])
 {
+	bool same_parity = !((range[0] ^ range[1]) & 1);
+
 	write_seqlock(&net->ipv4_sysctl_local_ports.lock);
+	if (same_parity && !net->ip_local_ports_warned) {
+		net->ip_local_ports_warned = true;
+		pr_err_ratelimited("ip_local_port_range: prefer different parity for start/end values.\n");
+	}
 	net->ipv4_sysctl_local_ports.range[0] = range[0];
 	net->ipv4_sysctl_local_ports.range[1] = range[1];
 	write_sequnlock(&net->ipv4_sysctl_local_ports.lock);
