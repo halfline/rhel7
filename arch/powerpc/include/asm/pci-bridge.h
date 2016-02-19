@@ -15,6 +15,13 @@
 struct device_node;
 
 /*
+ * PCI controller operations
+ */
+struct pci_controller_ops {
+	void		(*dma_dev_setup)(struct pci_dev *dev);
+};
+
+/*
  * Structure of a PCI controller (host bridge)
  */
 struct pci_controller {
@@ -94,6 +101,7 @@ struct pci_controller {
 	void *private_data;
 #ifdef CONFIG_PPC64
 	RH_KABI_EXTEND(struct pci_dn *pci_data)
+	RH_KABI_EXTEND(struct pci_controller_ops controller_ops)
 #endif /* CONFIG_PPC64 */
 };
 
@@ -269,6 +277,19 @@ static inline int pcibios_vaddr_is_ioport(void __iomem *address)
 	return 0;
 }
 #endif	/* CONFIG_PCI */
+
+/*
+ * Shims to prefer pci_controller version over ppc_md where available.
+ */
+static inline void pci_dma_dev_setup(struct pci_dev *dev)
+{
+	struct pci_controller *phb = pci_bus_to_host(dev->bus);
+
+	if (phb->controller_ops.dma_dev_setup)
+		phb->controller_ops.dma_dev_setup(dev);
+	else if (ppc_md.pci_dma_dev_setup)
+		ppc_md.pci_dma_dev_setup(dev);
+}
 
 #endif	/* __KERNEL__ */
 #endif	/* _ASM_POWERPC_PCI_BRIDGE_H */
