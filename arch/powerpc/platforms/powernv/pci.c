@@ -836,7 +836,6 @@ void __init pnv_pci_init(void)
 	pci_devs_phb_init();
 
 	/* Configure IOMMU DMA hooks */
-	ppc_md.pci_dma_dev_setup = pnv_pci_dma_dev_setup;
 	set_pci_dma_ops(&dma_iommu_ops);
 
 	/* Configure MSIs */
@@ -847,3 +846,7 @@ void __init pnv_pci_init(void)
 }
 
 machine_subsys_initcall_sync(powernv, tce_iommu_bus_notifier_init);
+
+struct pci_controller_ops pnv_pci_controller_ops = {
+	.dma_dev_setup = pnv_pci_dma_dev_setup,
+};
