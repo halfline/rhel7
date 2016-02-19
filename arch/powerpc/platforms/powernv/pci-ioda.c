@@ -122,16 +122,6 @@ static int __init iommu_setup(char *str)
 }
 early_param("iommu", iommu_setup);
 
-/*
- * stdcix is only supposed to be used in hypervisor real mode as per
- * the architecture spec
- */
-static inline void __raw_rm_writeq(u64 val, volatile void __iomem *paddr)
-{
-	__asm__ __volatile__("stdcix %0,0,%1"
-		: : "r" (val), "r" (paddr) : "memory");
-}
-
 static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
 {
 	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe)) {
