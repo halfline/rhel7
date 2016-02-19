@@ -13,10 +13,7 @@
  *
  */
 
-#undef DEBUG
-
 #include <linux/irq.h>
-#include <linux/bootmem.h>
 #include <linux/msi.h>
 #include <asm/mpic.h>
 #include <asm/prom.h>
@@ -24,7 +21,7 @@
 #include <asm/ppc-pci.h>
 #include <asm/msi_bitmap.h>
 
-#include "mpic.h"
+#include <sysdev/mpic.h>
 
 /* Allocate 16 interrupts per device, to give an alignment of 16,
  * since that's the size of the grouping w.r.t. affinity. If someone
@@ -42,7 +39,7 @@ static struct mpic *msi_mpic;
 static void mpic_pasemi_msi_mask_irq(struct irq_data *data)
 {
 	pr_debug("mpic_pasemi_msi_mask_irq %d\n", data->irq);
-	mask_msi_irq(data);
+	pci_msi_mask_irq(data);
 	mpic_mask_irq(data);
 }
 
@@ -50,7 +47,7 @@ static void mpic_pasemi_msi_unmask_irq(struct irq_data *data)
 {
 	pr_debug("mpic_pasemi_msi_unmask_irq %d\n", data->irq);
 	mpic_unmask_irq(data);
-	unmask_msi_irq(data);
+	pci_msi_unmask_irq(data);
 }
 
 static struct irq_chip mpic_pasemi_msi_chip = {
@@ -136,7 +133,7 @@ static int pasemi_msi_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
 		 * register to generate MSI [512...1023]
 		 */
 		msg.data = hwirq-0x200;
-		write_msi_msg(virq, &msg);
+		pci_write_msi_msg(virq, &msg);
 	}
 
 	return 0;
