@@ -38,6 +38,8 @@ struct pci_controller_ops {
 #endif
 
 	int             (*dma_set_mask)(struct pci_dev *dev, u64 dma_mask);
+
+	void		(*shutdown)(struct pci_controller *);
 };
 
 /*
