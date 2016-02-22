@@ -1543,9 +1543,10 @@ restart:
 		spin_unlock(&btp->bt_lru_lock);
 		if (bp->b_flags & XBF_WRITE_FAIL) {
 			xfs_alert(btp->bt_mount,
-"Corruption Alert: Buffer at block 0x%llx had permanent write failures!\n"
-"Please run xfs_repair to determine the extent of the problem.",
+"Corruption Alert: Buffer at block 0x%llx had permanent write failures!",
 				(long long)bp->b_bn);
+			xfs_alert(btp->bt_mount,
+"Please run xfs_repair to determine the extent of the problem.");
 		}
 		xfs_buf_rele(bp);
 		spin_lock(&btp->bt_lru_lock);
