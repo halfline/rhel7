@@ -1465,7 +1465,7 @@ xfs_collapse_file_space(
 				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
 				XFS_QMOPT_RES_REGBLKS);
 		if (error)
-			goto out;
+			goto out_trans_cancel;
 
 		xfs_trans_ijoin(tp, ip, 0);
 
@@ -1480,11 +1480,11 @@ xfs_collapse_file_space(
 				&done, &next_fsb, &first_block, &free_list,
 				XFS_BMAP_MAX_SHIFT_EXTENTS);
 		if (error)
-			goto out;
+			goto out_bmap_cancel;
 
 		error = xfs_bmap_finish(&tp, &free_list, &committed);
 		if (error)
-			goto out;
+			goto out_bmap_cancel;
 
 		error = xfs_trans_commit(tp);
 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
@@ -1492,7 +1492,9 @@ xfs_collapse_file_space(
 
 	return error;
 
-out:
+out_bmap_cancel:
+	xfs_bmap_cancel(&free_list);
+out_trans_cancel:
 	xfs_trans_cancel(tp);
 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 	return error;
