@@ -872,6 +872,9 @@ void perf_evsel__config(struct perf_evsel *evsel, struct record_opts *opts)
 		attr->enable_on_exec = 0;
 	}
 
+	if (evsel->precise_max)
+		perf_event_attr__set_max_precise_ip(attr);
+
 	/*
 	 * Apply event specific term settings,
 	 * it overloads any global configuration.
