@@ -1092,7 +1092,6 @@ xfs_create(
 	xfs_bmap_free_t		free_list;
 	xfs_fsblock_t		first_block;
 	bool                    unlock_dp_on_error = false;
-	uint			cancel_flags;
 	int			committed;
 	prid_t			prid;
 	struct xfs_dquot	*udqp = NULL;
@@ -1130,8 +1129,6 @@ xfs_create(
 		tp = xfs_trans_alloc(mp, XFS_TRANS_CREATE);
 	}
 
-	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
-
 	/*
 	 * Initially assume that the file does not exist and
 	 * reserve the resources for that case.  If that is not
@@ -1149,10 +1146,9 @@ xfs_create(
 		resblks = 0;
 		error = xfs_trans_reserve(tp, tres, 0, 0);
 	}
-	if (error) {
-		cancel_flags = 0;
+	if (error)
 		goto out_trans_cancel;
-	}
+
 
 	xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
 	unlock_dp_on_error = true;
@@ -1183,7 +1179,7 @@ xfs_create(
 	if (error) {
 		if (error == -ENOSPC)
 			goto out_trans_cancel;
-		goto out_trans_abort;
+		goto out_trans_cancel;
 	}
 
 	/*
@@ -1201,7 +1197,7 @@ xfs_create(
 					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
 	if (error) {
 		ASSERT(error != -ENOSPC);
-		goto out_trans_abort;
+		goto out_trans_cancel;
 	}
 	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
@@ -1248,10 +1244,8 @@ xfs_create(
 
  out_bmap_cancel:
 	xfs_bmap_cancel(&free_list);
- out_trans_abort:
-	cancel_flags |= XFS_TRANS_ABORT;
  out_trans_cancel:
-	xfs_trans_cancel(tp, cancel_flags);
+	xfs_trans_cancel(tp);
  out_release_inode:
 	/*
 	 * Wait until after the current transaction is aborted to finish the
@@ -1283,7 +1277,6 @@ xfs_create_tmpfile(
 	struct xfs_inode	*ip = NULL;
 	struct xfs_trans	*tp = NULL;
 	int			error;
-	uint			cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
 	prid_t                  prid;
 	struct xfs_dquot	*udqp = NULL;
 	struct xfs_dquot	*gdqp = NULL;
@@ -1316,10 +1309,8 @@ xfs_create_tmpfile(
 		resblks = 0;
 		error = xfs_trans_reserve(tp, tres, 0, 0);
 	}
-	if (error) {
-		cancel_flags = 0;
+	if (error)
 		goto out_trans_cancel;
-	}
 
 	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
 						pdqp, resblks, 1, 0);
@@ -1331,7 +1322,7 @@ xfs_create_tmpfile(
 	if (error) {
 		if (error == -ENOSPC)
 			goto out_trans_cancel;
-		goto out_trans_abort;
+		goto out_trans_cancel;
 	}
 
 	if (mp->m_flags & XFS_MOUNT_WSYNC)
@@ -1347,7 +1338,7 @@ xfs_create_tmpfile(
 	ip->i_d.di_nlink--;
 	error = xfs_iunlink(tp, ip);
 	if (error)
-		goto out_trans_abort;
+		goto out_trans_cancel;
 
 	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
 	if (error)
@@ -1360,10 +1351,8 @@ xfs_create_tmpfile(
 	*ipp = ip;
 	return 0;
 
- out_trans_abort:
-	cancel_flags |= XFS_TRANS_ABORT;
  out_trans_cancel:
-	xfs_trans_cancel(tp, cancel_flags);
+	xfs_trans_cancel(tp);
  out_release_inode:
 	/*
 	 * Wait until after the current transaction is aborted to finish the
@@ -1393,7 +1382,6 @@ xfs_link(
 	int			error;
 	xfs_bmap_free_t         free_list;
 	xfs_fsblock_t           first_block;
-	int			cancel_flags;
 	int			committed;
 	int			resblks;
 
@@ -1413,17 +1401,14 @@ xfs_link(
 		goto std_return;
 
 	tp = xfs_trans_alloc(mp, XFS_TRANS_LINK);
-	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
 	resblks = XFS_LINK_SPACE_RES(mp, target_name->len);
 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_link, resblks, 0);
 	if (error == -ENOSPC) {
 		resblks = 0;
 		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_link, 0, 0);
 	}
-	if (error) {
-		cancel_flags = 0;
+	if (error)
 		goto error_return;
-	}
 
 	xfs_lock_two_inodes(sip, tdp, XFS_ILOCK_EXCL);
 
@@ -1452,19 +1437,19 @@ xfs_link(
 	if (sip->i_d.di_nlink == 0) {
 		error = xfs_iunlink_remove(tp, sip);
 		if (error)
-			goto abort_return;
+			goto error_return;
 	}
 
 	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
 					&first_block, &free_list, resblks);
 	if (error)
-		goto abort_return;
+		goto error_return;
 	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
 	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
 
 	error = xfs_bumplink(tp, sip);
 	if (error)
-		goto abort_return;
+		goto error_return;
 
 	/*
 	 * If this is a synchronous mount, make sure that the
@@ -1478,15 +1463,13 @@ xfs_link(
 	error = xfs_bmap_finish (&tp, &free_list, &committed);
 	if (error) {
 		xfs_bmap_cancel(&free_list);
-		goto abort_return;
+		goto error_return;
 	}
 
 	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
 
- abort_return:
-	cancel_flags |= XFS_TRANS_ABORT;
  error_return:
-	xfs_trans_cancel(tp, cancel_flags);
+	xfs_trans_cancel(tp);
  std_return:
 	return error;
 }
@@ -1699,7 +1682,7 @@ xfs_inactive_truncate(
 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
 	if (error) {
 		ASSERT(XFS_FORCED_SHUTDOWN(mp));
-		xfs_trans_cancel(tp, 0);
+		xfs_trans_cancel(tp);
 		return error;
 	}
 
@@ -1728,7 +1711,7 @@ xfs_inactive_truncate(
 	return 0;
 
 error_trans_cancel:
-	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+	xfs_trans_cancel(tp);
 error_unlock:
 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 	return error;
@@ -1778,7 +1761,7 @@ xfs_inactive_ifree(
 		} else {
 			ASSERT(XFS_FORCED_SHUTDOWN(mp));
 		}
-		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES);
+		xfs_trans_cancel(tp);
 		return error;
 	}
 
@@ -1798,7 +1781,7 @@ xfs_inactive_ifree(
 				__func__, error);
 			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
 		}
-		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+		xfs_trans_cancel(tp);
 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
 		return error;
 	}
@@ -2492,7 +2475,6 @@ xfs_remove(
 	int                     error = 0;
 	xfs_bmap_free_t         free_list;
 	xfs_fsblock_t           first_block;
-	int			cancel_flags;
 	int			committed;
 	uint			resblks;
 
@@ -2513,7 +2495,6 @@ xfs_remove(
 		tp = xfs_trans_alloc(mp, XFS_TRANS_RMDIR);
 	else
 		tp = xfs_trans_alloc(mp, XFS_TRANS_REMOVE);
-	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
 
 	/*
 	 * We try to get the real space reservation first,
@@ -2532,7 +2513,6 @@ xfs_remove(
 	}
 	if (error) {
 		ASSERT(error != -ENOSPC);
-		cancel_flags = 0;
 		goto out_trans_cancel;
 	}
 
@@ -2544,7 +2524,6 @@ xfs_remove(
 	/*
 	 * If we're removing a directory perform some additional validation.
 	 */
-	cancel_flags |= XFS_TRANS_ABORT;
 	if (is_dir) {
 		ASSERT(ip->i_d.di_nlink >= 2);
 		if (ip->i_d.di_nlink != 2) {
@@ -2612,7 +2591,7 @@ xfs_remove(
  out_bmap_cancel:
 	xfs_bmap_cancel(&free_list);
  out_trans_cancel:
-	xfs_trans_cancel(tp, cancel_flags);
+	xfs_trans_cancel(tp);
  std_return:
 	return error;
 }
@@ -2686,7 +2665,7 @@ xfs_finish_rename(
 	error = xfs_bmap_finish(&tp, free_list, &committed);
 	if (error) {
 		xfs_bmap_cancel(free_list);
-		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+		xfs_trans_cancel(tp);
 		return error;
 	}
 
@@ -2811,7 +2790,7 @@ xfs_cross_rename(
 
 out_trans_abort:
 	xfs_bmap_cancel(free_list);
-	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+	xfs_trans_cancel(tp);
 	return error;
 }
 
@@ -2871,7 +2850,6 @@ xfs_rename(
 	int			num_inodes = __XFS_SORT_INODES;
 	bool			new_parent = (src_dp != target_dp);
 	bool			src_is_directory = S_ISDIR(src_ip->i_d.di_mode);
-	int			cancel_flags = 0;
 	int			spaceres;
 	int			error;
 
@@ -2907,7 +2885,6 @@ xfs_rename(
 	}
 	if (error)
 		goto out_trans_cancel;
-	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
 
 	/*
 	 * Attach the dquots to the inodes
@@ -2978,10 +2955,8 @@ xfs_rename(
 		error = xfs_dir_createname(tp, target_dp, target_name,
 						src_ip->i_ino, &first_block,
 						&free_list, spaceres);
-		if (error == -ENOSPC)
-			goto out_bmap_cancel;
 		if (error)
-			goto out_trans_abort;
+			goto out_bmap_cancel;
 
 		xfs_trans_ichgtime(tp, target_dp,
 					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
@@ -2989,7 +2964,7 @@ xfs_rename(
 		if (new_parent && src_is_directory) {
 			error = xfs_bumplink(tp, target_dp);
 			if (error)
-				goto out_trans_abort;
+				goto out_bmap_cancel;
 		}
 	} else { /* target_ip != NULL */
 		/*
@@ -3021,7 +2996,7 @@ xfs_rename(
 					src_ip->i_ino,
 					&first_block, &free_list, spaceres);
 		if (error)
-			goto out_trans_abort;
+			goto out_bmap_cancel;
 
 		xfs_trans_ichgtime(tp, target_dp,
 					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
@@ -3032,7 +3007,7 @@ xfs_rename(
 		 */
 		error = xfs_droplink(tp, target_ip);
 		if (error)
-			goto out_trans_abort;
+			goto out_bmap_cancel;
 
 		if (src_is_directory) {
 			/*
@@ -3040,7 +3015,7 @@ xfs_rename(
 			 */
 			error = xfs_droplink(tp, target_ip);
 			if (error)
-				goto out_trans_abort;
+				goto out_bmap_cancel;
 		}
 	} /* target_ip != NULL */
 
@@ -3057,7 +3032,7 @@ xfs_rename(
 					&first_block, &free_list, spaceres);
 		ASSERT(error != -EEXIST);
 		if (error)
-			goto out_trans_abort;
+			goto out_bmap_cancel;
 	}
 
 	/*
@@ -3083,7 +3058,7 @@ xfs_rename(
 		 */
 		error = xfs_droplink(tp, src_dp);
 		if (error)
-			goto out_trans_abort;
+			goto out_bmap_cancel;
 	}
 
 	/*
@@ -3098,7 +3073,7 @@ xfs_rename(
 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
 					   &first_block, &free_list, spaceres);
 	if (error)
-		goto out_trans_abort;
+		goto out_bmap_cancel;
 
 	/*
 	 * For whiteouts, we need to bump the link count on the whiteout inode.
@@ -3112,10 +3087,10 @@ xfs_rename(
 		ASSERT(VFS_I(wip)->i_nlink == 0 && wip->i_d.di_nlink == 0);
 		error = xfs_bumplink(tp, wip);
 		if (error)
-			goto out_trans_abort;
+			goto out_bmap_cancel;
 		error = xfs_iunlink_remove(tp, wip);
 		if (error)
-			goto out_trans_abort;
+			goto out_bmap_cancel;
 		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
 
 		/*
@@ -3136,12 +3111,10 @@ xfs_rename(
 		IRELE(wip);
 	return error;
 
-out_trans_abort:
-	cancel_flags |= XFS_TRANS_ABORT;
 out_bmap_cancel:
 	xfs_bmap_cancel(&free_list);
 out_trans_cancel:
-	xfs_trans_cancel(tp, cancel_flags);
+	xfs_trans_cancel(tp);
 	if (wip)
 		IRELE(wip);
 	return error;

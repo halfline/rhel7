@@ -362,7 +362,7 @@ xfs_set_dmattrs(
 	tp = xfs_trans_alloc(mp, XFS_TRANS_SET_DMATTRS);
 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
 	if (error) {
-		xfs_trans_cancel(tp, 0);
+		xfs_trans_cancel(tp);
 		return error;
 	}
 	xfs_ilock(ip, XFS_ILOCK_EXCL);
@@ -1102,7 +1102,7 @@ xfs_ioctl_setattr_get_trans(
 	return tp;
 
 out_cancel:
-	xfs_trans_cancel(tp, 0);
+	xfs_trans_cancel(tp);
 	return ERR_PTR(error);
 }
 
@@ -1291,7 +1291,7 @@ xfs_ioctl_setattr(
 	return code;
 
 error_trans_cancel:
-	xfs_trans_cancel(tp, 0);
+	xfs_trans_cancel(tp);
 error_free_dquots:
 	xfs_qm_dqrele(udqp);
 	xfs_qm_dqrele(pdqp);
@@ -1364,7 +1364,7 @@ xfs_ioc_setxflags(
 
 	error = xfs_ioctl_setattr_xflags(tp, ip, &fa);
 	if (error) {
-		xfs_trans_cancel(tp, 0);
+		xfs_trans_cancel(tp);
 		goto out_drop_write;
 	}
 
