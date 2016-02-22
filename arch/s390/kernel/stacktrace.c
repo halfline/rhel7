@@ -87,6 +87,10 @@ void save_stack_trace_tsk(struct task_struct *tsk, struct stack_trace *trace)
 	unsigned long sp, low, high;
 
 	sp = tsk->thread.ksp & PSW_ADDR_INSN;
+	if (tsk == current) {
+		/* Get current stack pointer. */
+		asm volatile("la %0,0(15)" : "=a" (sp));
+	}
 	low = (unsigned long) task_stack_page(tsk);
 	high = (unsigned long) task_pt_regs(tsk);
 	save_context_stack(trace, sp, low, high, 0);
