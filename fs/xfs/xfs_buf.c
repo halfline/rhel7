@@ -1530,6 +1530,16 @@ xfs_wait_buftarg(
 {
 	struct xfs_buf		*bp;
 
+	/*
+	 * We need to flush the buffer workqueue to ensure that all IO
+	 * completion processing is 100% done. Just waiting on buffer locks is
+	 * not sufficient for async IO as the reference count held over IO is
+	 * not released until after the buffer lock is dropped. Hence we need to
+	 * ensure here that all reference counts have been dropped before we
+	 * start walking the LRU list.
+	 */
+	drain_workqueue(btp->bt_mount->m_buf_workqueue);
+
 restart:
 	spin_lock(&btp->bt_lru_lock);
 	while (!list_empty(&btp->bt_lru)) {
