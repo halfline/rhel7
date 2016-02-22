@@ -129,7 +129,6 @@ xfs_iomap_write_direct(
 	xfs_trans_t	*tp;
 	xfs_bmap_free_t free_list;
 	uint		qblocks, resblks, resrtextents;
-	int		committed;
 	int		error;
 	int		lockmode;
 
@@ -229,7 +228,7 @@ xfs_iomap_write_direct(
 	/*
 	 * Complete the transaction
 	 */
-	error = xfs_bmap_finish(&tp, &free_list, &committed);
+	error = xfs_bmap_finish(&tp, &free_list, NULL);
 	if (error)
 		goto out_bmap_cancel;
 	error = xfs_trans_commit(tp);
@@ -674,7 +673,7 @@ xfs_iomap_write_allocate(
 	xfs_bmap_free_t	free_list;
 	xfs_filblks_t	count_fsb;
 	xfs_trans_t	*tp;
-	int		nimaps, committed;
+	int		nimaps;
 	int		error = 0;
 	int		nres;
 
@@ -775,7 +774,7 @@ xfs_iomap_write_allocate(
 			if (error)
 				goto trans_cancel;
 
-			error = xfs_bmap_finish(&tp, &free_list, &committed);
+			error = xfs_bmap_finish(&tp, &free_list, NULL);
 			if (error)
 				goto trans_cancel;
 
@@ -833,7 +832,6 @@ xfs_iomap_write_unwritten(
 	xfs_bmap_free_t free_list;
 	xfs_fsize_t	i_size;
 	uint		resblks;
-	int		committed;
 	int		error;
 
 	trace_xfs_unwritten_convert(ip, offset, count);
@@ -905,7 +903,7 @@ xfs_iomap_write_unwritten(
 			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 		}
 
-		error = xfs_bmap_finish(&tp, &free_list, &committed);
+		error = xfs_bmap_finish(&tp, &free_list, NULL);
 		if (error)
 			goto error_on_bmapi_transaction;
 

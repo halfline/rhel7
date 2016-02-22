@@ -1143,7 +1143,6 @@ xfs_create(
 	xfs_bmap_free_t		free_list;
 	xfs_fsblock_t		first_block;
 	bool                    unlock_dp_on_error = false;
-	int			committed;
 	prid_t			prid;
 	struct xfs_dquot	*udqp = NULL;
 	struct xfs_dquot	*gdqp = NULL;
@@ -1227,7 +1226,7 @@ xfs_create(
 	 * pointing to itself.
 	 */
 	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev,
-			       prid, resblks > 0, &ip, &committed);
+			       prid, resblks > 0, &ip, NULL);
 	if (error)
 		goto out_trans_cancel;
 
@@ -1276,7 +1275,7 @@ xfs_create(
 	 */
 	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp, pdqp);
 
-	error = xfs_bmap_finish(&tp, &free_list, &committed);
+	error = xfs_bmap_finish(&tp, &free_list, NULL);
 	if (error)
 		goto out_bmap_cancel;
 
@@ -1428,7 +1427,6 @@ xfs_link(
 	int			error;
 	xfs_bmap_free_t         free_list;
 	xfs_fsblock_t           first_block;
-	int			committed;
 	int			resblks;
 
 	trace_xfs_link(tdp, target_name);
@@ -1503,11 +1501,10 @@ xfs_link(
 	 * link transaction goes to disk before returning to
 	 * the user.
 	 */
-	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC)) {
+	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
 		xfs_trans_set_sync(tp);
-	}
 
-	error = xfs_bmap_finish (&tp, &free_list, &committed);
+	error = xfs_bmap_finish(&tp, &free_list, NULL);
 	if (error) {
 		xfs_bmap_cancel(&free_list);
 		goto error_return;
@@ -1556,7 +1553,6 @@ xfs_itruncate_extents(
 	xfs_fileoff_t		first_unmap_block;
 	xfs_fileoff_t		last_block;
 	xfs_filblks_t		unmap_len;
-	int			committed;
 	int			error = 0;
 	int			done = 0;
 
@@ -1602,9 +1598,7 @@ xfs_itruncate_extents(
 		 * Duplicate the transaction that has the permanent
 		 * reservation and commit the old transaction.
 		 */
-		error = xfs_bmap_finish(&tp, &free_list, &committed);
-		if (committed)
-			xfs_trans_ijoin(tp, ip, 0);
+		error = xfs_bmap_finish(&tp, &free_list, ip);
 		if (error)
 			goto out_bmap_cancel;
 
@@ -1775,7 +1769,6 @@ xfs_inactive_ifree(
 {
 	xfs_bmap_free_t		free_list;
 	xfs_fsblock_t		first_block;
-	int			committed;
 	struct xfs_mount	*mp = ip->i_mount;
 	struct xfs_trans	*tp;
 	int			error;
@@ -1842,7 +1835,7 @@ xfs_inactive_ifree(
 	 * Just ignore errors at this point.  There is nothing we can do except
 	 * to try to keep going. Make sure it's not a silent error.
 	 */
-	error = xfs_bmap_finish(&tp,  &free_list, &committed);
+	error = xfs_bmap_finish(&tp, &free_list, NULL);
 	if (error) {
 		xfs_notice(mp, "%s: xfs_bmap_finish returned error %d",
 			__func__, error);
@@ -2524,7 +2517,6 @@ xfs_remove(
 	int                     error = 0;
 	xfs_bmap_free_t         free_list;
 	xfs_fsblock_t           first_block;
-	int			committed;
 	uint			resblks;
 
 	trace_xfs_remove(dp, name);
@@ -2625,7 +2617,7 @@ xfs_remove(
 	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
 		xfs_trans_set_sync(tp);
 
-	error = xfs_bmap_finish(&tp, &free_list, &committed);
+	error = xfs_bmap_finish(&tp, &free_list, NULL);
 	if (error)
 		goto out_bmap_cancel;
 
@@ -2702,7 +2694,6 @@ xfs_finish_rename(
 	struct xfs_trans	*tp,
 	struct xfs_bmap_free	*free_list)
 {
-	int			committed = 0;
 	int			error;
 
 	/*
@@ -2712,7 +2703,7 @@ xfs_finish_rename(
 	if (tp->t_mountp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
 		xfs_trans_set_sync(tp);
 
-	error = xfs_bmap_finish(&tp, free_list, &committed);
+	error = xfs_bmap_finish(&tp, free_list, NULL);
 	if (error) {
 		xfs_bmap_cancel(free_list);
 		xfs_trans_cancel(tp);
