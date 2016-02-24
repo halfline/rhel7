@@ -409,7 +409,7 @@ static int gfs2_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
 	if (ret)
 		goto out;
 
-	ret = gfs2_rs_alloc(ip);
+	ret = gfs2_rsqa_alloc(ip);
 	if (ret)
 		goto out_write_access;
 
@@ -631,7 +631,7 @@ static int gfs2_release(struct inode *inode, struct file *file)
 	if (!(file->f_mode & FMODE_WRITE))
 		return 0;
 
-	gfs2_rs_delete(ip, &inode->i_writecount);
+	gfs2_rsqa_delete(ip, &inode->i_writecount);
 	return 0;
 }
 
@@ -713,7 +713,7 @@ static ssize_t gfs2_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
 	struct gfs2_inode *ip = GFS2_I(file_inode(file));
 	int ret;
 
-	ret = gfs2_rs_alloc(ip);
+	ret = gfs2_rsqa_alloc(ip);
 	if (ret)
 		return ret;
 
@@ -949,7 +949,7 @@ static long gfs2_fallocate(struct file *file, int mode, loff_t offset, loff_t le
 	if (ret)
 		goto out_unlock;
 
-	ret = gfs2_rs_alloc(ip);
+	ret = gfs2_rsqa_alloc(ip);
 	if (ret)
 		goto out_putw;
 
@@ -973,7 +973,7 @@ static ssize_t gfs2_file_splice_write(struct pipe_inode_info *pipe,
 	int error;
 	struct gfs2_inode *ip = GFS2_I(out->f_mapping->host);
 
-	error = gfs2_rs_alloc(ip);
+	error = gfs2_rsqa_alloc(ip);
 	if (error)
 		return (ssize_t)error;
 

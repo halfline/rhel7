@@ -566,7 +566,7 @@ static int gfs2_create_inode(struct inode *dir, struct dentry *dentry,
 	if (!name->len || name->len > GFS2_FNAMESIZE)
 		return -ENAMETOOLONG;
 
-	error = gfs2_rs_alloc(dip);
+	error = gfs2_rsqa_alloc(dip);
 	if (error)
 		return error;
 
@@ -618,7 +618,7 @@ static int gfs2_create_inode(struct inode *dir, struct dentry *dentry,
 		goto fail_gunlock;
 
 	ip = GFS2_I(inode);
-	error = gfs2_rs_alloc(ip);
+	error = gfs2_rsqa_alloc(ip);
 	if (error)
 		goto fail_free_inode;
 
@@ -722,7 +722,7 @@ fail_gunlock2:
 fail_free_inode:
 	if (ip->i_gl)
 		gfs2_glock_put(ip->i_gl);
-	gfs2_rs_delete(ip, NULL);
+	gfs2_rsqa_delete(ip, NULL);
 	free_vfs_inode = 1;
 fail_gunlock:
 	gfs2_glock_dq_uninit(ghs);
@@ -837,7 +837,7 @@ static int gfs2_link(struct dentry *old_dentry, struct inode *dir,
 	if (S_ISDIR(inode->i_mode))
 		return -EPERM;
 
-	error = gfs2_rs_alloc(dip);
+	error = gfs2_rsqa_alloc(dip);
 	if (error)
 		return error;
 
@@ -1320,7 +1320,7 @@ static int gfs2_rename(struct inode *odir, struct dentry *odentry,
 	if (error)
 		return error;
 
-	error = gfs2_rs_alloc(ndip);
+	error = gfs2_rsqa_alloc(ndip);
 	if (error)
 		return error;
 
@@ -1808,7 +1808,7 @@ static int setattr_chown(struct inode *inode, struct iattr *attr)
 	if (error)
 		return error;
 
-	error = gfs2_rs_alloc(ip);
+	error = gfs2_rsqa_alloc(ip);
 	if (error)
 		goto out;
 
@@ -1870,7 +1870,7 @@ static int gfs2_setattr(struct dentry *dentry, struct iattr *attr)
 	struct gfs2_holder i_gh;
 	int error;
 
-	error = gfs2_rs_alloc(ip);
+	error = gfs2_rsqa_alloc(ip);
 	if (error)
 		return error;
 
@@ -1951,7 +1951,7 @@ static int gfs2_setxattr(struct dentry *dentry, const char *name,
 	gfs2_holder_init(ip->i_gl, LM_ST_EXCLUSIVE, 0, &gh);
 	ret = gfs2_glock_nq(&gh);
 	if (ret == 0) {
-		ret = gfs2_rs_alloc(ip);
+		ret = gfs2_rsqa_alloc(ip);
 		if (ret == 0)
 			ret = generic_setxattr(dentry, name, data, size, flags);
 		gfs2_glock_dq(&gh);
@@ -1992,7 +1992,7 @@ static int gfs2_removexattr(struct dentry *dentry, const char *name)
 	gfs2_holder_init(ip->i_gl, LM_ST_EXCLUSIVE, 0, &gh);
 	ret = gfs2_glock_nq(&gh);
 	if (ret == 0) {
-		ret = gfs2_rs_alloc(ip);
+		ret = gfs2_rsqa_alloc(ip);
 		if (ret == 0)
 			ret = generic_removexattr(dentry, name);
 		gfs2_glock_dq(&gh);
