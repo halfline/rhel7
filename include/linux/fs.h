@@ -1954,6 +1954,7 @@ struct file_system_type {
 #define FS_HAS_RM_XQUOTA	256	/* KABI: fs has the rm_xquota quota op */
 #define FS_HAS_INVALIDATE_RANGE	512	/* FS has new ->invalidatepage with length arg */
 #define FS_HAS_DIO_IODONE2	1024	/* KABI: fs supports new iodone */
+#define FS_HAS_NEXTDQBLK	2048	/* KABI: fs has the ->get_nextdqblk op */
 #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
 	struct dentry *(*mount) (struct file_system_type *, int,
 		       const char *, void *);
@@ -1973,6 +1974,7 @@ struct file_system_type {
 };
 
 #define sb_has_rm_xquota(sb)	((sb)->s_type->fs_flags & FS_HAS_RM_XQUOTA)
+#define sb_has_nextdqblk(sb)	((sb)->s_type->fs_flags & FS_HAS_NEXTDQBLK)
 
 /*
  * the fs address space operations contain a new invalidatepage_rang () op
