@@ -790,9 +790,10 @@ out:
 int
 xfs_qm_scall_getquota(
 	struct xfs_mount	*mp,
-	xfs_dqid_t		id,
+	xfs_dqid_t		*id,
 	uint			type,
-	struct fs_disk_quota	*dst)
+	struct fs_disk_quota	*dst,
+	uint			dqget_flags)
 {
 	struct xfs_dquot	*dqp;
 	int			error;
@@ -802,7 +803,7 @@ xfs_qm_scall_getquota(
 	 * we aren't passing the XFS_QMOPT_DOALLOC flag. If it doesn't
 	 * exist, we'll get ENOENT back.
 	 */
-	error = xfs_qm_dqget(mp, NULL, id, type, 0, &dqp);
+	error = xfs_qm_dqget(mp, NULL, *id, type, dqget_flags, &dqp);
 	if (error)
 		return error;
 
@@ -814,6 +815,9 @@ xfs_qm_scall_getquota(
 		error = -ENOENT;
 		goto out_put;
 	}
+
+	/* Fill in the ID we actually read from disk */
+	*id = be32_to_cpu(dqp->q_core.d_id);
 
 	memset(dst, 0, sizeof(*dst));
 	dst->d_version = FS_DQUOT_VERSION;
@@ -859,7 +863,7 @@ xfs_qm_scall_getquota(
 	if (((XFS_IS_UQUOTA_ENFORCED(mp) && dst->d_flags == FS_USER_QUOTA) ||
 	     (XFS_IS_GQUOTA_ENFORCED(mp) && dst->d_flags == FS_GROUP_QUOTA) ||
 	     (XFS_IS_PQUOTA_ENFORCED(mp) && dst->d_flags == FS_PROJ_QUOTA)) &&
-	    dst->d_id != 0) {
+	    *id != 0) {
 		if ((dst->d_bcount > dst->d_blk_softlimit) &&
 		    (dst->d_blk_softlimit > 0)) {
 			ASSERT(dst->d_btimer != 0);
