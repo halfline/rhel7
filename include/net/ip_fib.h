@@ -228,18 +228,24 @@ static inline int fib_lookup(struct net *net, const struct flowi4 *flp,
 			     struct fib_result *res)
 {
 	struct fib_table *tb;
-	int err;
+	int err = -ENETUNREACH;
 
 	rcu_read_lock();
 
-	for (err = 0; !err; err = -ENETUNREACH) {
-		tb = fib_get_table(net, RT_TABLE_LOCAL);
-		if (tb && !fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF))
-			break;
-		tb = fib_get_table(net, RT_TABLE_MAIN);
-		if (tb && !fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF))
-			break;
-	}
+	tb = fib_get_table(net, RT_TABLE_LOCAL);
+	if (tb)
+		err = fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF)
+
+	if (!err)
+		goto out;
+
+	tb = fib_get_table(net, RT_TABLE_MAIN);
+	if (tb)
+		err = fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF);
+
+out:
+	if (err == -EAGAIN)
+		err = -ENETUNREACH;
 
 	rcu_read_unlock();
 
@@ -259,7 +265,7 @@ static inline int fib_lookup(struct net *net, struct flowi4 *flp,
 			     struct fib_result *res)
 {
 	struct fib_table *tb;
-	int err;
+	int err = -ENETUNREACH;
 
 	if (net->ipv4.fib_has_custom_rules)
 		return __fib_lookup(net, flp, res);
@@ -268,19 +274,27 @@ static inline int fib_lookup(struct net *net, struct flowi4 *flp,
 
 	res->tclassid = 0;
 
-	for (err = 0; !err; err = -ENETUNREACH) {
-		tb = rcu_dereference_rtnl(net->ipv4.fib_local);
-		if (tb && !fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF))
-			break;
+	tb = rcu_dereference_rtnl(net->ipv4.fib_local);
+	if (tb)
+		err = fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF);
 
-		tb = rcu_dereference_rtnl(net->ipv4.fib_main);
-		if (tb && !fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF))
-			break;
+	if (!err)
+		goto out;
 
-		tb = rcu_dereference_rtnl(net->ipv4.fib_default);
-		if (tb && !fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF))
-			break;
-	}
+	tb = rcu_dereference_rtnl(net->ipv4.fib_main);
+	if (tb)
+		err = fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF);
+
+	if (!err)
+		goto out;
+
+	tb = rcu_dereference_rtnl(net->ipv4.fib_default);
+	if (tb)
+		err = fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF);
+
+out:
+	if (err == -EAGAIN)
+		err = -ENETUNREACH;
 
 	rcu_read_unlock();
 
