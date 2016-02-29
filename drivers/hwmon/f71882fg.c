@@ -2580,9 +2580,11 @@ static int __init f71882fg_find(int sioaddr, struct f71882fg_sio_data *sio_data)
 	case SIO_F71862_ID:
 		sio_data->type = f71862fg;
 		break;
+#if 0	/* RHEL: disable; no hardware to test yet */
 	case SIO_F71868_ID:
 		sio_data->type = f71868a;
 		break;
+#endif
 	case SIO_F71869_ID:
 		sio_data->type = f71869;
 		break;
@@ -2610,9 +2612,11 @@ static int __init f71882fg_find(int sioaddr, struct f71882fg_sio_data *sio_data)
 	case SIO_F81865_ID:
 		sio_data->type = f81865f;
 		break;
+#if 0	/* RHEL: disable; no hardware to test yet */
 	case SIO_F81866_ID:
 		sio_data->type = f81866a;
 		break;
+#endif
 	default:
 		pr_info("Unsupported Fintek device: %04x\n",
 			(unsigned int)devid);
