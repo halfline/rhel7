@@ -141,6 +141,7 @@ struct cpu_defaults {
 };
 
 static inline int32_t get_target_pstate_use_performance(struct cpudata *cpu);
+static inline int32_t get_target_pstate_use_cpu_load(struct cpudata *cpu);
 
 static struct pstate_adjust_policy pid_params;
 static struct pstate_funcs pstate_funcs;
@@ -746,7 +747,7 @@ static struct cpu_defaults atom_params = {
 		.set = atom_set_pstate,
 		.get_scaling = atom_get_scaling,
 		.get_vid = atom_get_vid,
-		.get_target_pstate = get_target_pstate_use_performance,
+		.get_target_pstate = get_target_pstate_use_cpu_load,
 	},
 };
 
@@ -851,8 +852,8 @@ static inline void intel_pstate_sample(struct cpudata *cpu)
 	local_irq_save(flags);
 	rdmsrl(MSR_IA32_APERF, aperf);
 	rdmsrl(MSR_IA32_MPERF, mperf);
-	tsc = native_read_tsc();
-	if (cpu->prev_mperf == mperf) {
+	tsc = rdtsc();
+	if ((cpu->prev_mperf == mperf) || (cpu->prev_tsc == tsc)) {
 		local_irq_restore(flags);
 		return;
 	}
@@ -890,6 +891,25 @@ static inline void intel_pstate_set_sample_time(struct cpudata *cpu)
 	delay = msecs_to_jiffies(pid_params.sample_rate_ms);
 	mod_timer_pinned(&cpu->timer, jiffies + delay);
 }
+
+static inline int32_t get_target_pstate_use_cpu_load(struct cpudata *cpu)
+{
+	struct sample *sample = &cpu->sample;
+	int32_t cpu_load;
+
+	/*
+	 * The load can be estimated as the ratio of the mperf counter
+	 * running at a constant frequency during active periods
+	 * (C0) and the time stamp counter running at the same frequency
+	 * also during C-states.
+	 */
+	cpu_load = div64_u64(int_tofp(100) * sample->mperf, sample->tsc);
+
+	cpu->sample.busy_scaled = cpu_load;
+
+	return cpu->pstate.current_pstate - pid_calc(&cpu->pid, cpu_load);
+}
+
 
 static inline int32_t get_target_pstate_use_performance(struct cpudata *cpu)
 {
