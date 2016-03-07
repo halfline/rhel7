@@ -179,7 +179,7 @@ F:	drivers/net/bonding/
 F:	include/linux/if_bonding.h
 
 CIFS FILESYSTEM
-M:	Jeff Layton <jlayton@redhat.com>
+M:	Red Hat NFS Team <nfs-team@redhat.com>
 S:	Maintained
 F:	fs/cifs/
 
