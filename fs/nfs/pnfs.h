@@ -349,6 +349,11 @@ void pnfs_layout_mark_request_commit(struct nfs_page *req,
 				     struct nfs_commit_info *cinfo,
 				     u32 ds_commit_idx);
 
+static inline bool nfs_have_layout(struct inode *inode)
+{
+	return NFS_I(inode)->layout != NULL;
+}
+
 static inline struct nfs4_deviceid_node *
 nfs4_get_deviceid(struct nfs4_deviceid_node *d)
 {
@@ -517,6 +522,11 @@ static inline void nfs4_print_deviceid(const struct nfs4_deviceid *dev_id)
 }
 #endif /* NFS_DEBUG */
 #else  /* CONFIG_NFS_V4_1 */
+
+static inline bool nfs_have_layout(struct inode *inode)
+{
+	return false;
+}
 
 static inline void pnfs_destroy_all_layouts(struct nfs_client *clp)
 {
