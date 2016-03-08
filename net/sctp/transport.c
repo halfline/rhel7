@@ -139,8 +139,6 @@ fail:
  */
 void sctp_transport_free(struct sctp_transport *transport)
 {
-	transport->dead = 1;
-
 	/* Try to delete the heartbeat timer.  */
 	if (del_timer(&transport->hb_timer))
 		sctp_transport_put(transport);
@@ -176,7 +174,7 @@ static void sctp_transport_destroy_rcu(struct rcu_head *head)
  */
 static void sctp_transport_destroy(struct sctp_transport *transport)
 {
-	SCTP_ASSERT(transport->dead, "Transport is not dead", return);
+	SCTP_ASSERT(!atomic_read(&transport->refcnt), "Transport is not dead", return);
 
 	call_rcu(&transport->rcu, sctp_transport_destroy_rcu);
 
