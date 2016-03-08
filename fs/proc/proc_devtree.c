@@ -107,7 +107,7 @@ void proc_device_tree_update_prop(struct proc_dir_entry *pde,
 		return;
 	}
 
-	for (ent = pde_subdir_first(pde); ent != NULL; ent = pde_subdir_next(pde))
+	for (ent = pde_subdir_first(pde); ent != NULL; ent = pde_subdir_next(ent))
 		if (ent->data == oldprop)
 			break;
 	if (ent == NULL) {
