@@ -1986,8 +1986,6 @@ static int xs_local_setup_socket(struct sock_xprt *transport)
 	struct socket *sock;
 	int status = -EIO;
 
-	current->flags |= PF_FSTRANS;
-
 	status = __sock_create(xprt->xprt_net, AF_LOCAL,
 					SOCK_STREAM, 0, &sock, 1);
 	if (status < 0) {
@@ -2026,7 +2024,6 @@ static int xs_local_setup_socket(struct sock_xprt *transport)
 out:
 	xprt_clear_connecting(xprt);
 	xprt_wake_pending_tasks(xprt, status);
-	current->flags &= ~PF_FSTRANS;
 	return status;
 }
 
@@ -2129,8 +2126,6 @@ static void xs_udp_setup_socket(struct work_struct *work)
 	struct socket *sock = transport->sock;
 	int status = -EIO;
 
-	current->flags |= PF_FSTRANS;
-
 	sock = xs_create_sock(xprt, transport,
 			xs_addr(xprt)->sa_family, SOCK_DGRAM,
 			IPPROTO_UDP, false);
@@ -2150,7 +2145,6 @@ out:
 	xprt_unlock_connect(xprt, transport);
 	xprt_clear_connecting(xprt);
 	xprt_wake_pending_tasks(xprt, status);
-	current->flags &= ~PF_FSTRANS;
 }
 
 static int xs_tcp_finish_connecting(struct rpc_xprt *xprt, struct socket *sock)
@@ -2232,8 +2226,6 @@ static void xs_tcp_setup_socket(struct work_struct *work)
 	struct rpc_xprt *xprt = &transport->xprt;
 	int status = -EIO;
 
-	current->flags |= PF_FSTRANS;
-
 	if (!sock) {
 		sock = xs_create_sock(xprt, transport,
 				xs_addr(xprt)->sa_family, SOCK_STREAM,
@@ -2270,7 +2262,6 @@ static void xs_tcp_setup_socket(struct work_struct *work)
 	case -EALREADY:
 		xprt_unlock_connect(xprt, transport);
 		xprt_clear_connecting(xprt);
-		current->flags &= ~PF_FSTRANS;
 		return;
 	case -EINVAL:
 		/* Happens, for instance, if the user specified a link
@@ -2290,7 +2281,6 @@ out:
 	xprt_unlock_connect(xprt, transport);
 	xprt_clear_connecting(xprt);
 	xprt_wake_pending_tasks(xprt, status);
-	current->flags &= ~PF_FSTRANS;
 }
 
 /**
