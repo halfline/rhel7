@@ -666,37 +666,37 @@ static void __vtime_account_system(struct task_struct *tsk)
 
 void vtime_account_system(struct task_struct *tsk)
 {
-	write_seqlock(&tsk->vtime_seqlock);
+	write_seqcount_begin(&tsk->vtime_seqlock.seqcount);
 	__vtime_account_system(tsk);
-	write_sequnlock(&tsk->vtime_seqlock);
+	write_seqcount_end(&tsk->vtime_seqlock.seqcount);
 }
 
 void vtime_gen_account_irq_exit(struct task_struct *tsk)
 {
-	write_seqlock(&tsk->vtime_seqlock);
+	write_seqcount_begin(&tsk->vtime_seqlock.seqcount);
 	__vtime_account_system(tsk);
 	if (context_tracking_in_user())
 		tsk->vtime_snap_whence = VTIME_USER;
-	write_sequnlock(&tsk->vtime_seqlock);
+	write_seqcount_end(&tsk->vtime_seqlock.seqcount);
 }
 
 void vtime_account_user(struct task_struct *tsk)
 {
 	cputime_t delta_cpu;
 
-	write_seqlock(&tsk->vtime_seqlock);
+	write_seqcount_begin(&tsk->vtime_seqlock.seqcount);
 	delta_cpu = get_vtime_delta(tsk);
 	tsk->vtime_snap_whence = VTIME_SYS;
 	account_user_time(tsk, delta_cpu, cputime_to_scaled(delta_cpu));
-	write_sequnlock(&tsk->vtime_seqlock);
+	write_seqcount_end(&tsk->vtime_seqlock.seqcount);
 }
 
 void vtime_user_enter(struct task_struct *tsk)
 {
-	write_seqlock(&tsk->vtime_seqlock);
+	write_seqcount_begin(&tsk->vtime_seqlock.seqcount);
 	__vtime_account_system(tsk);
 	tsk->vtime_snap_whence = VTIME_USER;
-	write_sequnlock(&tsk->vtime_seqlock);
+	write_seqcount_end(&tsk->vtime_seqlock.seqcount);
 }
 
 void vtime_guest_enter(struct task_struct *tsk)
@@ -708,19 +708,19 @@ void vtime_guest_enter(struct task_struct *tsk)
 	 * synchronization against the reader (task_gtime())
 	 * that can thus safely catch up with a tickless delta.
 	 */
-	write_seqlock(&tsk->vtime_seqlock);
+	write_seqcount_begin(&tsk->vtime_seqlock.seqcount);
 	__vtime_account_system(tsk);
 	current->flags |= PF_VCPU;
-	write_sequnlock(&tsk->vtime_seqlock);
+	write_seqcount_end(&tsk->vtime_seqlock.seqcount);
 }
 EXPORT_SYMBOL_GPL(vtime_guest_enter);
 
 void vtime_guest_exit(struct task_struct *tsk)
 {
-	write_seqlock(&tsk->vtime_seqlock);
+	write_seqcount_begin(&tsk->vtime_seqlock.seqcount);
 	__vtime_account_system(tsk);
 	current->flags &= ~PF_VCPU;
-	write_sequnlock(&tsk->vtime_seqlock);
+	write_seqcount_end(&tsk->vtime_seqlock.seqcount);
 }
 EXPORT_SYMBOL_GPL(vtime_guest_exit);
 
@@ -733,24 +733,26 @@ void vtime_account_idle(struct task_struct *tsk)
 
 void arch_vtime_task_switch(struct task_struct *prev)
 {
-	write_seqlock(&prev->vtime_seqlock);
+	write_seqcount_begin(&prev->vtime_seqlock.seqcount);
 	prev->vtime_snap_whence = VTIME_SLEEPING;
-	write_sequnlock(&prev->vtime_seqlock);
+	write_seqcount_end(&prev->vtime_seqlock.seqcount);
 
-	write_seqlock(&current->vtime_seqlock);
+	write_seqcount_begin(&current->vtime_seqlock.seqcount);
 	current->vtime_snap_whence = VTIME_SYS;
 	current->vtime_snap = sched_clock_cpu(smp_processor_id());
-	write_sequnlock(&current->vtime_seqlock);
+	write_seqcount_end(&current->vtime_seqlock.seqcount);
 }
 
 void vtime_init_idle(struct task_struct *t, int cpu)
 {
 	unsigned long flags;
 
-	write_seqlock_irqsave(&t->vtime_seqlock, flags);
+	local_irq_save(flags);
+	write_seqcount_begin(&t->vtime_seqlock.seqcount);
 	t->vtime_snap_whence = VTIME_SYS;
 	t->vtime_snap = sched_clock_cpu(cpu);
-	write_sequnlock_irqrestore(&t->vtime_seqlock, flags);
+	write_seqcount_end(&t->vtime_seqlock.seqcount);
+	local_irq_restore(flags);
 }
 
 cputime_t task_gtime(struct task_struct *t)
