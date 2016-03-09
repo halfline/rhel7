@@ -39,6 +39,9 @@ extern int irq_remapping_enabled;
 extern int disable_irq_post;
 
 struct irq_remap_ops {
+	/* The supported capabilities */
+	int capability;
+
 	/* Initializes hardware and makes it ready for remapping interrupts */
 	int  (*prepare)(void);
 
