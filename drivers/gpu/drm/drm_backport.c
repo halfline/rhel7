@@ -42,16 +42,11 @@ void unregister_shrinker2(struct shrinker2 *s2)
 }
 EXPORT_SYMBOL(unregister_shrinker2);
 
-struct workqueue_struct *system_power_efficient_wq __read_mostly;
-EXPORT_SYMBOL_GPL(system_power_efficient_wq);
-
 int __init drm_backport_init(void)
 {
-	system_power_efficient_wq = create_workqueue("events_power_efficient");
 	return 0;
 }
 
 void __exit drm_backport_exit(void)
 {
-	destroy_workqueue(system_power_efficient_wq);
 }
