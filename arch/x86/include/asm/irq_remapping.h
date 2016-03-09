@@ -60,6 +60,7 @@ extern bool setup_remapped_irq(int irq,
 			       struct irq_chip *chip);
 
 void irq_remap_modify_chip_defaults(struct irq_chip *chip);
+int irq_set_vcpu_affinity(unsigned int irq, void *vcpu_info);
 
 #else  /* CONFIG_IRQ_REMAP */
 
@@ -103,6 +104,12 @@ static inline bool setup_remapped_irq(int irq,
 {
 	return false;
 }
+
+int irq_set_vcpu_affinity(unsigned int irq, void *vcpu_info)
+{
+	return -ENOSYS;
+}
+
 #endif /* CONFIG_IRQ_REMAP */
 
 #define dmar_alloc_hwirq()	irq_alloc_hwirq(-1)

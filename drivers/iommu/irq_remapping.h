@@ -82,6 +82,9 @@ struct irq_remap_ops {
 
 	/* Setup interrupt remapping for an HPET MSI */
 	int (*alloc_hpet_msi)(unsigned int, unsigned int);
+
+	/* Setup interrupt to target a vCPU in a virtual machine */
+	int (*irq_set_vcpu_affinity)(int irq, void *vcpu_info);
 };
 
 extern struct irq_remap_ops intel_irq_remap_ops;
