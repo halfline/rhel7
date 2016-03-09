@@ -62,6 +62,11 @@ extern bool setup_remapped_irq(int irq,
 void irq_remap_modify_chip_defaults(struct irq_chip *chip);
 int irq_set_vcpu_affinity(unsigned int irq, void *vcpu_info);
 
+struct vcpu_data {
+	u64 pi_desc_addr;	/* Physical address of PI Descriptor */
+	u32 vector;		/* Guest vector of the interrupt */
+};
+
 #else  /* CONFIG_IRQ_REMAP */
 
 static inline bool irq_remapping_cap(enum irq_remap_cap cap) { return 0; }

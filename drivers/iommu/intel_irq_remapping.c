@@ -1301,6 +1301,42 @@ static int intel_alloc_hpet_msi(unsigned int irq, unsigned int id)
 	return ret;
 }
 
+static int intel_ir_set_vcpu_affinity(int irq, void *info)
+{
+	struct irq_2_iommu *ir_data = irq_2_iommu(irq);
+	struct vcpu_data *vcpu_pi_info = info;
+
+	/* stop posting interrupts, back to remapping mode */
+	if (!vcpu_pi_info) {
+		modify_irte(irq, get_irte(ir_data));
+	} else {
+		struct irte irte_pi;
+
+		/*
+		 * We are not caching the posted interrupt entry. We
+		 * copy the data from the remapped entry and modify
+		 * the fields which are relevant for posted mode. The
+		 * cached remapped entry is used for switching back to
+		 * remapped mode.
+		 */
+		memset(&irte_pi, 0, sizeof(irte_pi));
+		dmar_copy_shared_irte(&irte_pi, get_irte(ir_data));
+
+		/* Update the posted mode fields */
+		irte_pi.p_pst = 1;
+		irte_pi.p_urgent = 0;
+		irte_pi.p_vector = vcpu_pi_info->vector;
+		irte_pi.pda_l = (vcpu_pi_info->pi_desc_addr >>
+				(32 - PDA_LOW_BIT)) & ~(-1UL << PDA_LOW_BIT);
+		irte_pi.pda_h = (vcpu_pi_info->pi_desc_addr >> 32) &
+				~(-1UL << PDA_HIGH_BIT);
+
+		modify_irte(irq, &irte_pi);
+	}
+
+	return 0;
+}
+
 struct irq_remap_ops intel_irq_remap_ops = {
 	.prepare		= intel_prepare_irq_remapping,
 	.enable			= intel_enable_irq_remapping,
@@ -1314,6 +1350,7 @@ struct irq_remap_ops intel_irq_remap_ops = {
 	.msi_alloc_irq		= intel_msi_alloc_irq,
 	.msi_setup_irq		= intel_msi_setup_irq,
 	.alloc_hpet_msi		= intel_alloc_hpet_msi,
+	.irq_set_vcpu_affinity = intel_ir_set_vcpu_affinity,
 };
 
 /*
