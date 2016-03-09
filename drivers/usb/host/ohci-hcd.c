@@ -1222,11 +1222,6 @@ MODULE_LICENSE ("GPL");
 #define EP93XX_PLATFORM_DRIVER	ohci_hcd_ep93xx_driver
 #endif
 
-#ifdef CONFIG_ARCH_LPC32XX
-#include "ohci-nxp.c"
-#define NXP_PLATFORM_DRIVER	usb_hcd_nxp_driver
-#endif
-
 #ifdef CONFIG_ARCH_DAVINCI_DA8XX
 #include "ohci-da8xx.c"
 #define DAVINCI_PLATFORM_DRIVER	ohci_hcd_da8xx_driver
@@ -1327,12 +1322,6 @@ static int __init ohci_hcd_mod_init(void)
 		goto error_ep93xx;
 #endif
 
-#ifdef NXP_PLATFORM_DRIVER
-	retval = platform_driver_register(&NXP_PLATFORM_DRIVER);
-	if (retval < 0)
-		goto error_nxp;
-#endif
-
 #ifdef DAVINCI_PLATFORM_DRIVER
 	retval = platform_driver_register(&DAVINCI_PLATFORM_DRIVER);
 	if (retval < 0)
@@ -1345,10 +1334,6 @@ static int __init ohci_hcd_mod_init(void)
 #ifdef DAVINCI_PLATFORM_DRIVER
 	platform_driver_unregister(&DAVINCI_PLATFORM_DRIVER);
  error_davinci:
-#endif
-#ifdef NXP_PLATFORM_DRIVER
-	platform_driver_unregister(&NXP_PLATFORM_DRIVER);
- error_nxp:
 #endif
 #ifdef EP93XX_PLATFORM_DRIVER
 	platform_driver_unregister(&EP93XX_PLATFORM_DRIVER);
@@ -1391,9 +1376,6 @@ static void __exit ohci_hcd_mod_exit(void)
 {
 #ifdef DAVINCI_PLATFORM_DRIVER
 	platform_driver_unregister(&DAVINCI_PLATFORM_DRIVER);
-#endif
-#ifdef NXP_PLATFORM_DRIVER
-	platform_driver_unregister(&NXP_PLATFORM_DRIVER);
 #endif
 #ifdef EP93XX_PLATFORM_DRIVER
 	platform_driver_unregister(&EP93XX_PLATFORM_DRIVER);
