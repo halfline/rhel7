@@ -62,7 +62,7 @@
 /* Mutual exclusion for removal, open, and release */
 DEFINE_MUTEX(usbfs_mutex);
 
-struct dev_state {
+struct usb_dev_state {
 	struct list_head list;      /* state list */
 	struct usb_device *dev;
 	struct file *file;
@@ -81,7 +81,7 @@ struct dev_state {
 
 struct async {
 	struct list_head asynclist;
-	struct dev_state *ps;
+	struct usb_dev_state *ps;
 	struct pid *pid;
 	const struct cred *cred;
 	unsigned int signr;
@@ -151,7 +151,7 @@ static void usbfs_decrease_memory_usage(unsigned amount)
 	atomic_sub(amount, &usbfs_memory_usage);
 }
 
-static int connected(struct dev_state *ps)
+static int connected(struct usb_dev_state *ps)
 {
 	return (!list_empty(&ps->list) &&
 			ps->dev->state != USB_STATE_NOTATTACHED);
@@ -184,7 +184,7 @@ static loff_t usbdev_lseek(struct file *file, loff_t offset, int orig)
 static ssize_t usbdev_read(struct file *file, char __user *buf, size_t nbytes,
 			   loff_t *ppos)
 {
-	struct dev_state *ps = file->private_data;
+	struct usb_dev_state *ps = file->private_data;
 	struct usb_device *dev = ps->dev;
 	ssize_t ret = 0;
 	unsigned len;
@@ -307,7 +307,7 @@ static void free_async(struct async *as)
 
 static void async_newpending(struct async *as)
 {
-	struct dev_state *ps = as->ps;
+	struct usb_dev_state *ps = as->ps;
 	unsigned long flags;
 
 	spin_lock_irqsave(&ps->lock, flags);
@@ -317,7 +317,7 @@ static void async_newpending(struct async *as)
 
 static void async_removepending(struct async *as)
 {
-	struct dev_state *ps = as->ps;
+	struct usb_dev_state *ps = as->ps;
 	unsigned long flags;
 
 	spin_lock_irqsave(&ps->lock, flags);
@@ -325,7 +325,7 @@ static void async_removepending(struct async *as)
 	spin_unlock_irqrestore(&ps->lock, flags);
 }
 
-static struct async *async_getcompleted(struct dev_state *ps)
+static struct async *async_getcompleted(struct usb_dev_state *ps)
 {
 	unsigned long flags;
 	struct async *as = NULL;
@@ -340,7 +340,7 @@ static struct async *async_getcompleted(struct dev_state *ps)
 	return as;
 }
 
-static struct async *async_getpending(struct dev_state *ps,
+static struct async *async_getpending(struct usb_dev_state *ps,
 					     void __user *userurb)
 {
 	struct async *as;
@@ -448,7 +448,7 @@ static int copy_urb_data_to_user(u8 __user *userbuffer, struct urb *urb)
 #define AS_CONTINUATION	1
 #define AS_UNLINK	2
 
-static void cancel_bulk_urbs(struct dev_state *ps, unsigned bulk_addr)
+static void cancel_bulk_urbs(struct usb_dev_state *ps, unsigned bulk_addr)
 __releases(ps->lock)
 __acquires(ps->lock)
 {
@@ -489,7 +489,7 @@ __acquires(ps->lock)
 static void async_completed(struct urb *urb)
 {
 	struct async *as = urb->context;
-	struct dev_state *ps = as->ps;
+	struct usb_dev_state *ps = as->ps;
 	struct siginfo sinfo;
 	struct pid *pid = NULL;
 	u32 secid = 0;
@@ -530,7 +530,7 @@ static void async_completed(struct urb *urb)
 	wake_up(&ps->wait);
 }
 
-static void destroy_async(struct dev_state *ps, struct list_head *list)
+static void destroy_async(struct usb_dev_state *ps, struct list_head *list)
 {
 	struct urb *urb;
 	struct async *as;
@@ -552,7 +552,7 @@ static void destroy_async(struct dev_state *ps, struct list_head *list)
 	spin_unlock_irqrestore(&ps->lock, flags);
 }
 
-static void destroy_async_on_interface(struct dev_state *ps,
+static void destroy_async_on_interface(struct usb_dev_state *ps,
 				       unsigned int ifnum)
 {
 	struct list_head *p, *q, hitlist;
@@ -567,7 +567,7 @@ static void destroy_async_on_interface(struct dev_state *ps,
 	destroy_async(ps, &hitlist);
 }
 
-static void destroy_all_async(struct dev_state *ps)
+static void destroy_all_async(struct usb_dev_state *ps)
 {
 	destroy_async(ps, &ps->async_pending);
 }
@@ -586,7 +586,7 @@ static int driver_probe(struct usb_interface *intf,
 
 static void driver_disconnect(struct usb_interface *intf)
 {
-	struct dev_state *ps = usb_get_intfdata(intf);
+	struct usb_dev_state *ps = usb_get_intfdata(intf);
 	unsigned int ifnum = intf->altsetting->desc.bInterfaceNumber;
 
 	if (!ps)
@@ -629,7 +629,7 @@ struct usb_driver usbfs_driver = {
 	.resume =	driver_resume,
 };
 
-static int claimintf(struct dev_state *ps, unsigned int ifnum)
+static int claimintf(struct usb_dev_state *ps, unsigned int ifnum)
 {
 	struct usb_device *dev = ps->dev;
 	struct usb_interface *intf;
@@ -651,7 +651,7 @@ static int claimintf(struct dev_state *ps, unsigned int ifnum)
 	return err;
 }
 
-static int releaseintf(struct dev_state *ps, unsigned int ifnum)
+static int releaseintf(struct usb_dev_state *ps, unsigned int ifnum)
 {
 	struct usb_device *dev;
 	struct usb_interface *intf;
@@ -671,7 +671,7 @@ static int releaseintf(struct dev_state *ps, unsigned int ifnum)
 	return err;
 }
 
-static int checkintf(struct dev_state *ps, unsigned int ifnum)
+static int checkintf(struct usb_dev_state *ps, unsigned int ifnum)
 {
 	if (ps->dev->state != USB_STATE_CONFIGURED)
 		return -EHOSTUNREACH;
@@ -711,7 +711,7 @@ static int findintfep(struct usb_device *dev, unsigned int ep)
 	return -ENOENT;
 }
 
-static int check_ctrlrecip(struct dev_state *ps, unsigned int requesttype,
+static int check_ctrlrecip(struct usb_dev_state *ps, unsigned int requesttype,
 			   unsigned int request, unsigned int index)
 {
 	int ret = 0;
@@ -779,7 +779,7 @@ static struct usb_host_endpoint *ep_to_host_endpoint(struct usb_device *dev,
 		return dev->ep_out[ep & USB_ENDPOINT_NUMBER_MASK];
 }
 
-static int parse_usbdevfs_streams(struct dev_state *ps,
+static int parse_usbdevfs_streams(struct usb_dev_state *ps,
 				  struct usbdevfs_streams __user *streams,
 				  unsigned int *num_streams_ret,
 				  unsigned int *num_eps_ret,
@@ -874,11 +874,11 @@ static struct usb_device *usbdev_lookup_by_devt(dev_t devt)
 static int usbdev_open(struct inode *inode, struct file *file)
 {
 	struct usb_device *dev = NULL;
-	struct dev_state *ps;
+	struct usb_dev_state *ps;
 	int ret;
 
 	ret = -ENOMEM;
-	ps = kmalloc(sizeof(struct dev_state), GFP_KERNEL);
+	ps = kmalloc(sizeof(struct usb_dev_state), GFP_KERNEL);
 	if (!ps)
 		goto out_free_ps;
 
@@ -935,7 +935,7 @@ static int usbdev_open(struct inode *inode, struct file *file)
 
 static int usbdev_release(struct inode *inode, struct file *file)
 {
-	struct dev_state *ps = file->private_data;
+	struct usb_dev_state *ps = file->private_data;
 	struct usb_device *dev = ps->dev;
 	unsigned int ifnum;
 	struct async *as;
@@ -966,7 +966,7 @@ static int usbdev_release(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static int proc_control(struct dev_state *ps, void __user *arg)
+static int proc_control(struct usb_dev_state *ps, void __user *arg)
 {
 	struct usb_device *dev = ps->dev;
 	struct usbdevfs_ctrltransfer ctrl;
@@ -1053,7 +1053,7 @@ static int proc_control(struct dev_state *ps, void __user *arg)
 	return ret;
 }
 
-static int proc_bulk(struct dev_state *ps, void __user *arg)
+static int proc_bulk(struct usb_dev_state *ps, void __user *arg)
 {
 	struct usb_device *dev = ps->dev;
 	struct usbdevfs_bulktransfer bulk;
@@ -1140,7 +1140,7 @@ static void check_reset_of_active_ep(struct usb_device *udev,
 				ioctl_name, epnum);
 }
 
-static int proc_resetep(struct dev_state *ps, void __user *arg)
+static int proc_resetep(struct usb_dev_state *ps, void __user *arg)
 {
 	unsigned int ep;
 	int ret;
@@ -1158,7 +1158,7 @@ static int proc_resetep(struct dev_state *ps, void __user *arg)
 	return 0;
 }
 
-static int proc_clearhalt(struct dev_state *ps, void __user *arg)
+static int proc_clearhalt(struct usb_dev_state *ps, void __user *arg)
 {
 	unsigned int ep;
 	int pipe;
@@ -1181,7 +1181,7 @@ static int proc_clearhalt(struct dev_state *ps, void __user *arg)
 	return usb_clear_halt(ps->dev, pipe);
 }
 
-static int proc_getdriver(struct dev_state *ps, void __user *arg)
+static int proc_getdriver(struct usb_dev_state *ps, void __user *arg)
 {
 	struct usbdevfs_getdriver gd;
 	struct usb_interface *intf;
@@ -1200,7 +1200,7 @@ static int proc_getdriver(struct dev_state *ps, void __user *arg)
 	return ret;
 }
 
-static int proc_connectinfo(struct dev_state *ps, void __user *arg)
+static int proc_connectinfo(struct usb_dev_state *ps, void __user *arg)
 {
 	struct usbdevfs_connectinfo ci = {
 		.devnum = ps->dev->devnum,
@@ -1212,12 +1212,12 @@ static int proc_connectinfo(struct dev_state *ps, void __user *arg)
 	return 0;
 }
 
-static int proc_resetdevice(struct dev_state *ps)
+static int proc_resetdevice(struct usb_dev_state *ps)
 {
 	return usb_reset_device(ps->dev);
 }
 
-static int proc_setintf(struct dev_state *ps, void __user *arg)
+static int proc_setintf(struct usb_dev_state *ps, void __user *arg)
 {
 	struct usbdevfs_setinterface setintf;
 	int ret;
@@ -1233,7 +1233,7 @@ static int proc_setintf(struct dev_state *ps, void __user *arg)
 			setintf.altsetting);
 }
 
-static int proc_setconfig(struct dev_state *ps, void __user *arg)
+static int proc_setconfig(struct usb_dev_state *ps, void __user *arg)
 {
 	int u;
 	int status = 0;
@@ -1281,7 +1281,7 @@ static int proc_setconfig(struct dev_state *ps, void __user *arg)
 	return status;
 }
 
-static int proc_do_submiturb(struct dev_state *ps, struct usbdevfs_urb *uurb,
+static int proc_do_submiturb(struct usb_dev_state *ps, struct usbdevfs_urb *uurb,
 			struct usbdevfs_iso_packet_desc __user *iso_frame_desc,
 			void __user *arg)
 {
@@ -1608,7 +1608,7 @@ static int proc_do_submiturb(struct dev_state *ps, struct usbdevfs_urb *uurb,
 	return ret;
 }
 
-static int proc_submiturb(struct dev_state *ps, void __user *arg)
+static int proc_submiturb(struct usb_dev_state *ps, void __user *arg)
 {
 	struct usbdevfs_urb uurb;
 
@@ -1620,7 +1620,7 @@ static int proc_submiturb(struct dev_state *ps, void __user *arg)
 			arg);
 }
 
-static int proc_unlinkurb(struct dev_state *ps, void __user *arg)
+static int proc_unlinkurb(struct usb_dev_state *ps, void __user *arg)
 {
 	struct urb *urb;
 	struct async *as;
@@ -1680,7 +1680,7 @@ err_out:
 	return -EFAULT;
 }
 
-static struct async *reap_as(struct dev_state *ps)
+static struct async *reap_as(struct usb_dev_state *ps)
 {
 	DECLARE_WAITQUEUE(wait, current);
 	struct async *as = NULL;
@@ -1703,7 +1703,7 @@ static struct async *reap_as(struct dev_state *ps)
 	return as;
 }
 
-static int proc_reapurb(struct dev_state *ps, void __user *arg)
+static int proc_reapurb(struct usb_dev_state *ps, void __user *arg)
 {
 	struct async *as = reap_as(ps);
 	if (as) {
@@ -1716,7 +1716,7 @@ static int proc_reapurb(struct dev_state *ps, void __user *arg)
 	return -ENODEV;
 }
 
-static int proc_reapurbnonblock(struct dev_state *ps, void __user *arg)
+static int proc_reapurbnonblock(struct usb_dev_state *ps, void __user *arg)
 {
 	int retval;
 	struct async *as;
@@ -1732,7 +1732,7 @@ static int proc_reapurbnonblock(struct dev_state *ps, void __user *arg)
 }
 
 #ifdef CONFIG_COMPAT
-static int proc_control_compat(struct dev_state *ps,
+static int proc_control_compat(struct usb_dev_state *ps,
 				struct usbdevfs_ctrltransfer32 __user *p32)
 {
 	struct usbdevfs_ctrltransfer __user *p;
@@ -1745,7 +1745,7 @@ static int proc_control_compat(struct dev_state *ps,
 	return proc_control(ps, p);
 }
 
-static int proc_bulk_compat(struct dev_state *ps,
+static int proc_bulk_compat(struct usb_dev_state *ps,
 			struct usbdevfs_bulktransfer32 __user *p32)
 {
 	struct usbdevfs_bulktransfer __user *p;
@@ -1762,7 +1762,7 @@ static int proc_bulk_compat(struct dev_state *ps,
 
 	return proc_bulk(ps, p);
 }
-static int proc_disconnectsignal_compat(struct dev_state *ps, void __user *arg)
+static int proc_disconnectsignal_compat(struct usb_dev_state *ps, void __user *arg)
 {
 	struct usbdevfs_disconnectsignal32 ds;
 
@@ -1800,7 +1800,7 @@ static int get_urb32(struct usbdevfs_urb *kurb,
 	return 0;
 }
 
-static int proc_submiturb_compat(struct dev_state *ps, void __user *arg)
+static int proc_submiturb_compat(struct usb_dev_state *ps, void __user *arg)
 {
 	struct usbdevfs_urb uurb;
 
@@ -1846,7 +1846,7 @@ static int processcompl_compat(struct async *as, void __user * __user *arg)
 	return 0;
 }
 
-static int proc_reapurb_compat(struct dev_state *ps, void __user *arg)
+static int proc_reapurb_compat(struct usb_dev_state *ps, void __user *arg)
 {
 	struct async *as = reap_as(ps);
 	if (as) {
@@ -1859,7 +1859,7 @@ static int proc_reapurb_compat(struct dev_state *ps, void __user *arg)
 	return -ENODEV;
 }
 
-static int proc_reapurbnonblock_compat(struct dev_state *ps, void __user *arg)
+static int proc_reapurbnonblock_compat(struct usb_dev_state *ps, void __user *arg)
 {
 	int retval;
 	struct async *as;
@@ -1877,7 +1877,7 @@ static int proc_reapurbnonblock_compat(struct dev_state *ps, void __user *arg)
 
 #endif
 
-static int proc_disconnectsignal(struct dev_state *ps, void __user *arg)
+static int proc_disconnectsignal(struct usb_dev_state *ps, void __user *arg)
 {
 	struct usbdevfs_disconnectsignal ds;
 
@@ -1888,7 +1888,7 @@ static int proc_disconnectsignal(struct dev_state *ps, void __user *arg)
 	return 0;
 }
 
-static int proc_claiminterface(struct dev_state *ps, void __user *arg)
+static int proc_claiminterface(struct usb_dev_state *ps, void __user *arg)
 {
 	unsigned int ifnum;
 
@@ -1897,7 +1897,7 @@ static int proc_claiminterface(struct dev_state *ps, void __user *arg)
 	return claimintf(ps, ifnum);
 }
 
-static int proc_releaseinterface(struct dev_state *ps, void __user *arg)
+static int proc_releaseinterface(struct usb_dev_state *ps, void __user *arg)
 {
 	unsigned int ifnum;
 	int ret;
@@ -1910,7 +1910,7 @@ static int proc_releaseinterface(struct dev_state *ps, void __user *arg)
 	return 0;
 }
 
-static int proc_ioctl(struct dev_state *ps, struct usbdevfs_ioctl *ctl)
+static int proc_ioctl(struct usb_dev_state *ps, struct usbdevfs_ioctl *ctl)
 {
 	int			size;
 	void			*buf = NULL;
@@ -1986,7 +1986,7 @@ static int proc_ioctl(struct dev_state *ps, struct usbdevfs_ioctl *ctl)
 	return retval;
 }
 
-static int proc_ioctl_default(struct dev_state *ps, void __user *arg)
+static int proc_ioctl_default(struct usb_dev_state *ps, void __user *arg)
 {
 	struct usbdevfs_ioctl	ctrl;
 
@@ -1996,7 +1996,7 @@ static int proc_ioctl_default(struct dev_state *ps, void __user *arg)
 }
 
 #ifdef CONFIG_COMPAT
-static int proc_ioctl_compat(struct dev_state *ps, compat_uptr_t arg)
+static int proc_ioctl_compat(struct usb_dev_state *ps, compat_uptr_t arg)
 {
 	struct usbdevfs_ioctl32 __user *uioc;
 	struct usbdevfs_ioctl ctrl;
@@ -2014,7 +2014,7 @@ static int proc_ioctl_compat(struct dev_state *ps, compat_uptr_t arg)
 }
 #endif
 
-static int proc_claim_port(struct dev_state *ps, void __user *arg)
+static int proc_claim_port(struct usb_dev_state *ps, void __user *arg)
 {
 	unsigned portnum;
 	int rc;
@@ -2028,7 +2028,7 @@ static int proc_claim_port(struct dev_state *ps, void __user *arg)
 	return rc;
 }
 
-static int proc_release_port(struct dev_state *ps, void __user *arg)
+static int proc_release_port(struct usb_dev_state *ps, void __user *arg)
 {
 	unsigned portnum;
 
@@ -2037,7 +2037,7 @@ static int proc_release_port(struct dev_state *ps, void __user *arg)
 	return usb_hub_release_port(ps->dev, portnum, ps);
 }
 
-static int proc_get_capabilities(struct dev_state *ps, void __user *arg)
+static int proc_get_capabilities(struct usb_dev_state *ps, void __user *arg)
 {
 	__u32 caps;
 
@@ -2054,7 +2054,7 @@ static int proc_get_capabilities(struct dev_state *ps, void __user *arg)
 	return 0;
 }
 
-static int proc_disconnect_claim(struct dev_state *ps, void __user *arg)
+static int proc_disconnect_claim(struct usb_dev_state *ps, void __user *arg)
 {
 	struct usbdevfs_disconnect_claim dc;
 	struct usb_interface *intf;
@@ -2086,7 +2086,7 @@ static int proc_disconnect_claim(struct dev_state *ps, void __user *arg)
 	return claimintf(ps, dc.interface);
 }
 
-static int proc_alloc_streams(struct dev_state *ps, void __user *arg)
+static int proc_alloc_streams(struct usb_dev_state *ps, void __user *arg)
 {
 	unsigned num_streams, num_eps;
 	struct usb_host_endpoint **eps;
@@ -2106,7 +2106,7 @@ static int proc_alloc_streams(struct dev_state *ps, void __user *arg)
 	return r;
 }
 
-static int proc_free_streams(struct dev_state *ps, void __user *arg)
+static int proc_free_streams(struct usb_dev_state *ps, void __user *arg)
 {
 	unsigned num_eps;
 	struct usb_host_endpoint **eps;
@@ -2133,7 +2133,7 @@ static int proc_free_streams(struct dev_state *ps, void __user *arg)
 static long usbdev_do_ioctl(struct file *file, unsigned int cmd,
 				void __user *p)
 {
-	struct dev_state *ps = file->private_data;
+	struct usb_dev_state *ps = file->private_data;
 	struct inode *inode = file_inode(file);
 	struct usb_device *dev = ps->dev;
 	int ret = -ENOTTY;
@@ -2348,7 +2348,7 @@ static long usbdev_compat_ioctl(struct file *file, unsigned int cmd,
 static unsigned int usbdev_poll(struct file *file,
 				struct poll_table_struct *wait)
 {
-	struct dev_state *ps = file->private_data;
+	struct usb_dev_state *ps = file->private_data;
 	unsigned int mask = 0;
 
 	poll_wait(file, &ps->wait, wait);
@@ -2374,11 +2374,11 @@ const struct file_operations usbdev_file_operations = {
 
 static void usbdev_remove(struct usb_device *udev)
 {
-	struct dev_state *ps;
+	struct usb_dev_state *ps;
 	struct siginfo sinfo;
 
 	while (!list_empty(&udev->filelist)) {
-		ps = list_entry(udev->filelist.next, struct dev_state, list);
+		ps = list_entry(udev->filelist.next, struct usb_dev_state, list);
 		destroy_all_async(ps);
 		wake_up_all(&ps->wait);
 		list_del_init(&ps->list);

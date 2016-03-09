@@ -393,7 +393,7 @@ struct usb_bus {
 #endif
 };
 
-struct dev_state;
+struct usb_dev_state;
 
 /* ----------------------------------------------------------------------- */
 
@@ -780,9 +780,9 @@ extern struct usb_host_interface *usb_find_alt_setting(
 
 /* port claiming functions */
 int usb_hub_claim_port(struct usb_device *hdev, unsigned port1,
-		struct dev_state *owner);
+		struct usb_dev_state *owner);
 int usb_hub_release_port(struct usb_device *hdev, unsigned port1,
-		struct dev_state *owner);
+		struct usb_dev_state *owner);
 
 /**
  * usb_make_path - returns stable device path in the usb tree
