@@ -29,6 +29,7 @@
 extern void apic_timer_interrupt(void);
 extern void x86_platform_ipi(void);
 extern void kvm_posted_intr_ipi(void);
+extern void kvm_posted_intr_wakeup_ipi(void);
 extern void error_interrupt(void);
 extern void irq_work_interrupt(void);
 
@@ -94,6 +95,7 @@ extern void trace_call_function_single_interrupt(void);
 #define trace_irq_move_cleanup_interrupt  irq_move_cleanup_interrupt
 #define trace_reboot_interrupt  reboot_interrupt
 #define trace_kvm_posted_intr_ipi kvm_posted_intr_ipi
+#define trace_kvm_posted_intr_wakeup_ipi kvm_posted_intr_wakeup_ipi
 #endif /* CONFIG_TRACING */
 
 /* IOAPIC */
