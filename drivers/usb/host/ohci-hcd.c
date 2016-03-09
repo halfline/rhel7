@@ -1227,11 +1227,6 @@ MODULE_LICENSE ("GPL");
 #define EP93XX_PLATFORM_DRIVER	ohci_hcd_ep93xx_driver
 #endif
 
-#ifdef CONFIG_ARCH_AT91
-#include "ohci-at91.c"
-#define AT91_PLATFORM_DRIVER	ohci_hcd_at91_driver
-#endif
-
 #ifdef CONFIG_ARCH_LPC32XX
 #include "ohci-nxp.c"
 #define NXP_PLATFORM_DRIVER	usb_hcd_nxp_driver
@@ -1343,12 +1338,6 @@ static int __init ohci_hcd_mod_init(void)
 		goto error_ep93xx;
 #endif
 
-#ifdef AT91_PLATFORM_DRIVER
-	retval = platform_driver_register(&AT91_PLATFORM_DRIVER);
-	if (retval < 0)
-		goto error_at91;
-#endif
-
 #ifdef NXP_PLATFORM_DRIVER
 	retval = platform_driver_register(&NXP_PLATFORM_DRIVER);
 	if (retval < 0)
@@ -1371,10 +1360,6 @@ static int __init ohci_hcd_mod_init(void)
 #ifdef NXP_PLATFORM_DRIVER
 	platform_driver_unregister(&NXP_PLATFORM_DRIVER);
  error_nxp:
-#endif
-#ifdef AT91_PLATFORM_DRIVER
-	platform_driver_unregister(&AT91_PLATFORM_DRIVER);
- error_at91:
 #endif
 #ifdef EP93XX_PLATFORM_DRIVER
 	platform_driver_unregister(&EP93XX_PLATFORM_DRIVER);
@@ -1424,9 +1409,6 @@ static void __exit ohci_hcd_mod_exit(void)
 #endif
 #ifdef NXP_PLATFORM_DRIVER
 	platform_driver_unregister(&NXP_PLATFORM_DRIVER);
-#endif
-#ifdef AT91_PLATFORM_DRIVER
-	platform_driver_unregister(&AT91_PLATFORM_DRIVER);
 #endif
 #ifdef EP93XX_PLATFORM_DRIVER
 	platform_driver_unregister(&EP93XX_PLATFORM_DRIVER);
