@@ -14,7 +14,6 @@ typedef struct {
 #endif
 #ifdef CONFIG_HAVE_KVM
 	unsigned int kvm_posted_intr_ipis;
-	unsigned int kvm_posted_intr_wakeup_ipis;
 #endif
 	unsigned int x86_platform_ipis;	/* arch dependent */
 	unsigned int apic_perf_irqs;
@@ -43,6 +42,7 @@ typedef struct {
 #ifdef CONFIG_X86_MCE_AMD
 	unsigned int irq_deferred_error_count;
 #endif
+	unsigned int kvm_posted_intr_wakeup_ipis;
 } ____cacheline_aligned rh_irq_cpustat_t;
 
 DECLARE_PER_CPU_SHARED_ALIGNED(rh_irq_cpustat_t, rh_irq_stat);

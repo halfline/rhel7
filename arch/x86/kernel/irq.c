@@ -153,7 +153,7 @@ int arch_show_interrupts(struct seq_file *p, int prec)
 	seq_printf(p, "%*s: ", prec, "PIW");
 	for_each_online_cpu(j)
 		seq_printf(p, "%10u ",
-			   irq_stats(j)->kvm_posted_intr_wakeup_ipis);
+			   rh_irq_stats(j)->kvm_posted_intr_wakeup_ipis);
 	seq_puts(p, "  Posted-interrupt wakeup event\n");
 #endif
 	return 0;
@@ -297,7 +297,7 @@ __visible void smp_kvm_posted_intr_wakeup_ipi(struct pt_regs *regs)
 	struct pt_regs *old_regs = set_irq_regs(regs);
 
 	entering_ack_irq();
-	inc_irq_stat(kvm_posted_intr_wakeup_ipis);
+	rh_inc_irq_stat(kvm_posted_intr_wakeup_ipis);
 	kvm_posted_intr_wakeup_handler();
 	exiting_irq();
 	set_irq_regs(old_regs);
