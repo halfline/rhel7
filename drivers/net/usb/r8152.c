@@ -2048,13 +2048,13 @@ static void rtl8152_disable(struct r8152 *tp)
 		ocp_data = ocp_read_byte(tp, MCU_TYPE_PLA, PLA_OOB_CTRL);
 		if ((ocp_data & FIFO_EMPTY) == FIFO_EMPTY)
 			break;
-		mdelay(1);
+		usleep_range(1000, 2000);
 	}
 
 	for (i = 0; i < 1000; i++) {
 		if (ocp_read_word(tp, MCU_TYPE_PLA, PLA_TCR0) & TCR0_TX_EMPTY)
 			break;
-		mdelay(1);
+		usleep_range(1000, 2000);
 	}
 
 	for (i = 0; i < RTL8152_MAX_RX; i++)
@@ -2199,7 +2199,7 @@ static void rtl_clear_bp(struct r8152 *tp)
 	ocp_write_dword(tp, MCU_TYPE_USB, USB_BP_2, 0);
 	ocp_write_dword(tp, MCU_TYPE_USB, USB_BP_4, 0);
 	ocp_write_dword(tp, MCU_TYPE_USB, USB_BP_6, 0);
-	mdelay(3);
+	usleep_range(3000, 6000);
 	ocp_write_word(tp, MCU_TYPE_PLA, PLA_BP_BA, 0);
 	ocp_write_word(tp, MCU_TYPE_USB, USB_BP_BA, 0);
 }
@@ -2285,7 +2285,7 @@ static void r8152b_exit_oob(struct r8152 *tp)
 		ocp_data = ocp_read_byte(tp, MCU_TYPE_PLA, PLA_OOB_CTRL);
 		if (ocp_data & LINK_LIST_READY)
 			break;
-		mdelay(1);
+		usleep_range(1000, 2000);
 	}
 
 	ocp_data = ocp_read_word(tp, MCU_TYPE_PLA, PLA_SFF_STS_7);
@@ -2296,7 +2296,7 @@ static void r8152b_exit_oob(struct r8152 *tp)
 		ocp_data = ocp_read_byte(tp, MCU_TYPE_PLA, PLA_OOB_CTRL);
 		if (ocp_data & LINK_LIST_READY)
 			break;
-		mdelay(1);
+		usleep_range(1000, 2000);
 	}
 
 	rtl8152_nic_reset(tp);
@@ -2357,7 +2357,7 @@ static void r8152b_enter_oob(struct r8152 *tp)
 		ocp_data = ocp_read_byte(tp, MCU_TYPE_PLA, PLA_OOB_CTRL);
 		if (ocp_data & LINK_LIST_READY)
 			break;
-		mdelay(1);
+		usleep_range(1000, 2000);
 	}
 
 	ocp_data = ocp_read_word(tp, MCU_TYPE_PLA, PLA_SFF_STS_7);
@@ -2368,7 +2368,7 @@ static void r8152b_enter_oob(struct r8152 *tp)
 		ocp_data = ocp_read_byte(tp, MCU_TYPE_PLA, PLA_OOB_CTRL);
 		if (ocp_data & LINK_LIST_READY)
 			break;
-		mdelay(1);
+		usleep_range(1000, 2000);
 	}
 
 	ocp_write_word(tp, MCU_TYPE_PLA, PLA_RMS, RTL8152_RMS);
@@ -2515,7 +2515,7 @@ static void r8153_first_init(struct r8152 *tp)
 		ocp_data = ocp_read_byte(tp, MCU_TYPE_PLA, PLA_OOB_CTRL);
 		if (ocp_data & LINK_LIST_READY)
 			break;
-		mdelay(1);
+		usleep_range(1000, 2000);
 	}
 
 	ocp_data = ocp_read_word(tp, MCU_TYPE_PLA, PLA_SFF_STS_7);
@@ -2526,7 +2526,7 @@ static void r8153_first_init(struct r8152 *tp)
 		ocp_data = ocp_read_byte(tp, MCU_TYPE_PLA, PLA_OOB_CTRL);
 		if (ocp_data & LINK_LIST_READY)
 			break;
-		mdelay(1);
+		usleep_range(1000, 2000);
 	}
 
 	ocp_data = ocp_read_word(tp, MCU_TYPE_PLA, PLA_CPCR);
@@ -2570,7 +2570,7 @@ static void r8153_enter_oob(struct r8152 *tp)
 		ocp_data = ocp_read_byte(tp, MCU_TYPE_PLA, PLA_OOB_CTRL);
 		if (ocp_data & LINK_LIST_READY)
 			break;
-		mdelay(1);
+		usleep_range(1000, 2000);
 	}
 
 	ocp_data = ocp_read_word(tp, MCU_TYPE_PLA, PLA_SFF_STS_7);
@@ -2581,7 +2581,7 @@ static void r8153_enter_oob(struct r8152 *tp)
 		ocp_data = ocp_read_byte(tp, MCU_TYPE_PLA, PLA_OOB_CTRL);
 		if (ocp_data & LINK_LIST_READY)
 			break;
-		mdelay(1);
+		usleep_range(1000, 2000);
 	}
 
 	ocp_write_word(tp, MCU_TYPE_PLA, PLA_RMS, RTL8153_RMS);
