@@ -4520,8 +4520,9 @@ static u32 vmx_secondary_exec_control(struct vcpu_vmx *vmx)
 	   a current VMCS12
 	*/
 	exec_control &= ~SECONDARY_EXEC_SHADOW_VMCS;
-	/* PML is enabled/disabled in creating/destorying vcpu */
-	exec_control &= ~SECONDARY_EXEC_ENABLE_PML;
+
+	if (!enable_pml)
+		exec_control &= ~SECONDARY_EXEC_ENABLE_PML;
 
 	/* Currently, we allow L1 guest to directly run pcommit instruction. */
 	exec_control &= ~SECONDARY_EXEC_PCOMMIT;
@@ -7518,10 +7519,9 @@ static void vmx_get_exit_info(struct kvm_vcpu *vcpu, u64 *info1, u64 *info2)
 	*info2 = vmcs_read32(VM_EXIT_INTR_INFO);
 }
 
-static int vmx_enable_pml(struct vcpu_vmx *vmx)
+static int vmx_create_pml_buffer(struct vcpu_vmx *vmx)
 {
 	struct page *pml_pg;
-	u32 exec_control;
 
 	pml_pg = alloc_page(GFP_KERNEL | __GFP_ZERO);
 	if (!pml_pg)
@@ -7532,24 +7532,15 @@ static int vmx_enable_pml(struct vcpu_vmx *vmx)
 	vmcs_write64(PML_ADDRESS, page_to_phys(vmx->pml_pg));
 	vmcs_write16(GUEST_PML_INDEX, PML_ENTITY_NUM - 1);
 
-	exec_control = vmcs_read32(SECONDARY_VM_EXEC_CONTROL);
-	exec_control |= SECONDARY_EXEC_ENABLE_PML;
-	vmcs_write32(SECONDARY_VM_EXEC_CONTROL, exec_control);
-
 	return 0;
 }
 
-static void vmx_disable_pml(struct vcpu_vmx *vmx)
+static void vmx_destroy_pml_buffer(struct vcpu_vmx *vmx)
 {
-	u32 exec_control;
-
-	ASSERT(vmx->pml_pg);
-	__free_page(vmx->pml_pg);
-	vmx->pml_pg = NULL;
-
-	exec_control = vmcs_read32(SECONDARY_VM_EXEC_CONTROL);
-	exec_control &= ~SECONDARY_EXEC_ENABLE_PML;
-	vmcs_write32(SECONDARY_VM_EXEC_CONTROL, exec_control);
+	if (vmx->pml_pg) {
+		__free_page(vmx->pml_pg);
+		vmx->pml_pg = NULL;
+	}
 }
 
 static void vmx_flush_pml_buffer(struct kvm_vcpu *vcpu)
@@ -8420,7 +8411,7 @@ static void vmx_free_vcpu(struct kvm_vcpu *vcpu)
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 
 	if (enable_pml)
-		vmx_disable_pml(vmx);
+		vmx_destroy_pml_buffer(vmx);
 	free_vpid(vmx);
 	leave_guest_mode(vcpu);
 	vmx_load_vmcs01(vcpu);
@@ -8502,7 +8493,7 @@ static struct kvm_vcpu *vmx_create_vcpu(struct kvm *kvm, unsigned int id)
 	 * for the guest, etc.
 	 */
 	if (enable_pml) {
-		err = vmx_enable_pml(vmx);
+		err = vmx_create_pml_buffer(vmx);
 		if (err)
 			goto free_vmcs;
 	}
