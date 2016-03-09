@@ -3007,10 +3007,8 @@ static int load_state_from_tss32(struct x86_emulate_ctxt *ctxt,
 		return ret;
 	ret = __load_segment_descriptor(ctxt, tss->gs, VCPU_SREG_GS, cpl,
 					true, NULL);
-	if (ret != X86EMUL_CONTINUE)
-		return ret;
 
-	return X86EMUL_CONTINUE;
+	return ret;
 }
 
 static int task_switch_32(struct x86_emulate_ctxt *ctxt,
