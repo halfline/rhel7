@@ -17,6 +17,9 @@ xhci-hcd-y += xhci-ring.o xhci-hub.o xhci-dbg.o
 xhci-hcd-y += xhci-trace.o
 
 xhci-plat-hcd-y := xhci-plat.o
+ifneq ($(CONFIG_USB_XHCI_MVEBU), )
+	xhci-plat-hcd-y		+= xhci-mvebu.o
+endif
 
 obj-$(CONFIG_USB_WHCI_HCD)	+= whci/
 
