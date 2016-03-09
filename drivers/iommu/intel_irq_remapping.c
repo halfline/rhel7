@@ -83,27 +83,9 @@ static struct irq_2_iommu *irq_2_iommu(unsigned int irq)
 	return cfg ? &cfg->irq_2_iommu : NULL;
 }
 
-static int get_irte(int irq, struct irte *entry)
+static struct irte *get_irte(struct irq_2_iommu *iommu)
 {
-	struct irq_2_iommu *irq_iommu = irq_2_iommu(irq);
-	unsigned long flags;
-	int index;
-
-	if (!entry || !irq_iommu)
-		return -1;
-
-	raw_spin_lock_irqsave(&irq_2_ir_lock, flags);
-
-	if (unlikely(!irq_iommu->iommu)) {
-		raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
-		return -1;
-	}
-
-	index = irq_iommu->irte_index + irq_iommu->sub_handle;
-	*entry = *(irq_iommu->iommu->ir_table->base + index);
-
-	raw_spin_unlock_irqrestore(&irq_2_ir_lock, flags);
-	return 0;
+	return iommu ? (struct irte *)&iommu->irte_entry : NULL;
 }
 
 static int alloc_irte(struct intel_iommu *iommu, int irq, u16 count)
@@ -1087,7 +1069,7 @@ static int intel_setup_ioapic_entry(int irq,
 	int ioapic_id = mpc_ioapic_id(attr->ioapic);
 	struct intel_iommu *iommu;
 	struct IR_IO_APIC_route_entry *entry;
-	struct irte irte;
+	struct irte *irte;
 	int index;
 
 	down_read(&dmar_global_lock);
@@ -1107,22 +1089,23 @@ static int intel_setup_ioapic_entry(int irq,
 	if (index < 0)
 		return index;
 
-	prepare_irte(&irte, vector, destination);
+	irte = get_irte(irq_2_iommu(irq));
+	prepare_irte(irte, vector, destination);
 
 	/* Set source-id of interrupt request */
-	set_ioapic_sid(&irte, ioapic_id);
+	set_ioapic_sid(irte, ioapic_id);
 
-	modify_irte(irq, &irte);
+	modify_irte(irq, irte);
 
 	apic_printk(APIC_VERBOSE, KERN_DEBUG "IOAPIC[%d]: "
 		"Set IRTE entry (P:%d FPD:%d Dst_Mode:%d "
 		"Redir_hint:%d Trig_Mode:%d Dlvry_Mode:%X "
 		"Avail:%X Vector:%02X Dest:%08X "
 		"SID:%04X SQ:%X SVT:%X)\n",
-		attr->ioapic, irte.present, irte.fpd, irte.dst_mode,
-		irte.redir_hint, irte.trigger_mode, irte.dlvry_mode,
-		irte.avail, irte.vector, irte.dest_id,
-		irte.sid, irte.sq, irte.svt);
+		attr->ioapic, irte->present, irte->fpd, irte->dst_mode,
+		irte->redir_hint, irte->trigger_mode, irte->dlvry_mode,
+		irte->avail, irte->vector, irte->dest_id,
+		irte->sid, irte->sq, irte->svt);
 
 	entry = (struct IR_IO_APIC_route_entry *)route_entry;
 	memset(entry, 0, sizeof(*entry));
@@ -1168,8 +1151,8 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
 			  bool force)
 {
 	struct irq_cfg *cfg = data->chip_data;
+	struct irte *irte;
 	unsigned int dest, irq = data->irq;
-	struct irte irte;
 	int err;
 
 	if (!config_enabled(CONFIG_SMP))
@@ -1177,9 +1160,6 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
 
 	if (!cpumask_intersects(mask, cpu_online_mask))
 		return -EINVAL;
-
-	if (get_irte(irq, &irte))
-		return -EBUSY;
 
 	err = assign_irq_vector(irq, cfg, mask);
 	if (err)
@@ -1192,14 +1172,14 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
 		return err;
 	}
 
-	irte.vector = cfg->vector;
-	irte.dest_id = IRTE_DEST(dest);
-
 	/*
 	 * Atomically updates the IRTE with the new destination, vector
 	 * and flushes the interrupt entry cache.
 	 */
-	modify_irte(irq, &irte);
+	irte = get_irte(irq_2_iommu(irq));
+	irte->vector = cfg->vector;
+	irte->dest_id = IRTE_DEST(dest);
+	modify_irte(irq, irte);
 
 	/*
 	 * After this point, all the interrupts will start arriving
@@ -1218,7 +1198,7 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
 				  struct msi_msg *msg, u8 hpet_id)
 {
 	struct irq_cfg *cfg;
-	struct irte irte;
+	struct irte *irte;
 	u16 sub_handle = 0;
 	int ir_index;
 
@@ -1227,15 +1207,16 @@ static void intel_compose_msi_msg(struct pci_dev *pdev,
 	ir_index = map_irq_to_irte_handle(irq, &sub_handle);
 	BUG_ON(ir_index == -1);
 
-	prepare_irte(&irte, cfg->vector, dest);
+	irte = get_irte(irq_2_iommu(irq));
+	prepare_irte(irte, cfg->vector, dest);
 
 	/* Set source-id of interrupt request */
 	if (pdev)
-		set_msi_sid(&irte, pdev);
+		set_msi_sid(irte, pdev);
 	else
-		set_hpet_sid(&irte, hpet_id);
+		set_hpet_sid(irte, hpet_id);
 
-	modify_irte(irq, &irte);
+	modify_irte(irq, irte);
 
 	msg->address_hi = MSI_ADDR_BASE_HI;
 	msg->data = sub_handle;

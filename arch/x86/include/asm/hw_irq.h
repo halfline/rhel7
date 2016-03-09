@@ -124,6 +124,7 @@ static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
 /* Intel specific interrupt remapping information */
 struct irq_2_iommu {
 	struct intel_iommu *iommu;
+	u64 irte_entry[2];
 	u16 irte_index;
 	u16 sub_handle;
 	u8  irte_mask;
