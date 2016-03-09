@@ -20,6 +20,9 @@ xhci-plat-hcd-y := xhci-plat.o
 ifneq ($(CONFIG_USB_XHCI_MVEBU), )
 	xhci-plat-hcd-y		+= xhci-mvebu.o
 endif
+ifneq ($(CONFIG_USB_XHCI_RCAR), )
+	xhci-plat-hcd-y		+= xhci-rcar.o
+endif
 
 obj-$(CONFIG_USB_WHCI_HCD)	+= whci/
 
