@@ -4553,6 +4553,47 @@ void kvm_mmu_slot_remove_write_access(struct kvm *kvm,
 		kvm_flush_remote_tlbs(kvm);
 }
 
+static bool kvm_mmu_zap_collapsible_spte(struct kvm *kvm,
+		unsigned long *rmapp)
+{
+	u64 *sptep;
+	struct rmap_iterator iter;
+	int need_tlb_flush = 0;
+	pfn_t pfn;
+	struct kvm_mmu_page *sp;
+
+restart:
+	for_each_rmap_spte(rmapp, &iter, sptep) {
+		sp = page_header(__pa(sptep));
+		pfn = spte_to_pfn(*sptep);
+
+		/*
+		 * Only EPT supported for now; otherwise, one would need to
+		 * find out efficiently whether the guest page tables are
+		 * also using huge pages.
+		 */
+		if (sp->role.direct &&
+			!kvm_is_reserved_pfn(pfn) &&
+			PageTransCompound(pfn_to_page(pfn))) {
+			drop_spte(kvm, sptep);
+			need_tlb_flush = 1;
+			goto restart;
+		}
+	}
+
+	return need_tlb_flush;
+}
+
+void kvm_mmu_zap_collapsible_sptes(struct kvm *kvm,
+				   const struct kvm_memory_slot *memslot)
+{
+	/* FIXME: const-ify all uses of struct kvm_memory_slot.  */
+	spin_lock(&kvm->mmu_lock);
+	slot_handle_leaf(kvm, (struct kvm_memory_slot *)memslot,
+			 kvm_mmu_zap_collapsible_spte, true);
+	spin_unlock(&kvm->mmu_lock);
+}
+
 void kvm_mmu_slot_leaf_clear_dirty(struct kvm *kvm,
 				   struct kvm_memory_slot *memslot)
 {
