@@ -121,6 +121,11 @@ static inline void set_io_apic_irq_attr(struct io_apic_irq_attr *irq_attr,
 	irq_attr->polarity	= polarity;
 }
 
+enum irq_mode {
+       IRQ_REMAPPING,
+       IRQ_POSTING,
+};
+
 /* Intel specific interrupt remapping information */
 struct irq_2_iommu {
 	struct intel_iommu *iommu;
@@ -128,6 +133,7 @@ struct irq_2_iommu {
 	u16 irte_index;
 	u16 sub_handle;
 	u8  irte_mask;
+	enum irq_mode mode;
 };
 
 /* AMD specific interrupt remapping information */
