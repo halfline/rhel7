@@ -1183,7 +1183,10 @@ intel_ioapic_set_affinity(struct irq_data *data, const struct cpumask *mask,
 	irte = get_irte(irq_2_iommu(irq));
 	irte->vector = cfg->vector;
 	irte->dest_id = IRTE_DEST(dest);
-	modify_irte(irq, irte);
+
+	/* Update the hardware only if the interrupt is in remapped mode. */
+	if (irq_2_iommu(irq)->mode == IRQ_REMAPPING)
+		modify_irte(irq, irte);
 
 	/*
 	 * After this point, all the interrupts will start arriving
