@@ -1888,6 +1888,8 @@ void kvm_apic_post_state_restore(struct kvm_vcpu *vcpu,
 				apic_find_highest_isr(apic));
 	kvm_make_request(KVM_REQ_EVENT, vcpu);
 	kvm_rtc_eoi_tracking_restore_one(vcpu);
+
+	vcpu->arch.apic_arb_prio = 0;
 }
 
 void __kvm_migrate_apic_timer(struct kvm_vcpu *vcpu)
