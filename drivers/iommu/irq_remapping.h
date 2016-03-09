@@ -36,6 +36,8 @@ extern int disable_sourceid_checking;
 extern int no_x2apic_optout;
 extern int irq_remapping_enabled;
 
+extern int disable_irq_post;
+
 struct irq_remap_ops {
 	/* Initializes hardware and makes it ready for remapping interrupts */
 	int  (*prepare)(void);
@@ -86,6 +88,7 @@ extern struct irq_remap_ops amd_iommu_irq_ops;
 
 #define irq_remapping_enabled 0
 #define irq_remap_broken      0
+#define disable_irq_post      1
 
 #endif /* CONFIG_IRQ_REMAP */
 
