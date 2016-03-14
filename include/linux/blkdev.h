@@ -39,6 +39,7 @@ struct sg_io_hdr;
 struct bsg_job;
 struct blkcg_gq;
 struct blk_flush_queue;
+struct pr_ops;
 
 #define BLKDEV_MIN_RQ	4
 #define BLKDEV_MAX_RQ	128	/* Default maximum */
@@ -1659,8 +1660,9 @@ struct block_device_operations {
 	/* this callback is with swap_lock and sometimes page table lock held */
 	void (*swap_slot_free_notify) (struct block_device *, unsigned long);
 
+	RH_KABI_REPLACE(void *rh_reserved_ptrs1, const struct pr_ops *pr_ops)
+
 	/* future placeholders for nvdimm */
-	void *rh_reserved_ptrs1;
 	void *rh_reserved_ptrs2;
 	void *rh_reserved_ptrs3;
 	void *rh_reserved_ptrs4;
