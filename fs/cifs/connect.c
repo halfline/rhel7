@@ -1600,6 +1600,8 @@ cifs_parse_mount_options(const char *mountdata, const char *devname,
 				pr_warn("CIFS: username too long\n");
 				goto cifs_parse_mount_err;
 			}
+
+			kfree(vol->username);
 			vol->username = kstrdup(string, GFP_KERNEL);
 			if (!vol->username)
 				goto cifs_parse_mount_err;
@@ -1701,6 +1703,7 @@ cifs_parse_mount_options(const char *mountdata, const char *devname,
 				goto cifs_parse_mount_err;
 			}
 
+			kfree(vol->domainname);
 			vol->domainname = kstrdup(string, GFP_KERNEL);
 			if (!vol->domainname) {
 				pr_warn("CIFS: no memory for domainname\n");
@@ -1732,6 +1735,7 @@ cifs_parse_mount_options(const char *mountdata, const char *devname,
 			}
 
 			 if (strncasecmp(string, "default", 7) != 0) {
+				kfree(vol->iocharset);
 				vol->iocharset = kstrdup(string,
 							 GFP_KERNEL);
 				if (!vol->iocharset) {
