@@ -2183,11 +2183,7 @@ static void shrink_zone(struct zone *zone, struct scan_control *sc)
 		nr_scanned = sc->nr_scanned;
 
 		memcg = mem_cgroup_iter(root, NULL, &reclaim);
-		/* 
-		 * root css might be in offline state under race condition, 
-		 * and mem_cgroup_iter() might return NULL.
-		 */
-		while (memcg) {
+		do {
 			struct lruvec *lruvec;
 
 			lruvec = mem_cgroup_zone_lruvec(zone, memcg);
@@ -2210,7 +2206,7 @@ static void shrink_zone(struct zone *zone, struct scan_control *sc)
 				break;
 			}
 			memcg = mem_cgroup_iter(root, memcg, &reclaim);
-		}
+		} while (memcg);
 
 		vmpressure(sc->gfp_mask, sc->target_mem_cgroup,
 			   sc->nr_scanned - nr_scanned,

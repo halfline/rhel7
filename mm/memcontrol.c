@@ -1234,26 +1234,8 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
 				smp_rmb();
 				last_visited = iter->last_visited;
 				if (last_visited &&
-				    !css_tryget(&last_visited->css)) {
-					/*
-					 * last_visited->css may be offlined
-					 * and css_tryget() may always return
-					 * false. If "last_visited" == root,
-					 * it is not good enough to just reset
-					 * last_visited and start iteration
-					 * from root:
-					 * since __mem_cgroup_iter_next() will
-					 * return the  same "root" again and
-					 * lead to dead loop.
-					 * The good way is to termination this
-					 * iteration and let RCU unlock go.
-					 */
-					if (last_visited == root) {
-						iter->last_visited = NULL;
-						goto out_unlock;
-					}
+				    !css_tryget(&last_visited->css))
 					last_visited = NULL;
-				}
 			}
 		}
 
