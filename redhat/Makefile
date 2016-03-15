@@ -197,6 +197,13 @@ rh-rtg: rh-release
 	@$(MAKE) rh-release-tag
 	@$(MAKE) rh-dist-git
 
+# RH_LATEST returns the value of the latest "known good" kernel from brew.
+# This should not be confused with the latest top-of-tree development tag.
+RH_LATEST:=$(shell brew latest-pkg --quiet rhel-${RHELMAJOR}.${RHELMINOR}-candidate kernel | awk ' { print $$1 } ')
+
+rh-get-latest:
+	@echo "The latest kernel package tag is ${RH_LATEST}."
+
 rh-help:
 	@echo  'Cleaning targets:'
 	@echo  '  rh-clean            - Do rh-clean-sources, rh-clean-configs, & rh-clean-rpmdirs'
@@ -241,6 +248,7 @@ rh-help:
 	@echo  '		      ppc64, x86_64 using RHEL cross compiler'
 	@echo  '  rh-cross-[ARCH]-rpm - [x86_64 only] execute rpm builds for specified'
 	@echo  '			ARCH using RHEL cross compiler'
+	@echo  '  rh-get-latest - returns latest-pkg tag from brew'
 
 	@echo  ''
 	@echo  'Configuration targets:'
