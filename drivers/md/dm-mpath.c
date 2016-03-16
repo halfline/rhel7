@@ -455,7 +455,7 @@ static int __multipath_map(struct dm_target *ti, struct request *clone,
 		 * blk-mq stacked on blk-mq path(s).
 		 */
 		*__clone = blk_mq_alloc_request(bdev_get_queue(bdev),
-						rq_data_dir(rq), BLK_MQ_REQ_NOWAIT);
+						rq_data_dir(rq), GFP_ATOMIC, false);
 		if (IS_ERR(*__clone)) {
 			/* ENOMEM, requeue */
 			clear_request_fn_mpio(m, map_context);
