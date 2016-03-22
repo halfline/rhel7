@@ -1410,7 +1410,7 @@ static bool pnfs_prepare_to_retry_layoutget(struct pnfs_layout_hdr *lo)
 	 * reference
 	 */
 	pnfs_layoutcommit_inode(lo->plh_inode, false);
-	return !wait_on_bit(&lo->plh_flags, NFS_LAYOUT_RETURN,
+	return !wait_on_bit_action(&lo->plh_flags, NFS_LAYOUT_RETURN,
 				   pnfs_layoutget_retry_bit_wait,
 				   TASK_UNINTERRUPTIBLE);
 }
@@ -1483,7 +1483,7 @@ lookup_again:
 				     &lo->plh_flags)) {
 			spin_unlock(&ino->i_lock);
 			wait_on_bit(&lo->plh_flags, NFS_LAYOUT_FIRST_LAYOUTGET,
-				    nfs_wait_bit_killable, TASK_UNINTERRUPTIBLE);
+				    TASK_UNINTERRUPTIBLE);
 			pnfs_put_layout_hdr(lo);
 			goto lookup_again;
 		}
@@ -2181,7 +2181,7 @@ pnfs_layoutcommit_inode(struct inode *inode, bool sync)
 	if (test_and_set_bit(NFS_INO_LAYOUTCOMMITTING, &nfsi->flags)) {
 		if (!sync)
 			goto out;
-		status = wait_on_bit_lock(&nfsi->flags,
+		status = wait_on_bit_lock_action(&nfsi->flags,
 				NFS_INO_LAYOUTCOMMITTING,
 				nfs_wait_bit_killable,
 				TASK_KILLABLE);
