@@ -20,6 +20,15 @@
 #include <linux/pm_qos.h>
 #include "pci.h"
 
+/*
+ * The UUID is defined in the PCI Firmware Specification available here:
+ * https://www.pcisig.com/members/downloads/pcifw_r3_1_13Dec10.pdf
+ */
+const u8 pci_acpi_dsm_uuid[] = {
+	0xd0, 0x37, 0xc9, 0xe5, 0x53, 0x35, 0x7a, 0x4d,
+	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
+};
+
 /**
  * pci_acpi_wake_bus - Wake-up notification handler for root buses.
  * @handle: ACPI handle of a device the notification is for.
