@@ -272,13 +272,38 @@ static void pids_fork(struct task_struct *task, void *priv)
 	css_put(old_css);
 }
 
+void cgroup_pids_release(struct task_struct *task)
+{
+	struct list_head *cg_list = &task->cg_list;
+	struct cgroup_subsys_state *css;
+
+	if (WARN_ON(!list_empty(cg_list)))
+		return;
+	if (WARN_ON(cg_list->prev == cg_list))
+		return;
+
+	css = (void *)cg_list->prev;
+	pids_uncharge(css_pids(css), 1);
+	css_put(css);
+}
+
 static void pids_exit(struct cgroup *cgroup,
 		      struct cgroup *old_cgroup,
 		      struct task_struct *task)
 {
-	struct pids_cgroup *pids = cgroup_pids(old_cgroup);
+	struct list_head *cg_list = &task->cg_list;
+	struct cgroup_subsys_state *css;
 
-	pids_uncharge(pids, 1);
+	if (WARN_ON(cg_list->prev != cg_list))
+		return;
+	/*
+	 * This preserves list_empty(cg_list) == T and nobody else can use
+	 * ->cg_list after cgroup_exit(). Abuse cg_list->prev to pass this
+	 * css to cgroup_pids_release().
+	 */
+	css = cgroup_subsys_state(old_cgroup, pids_subsys_id);
+	cg_list->prev = (void *)css;
+	css_get(css);
 }
 
 static int pids_max_write(struct cgroup *cgroup, struct cftype *cft,

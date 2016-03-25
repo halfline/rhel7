@@ -21,6 +21,12 @@
 #include <linux/xattr.h>
 #include <linux/fs.h>
 
+#ifdef CONFIG_CGROUP_PIDS
+void cgroup_pids_release(struct task_struct *task);
+#else
+static inline void cgroup_pids_release(struct task_struct *task) {}
+#endif
+
 #ifdef CONFIG_CGROUPS
 
 struct cgroupfs_root;
