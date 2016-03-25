@@ -36,6 +36,7 @@
 #include <linux/atomic.h>
 #include <linux/cgroup.h>
 #include <linux/slab.h>
+#include <linux/seq_file.h>
 
 #define PIDS_MAX (PID_MAX_LIMIT + 1ULL)
 #define PIDS_MAX_STR "max"
@@ -56,13 +57,18 @@ static struct pids_cgroup *css_pids(struct cgroup_subsys_state *css)
 	return container_of(css, struct pids_cgroup, css);
 }
 
-static struct pids_cgroup *parent_pids(struct pids_cgroup *pids)
+static inline struct pids_cgroup *cgroup_pids(struct cgroup *cgroup)
 {
-	return css_pids(pids->css.parent);
+	return css_pids(cgroup_subsys_state(cgroup, pids_subsys_id));
 }
 
-static struct cgroup_subsys_state *
-pids_css_alloc(struct cgroup_subsys_state *parent)
+static struct pids_cgroup *parent_pids(struct pids_cgroup *pids)
+{
+	struct cgroup *pcg = pids->css.cgroup->parent;
+	return pcg ? cgroup_pids(pcg) : NULL;
+}
+
+static struct cgroup_subsys_state *pids_css_alloc(struct cgroup *cgroup)
 {
 	struct pids_cgroup *pids;
 
@@ -75,9 +81,9 @@ pids_css_alloc(struct cgroup_subsys_state *parent)
 	return &pids->css;
 }
 
-static void pids_css_free(struct cgroup_subsys_state *css)
+static void pids_css_free(struct cgroup *cgroup)
 {
-	kfree(css_pids(css));
+	kfree(cgroup_pids(cgroup));
 }
 
 /**
@@ -162,13 +168,13 @@ revert:
 	return -EAGAIN;
 }
 
-static int pids_can_attach(struct cgroup_subsys_state *css,
+static int pids_can_attach(struct cgroup *cgrp,
 			   struct cgroup_taskset *tset)
 {
-	struct pids_cgroup *pids = css_pids(css);
+	struct pids_cgroup *pids = cgroup_pids(cgrp);
 	struct task_struct *task;
 
-	cgroup_taskset_for_each(task, tset) {
+	cgroup_taskset_for_each(task, cgrp, tset) {
 		struct cgroup_subsys_state *old_css;
 		struct pids_cgroup *old_pids;
 
@@ -177,7 +183,7 @@ static int pids_can_attach(struct cgroup_subsys_state *css,
 		 * because cgroup core protects it from being freed before
 		 * the migration completes or fails.
 		 */
-		old_css = task_css(task, pids_cgrp_id);
+		old_css = task_subsys_state(task, pids_subsys_id);
 		old_pids = css_pids(old_css);
 
 		pids_charge(pids, 1);
@@ -187,17 +193,17 @@ static int pids_can_attach(struct cgroup_subsys_state *css,
 	return 0;
 }
 
-static void pids_cancel_attach(struct cgroup_subsys_state *css,
+static void pids_cancel_attach(struct cgroup *cgrp,
 			       struct cgroup_taskset *tset)
 {
-	struct pids_cgroup *pids = css_pids(css);
+	struct pids_cgroup *pids = cgroup_pids(cgrp);
 	struct task_struct *task;
 
-	cgroup_taskset_for_each(task, tset) {
+	cgroup_taskset_for_each(task, cgrp, tset) {
 		struct cgroup_subsys_state *old_css;
 		struct pids_cgroup *old_pids;
 
-		old_css = task_css(task, pids_cgrp_id);
+		old_css = task_subsys_state(task, pids_subsys_id);
 		old_pids = css_pids(old_css);
 
 		pids_charge(old_pids, 1);
@@ -217,7 +223,7 @@ static int pids_can_fork(struct task_struct *task, void **priv_p)
 	 * case we will forcefully revert/reapply the charge on the right
 	 * hierarchy after it is committed to the task proper.
 	 */
-	css = task_get_css(current, pids_cgrp_id);
+	css = task_get_css(current, pids_subsys_id);
 	pids = css_pids(css);
 
 	err = pids_try_charge(pids, 1);
@@ -248,7 +254,7 @@ static void pids_fork(struct task_struct *task, void *priv)
 	struct pids_cgroup *pids;
 	struct pids_cgroup *old_pids = css_pids(old_css);
 
-	css = task_get_css(task, pids_cgrp_id);
+	css = task_get_css(task, pids_subsys_id);
 	pids = css_pids(css);
 
 	/*
@@ -266,24 +272,23 @@ static void pids_fork(struct task_struct *task, void *priv)
 	css_put(old_css);
 }
 
-static void pids_exit(struct cgroup_subsys_state *css,
-		      struct cgroup_subsys_state *old_css,
+static void pids_exit(struct cgroup *cgroup,
+		      struct cgroup *old_cgroup,
 		      struct task_struct *task)
 {
-	struct pids_cgroup *pids = css_pids(old_css);
+	struct pids_cgroup *pids = cgroup_pids(old_cgroup);
 
 	pids_uncharge(pids, 1);
 }
 
-static ssize_t pids_max_write(struct kernfs_open_file *of, char *buf,
-			      size_t nbytes, loff_t off)
+static int pids_max_write(struct cgroup *cgroup, struct cftype *cft,
+			  const char *buf)
 {
-	struct cgroup_subsys_state *css = of_css(of);
-	struct pids_cgroup *pids = css_pids(css);
+	struct pids_cgroup *pids = cgroup_pids(cgroup);
 	int64_t limit;
 	int err;
 
-	buf = strstrip(buf);
+	buf = strstrip((char *)buf);
 	if (!strcmp(buf, PIDS_MAX_STR)) {
 		limit = PIDS_MAX;
 		goto set_limit;
@@ -302,13 +307,13 @@ set_limit:
 	 * critical that any racing fork()s follow the new limit.
 	 */
 	pids->limit = limit;
-	return nbytes;
+	return 0;
 }
 
-static int pids_max_show(struct seq_file *sf, void *v)
+static int pids_max_show(struct cgroup *cgroup, struct cftype *cft,
+                         struct seq_file *sf)
 {
-	struct cgroup_subsys_state *css = seq_css(sf);
-	struct pids_cgroup *pids = css_pids(css);
+	struct pids_cgroup *pids = cgroup_pids(cgroup);
 	int64_t limit = pids->limit;
 
 	if (limit >= PIDS_MAX)
@@ -319,10 +324,10 @@ static int pids_max_show(struct seq_file *sf, void *v)
 	return 0;
 }
 
-static s64 pids_current_read(struct cgroup_subsys_state *css,
+static s64 pids_current_read(struct cgroup *cgroup,
 			     struct cftype *cft)
 {
-	struct pids_cgroup *pids = css_pids(css);
+	struct pids_cgroup *pids = cgroup_pids(cgroup);
 
 	return atomic64_read(&pids->counter);
 }
@@ -330,8 +335,8 @@ static s64 pids_current_read(struct cgroup_subsys_state *css,
 static struct cftype pids_files[] = {
 	{
 		.name = "max",
-		.write = pids_max_write,
-		.seq_show = pids_max_show,
+		.write_string = pids_max_write,
+		.read_seq_string = pids_max_show,
 		.flags = CFTYPE_NOT_ON_ROOT,
 	},
 	{
@@ -341,7 +346,9 @@ static struct cftype pids_files[] = {
 	{ }	/* terminate */
 };
 
-struct cgroup_subsys pids_cgrp_subsys = {
+struct cgroup_subsys pids_subsys = {
+	.name		= "pids",
+	.subsys_id	= pids_subsys_id,
 	.css_alloc	= pids_css_alloc,
 	.css_free	= pids_css_free,
 	.can_attach 	= pids_can_attach,
@@ -350,6 +357,5 @@ struct cgroup_subsys pids_cgrp_subsys = {
 	.cancel_fork	= pids_cancel_fork,
 	.fork		= pids_fork,
 	.exit		= pids_exit,
-	.legacy_cftypes	= pids_files,
-	.dfl_cftypes	= pids_files,
+	.base_cftypes	= pids_files,
 };
