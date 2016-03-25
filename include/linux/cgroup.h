@@ -739,6 +739,31 @@ static inline struct cgroup* task_cgroup(struct task_struct *task,
 }
 
 /**
+ * task_get_css - find and get the css for (task, subsys)
+ * @task: the target task
+ * @subsys_id: the target subsystem ID
+ *
+ * Find the css for the (@task, @subsys_id) combination, increment a
+ * reference on and return it.  This function is guaranteed to return a
+ * valid css.
+ */
+static inline struct cgroup_subsys_state *
+task_get_css(struct task_struct *task, int subsys_id)
+{
+	struct cgroup_subsys_state *css;
+
+	rcu_read_lock();
+	while (true) {
+		css = task_subsys_state(task, subsys_id);
+		if (likely(css_tryget(css)))
+			break;
+		cpu_relax();
+	}
+	rcu_read_unlock();
+	return css;
+}
+
+/**
  * cgroup_for_each_child - iterate through children of a cgroup
  * @pos: the cgroup * to use as the loop cursor
  * @cgroup: cgroup whose children to walk
