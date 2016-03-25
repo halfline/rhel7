@@ -30,18 +30,6 @@ struct cgroup;
 struct css_id;
 struct eventfd_ctx;
 
-extern int cgroup_init_early(void);
-extern int cgroup_init(void);
-extern void cgroup_fork(struct task_struct *p);
-extern void cgroup_post_fork(struct task_struct *p);
-extern void cgroup_exit(struct task_struct *p, int run_callbacks);
-extern int cgroupstats_build(struct cgroupstats *stats,
-				struct dentry *dentry);
-extern int cgroup_load_subsys(struct cgroup_subsys *ss);
-extern void cgroup_unload_subsys(struct cgroup_subsys *ss);
-
-extern int proc_cgroup_show(struct seq_file *, void *);
-
 /*
  * Define the enumeration of all cgroup subsystems.
  *
@@ -56,6 +44,8 @@ extern int proc_cgroup_show(struct seq_file *, void *);
  * modifications to this ennumeration
  */
 #define SUBSYS(_x) _x ## _subsys_id,
+#define SUBSYS_TAG(_t) CGROUP_ ## _t, \
+	__unused_tag_ ## _t = CGROUP_ ## _t - 1,
 enum cgroup_subsys_id {
 #define IS_SUBSYS_ENABLED(option) IS_BUILTIN(option)
 #include <linux/cgroup_subsys.h>
@@ -64,6 +54,7 @@ enum cgroup_subsys_id {
 
 	__CGROUP_SUBSYS_TEMP_PLACEHOLDER = CGROUP_BUILTIN_SUBSYS_COUNT - 1,
 
+#undef SUBSYS_TAG
 #define IS_SUBSYS_ENABLED(option) IS_MODULE(option)
 #define ENABLE_NETPRIO_NOW
 #include <linux/cgroup_subsys.h>
@@ -72,6 +63,25 @@ enum cgroup_subsys_id {
 	CGROUP_SUBSYS_COUNT,
 };
 #undef SUBSYS
+
+#define CGROUP_CANFORK_COUNT (CGROUP_CANFORK_END - CGROUP_CANFORK_START)
+
+extern int cgroup_init_early(void);
+extern int cgroup_init(void);
+extern void cgroup_fork(struct task_struct *p);
+extern int cgroup_can_fork(struct task_struct *p,
+			   void *ss_priv[CGROUP_CANFORK_COUNT]);
+extern void cgroup_cancel_fork(struct task_struct *p,
+			       void *ss_priv[CGROUP_CANFORK_COUNT]);
+extern void cgroup_post_fork(struct task_struct *p,
+			     void *old_ss_priv[CGROUP_CANFORK_COUNT]);
+extern void cgroup_exit(struct task_struct *p, int run_callbacks);
+extern int cgroupstats_build(struct cgroupstats *stats,
+				struct dentry *dentry);
+extern int cgroup_load_subsys(struct cgroup_subsys *ss);
+extern void cgroup_unload_subsys(struct cgroup_subsys *ss);
+
+extern int proc_cgroup_show(struct seq_file *, void *);
 
 /* Per-subsystem/per-cgroup state maintained by the system. */
 struct cgroup_subsys_state {
@@ -593,7 +603,9 @@ struct cgroup_subsys {
 	int (*can_attach)(struct cgroup *cgrp, struct cgroup_taskset *tset);
 	void (*cancel_attach)(struct cgroup *cgrp, struct cgroup_taskset *tset);
 	void (*attach)(struct cgroup *cgrp, struct cgroup_taskset *tset);
-	void (*fork)(struct task_struct *task);
+	int (*can_fork)(struct task_struct *task, void **priv_p);
+	void (*cancel_fork)(struct task_struct *task, void *priv);
+	void (*fork)(struct task_struct *task, void *priv);
 	void (*exit)(struct cgroup *cgrp, struct cgroup *old_cgrp,
 		     struct task_struct *task);
 	void (*bind)(struct cgroup *root);
@@ -884,10 +896,18 @@ struct cgroup_subsys_state *cgroup_css_from_dir(struct file *f, int id);
 
 #else /* !CONFIG_CGROUPS */
 
+#define CGROUP_CANFORK_COUNT	0
+
 static inline int cgroup_init_early(void) { return 0; }
 static inline int cgroup_init(void) { return 0; }
 static inline void cgroup_fork(struct task_struct *p) {}
-static inline void cgroup_post_fork(struct task_struct *p) {}
+static inline int cgroup_can_fork(struct task_struct *p,
+				  void *ss_priv[CGROUP_CANFORK_COUNT])
+{ return 0; }
+static inline void cgroup_cancel_fork(struct task_struct *p,
+				      void *ss_priv[CGROUP_CANFORK_COUNT]) {}
+static inline void cgroup_post_fork(struct task_struct *p,
+				    void *ss_priv[CGROUP_CANFORK_COUNT]) {}
 static inline void cgroup_exit(struct task_struct *p, int callbacks) {}
 
 static inline void cgroup_lock(void) {}

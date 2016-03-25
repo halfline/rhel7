@@ -3,6 +3,16 @@
  * patches don't collide
  */
 
+/*
+ * This file *must* be included with SUBSYS() defined.
+ * SUBSYS_TAG() is a noop if undefined.
+ */
+
+#ifndef SUBSYS_TAG
+#define __TMP_SUBSYS_TAG
+#define SUBSYS_TAG(_x)
+#endif
+
 /* */
 
 /* */
@@ -83,4 +93,12 @@ SUBSYS(hugetlb)
 SUBSYS(bcache)
 #endif
 
+SUBSYS_TAG(CANFORK_START)
+SUBSYS_TAG(CANFORK_END)
+
 /* */
+
+#ifdef __TMP_SUBSYS_TAG
+#undef __TMP_SUBSYS_TAG
+#undef SUBSYS_TAG
+#endif
