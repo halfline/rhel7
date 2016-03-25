@@ -603,9 +603,8 @@ struct cgroup_subsys {
 	int (*can_attach)(struct cgroup *cgrp, struct cgroup_taskset *tset);
 	void (*cancel_attach)(struct cgroup *cgrp, struct cgroup_taskset *tset);
 	void (*attach)(struct cgroup *cgrp, struct cgroup_taskset *tset);
-	int (*can_fork)(struct task_struct *task, void **priv_p);
-	void (*cancel_fork)(struct task_struct *task, void *priv);
-	void (*fork)(struct task_struct *task, void *priv);
+	RH_KABI_REPLACE(void (*fork)(struct task_struct *task),
+			void (*fork)(struct task_struct *task, void *priv))
 	void (*exit)(struct cgroup *cgrp, struct cgroup *old_cgrp,
 		     struct task_struct *task);
 	void (*bind)(struct cgroup *root);
@@ -656,6 +655,9 @@ struct cgroup_subsys {
 
 	/* should be defined only by modular subsystems */
 	struct module *module;
+
+	RH_KABI_EXTEND(int (*can_fork)(struct task_struct *task, void **priv_p))
+	RH_KABI_EXTEND(void (*cancel_fork)(struct task_struct *task, void *priv))
 };
 
 #define SUBSYS(_x) extern struct cgroup_subsys _x ## _subsys;

@@ -93,6 +93,7 @@ SUBSYS(hugetlb)
 SUBSYS(bcache)
 #endif
 
+#ifndef __GENKSYMS__
 SUBSYS_TAG(CANFORK_START)
 
 #if IS_SUBSYS_ENABLED(CONFIG_CGROUP_PIDS)
@@ -100,7 +101,7 @@ SUBSYS(pids)
 #endif
 
 SUBSYS_TAG(CANFORK_END)
-
+#endif
 /* */
 
 #ifdef __TMP_SUBSYS_TAG
