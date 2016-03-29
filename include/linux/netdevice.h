@@ -3332,6 +3332,23 @@ struct net_device *netdev_all_upper_get_next_dev_rcu(struct net_device *dev,
 	     updev; \
 	     updev = netdev_all_upper_get_next_dev_rcu(dev, &(iter)))
 
+void *netdev_lower_get_next_private(struct net_device *dev,
+				    struct list_head **iter);
+void *netdev_lower_get_next_private_rcu(struct net_device *dev,
+					struct list_head **iter);
+
+#define netdev_for_each_lower_private(dev, priv, iter) \
+	for (iter = (dev)->adj_list.lower.next, \
+	     priv = netdev_lower_get_next_private(dev, &(iter)); \
+	     priv; \
+	     priv = netdev_lower_get_next_private(dev, &(iter)))
+
+#define netdev_for_each_lower_private_rcu(dev, priv, iter) \
+	for (iter = &(dev)->adj_list.lower, \
+	     priv = netdev_lower_get_next_private_rcu(dev, &(iter)); \
+	     priv; \
+	     priv = netdev_lower_get_next_private_rcu(dev, &(iter)))
+
 struct net_device *netdev_master_upper_dev_get(struct net_device *dev);
 struct net_device *netdev_master_upper_dev_get_rcu(struct net_device *dev);
 int netdev_upper_dev_link(struct net_device *dev, struct net_device *upper_dev);
