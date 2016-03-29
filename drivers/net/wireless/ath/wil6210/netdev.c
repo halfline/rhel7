@@ -180,7 +180,7 @@ void *wil_if_alloc(struct device *dev, void __iomem *csr)
 
 	netif_napi_add(ndev, &wil->napi_rx, wil6210_netdev_poll_rx,
 		       WIL6210_NAPI_BUDGET);
-	netif_napi_add(ndev, &wil->napi_tx, wil6210_netdev_poll_tx,
+	netif_tx_napi_add(ndev, &wil->napi_tx, wil6210_netdev_poll_tx,
 		       WIL6210_NAPI_BUDGET);
 
 	netif_tx_stop_all_queues(ndev);
