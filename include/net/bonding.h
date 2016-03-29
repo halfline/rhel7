@@ -83,12 +83,12 @@
  *
  * Caller must hold RTNL
  */
-#define bond_for_each_slave(bond, pos, iter) iter = &(bond)->slave_list; \
-	list_for_each_entry(pos, &(bond)->slave_list, list)
+#define bond_for_each_slave(bond, pos, iter) \
+	netdev_for_each_lower_private((bond)->dev, pos, iter)
 
 /* Caller must have rcu_read_lock */
-#define bond_for_each_slave_rcu(bond, pos, iter) iter = &(bond)->slave_list; \
-	list_for_each_entry_rcu(pos, &(bond)->slave_list, list)
+#define bond_for_each_slave_rcu(bond, pos, iter) \
+	netdev_for_each_lower_private_rcu((bond)->dev, pos, iter)
 
 #ifdef CONFIG_NET_POLL_CONTROLLER
 extern atomic_t netpoll_block_tx;
