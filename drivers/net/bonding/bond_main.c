@@ -911,33 +911,6 @@ void bond_select_active_slave(struct bonding *bond)
 	}
 }
 
-/*--------------------------- slave list handling ---------------------------*/
-
-/*
- * This function attaches the slave to the end of list.
- *
- * bond->lock held for writing by caller.
- */
-static void bond_attach_slave(struct bonding *bond, struct slave *new_slave)
-{
-	list_add_tail_rcu(&new_slave->list, &bond->slave_list);
-}
-
-/*
- * This function detaches the slave from the list.
- * WARNING: no check is made to verify if the slave effectively
- * belongs to <bond>.
- * Nothing is freed on return, structures are just unchained.
- * If any slave pointer in bond was pointing to <slave>,
- * it should be changed by the calling function.
- *
- * bond->lock held for writing by caller.
- */
-static void bond_detach_slave(struct bonding *bond, struct slave *slave)
-{
-	list_del_rcu(&slave->list);
-}
-
 #ifdef CONFIG_NET_POLL_CONTROLLER
 static inline int slave_enable_netpoll(struct slave *slave)
 {
@@ -1231,7 +1204,6 @@ static struct slave *bond_alloc_slave(struct bonding *bond)
 	slave = kzalloc(sizeof(struct slave), GFP_KERNEL);
 	if (!slave)
 		return NULL;
-	INIT_LIST_HEAD(&slave->list);
 
 	if (BOND_MODE(bond) == BOND_MODE_8023AD) {
 		SLAVE_AD_INFO(slave) = kzalloc(sizeof(struct ad_slave_info),
@@ -1638,7 +1610,6 @@ int bond_enslave(struct net_device *bond_dev, struct net_device *slave_dev)
 		netdev_dbg(bond_dev, "Error %d calling bond_master_upper_dev_link\n", res);
 		goto err_unregister;
 	}
-	bond_attach_slave(bond, new_slave);
 
 	res = bond_sysfs_slave_add(new_slave);
 	if (res) {
@@ -1669,7 +1640,6 @@ int bond_enslave(struct net_device *bond_dev, struct net_device *slave_dev)
 
 /* Undo stages on error */
 err_upper_unlink:
-	bond_detach_slave(bond, new_slave);
 	bond_upper_dev_unlink(bond_dev, slave_dev);
 
 err_unregister:
@@ -1767,8 +1737,6 @@ static int __bond_release_one(struct net_device *bond_dev,
 	}
 
 	/* release the slave from its bond */
-	bond_detach_slave(bond, slave);
-
 	bond_sysfs_slave_del(slave);
 
 	/* recompute stats just before removing the slave */
@@ -4060,7 +4028,6 @@ void bond_setup(struct net_device *bond_dev)
 	struct bonding *bond = netdev_priv(bond_dev);
 
 	spin_lock_init(&bond->mode_lock);
-	INIT_LIST_HEAD(&bond->slave_list);
 	bond->params = bonding_defaults;
 
 	/* Initialize pointers */
