@@ -7653,7 +7653,7 @@ static int ixgbe_set_features(struct net_device *netdev,
 
 static int ixgbe_ndo_fdb_add(struct ndmsg *ndm, struct nlattr *tb[],
 			     struct net_device *dev,
-			     const unsigned char *addr,
+			     const unsigned char *addr, u16 vid,
 			     u16 flags)
 {
 	/* guarantee we can provide a unique filter for the unicast address */
@@ -7662,7 +7662,7 @@ static int ixgbe_ndo_fdb_add(struct ndmsg *ndm, struct nlattr *tb[],
 			return -ENOMEM;
 	}
 
-	return ndo_dflt_fdb_add(ndm, tb, dev, addr, flags);
+	return ndo_dflt_fdb_add(ndm, tb, dev, addr, vid, flags);
 }
 
 /**

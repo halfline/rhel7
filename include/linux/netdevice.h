@@ -973,11 +973,11 @@ typedef u16 (*select_queue_fallback_t)(struct net_device *dev,
  *
  * int (*ndo_fdb_add)(struct ndmsg *ndm, struct nlattr *tb[],
  *		      struct net_device *dev,
- *		      const unsigned char *addr, u16 flags)
+ *		      const unsigned char *addr, u16 vid, u16 flags)
  *	Adds an FDB entry to dev for addr.
  * int (*ndo_fdb_del)(struct ndmsg *ndm, struct nlattr *tb[],
  *		      struct net_device *dev,
- *		      const unsigned char *addr)
+ *		      const unsigned char *addr, u16 vid)
  *	Deletes the FDB entry from dev coresponding to addr.
  * int (*ndo_fdb_dump)(struct sk_buff *skb, struct netlink_callback *cb,
  *		       struct net_device *dev, int idx)
@@ -1156,15 +1156,21 @@ struct net_device_ops {
 	int			(*ndo_neigh_construct)(struct neighbour *n);
 	void			(*ndo_neigh_destroy)(struct neighbour *n);
 
-	int			(*ndo_fdb_add)(struct ndmsg *ndm,
+	RH_KABI_RENAME(int	(*ndo_fdb_add),
+		       int	(*ndo_fdb_add_rh72))(struct ndmsg *ndm,
 					       struct nlattr *tb[],
 					       struct net_device *dev,
 					       const unsigned char *addr,
 					       u16 flags);
-	int			(*ndo_fdb_del)(struct ndmsg *ndm,
+	RH_KABI_REPLACE(int	(*ndo_fdb_del)(struct ndmsg *ndm,
 					       struct nlattr *tb[],
 					       struct net_device *dev,
-					       const unsigned char *addr);
+					       const unsigned char *addr),
+			int	(*ndo_fdb_del)(struct ndmsg *ndm,
+					       struct nlattr *tb[],
+					       struct net_device *dev,
+					       const unsigned char *addr,
+					       u16 vid))
 	int			(*ndo_fdb_dump)(struct sk_buff *skb,
 						struct netlink_callback *cb,
 						struct net_device *dev,
@@ -1218,7 +1224,12 @@ struct net_device_ops {
 							struct net_device *dev))
 	RH_KABI_USE_P(8, void	(*ndo_dfwd_del_station)(struct net_device *pdev,
 							void *priv))
-	RH_KABI_RESERVE_P(9)
+	RH_KABI_USE_P(9, int	(*ndo_fdb_add)(struct ndmsg *ndm,
+					       struct nlattr *tb[],
+					       struct net_device *dev,
+					       const unsigned char *addr,
+					       u16 vid,
+					       u16 flags))
 	RH_KABI_RESERVE_P(10)
 	RH_KABI_RESERVE_P(11)
 	RH_KABI_RESERVE_P(12)
