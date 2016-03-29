@@ -3337,6 +3337,9 @@ struct net_device *netdev_master_upper_dev_get_rcu(struct net_device *dev);
 int netdev_upper_dev_link(struct net_device *dev, struct net_device *upper_dev);
 int netdev_master_upper_dev_link(struct net_device *dev,
 				 struct net_device *upper_dev);
+int netdev_master_upper_dev_link_private(struct net_device *dev,
+					 struct net_device *upper_dev,
+					 void *private);
 void netdev_upper_dev_unlink(struct net_device *dev,
 			     struct net_device *upper_dev);
 void *netdev_lower_dev_get_private_rcu(struct net_device *dev,
