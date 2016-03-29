@@ -50,6 +50,8 @@
 #include <linux/netdev_features.h>
 #include <linux/neighbour.h>
 #include <uapi/linux/netdevice.h>
+#include <uapi/linux/if_bonding.h>
+#include <uapi/linux/pkt_cls.h>
 
 #include <linux/rh_kabi.h>
 
@@ -1114,7 +1116,9 @@ struct net_device_ops {
 						   struct nlattr *port[]);
 	int			(*ndo_get_vf_port)(struct net_device *dev,
 						   int vf, struct sk_buff *skb);
-	int			(*ndo_setup_tc)(struct net_device *dev, u8 tc);
+	RH_KABI_RENAME(int	(*ndo_setup_tc),
+		       int	(*ndo_setup_tc_rh72))(struct net_device *dev,
+						      u8 tc);
 #if IS_ENABLED(CONFIG_FCOE)
 	int			(*ndo_fcoe_enable)(struct net_device *dev);
 	int			(*ndo_fcoe_disable)(struct net_device *dev);
@@ -1230,7 +1234,8 @@ struct net_device_ops {
 					       const unsigned char *addr,
 					       u16 vid,
 					       u16 flags))
-	RH_KABI_RESERVE_P(10)
+	RH_KABI_USE_P(10,int	(*ndo_setup_tc)(struct net_device *dev,
+						u32 handle, u8 tc))
 	RH_KABI_RESERVE_P(11)
 	RH_KABI_RESERVE_P(12)
 	RH_KABI_RESERVE_P(13)

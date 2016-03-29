@@ -38,8 +38,13 @@ static void mqprio_destroy(struct Qdisc *sch)
 		kfree(priv->qdiscs);
 	}
 
-	if (priv->hw_owned && dev->netdev_ops->ndo_setup_tc)
-		dev->netdev_ops->ndo_setup_tc(dev, 0);
+	if (priv->hw_owned && (dev->netdev_ops->ndo_setup_tc ||
+			       dev->netdev_ops->ndo_setup_tc_rh72))
+		if (dev->netdev_ops->ndo_setup_tc) {
+			dev->netdev_ops->ndo_setup_tc(dev, sch->handle, 0);
+		} else {
+			dev->netdev_ops->ndo_setup_tc_rh72(dev, 0);
+		}
 	else
 		netdev_set_num_tc(dev, 0);
 }
@@ -59,7 +64,8 @@ static int mqprio_parse_opt(struct net_device *dev, struct tc_mqprio_qopt *qopt)
 	}
 
 	/* net_device does not support requested operation */
-	if (qopt->hw && !dev->netdev_ops->ndo_setup_tc)
+	if (qopt->hw && !dev->netdev_ops->ndo_setup_tc &&
+	    !dev->netdev_ops->ndo_setup_tc_rh72)
 		return -EINVAL;
 
 	/* if hw owned qcount and qoffset are taken from LLD so
@@ -141,7 +147,10 @@ static int mqprio_init(struct Qdisc *sch, struct nlattr *opt)
 	 */
 	if (qopt->hw) {
 		priv->hw_owned = 1;
-		err = dev->netdev_ops->ndo_setup_tc(dev, qopt->num_tc);
+		err = dev->netdev_ops->ndo_setup_tc ?
+			dev->netdev_ops->ndo_setup_tc(dev, sch->handle,
+						      qopt->num_tc) :
+			dev->netdev_ops->ndo_setup_tc_rh72(dev, qopt->num_tc);
 		if (err)
 			goto err;
 	} else {
