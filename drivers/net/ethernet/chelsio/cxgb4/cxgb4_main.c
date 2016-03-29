@@ -1306,7 +1306,7 @@ static int del_filter_wr(struct adapter *adapter, int fidx)
 }
 
 static u16 cxgb_select_queue(struct net_device *dev, struct sk_buff *skb,
-			     void *accel_priv)
+			     void *accel_priv, select_queue_fallback_t fallback)
 {
 	int txq;
 
@@ -1344,7 +1344,7 @@ static u16 cxgb_select_queue(struct net_device *dev, struct sk_buff *skb,
 		return txq;
 	}
 
-	return skb_tx_hash(dev, skb);
+	return fallback(dev, skb) % dev->real_num_tx_queues;
 }
 
 static inline int is_offload(const struct adapter *adap)

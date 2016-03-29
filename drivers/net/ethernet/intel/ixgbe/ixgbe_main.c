@@ -7034,7 +7034,7 @@ static void ixgbe_atr(struct ixgbe_ring *ring,
 }
 
 static u16 ixgbe_select_queue(struct net_device *dev, struct sk_buff *skb,
-			      void *accel_priv)
+			      void *accel_priv, select_queue_fallback_t fallback)
 {
 #if 0 /* RHEL - ixgbe_fwd_adapter not defined now */
 	struct ixgbe_fwd_adapter *fwd_adapter = accel_priv;
@@ -7064,7 +7064,7 @@ static u16 ixgbe_select_queue(struct net_device *dev, struct sk_buff *skb,
 		if (adapter->flags & IXGBE_FLAG_FCOE_ENABLED)
 			break;
 	default:
-		return __netdev_pick_tx(dev, skb);
+		return fallback(dev, skb);
 	}
 
 	f = &adapter->ring_feature[RING_F_FCOE];
@@ -7077,7 +7077,7 @@ static u16 ixgbe_select_queue(struct net_device *dev, struct sk_buff *skb,
 
 	return txq + f->offset;
 #else
-	return __netdev_pick_tx(dev, skb);
+	return fallback(dev, skb);
 #endif
 }
 

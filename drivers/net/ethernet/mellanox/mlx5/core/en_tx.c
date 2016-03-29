@@ -97,10 +97,10 @@ static inline void mlx5e_dma_get(struct mlx5e_sq *sq, u32 i, dma_addr_t *addr,
 }
 
 u16 mlx5e_select_queue(struct net_device *dev, struct sk_buff *skb,
-		       void *accel_priv)
+		       void *accel_priv, select_queue_fallback_t fallback)
 {
 	struct mlx5e_priv *priv = netdev_priv(dev);
-	int channel_ix = __netdev_pick_tx(dev, skb);
+	int channel_ix = fallback(dev, skb);
 	int up = skb_vlan_tag_present(skb)        ?
 		 skb->vlan_tci >> VLAN_PRIO_SHIFT :
 		 priv->default_vlan_prio;
