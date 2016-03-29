@@ -2202,7 +2202,7 @@ static bool bond_has_this_ip(struct bonding *bond, __be32 ip)
 		return true;
 
 	rcu_read_lock();
-	netdev_for_each_upper_dev_rcu(bond->dev, upper, iter) {
+	netdev_for_each_all_upper_dev_rcu(bond->dev, upper, iter) {
 		if (ip == bond_confirm_addr(upper, 0, ip)) {
 			ret = true;
 			break;
@@ -2296,7 +2296,8 @@ static void bond_arp_send_all(struct bonding *bond, struct slave *slave)
 		 * rt->dst.dev. If found we save the tag of the vlan and
 		 * proceed to send the packet.
 		 */
-		netdev_for_each_upper_dev_rcu(bond->dev, vlan_upper, vlan_iter) {
+		netdev_for_each_all_upper_dev_rcu(bond->dev, vlan_upper,
+						  vlan_iter) {
 			if (!is_vlan_dev(vlan_upper))
 				continue;
 
@@ -2306,7 +2307,8 @@ static void bond_arp_send_all(struct bonding *bond, struct slave *slave)
 				rcu_read_unlock();
 				goto found;
 			}
-			netdev_for_each_upper_dev_rcu(vlan_upper, upper, iter) {
+			netdev_for_each_all_upper_dev_rcu(vlan_upper, upper,
+							  iter) {
 				if (upper == rt->dst.dev) {
 					/* If the upper dev is a vlan dev too,
 					 *  set the vlan tag to inner tag.
@@ -2327,7 +2329,7 @@ static void bond_arp_send_all(struct bonding *bond, struct slave *slave)
 		 * our upper vlans, then just search for any dev that
 		 * matches, and in case it's a vlan - save the id
 		 */
-		netdev_for_each_upper_dev_rcu(bond->dev, upper, iter) {
+		netdev_for_each_all_upper_dev_rcu(bond->dev, upper, iter) {
 			if (upper == rt->dst.dev) {
 				rcu_read_unlock();
 				goto found;

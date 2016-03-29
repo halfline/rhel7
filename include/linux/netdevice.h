@@ -1609,6 +1609,19 @@ struct net_device {
 	RH_KABI_USE_P(2, atomic_long_t  rx_nohandler) /* inactive slave drops */
 #ifndef __GENKSYMS__
 	struct list_head	lower_dev_list;
+
+	/* directly linked devices, like slaves for bonding */
+	struct {
+		struct list_head upper;
+		struct list_head lower;
+	} adj_list;
+
+	/*
+	 * RHEL ONLY: upstream has a matching all_adj_list that replaces
+	 * upper_dev_list and lower_dev_list directly, but making that
+	 * replacement would be a kabi nightmare, even more than we've
+	 * already got right here.
+	 */
 #else
 	/*
 	 * struct list_head contains two pointers, no easy way to make use of
@@ -1616,14 +1629,18 @@ struct net_device {
 	 * old school and using __GENKSYMS wrappers directly here.
 	 * RH_KABI_RESERVE_P(3) -> void (*rh_reserved3)(void);
 	 * RH_KABI_RESERVE_P(4) -> void (*rh_reserved4)(void);
+	 * RH_KABI_RESERVE_P(5) -> void (*rh_reserved5)(void);
+	 * RH_KABI_RESERVE_P(6) -> void (*rh_reserved6)(void);
+	 * RH_KABI_RESERVE_P(7) -> void (*rh_reserved7)(void);
+	 * RH_KABI_RESERVE_P(8) -> void (*rh_reserved8)(void);
 	 */
 	void (*rh_reserved3)(void);
 	void (*rh_reserved4)(void);
+	void (*rh_reserved5)(void);
+	void (*rh_reserved6)(void);
+	void (*rh_reserved7)(void);
+	void (*rh_reserved8)(void);
 #endif
-	RH_KABI_RESERVE_P(5)
-	RH_KABI_RESERVE_P(6)
-	RH_KABI_RESERVE_P(7)
-	RH_KABI_RESERVE_P(8)
 	RH_KABI_RESERVE_P(9)
 	RH_KABI_RESERVE_P(10)
 	RH_KABI_RESERVE_P(11)
@@ -3305,15 +3322,15 @@ extern int		bpf_jit_enable;
 
 bool netdev_has_upper_dev(struct net_device *dev, struct net_device *upper_dev);
 bool netdev_has_any_upper_dev(struct net_device *dev);
-struct net_device *netdev_upper_get_next_dev_rcu(struct net_device *dev,
-						 struct list_head **iter);
+struct net_device *netdev_all_upper_get_next_dev_rcu(struct net_device *dev,
+						     struct list_head **iter);
 
 /* iterate through upper list, must be called under RCU read lock */
-#define netdev_for_each_upper_dev_rcu(dev, upper, iter) \
+#define netdev_for_each_all_upper_dev_rcu(dev, updev, iter) \
 	for (iter = &(dev)->upper_dev_list, \
-	     upper = netdev_upper_get_next_dev_rcu(dev, &(iter)); \
-	     upper; \
-	     upper = netdev_upper_get_next_dev_rcu(dev, &(iter)))
+	     updev = netdev_all_upper_get_next_dev_rcu(dev, &(iter)); \
+	     updev; \
+	     updev = netdev_all_upper_get_next_dev_rcu(dev, &(iter)))
 
 struct net_device *netdev_master_upper_dev_get(struct net_device *dev);
 struct net_device *netdev_master_upper_dev_get_rcu(struct net_device *dev);
