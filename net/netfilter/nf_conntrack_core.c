@@ -148,7 +148,7 @@ static u32 hash_conntrack_raw(const struct nf_conntrack_tuple *tuple)
 
 static u32 __hash_bucket(u32 hash, unsigned int size)
 {
-	return ((u64)hash * size) >> 32;
+	return reciprocal_scale(hash, size);
 }
 
 static u32 hash_bucket(u32 hash, const struct net *net)

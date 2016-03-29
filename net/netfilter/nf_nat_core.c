@@ -277,7 +277,7 @@ find_best_ips_proto(const struct nf_conntrack_zone *zone,
 		}
 
 		var_ipp->all[i] = (__force __u32)
-			htonl(minip + (((u64)j * dist) >> 32));
+			htonl(minip + reciprocal_scale(j, dist));
 		if (var_ipp->all[i] != range->max_addr.all[i])
 			full_range = true;
 
