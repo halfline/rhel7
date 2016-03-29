@@ -263,14 +263,7 @@ struct bond_vlan_tag {
 static inline struct slave *bond_get_slave_by_dev(struct bonding *bond,
 						  struct net_device *slave_dev)
 {
-	struct slave *slave = NULL;
-	struct list_head *iter;
-
-	bond_for_each_slave(bond, slave, iter)
-		if (slave->dev == slave_dev)
-			return slave;
-
-	return NULL;
+	return netdev_lower_dev_get_private(bond->dev, slave_dev);
 }
 
 static inline struct bonding *bond_get_bond_by_slave(struct slave *slave)
