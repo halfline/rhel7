@@ -28,6 +28,7 @@ static void mqprio_destroy(struct Qdisc *sch)
 {
 	struct net_device *dev = qdisc_dev(sch);
 	struct mqprio_sched *priv = qdisc_priv(sch);
+	struct tc_to_netdev tc = {.type = TC_SETUP_MQPRIO};
 	unsigned int ntx;
 
 	if (priv->qdiscs) {
@@ -41,7 +42,7 @@ static void mqprio_destroy(struct Qdisc *sch)
 	if (priv->hw_owned && (dev->netdev_ops->ndo_setup_tc ||
 			       dev->netdev_ops->ndo_setup_tc_rh72))
 		if (dev->netdev_ops->ndo_setup_tc) {
-			dev->netdev_ops->ndo_setup_tc(dev, sch->handle, 0);
+			dev->netdev_ops->ndo_setup_tc(dev, sch->handle, 0, &tc);
 		} else {
 			dev->netdev_ops->ndo_setup_tc_rh72(dev, 0);
 		}
@@ -146,10 +147,13 @@ static int mqprio_init(struct Qdisc *sch, struct nlattr *opt)
 	 * supplied and verified mapping
 	 */
 	if (qopt->hw) {
+		struct tc_to_netdev tc = {.type = TC_SETUP_MQPRIO,
+					  .tc = qopt->num_tc};
+
 		priv->hw_owned = 1;
 		err = dev->netdev_ops->ndo_setup_tc ?
-			dev->netdev_ops->ndo_setup_tc(dev, sch->handle,
-						      qopt->num_tc) :
+			dev->netdev_ops->ndo_setup_tc(dev, sch->handle, 0,
+						      &tc) :
 			dev->netdev_ops->ndo_setup_tc_rh72(dev, qopt->num_tc);
 		if (err)
 			goto err;

@@ -787,6 +787,21 @@ struct netdev_phys_port_id {
 typedef u16 (*select_queue_fallback_t)(struct net_device *dev,
 				       struct sk_buff *skb);
 
+/* This structure holds attributes of qdisc and classifiers
+ * that are being passed to the netdevice through the setup_tc op.
+ */
+enum {
+	TC_SETUP_MQPRIO,
+};
+
+struct tc_to_netdev {
+	unsigned int type;
+	union {
+		u8 tc;
+	};
+};
+
+
 /*
  * This structure defines the management hooks for network devices.
  * The following hooks can be defined; unless noted otherwise, they are
@@ -1235,7 +1250,9 @@ struct net_device_ops {
 					       u16 vid,
 					       u16 flags))
 	RH_KABI_USE_P(10,int	(*ndo_setup_tc)(struct net_device *dev,
-						u32 handle, u8 tc))
+						u32 handle,
+						__be16 protocol,
+						struct tc_to_netdev *tc))
 	RH_KABI_RESERVE_P(11)
 	RH_KABI_RESERVE_P(12)
 	RH_KABI_RESERVE_P(13)
