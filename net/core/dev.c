@@ -2637,6 +2637,7 @@ out_kfree_skb:
 out_null:
 	return NULL;
 }
+EXPORT_SYMBOL_GPL(dev_hard_start_xmit);
 
 static void qdisc_pkt_len_init(struct sk_buff *skb)
 {
@@ -2792,7 +2793,7 @@ EXPORT_SYMBOL(dev_loopback_xmit);
  *      the BH enable code must have IRQs enabled so that it will not deadlock.
  *          --BLG
  */
-int dev_queue_xmit(struct sk_buff *skb)
+int __dev_queue_xmit(struct sk_buff *skb, void *accel_priv)
 {
 	struct net_device *dev = skb->dev;
 	struct netdev_queue *txq;
@@ -2816,7 +2817,7 @@ int dev_queue_xmit(struct sk_buff *skb)
 	else
 		skb_dst_force(skb);
 
-	txq = netdev_pick_tx(dev, skb);
+	txq = netdev_pick_tx(dev, skb, accel_priv);
 	q = rcu_dereference_bh(txq->qdisc);
 
 #ifdef CONFIG_NET_CLS_ACT
@@ -2886,7 +2887,18 @@ out:
 	rcu_read_unlock_bh();
 	return rc;
 }
+
+int dev_queue_xmit(struct sk_buff *skb)
+{
+	return __dev_queue_xmit(skb, NULL);
+}
 EXPORT_SYMBOL(dev_queue_xmit);
+
+int dev_queue_xmit_accel(struct sk_buff *skb, void *accel_priv)
+{
+	return __dev_queue_xmit(skb, accel_priv);
+}
+EXPORT_SYMBOL(dev_queue_xmit_accel);
 
 int dev_queue_xmit_sk(struct sock *sk, struct sk_buff *skb)
 {

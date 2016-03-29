@@ -812,7 +812,8 @@ struct netdev_phys_port_id {
  *        (can also return NETDEV_TX_LOCKED iff NETIF_F_LLTX)
  *	Required can not be NULL.
  *
- * u16 (*ndo_select_queue)(struct net_device *dev, struct sk_buff *skb);
+ * u16 (*ndo_select_queue)(struct net_device *dev, struct sk_buff *skb,
+ *                         void *accel_priv);
  *	Called to decide which queue to when device supports multiple
  *	transmit queues.
  *
@@ -1031,6 +1032,19 @@ struct netdev_phys_port_id {
  *			     int queue_index, u32 maxrate);
  *	Called when a user wants to set a max-rate limitation of specific
  *	TX queue.
+ *
+ * void* (*ndo_dfwd_add_station)(struct net_device *pdev,
+ *				 struct net_device *dev)
+ *	Called by upper layer devices to accelerate switching or other
+ *	station functionality into hardware. 'pdev is the lowerdev
+ *	to use for the offload and 'dev' is the net device that will
+ *	back the offload. Returns a pointer to the private structure
+ *	the upper layer will maintain.
+ * void (*ndo_dfwd_del_station)(struct net_device *pdev, void *priv)
+ *	Called by upper layer device to delete the station created
+ *	by 'ndo_dfwd_add_station'. 'pdev' is the net device backing
+ *	the station and priv is the structure returned by the add
+ *	operation.
  */
 struct net_device_ops {
 	int			(*ndo_init)(struct net_device *dev);
@@ -1039,8 +1053,11 @@ struct net_device_ops {
 	int			(*ndo_stop)(struct net_device *dev);
 	netdev_tx_t		(*ndo_start_xmit) (struct sk_buff *skb,
 						   struct net_device *dev);
-	u16			(*ndo_select_queue)(struct net_device *dev,
-						    struct sk_buff *skb);
+	RH_KABI_REPLACE(u16	(*ndo_select_queue)(struct net_device *dev,
+						    struct sk_buff *skb),
+			u16	(*ndo_select_queue)(struct net_device *dev,
+						    struct sk_buff *skb,
+						    void *accel_priv))
 	void			(*ndo_change_rx_flags)(struct net_device *dev,
 						       int flags);
 	void			(*ndo_set_rx_mode)(struct net_device *dev);
@@ -1193,8 +1210,10 @@ struct net_device_ops {
 	RH_KABI_USE_P(6, int	(*ndo_set_tx_maxrate)(struct net_device *dev,
 						      int queue_index,
 						      u32 maxrate))
-	RH_KABI_RESERVE_P(7)
-	RH_KABI_RESERVE_P(8)
+	RH_KABI_USE_P(7, void*	(*ndo_dfwd_add_station)(struct net_device *pdev,
+							struct net_device *dev))
+	RH_KABI_USE_P(8, void	(*ndo_dfwd_del_station)(struct net_device *pdev,
+							void *priv))
 	RH_KABI_RESERVE_P(9)
 	RH_KABI_RESERVE_P(10)
 	RH_KABI_RESERVE_P(11)
@@ -1641,7 +1660,7 @@ struct net_device {
 	void (*rh_reserved7)(void);
 	void (*rh_reserved8)(void);
 #endif
-	RH_KABI_RESERVE_P(9)
+	RH_KABI_USE_P(9, const struct forwarding_accel_ops *fwd_ops)
 	RH_KABI_RESERVE_P(10)
 	RH_KABI_RESERVE_P(11)
 	RH_KABI_RESERVE_P(12)
@@ -1731,7 +1750,8 @@ static inline void netdev_for_each_tx_queue(struct net_device *dev,
 }
 
 struct netdev_queue *netdev_pick_tx(struct net_device *dev,
-				    struct sk_buff *skb);
+				    struct sk_buff *skb,
+				    void *accel_priv);
 u16 __netdev_pick_tx(struct net_device *dev, struct sk_buff *skb);
 
 /*
@@ -2080,6 +2100,7 @@ void dev_disable_lro(struct net_device *dev);
 int dev_loopback_xmit(struct sock *sk, struct sk_buff *newskb);
 int dev_queue_xmit_sk(struct sock *sk, struct sk_buff *skb);
 int dev_queue_xmit(struct sk_buff *skb);
+int dev_queue_xmit_accel(struct sk_buff *skb, void *accel_priv);
 int register_netdevice(struct net_device *dev);
 void unregister_netdevice_queue(struct net_device *dev, struct list_head *head);
 void unregister_netdevice_many(struct list_head *head);
@@ -3570,6 +3591,11 @@ static inline void skb_gso_error_unwind(struct sk_buff *skb, __be16 protocol,
 	skb->mac_header = mac_offset;
 	skb->network_header = skb->mac_header + mac_len;
 	skb->mac_len = mac_len;
+}
+
+static inline bool netif_is_macvlan(struct net_device *dev)
+{
+	return dev->priv_flags & IFF_MACVLAN;
 }
 
 static inline bool netif_is_macvlan_port(struct net_device *dev)

@@ -368,7 +368,13 @@ netdev_tx_t macvlan_start_xmit(struct sk_buff *skb,
 	int ret;
 	const struct macvlan_dev *vlan = netdev_priv(dev);
 
-	ret = macvlan_queue_xmit(skb, dev);
+	if (vlan->fwd_priv) {
+		skb->dev = vlan->lowerdev;
+		ret = dev_queue_xmit_accel(skb, vlan->fwd_priv);
+	} else {
+		ret = macvlan_queue_xmit(skb, dev);
+	}
+
 	if (likely(ret == NET_XMIT_SUCCESS || ret == NET_XMIT_CN)) {
 		struct macvlan_pcpu_stats *pcpu_stats;
 
@@ -415,6 +421,19 @@ static int macvlan_open(struct net_device *dev)
 		goto hash_add;
 	}
 
+	if (lowerdev->features & NETIF_F_HW_L2FW_DOFFLOAD) {
+		vlan->fwd_priv =
+		      lowerdev->netdev_ops->ndo_dfwd_add_station(lowerdev, dev);
+
+		/* If we get a NULL pointer back, or if we get an error
+		 * then we should just fall through to the non accelerated path
+		 */
+		if (IS_ERR_OR_NULL(vlan->fwd_priv)) {
+			vlan->fwd_priv = NULL;
+		} else
+			return 0;
+	}
+
 	err = -EBUSY;
 	if (macvlan_addr_busy(vlan->port, dev->dev_addr))
 		goto out;
@@ -435,6 +454,11 @@ hash_add:
 del_unicast:
 	dev_uc_del(lowerdev, dev->dev_addr);
 out:
+	if (vlan->fwd_priv) {
+		lowerdev->netdev_ops->ndo_dfwd_del_station(lowerdev,
+							   vlan->fwd_priv);
+		vlan->fwd_priv = NULL;
+	}
 	return err;
 }
 
@@ -442,6 +466,13 @@ static int macvlan_stop(struct net_device *dev)
 {
 	struct macvlan_dev *vlan = netdev_priv(dev);
 	struct net_device *lowerdev = vlan->lowerdev;
+
+	if (vlan->fwd_priv) {
+		lowerdev->netdev_ops->ndo_dfwd_del_station(lowerdev,
+							   vlan->fwd_priv);
+		vlan->fwd_priv = NULL;
+		return 0;
+	}
 
 	dev_uc_unsync(lowerdev, dev);
 	dev_mc_unsync(lowerdev, dev);
@@ -935,6 +966,7 @@ int macvlan_common_newlink(struct net *src_net, struct net_device *dev,
 	if (err < 0)
 		goto upper_dev_unlink;
 
+	dev->priv_flags |= IFF_MACVLAN;
 	list_add_tail_rcu(&vlan->list, &port->vlans);
 	netif_stacked_transfer_operstate(lowerdev, dev);
 

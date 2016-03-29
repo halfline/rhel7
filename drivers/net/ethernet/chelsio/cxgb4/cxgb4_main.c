@@ -1305,7 +1305,8 @@ static int del_filter_wr(struct adapter *adapter, int fidx)
 	return 0;
 }
 
-static u16 cxgb_select_queue(struct net_device *dev, struct sk_buff *skb)
+static u16 cxgb_select_queue(struct net_device *dev, struct sk_buff *skb,
+			     void *accel_priv)
 {
 	int txq;
 

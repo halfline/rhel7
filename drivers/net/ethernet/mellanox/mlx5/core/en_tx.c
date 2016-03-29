@@ -96,7 +96,8 @@ static inline void mlx5e_dma_get(struct mlx5e_sq *sq, u32 i, dma_addr_t *addr,
 	*size = sq->dma_fifo[i & sq->dma_fifo_mask].size;
 }
 
-u16 mlx5e_select_queue(struct net_device *dev, struct sk_buff *skb)
+u16 mlx5e_select_queue(struct net_device *dev, struct sk_buff *skb,
+		       void *accel_priv)
 {
 	struct mlx5e_priv *priv = netdev_priv(dev);
 	int channel_ix = __netdev_pick_tx(dev, skb);

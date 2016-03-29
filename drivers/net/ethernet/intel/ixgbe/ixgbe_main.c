@@ -7033,12 +7033,24 @@ static void ixgbe_atr(struct ixgbe_ring *ring,
 					      input, common, ring->queue_index);
 }
 
-#ifdef IXGBE_FCOE
-static u16 ixgbe_select_queue(struct net_device *dev, struct sk_buff *skb)
+static u16 ixgbe_select_queue(struct net_device *dev, struct sk_buff *skb,
+			      void *accel_priv)
 {
+#if 0 /* RHEL - ixgbe_fwd_adapter not defined now */
+	struct ixgbe_fwd_adapter *fwd_adapter = accel_priv;
+#endif
+#ifdef IXGBE_FCOE
 	struct ixgbe_adapter *adapter;
 	struct ixgbe_ring_feature *f;
 	int txq;
+#endif
+
+#if 0 /* RHEL - ixgbe_fwd_adapter not defined now */
+	if (fwd_adapter)
+		return skb->queue_mapping + fwd_adapter->tx_base_queue;
+#endif
+
+#ifdef IXGBE_FCOE
 
 	/*
 	 * only execute the code below if protocol is FCoE
@@ -7064,9 +7076,11 @@ static u16 ixgbe_select_queue(struct net_device *dev, struct sk_buff *skb)
 		txq -= f->indices;
 
 	return txq + f->offset;
+#else
+	return __netdev_pick_tx(dev, skb);
+#endif
 }
 
-#endif
 netdev_tx_t ixgbe_xmit_frame_ring(struct sk_buff *skb,
 			  struct ixgbe_adapter *adapter,
 			  struct ixgbe_ring *tx_ring)
@@ -7777,9 +7791,7 @@ static const struct net_device_ops ixgbe_netdev_ops = {
 	.ndo_open		= ixgbe_open,
 	.ndo_stop		= ixgbe_close,
 	.ndo_start_xmit		= ixgbe_xmit_frame,
-#ifdef IXGBE_FCOE
 	.ndo_select_queue	= ixgbe_select_queue,
-#endif
 	.ndo_set_rx_mode	= ixgbe_set_rx_mode,
 	.ndo_validate_addr	= eth_validate_addr,
 	.ndo_set_mac_address	= ixgbe_set_mac,
