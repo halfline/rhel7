@@ -236,6 +236,14 @@ struct bonding {
 	struct rtnl_link_stats64 bond_stats;
 };
 
+struct netdev_upper {
+        struct net_device *dev;
+        bool master;
+        struct list_head list;
+        struct rcu_head rcu;
+        struct list_head search_list;
+};
+
 #define bond_slave_get_rcu(dev) \
 	((struct slave *) rcu_dereference(dev->rx_handler_data))
 

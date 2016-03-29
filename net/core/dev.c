@@ -133,7 +133,6 @@
 #include <linux/hashtable.h>
 #include <linux/vmalloc.h>
 #include <linux/hrtimer.h>
-#include <net/bonding.h>
 
 #include "net-sysfs.h"
 
@@ -1461,15 +1460,6 @@ void dev_disable_lro(struct net_device *dev)
 
 	if (unlikely(dev->features & NETIF_F_LRO))
 		netdev_WARN(dev, "failed to disable LRO!\n");
-
-	/* if dev is a bond master, disable LRO for all its slaves */
-	if (netif_is_bond_master(dev)) {
-		struct bonding *bond = netdev_priv(dev);
-		struct list_head *iter;
-		struct slave *slave;
-		bond_for_each_slave(bond, slave, iter)
-			dev_disable_lro(slave->dev);
-	}
 }
 EXPORT_SYMBOL(dev_disable_lro);
 
@@ -4508,6 +4498,14 @@ softnet_break:
 	__raise_softirq_irqoff(NET_RX_SOFTIRQ);
 	goto out;
 }
+
+struct netdev_upper {
+	struct net_device *dev;
+	bool master;
+	struct list_head list;
+	struct rcu_head rcu;
+	struct list_head search_list;
+};
 
 static void __append_search_uppers(struct list_head *search_list,
 				   struct net_device *dev)

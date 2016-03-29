@@ -345,14 +345,6 @@ enum {
 	NAPI_STATE_EXT,		/* Extended napi_struct */
 };
 
-struct netdev_upper {
-	struct net_device *dev;
-	bool master;
-	struct list_head list;
-	struct rcu_head rcu;
-	struct list_head search_list;
-};
-
 enum gro_result {
 	GRO_MERGED,
 	GRO_MERGED_FREE,
