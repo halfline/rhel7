@@ -667,9 +667,10 @@ struct sk_buff {
 	/* 0/2 bit hole (depending on ndisc_nodetype presence) */
 	kmemcheck_bitfield_end(flags2);
 
-#if defined CONFIG_NET_DMA_RH_KABI || defined CONFIG_NET_RX_BUSY_POLL
+#if defined CONFIG_NET_DMA_RH_KABI || defined CONFIG_NET_RX_BUSY_POLL || defined CONFIG_XPS
 	union {
 		unsigned int	napi_id;
+		RH_KABI_EXTEND(unsigned int	sender_cpu)
 		RH_KABI_DEPRECATE(dma_cookie_t,	dma_cookie)
 	};
 #endif
