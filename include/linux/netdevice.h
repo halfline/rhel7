@@ -1607,8 +1607,19 @@ struct net_device {
 	 */
 	RH_KABI_USE_P(1, unsigned long	gro_flush_timeout)
 	RH_KABI_USE_P(2, atomic_long_t  rx_nohandler) /* inactive slave drops */
-	RH_KABI_RESERVE_P(3)
-	RH_KABI_RESERVE_P(4)
+#ifndef __GENKSYMS__
+	struct list_head	lower_dev_list;
+#else
+	/*
+	 * struct list_head contains two pointers, no easy way to make use of
+	 * two reserved pointers in a single RH_KABI_* macro, so we're going
+	 * old school and using __GENKSYMS wrappers directly here.
+	 * RH_KABI_RESERVE_P(3) -> void (*rh_reserved3)(void);
+	 * RH_KABI_RESERVE_P(4) -> void (*rh_reserved4)(void);
+	 */
+	void (*rh_reserved3)(void);
+	void (*rh_reserved4)(void);
+#endif
 	RH_KABI_RESERVE_P(5)
 	RH_KABI_RESERVE_P(6)
 	RH_KABI_RESERVE_P(7)
