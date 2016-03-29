@@ -3305,6 +3305,16 @@ extern int		bpf_jit_enable;
 
 bool netdev_has_upper_dev(struct net_device *dev, struct net_device *upper_dev);
 bool netdev_has_any_upper_dev(struct net_device *dev);
+struct net_device *netdev_upper_get_next_dev_rcu(struct net_device *dev,
+						 struct list_head **iter);
+
+/* iterate through upper list, must be called under RCU read lock */
+#define netdev_for_each_upper_dev_rcu(dev, upper, iter) \
+	for (iter = &(dev)->upper_dev_list, \
+	     upper = netdev_upper_get_next_dev_rcu(dev, &(iter)); \
+	     upper; \
+	     upper = netdev_upper_get_next_dev_rcu(dev, &(iter)))
+
 struct net_device *netdev_master_upper_dev_get(struct net_device *dev);
 struct net_device *netdev_master_upper_dev_get_rcu(struct net_device *dev);
 int netdev_upper_dev_link(struct net_device *dev, struct net_device *upper_dev);
