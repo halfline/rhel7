@@ -2194,15 +2194,16 @@ re_arm:
 
 static bool bond_has_this_ip(struct bonding *bond, __be32 ip)
 {
-	struct netdev_upper *upper;
+	struct net_device *upper;
+	struct list_head *iter;
 	bool ret = false;
 
 	if (ip == bond_confirm_addr(bond->dev, 0, ip))
 		return true;
 
 	rcu_read_lock();
-	list_for_each_entry_rcu(upper, &bond->dev->upper_dev_list, list) {
-		if (ip == bond_confirm_addr(upper->dev, 0, ip)) {
+	netdev_for_each_upper_dev_rcu(bond->dev, upper, iter) {
+		if (ip == bond_confirm_addr(upper, 0, ip)) {
 			ret = true;
 			break;
 		}
