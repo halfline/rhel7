@@ -73,7 +73,7 @@
 
 /* Caller must have rcu_read_lock */
 #define bond_first_slave_rcu(bond) \
-	list_first_entry_or_null(&(bond)->slave_list, struct slave, list)
+	netdev_lower_get_first_private_rcu(bond->dev)
 
 #define bond_is_first_slave(bond, pos) (pos == bond_first_slave(bond))
 #define bond_is_last_slave(bond, pos) (pos == bond_last_slave(bond))
