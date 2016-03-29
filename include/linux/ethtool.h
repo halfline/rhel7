@@ -211,6 +211,11 @@ static inline u32 ethtool_rxfh_indir_default(u32 index, u32 n_rx_rings)
  *	a TX queue has this number, return -EINVAL. If only a RX queue or a TX
  *	queue has this number, set the inapplicable fields to ~0 and return 0.
  *	Returns a negative error code or zero.
+ * @set_per_queue_coalesce: Set interrupt coalescing parameters per queue.
+ *	It must check that the given queue number is valid. If neither a RX nor
+ *	a TX queue has this number, return -EINVAL. If only a RX queue or a TX
+ *	queue has this number, ignore the inapplicable fields.
+ *	Returns a negative error code or zero.
  *
  * All operations are optional (i.e. the function pointer may be set
  * to %NULL) and callers must take this into account.  Callers must
@@ -305,7 +310,9 @@ struct ethtool_ops {
 	RH_KABI_USE_P(6, int	(*get_per_queue_coalesce)(struct net_device *,
 							  u32,
 							  struct ethtool_coalesce *))
-	RH_KABI_RESERVE_P(7)
+	RH_KABI_USE_P(7, int	(*set_per_queue_coalesce)(struct net_device *,
+							  u32,
+							  struct ethtool_coalesce *))
 	RH_KABI_RESERVE_P(8)
 	RH_KABI_RESERVE_P(9)
 	RH_KABI_RESERVE_P(10)
