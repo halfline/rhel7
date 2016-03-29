@@ -1594,15 +1594,11 @@ int bond_enslave(struct net_device *bond_dev, struct net_device *slave_dev)
 	}
 #endif
 
-	res = bond_create_slave_symlinks(bond_dev, slave_dev);
-	if (res)
-		goto err_detach;
-
 	res = netdev_rx_handler_register(slave_dev, bond_handle_frame,
 					 new_slave);
 	if (res) {
 		netdev_dbg(bond_dev, "Error %d calling netdev_rx_handler_register\n", res);
-		goto err_dest_symlinks;
+		goto err_detach;
 	}
 
 	res = bond_master_upper_dev_link(bond_dev, slave_dev, new_slave);
@@ -1644,9 +1640,6 @@ err_upper_unlink:
 
 err_unregister:
 	netdev_rx_handler_unregister(slave_dev);
-
-err_dest_symlinks:
-	bond_destroy_slave_symlinks(bond_dev, slave_dev);
 
 err_detach:
 	if (!bond_uses_primary(bond))
@@ -1817,8 +1810,6 @@ static int __bond_release_one(struct net_device *bond_dev,
 			    slave_dev->name, bond_dev->name);
 
 	/* must do this from outside any spinlocks */
-	bond_destroy_slave_symlinks(bond_dev, slave_dev);
-
 	vlan_vids_del_by_dev(slave_dev, bond_dev);
 
 	/* If the mode uses primary, then this case was handled above by
