@@ -291,8 +291,12 @@ struct ethtool_ops {
 	RH_KABI_USE_P(3, int	(*set_rxfh)(struct net_device *,
 					    const u32 *indir, const u8 *key,
 					    const u8 hfunc))
-	RH_KABI_RESERVE_P(4)
-	RH_KABI_RESERVE_P(5)
+	RH_KABI_USE_P(4, int	(*get_tunable)(struct net_device *,
+					       const struct ethtool_tunable *,
+					       void *))
+	RH_KABI_USE_P(5, int	(*set_tunable)(struct net_device *,
+					       const struct ethtool_tunable *,
+					       const void *))
 	RH_KABI_RESERVE_P(6)
 	RH_KABI_RESERVE_P(7)
 	RH_KABI_RESERVE_P(8)
