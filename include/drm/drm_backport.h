@@ -11,13 +11,6 @@
 
 #include <linux/hrtimer.h>
 
-static inline u64 ktime_get_raw_ns(void)
-{
-	struct timespec now;
-	getrawmonotonic(&now);
-	return timespec_to_ns(&now);
-}
-
 /**
  * ktime_mono_to_real - Convert monotonic time to clock realtime
  */

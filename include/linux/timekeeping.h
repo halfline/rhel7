@@ -100,11 +100,17 @@ extern ktime_t ktime_get_real(void);
 extern ktime_t ktime_get_boottime(void);
 extern ktime_t ktime_get_monotonic_offset(void);
 extern ktime_t ktime_get_clocktai(void);
+extern ktime_t ktime_get_raw(void);
 
 /*
  * RTC specific
  */
 void timekeeping_inject_sleeptime(struct timespec *delta);
+
+static inline u64 ktime_get_raw_ns(void)
+{
+	return ktime_to_ns(ktime_get_raw());
+}
 
 /*
  * Persistent clock related interfaces

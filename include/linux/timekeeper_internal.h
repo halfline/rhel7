@@ -84,6 +84,9 @@ struct timekeeper {
 	unsigned int		clock_was_set_seq;
 	/* CLOCK_MONOTONIC time value of a pending leap-second */
 	ktime_t			next_leap_ktime;
+	/* Monotonic raw base time */
+	ktime_t			base_raw;
+
 };
 
 static inline struct timespec64 tk_xtime(struct timekeeper *tk)
