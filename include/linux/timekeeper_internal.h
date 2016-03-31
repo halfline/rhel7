@@ -31,12 +31,12 @@ struct tk_read_base {
 	u32			mult;
 	u32			shift;
 	u64			xtime_nsec;
-	ktime_t                 base_mono;
+	ktime_t			base;
 };
 
 /**
  * struct timekeeper - Structure holding internal timekeeping values.
- * @tkr:		The readout base structure
+ * @tkr_mono:		The readout base structure for CLOCK_MONOTONIC
  * @xtime_sec:		Current CLOCK_REALTIME time in seconds
  * @wall_to_monotonic:	CLOCK_REALTIME to CLOCK_MONOTONIC offset
  * @offs_real:		Offset clock monotonic -> clock realtime
@@ -74,7 +74,7 @@ struct tk_read_base {
  * used instead.
  */
 struct timekeeper {
-	struct tk_read_base	tkr;
+	struct tk_read_base	tkr_mono;
 	u64			xtime_sec;
 	struct timespec64	wall_to_monotonic;
 	ktime_t			offs_real;
@@ -110,7 +110,7 @@ static inline struct timespec64 tk_xtime(struct timekeeper *tk)
 	struct timespec64 ts;
 
 	ts.tv_sec = tk->xtime_sec;
-	ts.tv_nsec = (long)(tk->tkr.xtime_nsec >> tk->tkr.shift);
+	ts.tv_nsec = (long)(tk->tkr_mono.xtime_nsec >> tk->tkr_mono.shift);
 	return ts;
 }
 
@@ -131,8 +131,8 @@ static inline void update_vsyscall(struct timekeeper *tk)
 	struct timespec xt;
 
 	xt = tk_xtime(tk);
-	update_vsyscall_old(&xt, &tk->wall_to_monotonic, tk->tkr.clock,
-			    tk->tkr.mult);
+	update_vsyscall_old(&xt, &tk->wall_to_monotonic, tk->tkr_mono.clock,
+			    tk->tkr_mono.mult);
 }
 
 #else
