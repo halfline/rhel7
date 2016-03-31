@@ -68,6 +68,9 @@ struct page {
 						 * this page is only used to
 						 * free other pages.
 						 */
+#ifndef __GENKSYMS__ /* kABI bypass, the size of the union didn't change */
+			atomic_t thp_mmu_gather; /* in first tailpage of THP */
+#endif
 #if defined(CONFIG_TRANSPARENT_HUGEPAGE) && USE_SPLIT_PMD_PTLOCKS
 		pgtable_t pmd_huge_pte; /* protected by page->ptl */
 #endif

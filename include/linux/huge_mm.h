@@ -161,6 +161,61 @@ static inline int hpage_nr_pages(struct page *page)
 extern int do_huge_pmd_numa_page(struct mm_struct *mm, struct vm_area_struct *vma,
 				unsigned long addr, pmd_t pmd, pmd_t *pmdp);
 
+static inline bool is_trans_huge_page_release(struct page *page)
+{
+	return (unsigned long) page & 1;
+}
+
+static inline struct page *trans_huge_page_release_decode(struct page *page)
+{
+	return (struct page *) ((unsigned long)page & ~1UL);
+}
+
+static inline struct page *trans_huge_page_release_encode(struct page *page)
+{
+	return (struct page *) ((unsigned long)page | 1UL);
+}
+
+static inline atomic_t *__trans_huge_mmu_gather_count(struct page *page)
+{
+	return &(page + 1)->thp_mmu_gather;
+}
+
+static inline void init_trans_huge_mmu_gather_count(struct page *page)
+{
+	atomic_t *thp_mmu_gather = __trans_huge_mmu_gather_count(page);
+	atomic_set(thp_mmu_gather, 0);
+}
+
+static inline void inc_trans_huge_mmu_gather_count(struct page *page)
+{
+	atomic_t *thp_mmu_gather = __trans_huge_mmu_gather_count(page);
+	VM_BUG_ON(atomic_read(thp_mmu_gather) < 0);
+	atomic_inc(thp_mmu_gather);
+}
+
+static inline void dec_trans_huge_mmu_gather_count(struct page *page)
+{
+	atomic_t *thp_mmu_gather = __trans_huge_mmu_gather_count(page);
+	VM_BUG_ON(atomic_read(thp_mmu_gather) <= 0);
+	atomic_dec(thp_mmu_gather);
+}
+
+static inline int trans_huge_mmu_gather_count(struct page *page)
+{
+	atomic_t *thp_mmu_gather = __trans_huge_mmu_gather_count(page);
+	int ret = atomic_read(thp_mmu_gather);
+	VM_BUG_ON(ret < 0);
+	return ret;
+}
+
+/*
+ * free_trans_huge_page_list() is used to free the pages returned by
+ * trans_huge_page_release() (if still PageTransHuge()) in
+ * release_pages().
+ */
+extern void free_trans_huge_page_list(struct list_head *list);
+
 #else /* CONFIG_TRANSPARENT_HUGEPAGE */
 #define HPAGE_PMD_SHIFT ({ BUILD_BUG(); 0; })
 #define HPAGE_PMD_MASK ({ BUILD_BUG(); 0; })
@@ -210,6 +265,22 @@ static inline int do_huge_pmd_numa_page(struct mm_struct *mm, struct vm_area_str
 	return 0;
 }
 
+static inline bool is_trans_huge_page_release(struct page *page)
+{
+	return false;
+}
+
+static inline struct page *trans_huge_page_release_encode(struct page *page)
+{
+	return page;
+}
+
+static inline struct page *trans_huge_page_release_decode(struct page *page)
+{
+	return page;
+}
+
+extern void dec_trans_huge_mmu_gather_count(struct page *page);
 #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
 
 #endif /* _LINUX_HUGE_MM_H */

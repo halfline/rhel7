@@ -755,6 +755,7 @@ static int __do_huge_pmd_anonymous_page(struct mm_struct *mm,
 			return ret;
 		}
 
+		init_trans_huge_mmu_gather_count(page);
 		entry = mk_huge_pmd(page, vma);
 		page_add_new_anon_rmap(page, vma, haddr);
 		pgtable_trans_huge_deposit(mm, pmd, pgtable);
@@ -1232,6 +1233,7 @@ alloc:
 		goto out_mn;
 	} else {
 		pmd_t entry;
+		init_trans_huge_mmu_gather_count(new_page);
 		entry = mk_huge_pmd(new_page, vma);
 		pmdp_clear_flush_notify(vma, haddr, pmd);
 		page_add_new_anon_rmap(new_page, vma, haddr);
@@ -1466,8 +1468,20 @@ int zap_huge_pmd(struct mmu_gather *tlb, struct vm_area_struct *vma,
 			add_mm_counter(tlb->mm, MM_ANONPAGES, -HPAGE_PMD_NR);
 			VM_BUG_ON_PAGE(!PageHead(page), page);
 			atomic_long_dec(&tlb->mm->nr_ptes);
+			/*
+			 * page_remove_rmap() already decreased the
+			 * page_mapcount(), so tail pages can be
+			 * freed after we release the pmd lock. Increase the
+			 * mmu_gather_count to prevent the tail pages to be
+			 * freed, even if the THP page get splitted.
+			 * __split_huge_page_refcount() will then see that
+			 * we're in the middle of a mmu gather and it'll add
+			 * the compound mmu_gather_count to every tail
+			 * page page_count().
+			 */
+			inc_trans_huge_mmu_gather_count(page);
 			spin_unlock(ptl);
-			tlb_remove_page(tlb, page);
+			tlb_remove_page(tlb, trans_huge_page_release_encode(page));
 		}
 		pte_free(tlb->mm, pgtable);
 		ret = 1;
@@ -1710,10 +1724,21 @@ static void __split_huge_page_refcount(struct page *page,
 	struct zone *zone = page_zone(page);
 	struct lruvec *lruvec;
 	int tail_count = 0;
+	int mmu_gather_count;
 
 	/* prevent PageLRU to go away from under us, and freeze lru stats */
 	spin_lock_irq(&zone->lru_lock);
 	lruvec = mem_cgroup_page_lruvec(page, zone);
+
+	/*
+	 * No mmu_gather_count increase can happen anymore because
+	 * here all pmds are already pmd_trans_splitting(). No
+	 * decrease can happen either because it's only decreased
+	 * while holding the lru_lock. So here the mmu_gather_count is
+	 * already stable so store it on the stack. Then it'll be
+	 * overwritten when the page_tail->index is initialized.
+	 */
+	mmu_gather_count = trans_huge_mmu_gather_count(page);
 
 	compound_lock(page);
 	/* complete memcg works before add pages to LRU */
@@ -1741,8 +1766,8 @@ static void __split_huge_page_refcount(struct page *page,
 		 * atomic_set() here would be safe on all archs (and
 		 * not only on x86), it's safer to use atomic_add().
 		 */
-		atomic_add(page_mapcount(page) + page_mapcount(page_tail) + 1,
-			   &page_tail->_count);
+		atomic_add(page_mapcount(page) + page_mapcount(page_tail) +
+			   mmu_gather_count + 1, &page_tail->_count);
 
 		/* after clearing PageTail the gup refcount can be released */
 		smp_mb();
@@ -2533,6 +2558,8 @@ static void collapse_huge_page(struct mm_struct *mm,
 	 * visible after the set_pmd_at() write.
 	 */
 	smp_wmb();
+
+	init_trans_huge_mmu_gather_count(new_page);
 
 	spin_lock(pmd_ptl);
 	BUG_ON(!pmd_none(*pmd));

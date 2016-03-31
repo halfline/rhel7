@@ -832,6 +832,38 @@ void lru_add_drain_all(void)
 	mutex_unlock(&lock);
 }
 
+static inline struct zone *zone_lru_lock(struct zone *zone,
+					 struct page *page,
+					 unsigned int *lock_batch,
+					 unsigned long *_flags)
+{
+	struct zone *pagezone = page_zone(page);
+
+	if (pagezone != zone) {
+		unsigned long flags = *_flags;
+
+		if (zone)
+			spin_unlock_irqrestore(&zone->lru_lock, flags);
+		*lock_batch = 0;
+		zone = pagezone;
+		spin_lock_irqsave(&zone->lru_lock, flags);
+
+		*_flags = flags;
+	}
+
+	return zone;
+}
+
+static inline struct zone *zone_lru_unlock(struct zone *zone,
+					   unsigned long flags)
+{
+	if (zone) {
+		spin_unlock_irqrestore(&zone->lru_lock, flags);
+		zone = NULL;
+	}
+	return zone;
+}
+
 /*
  * Batched page_cache_release().  Decrement the reference count on all the
  * passed pages.  If it fell to zero then remove the page from the LRU and
@@ -849,35 +881,91 @@ void release_pages(struct page **pages, int nr, bool cold)
 {
 	int i;
 	LIST_HEAD(pages_to_free);
+	LIST_HEAD(trans_huge_pages_to_free);
 	struct zone *zone = NULL;
 	struct lruvec *lruvec;
 	unsigned long uninitialized_var(flags);
+	unsigned int uninitialized_var(lock_batch);
 
 	for (i = 0; i < nr; i++) {
 		struct page *page = pages[i];
+		const bool was_thp = is_trans_huge_page_release(page);
 
-		if (unlikely(PageCompound(page))) {
-			if (zone) {
-				spin_unlock_irqrestore(&zone->lru_lock, flags);
-				zone = NULL;
-			}
+		if (unlikely(!was_thp && PageCompound(page))) {
+			zone = zone_lru_unlock(zone, flags);
 			put_compound_page(page);
 			continue;
+		}
+
+		/*
+		 * Make sure the IRQ-safe lock-holding time does not get
+		 * excessive with a continuous string of pages from the
+		 * same zone. The lock is held only if zone != NULL.
+		 */
+		if (zone && ++lock_batch == SWAP_CLUSTER_MAX) {
+			spin_unlock_irqrestore(&zone->lru_lock, flags);
+			zone = NULL;
+		}
+
+		if (was_thp) {
+			page = trans_huge_page_release_decode(page);
+			zone = zone_lru_lock(zone, page, &lock_batch, &flags);
+			/*
+			 * Here, after taking the lru_lock,
+			 * __split_huge_page_refcount() can't run
+			 * anymore from under us and in turn
+			 * PageTransHuge() retval is stable and can't
+			 * change anymore.
+			 *
+			 * PageTransHuge() has an helpful
+			 * VM_BUG_ON_PAGE() internally to enforce that
+			 * the page cannot be a tail here.
+			 */
+			if (unlikely(!PageTransHuge(page))) {
+				int idx;
+
+				/*
+				 * The THP page was splitted before we
+				 * could free it, in turn its tails
+				 * kept an elevated count because the
+				 * mmu_gather_count was transferred to
+				 * the tail page count during the
+				 * split.
+				 *
+				 * This is a very unlikely slow path,
+				 * performance is irrelevant here,
+				 * just keep it to the simplest.
+				 */
+				zone = zone_lru_unlock(zone, flags);
+
+				for (idx = 0; idx < HPAGE_PMD_NR;
+				     idx++, page++) {
+					VM_BUG_ON(PageTransCompound(page));
+					put_page(page);
+				}
+				continue;
+			} else
+				/*
+				 * __split_huge_page_refcount() cannot
+				 * run from under us, so we can
+				 * release the refence we had on the
+				 * mmu_gather_count as we don't care
+				 * anymore if the page gets splitted
+				 * or not. By now the TLB flush
+				 * already happened for this mapping,
+				 * so we don't need to prevent the
+				 * tails to be freed anymore.
+				 */
+				dec_trans_huge_mmu_gather_count(page);
 		}
 
 		if (!put_page_testzero(page))
 			continue;
 
 		if (PageLRU(page)) {
-			struct zone *pagezone = page_zone(page);
-
-			if (pagezone != zone) {
-				if (zone)
-					spin_unlock_irqrestore(&zone->lru_lock,
-									flags);
-				zone = pagezone;
-				spin_lock_irqsave(&zone->lru_lock, flags);
-			}
+			if (!was_thp)
+				zone = zone_lru_lock(zone, page, &lock_batch,
+						     &flags);
 
 			lruvec = mem_cgroup_page_lruvec(page, zone);
 			VM_BUG_ON_PAGE(!PageLRU(page), page);
@@ -885,15 +973,26 @@ void release_pages(struct page **pages, int nr, bool cold)
 			del_page_from_lru_list(page, lruvec, page_off_lru(page));
 		}
 
-		/* Clear Active bit in case of parallel mark_page_accessed */
-		ClearPageActive(page);
+		if (!was_thp) {
+			/*
+			 * Clear Active bit in case of parallel
+			 * mark_page_accessed.
+			 */
+			__ClearPageActive(page);
 
-		list_add(&page->lru, &pages_to_free);
+			list_add(&page->lru, &pages_to_free);
+		} else
+			list_add(&page->lru, &trans_huge_pages_to_free);
 	}
 	if (zone)
 		spin_unlock_irqrestore(&zone->lru_lock, flags);
 
-	free_hot_cold_page_list(&pages_to_free, cold);
+	if (!list_empty(&pages_to_free))
+		free_hot_cold_page_list(&pages_to_free, cold);
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+	if (!list_empty(&trans_huge_pages_to_free))
+		free_trans_huge_page_list(&trans_huge_pages_to_free);
+#endif
 }
 EXPORT_SYMBOL(release_pages);
 

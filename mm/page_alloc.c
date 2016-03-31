@@ -1792,6 +1792,20 @@ void free_hot_cold_page_list(struct list_head *list, bool cold)
 	}
 }
 
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+void free_trans_huge_page_list(struct list_head *list)
+{
+	struct page *page, *next;
+
+	/*
+	 * THP pages always use the default destructor so call it
+	 * directly and skip the pointer to function.
+	 */
+	list_for_each_entry_safe(page, next, list, lru)
+		__free_pages_ok(page, HPAGE_PMD_ORDER);
+}
+#endif
+
 /*
  * split_page takes a non-compound higher-order page, and splits it into
  * n (1<<order) sub-pages: page[0..n]
