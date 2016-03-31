@@ -61,6 +61,7 @@ int gfs2_lm_withdraw(struct gfs2_sbd *sdp, char *fmt, ...)
 			fs_err(sdp, "telling LM to unmount\n");
 			lm->lm_unmount(sdp);
 		}
+		set_bit(SDF_SKIP_DLM_UNLOCK, &sdp->sd_flags);
 		fs_err(sdp, "withdrawn\n");
 		dump_stack();
 	}
