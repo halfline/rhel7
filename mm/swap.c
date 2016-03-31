@@ -908,6 +908,10 @@ void release_pages(struct page **pages, int nr, bool cold)
 		}
 
 		if (was_thp) {
+			if (is_huge_zero_page_release(page)) {
+				put_huge_zero_page();
+				continue;
+			}
 			page = trans_huge_page_release_decode(page);
 			zone = zone_lru_lock(zone, page, &lock_batch, &flags);
 			/*

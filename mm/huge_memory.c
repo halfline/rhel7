@@ -203,7 +203,7 @@ retry:
 	return ACCESS_ONCE(huge_zero_page);
 }
 
-static void put_huge_zero_page(void)
+void put_huge_zero_page(void)
 {
 	/*
 	 * Counter should never go to zero here. Only shrinker can put
@@ -1460,7 +1460,7 @@ int zap_huge_pmd(struct mmu_gather *tlb, struct vm_area_struct *vma,
 		if (is_huge_zero_pmd(orig_pmd)) {
 			atomic_long_dec(&tlb->mm->nr_ptes);
 			spin_unlock(ptl);
-			put_huge_zero_page();
+			tlb_remove_page(tlb, huge_zero_page_release_encode());
 		} else {
 			page = pmd_page(orig_pmd);
 			page_remove_rmap(page);

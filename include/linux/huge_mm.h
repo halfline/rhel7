@@ -33,6 +33,7 @@ extern int move_huge_pmd(struct vm_area_struct *vma,
 extern int change_huge_pmd(struct vm_area_struct *vma, pmd_t *pmd,
 			unsigned long addr, pgprot_t newprot,
 			int prot_numa);
+extern void put_huge_zero_page(void);
 
 enum transparent_hugepage_flag {
 	TRANSPARENT_HUGEPAGE_FLAG,
@@ -166,6 +167,11 @@ static inline bool is_trans_huge_page_release(struct page *page)
 	return (unsigned long) page & 1;
 }
 
+static inline bool is_huge_zero_page_release(struct page *page)
+{
+	return (unsigned long) page == ~0UL;
+}
+
 static inline struct page *trans_huge_page_release_decode(struct page *page)
 {
 	return (struct page *) ((unsigned long)page & ~1UL);
@@ -174,6 +180,12 @@ static inline struct page *trans_huge_page_release_decode(struct page *page)
 static inline struct page *trans_huge_page_release_encode(struct page *page)
 {
 	return (struct page *) ((unsigned long)page | 1UL);
+}
+
+static inline struct page *huge_zero_page_release_encode(void)
+{
+	/* NOTE: is_trans_huge_page_release() must return true */
+	return (struct page *) (~0UL);
 }
 
 static inline atomic_t *__trans_huge_mmu_gather_count(struct page *page)
@@ -210,9 +222,8 @@ static inline int trans_huge_mmu_gather_count(struct page *page)
 }
 
 /*
- * free_trans_huge_page_list() is used to free the pages returned by
- * trans_huge_page_release() (if still PageTransHuge()) in
- * release_pages().
+ * free_trans_huge_page_list() is used to free THP pages (if still
+ * PageTransHuge()) in release_pages().
  */
 extern void free_trans_huge_page_list(struct list_head *list);
 
@@ -281,6 +292,7 @@ static inline struct page *trans_huge_page_release_decode(struct page *page)
 }
 
 extern void dec_trans_huge_mmu_gather_count(struct page *page);
+extern bool is_huge_zero_page_release(struct page *page);
 #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
 
 #endif /* _LINUX_HUGE_MM_H */
