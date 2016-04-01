@@ -595,6 +595,10 @@ struct netdev_queue {
 #if defined(CONFIG_XPS) && defined(CONFIG_NUMA)
 	int			numa_node;
 #endif
+	/* There is a hole that can be used for additional struct members
+	 * without kABI breakage.
+	 * There are 36 bytes available on all supported platforms.
+	 */
 /*
  * write mostly part
  */
@@ -613,6 +617,12 @@ struct netdev_queue {
 
 	unsigned long		state;
 
+	/* There is a hole that can be used for additional struct members
+	 * without kABI breakage.
+	 * There are 32 bytes available on all supported platforms.
+	 */
+	RH_KABI_FILL_HOLE(unsigned long	tx_maxrate)	/* 8 bytes */
+	/* 24 bytes remaining */
 #ifdef CONFIG_BQL
 	struct dql		dql;
 #endif
@@ -1024,6 +1034,11 @@ struct netdev_phys_port_id {
  *
  * int (*ndo_set_vf_rate)(struct net_device *dev, int vf, int min_tx_rate,
  *			  int max_tx_rate);
+ *
+ * int (*ndo_set_tx_maxrate)(struct net_device *dev,
+ *			     int queue_index, u32 maxrate);
+ *	Called when a user wants to set a max-rate limitation of specific
+ *	TX queue.
  */
 struct net_device_ops {
 	int			(*ndo_init)(struct net_device *dev);
@@ -1183,7 +1198,9 @@ struct net_device_ops {
 	RH_KABI_USE_P(5, int    (*ndo_set_vf_rss_query_en)(struct net_device *dev,
 							   int vf, bool setting))
 
-	RH_KABI_RESERVE_P(6)
+	RH_KABI_USE_P(6, int	(*ndo_set_tx_maxrate)(struct net_device *dev,
+						      int queue_index,
+						      u32 maxrate))
 	RH_KABI_RESERVE_P(7)
 	RH_KABI_RESERVE_P(8)
 	RH_KABI_RESERVE_P(9)
