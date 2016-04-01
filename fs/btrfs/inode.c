@@ -3139,7 +3139,6 @@ void btrfs_run_delayed_iputs(struct btrfs_root *root)
 	if (empty)
 		return;
 
-	down_read(&fs_info->delayed_iput_sem);
 
 	spin_lock(&fs_info->delayed_iput_lock);
 	list_splice_init(&fs_info->delayed_iputs, &list);
@@ -3152,7 +3151,6 @@ void btrfs_run_delayed_iputs(struct btrfs_root *root)
 		kfree(delayed);
 	}
 
-	up_read(&root->fs_info->delayed_iput_sem);
 }
 
 /*
