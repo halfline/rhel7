@@ -1987,6 +1987,7 @@ static const struct net_device_ops team_netdev_ops = {
 	.ndo_del_slave		= team_del_slave,
 	.ndo_fix_features	= team_fix_features,
 	.ndo_change_carrier     = team_change_carrier,
+	.ndo_features_check	= passthru_features_check,
 };
 
 /***********************
