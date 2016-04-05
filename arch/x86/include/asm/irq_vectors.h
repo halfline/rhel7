@@ -102,12 +102,6 @@
  */
 #define X86_PLATFORM_IPI_VECTOR		0xf7
 
-/* Vector for KVM to deliver posted interrupt IPI */
-#ifdef CONFIG_HAVE_KVM
-#define POSTED_INTR_VECTOR		0xf2
-#define POSTED_INTR_WAKEUP_VECTOR	0xf1
-#endif
-
 /*
  * IRQ work vector:
  */
@@ -118,6 +112,12 @@
 
 /* Vector on which hypervisor callbacks will be delivered */
 #define HYPERVISOR_CALLBACK_VECTOR	0xf3
+
+/* Vector for KVM to deliver posted interrupt IPI */
+#ifdef CONFIG_HAVE_KVM
+#define POSTED_INTR_VECTOR		0xf2
+#define POSTED_INTR_WAKEUP_VECTOR	0xf1
+#endif
 
 /*
  * Local APIC timer IRQ vector is on a different priority level,
