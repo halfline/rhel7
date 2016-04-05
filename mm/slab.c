@@ -1756,7 +1756,7 @@ static void *kmem_getpages(struct kmem_cache *cachep, gfp_t flags, int nodeid)
 	}
 
 	/* Record if ALLOC_NO_WATERMARKS was set when allocating the slab */
-	if (unlikely(page->pfmemalloc))
+	if (page_is_pfmemalloc(page))
 		pfmemalloc_active = true;
 
 	nr_pages = (1 << cachep->gfporder);
@@ -1769,7 +1769,7 @@ static void *kmem_getpages(struct kmem_cache *cachep, gfp_t flags, int nodeid)
 	for (i = 0; i < nr_pages; i++) {
 		__SetPageSlab(page + i);
 
-		if (page->pfmemalloc)
+		if (page_is_pfmemalloc(page))
 			SetPageSlabPfmemalloc(page + i);
 	}
 	memcg_bind_pages(cachep, cachep->gfporder);

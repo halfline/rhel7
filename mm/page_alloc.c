@@ -2021,15 +2021,19 @@ this_zone_full:
 		goto zonelist_scan;
 	}
 
-	if (page)
+	if (page) {
 		/*
-		 * page->pfmemalloc is set when ALLOC_NO_WATERMARKS was
+		 * page is set pfmemalloc when ALLOC_NO_WATERMARKS was
 		 * necessary to allocate the page. The expectation is
 		 * that the caller is taking steps that will free more
 		 * memory. The caller should avoid the page being used
 		 * for !PFMEMALLOC purposes.
 		 */
-		page->pfmemalloc = !!(alloc_flags & ALLOC_NO_WATERMARKS);
+		if (alloc_flags & ALLOC_NO_WATERMARKS)
+			set_page_pfmemalloc(page);
+		else
+			clear_page_pfmemalloc(page);
+	}
 
 	return page;
 }
