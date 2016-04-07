@@ -29,7 +29,6 @@ obj-$(CONFIG_CPU_SUP_UMC_32)		+= umc.o
 
 ifdef CONFIG_PERF_EVENTS
 obj-$(CONFIG_CPU_SUP_INTEL)		+= perf_event_p6.o perf_event_knc.o perf_event_p4.o
-obj-$(CONFIG_CPU_SUP_INTEL)		+= perf_event_intel_lbr.o
 obj-$(CONFIG_CPU_SUP_INTEL)		+= perf_event_intel_uncore.o perf_event_intel_uncore_snb.o
 obj-$(CONFIG_CPU_SUP_INTEL)		+= perf_event_intel_uncore_snbep.o perf_event_intel_uncore_nhmex.o
 obj-$(CONFIG_CPU_SUP_INTEL)		+= perf_event_intel_rapl.o
