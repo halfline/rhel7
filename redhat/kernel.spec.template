@@ -1426,6 +1426,7 @@ fi
 %{_mandir}/man[1-8]/perf*
 %{_sysconfdir}/bash_completion.d/perf
 %{_datadir}/perf-core/strace/groups
+%{_datadir}/doc/perf-tip/tips.txt
 
 %files -n python-perf
 %defattr(-,root,root)
