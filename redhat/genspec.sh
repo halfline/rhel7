@@ -161,7 +161,7 @@ LENGTH=$(wc -l $clogf | awk '{print $1}')
 #also remove the blank on top, if it exists
 #left by the 'print version\n' logic above
 cname="$(git var GIT_COMMITTER_IDENT |sed 's/>.*/>/')"
-cdate="$(date +"%a %b %d %Y")"
+cdate="$(LC_ALL=C date +"%a %b %d %Y")"
 cversion="[$RPM_VERSION]";
 tac $clogf | sed "1{/^$/d; /^- /i\
 * $cdate $cname $cversion
