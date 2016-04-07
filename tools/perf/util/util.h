@@ -334,4 +334,6 @@ static inline char *asprintf_expr_not_in_ints(const char *var, size_t nints, int
 
 int get_stack_size(const char *str, unsigned long *_size);
 
+const char *perf_tip(const char *dirpath);
+
 #endif /* GIT_COMPAT_UTIL_H */
