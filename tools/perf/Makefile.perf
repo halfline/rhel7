@@ -181,13 +181,13 @@ strip-libs = $(filter-out -l%,$(1))
 ifneq ($(OUTPUT),)
   TE_PATH=$(OUTPUT)
 ifneq ($(subdir),)
-  LIB_PATH=$(OUTPUT)/../lib/api/
+  API_PATH=$(OUTPUT)/../lib/api/
 else
-  LIB_PATH=$(OUTPUT)
+  API_PATH=$(OUTPUT)
 endif
 else
   TE_PATH=$(TRACE_EVENT_DIR)
-  LIB_PATH=$(LIB_DIR)
+  API_PATH=$(LIB_DIR)
 endif
 
 LIBTRACEEVENT = $(TE_PATH)libtraceevent.a
@@ -196,7 +196,7 @@ export LIBTRACEEVENT
 LIBTRACEEVENT_DYNAMIC_LIST = $(TE_PATH)libtraceevent-dynamic-list
 LIBTRACEEVENT_DYNAMIC_LIST_LDFLAGS = -Xlinker --dynamic-list=$(LIBTRACEEVENT_DYNAMIC_LIST)
 
-LIBAPI = $(LIB_PATH)libapi.a
+LIBAPI = $(API_PATH)libapi.a
 export LIBAPI
 
 # python extension build directories
