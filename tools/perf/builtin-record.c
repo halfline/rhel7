@@ -49,6 +49,7 @@ struct record {
 	int			realtime_prio;
 	bool			no_buildid;
 	bool			no_buildid_cache;
+	bool			buildid_all;
 	unsigned long long	samples;
 };
 
@@ -360,6 +361,13 @@ static int process_buildids(struct record *rec)
 	 *   $HOME/.debug/.build-id/f0/6e17aa50adf4d00b88925e03775de107611551
 	 */
 	symbol_conf.ignore_vmlinux_buildid = true;
+
+	/*
+	 * If --buildid-all is given, it marks all DSO regardless of hits,
+	 * so no need to process samples.
+	 */
+	if (rec->buildid_all)
+		rec->tool.sample = NULL;
 
 	return perf_session__process_events(session);
 }
@@ -755,12 +763,8 @@ out_child:
 
 		if (!rec->no_buildid) {
 			process_buildids(rec);
-			/*
-			 * We take all buildids when the file contains
-			 * AUX area tracing data because we do not decode the
-			 * trace because it would take too long.
-			 */
-			if (rec->opts.full_auxtrace)
+
+			if (rec->buildid_all)
 				dsos__hit_all(rec->session);
 		}
 		perf_session__write_header(rec->session, rec->evlist, fd, true);
@@ -1044,6 +1048,8 @@ struct option __record_options[] = {
 			"per thread proc mmap processing timeout in ms"),
 	OPT_BOOLEAN(0, "switch-events", &record.opts.record_switch_events,
 		    "Record context switch events"),
+	OPT_BOOLEAN(0, "buildid-all", &record.buildid_all,
+		    "Record build-id of all DSOs regardless of hits"),
 	OPT_END()
 };
 
@@ -1146,6 +1152,14 @@ int cmd_record(int argc, const char **argv, const char *prefix __maybe_unused)
 	err = auxtrace_record__options(rec->itr, rec->evlist, &rec->opts);
 	if (err)
 		goto out_symbol_exit;
+
+	/*
+	 * We take all buildids when the file contains
+	 * AUX area tracing data because we do not decode the
+	 * trace because it would take too long.
+	 */
+	if (rec->opts.full_auxtrace)
+		rec->buildid_all = true;
 
 	if (record_opts__config(&rec->opts)) {
 		err = -EINVAL;

@@ -319,6 +319,9 @@ This option sets the time out limit. The default value is 500 ms.
 Record context switch events i.e. events of type PERF_RECORD_SWITCH or
 PERF_RECORD_SWITCH_CPU_WIDE.
 
+--buildid-all::
+Record build-id of all DSOs regardless whether it's actually hit or not.
+
 SEE ALSO
 --------
 linkperf:perf-stat[1], linkperf:perf-list[1]
