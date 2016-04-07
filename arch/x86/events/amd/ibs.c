@@ -13,7 +13,7 @@
 
 #include <asm/apic.h>
 
-#include "../../kernel/cpu/perf_event.h"
+#include "../perf_event.h"
 
 static u32 ibs_caps;
 

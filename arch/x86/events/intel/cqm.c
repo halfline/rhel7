@@ -7,7 +7,7 @@
 #include <linux/perf_event.h>
 #include <linux/slab.h>
 #include <asm/cpu_device_id.h>
-#include "../../kernel/cpu/perf_event.h"
+#include "../perf_event.h"
 #include <linux/preempt_mask.h>
 
 #define MSR_IA32_PQR_ASSOC	0x0c8f
