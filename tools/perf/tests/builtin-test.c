@@ -162,6 +162,10 @@ static struct test generic_tests[] = {
 		.func = test_session_topology,
 	},
 	{
+		.desc = "Test thread map synthesize",
+		.func = test__thread_map_synthesize,
+	},
+	{
 		.func = NULL,
 	},
 };
