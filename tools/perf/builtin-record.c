@@ -1036,6 +1036,13 @@ int cmd_record(int argc, const char **argv, const char *prefix __maybe_unused)
 	struct record *rec = &record;
 	char errbuf[BUFSIZ];
 
+#ifndef HAVE_LIBBPF_SUPPORT
+# define set_nobuild(s, l, c) set_option_nobuild(record_options, s, l, "NO_LIBBPF=1", c)
+	set_nobuild('\0', "clang-path", true);
+	set_nobuild('\0', "clang-opt", true);
+# undef set_nobuild
+#endif
+
 	rec->evlist = perf_evlist__new();
 	if (rec->evlist == NULL)
 		return -ENOMEM;
