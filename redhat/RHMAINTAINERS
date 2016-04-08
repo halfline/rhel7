@@ -111,6 +111,12 @@ M:      Tomas Henzl <thenzl@redhat.com>
 S:      Maintained
 F:      drivers/scsi/arcmsr/
 
+ATHEROS WIRELESS LAN DRIVERS
+M:	John Greene <jogreene@redhat.com>
+S: 	Maintained
+F:	drivers/net/wireless/ath5k
+F: 	drivers/net/wireless/ath9k
+
 ATLX ETHERNET DRIVERS
 M:	John Greene <jogreene@redhat.com>
 S:	Maintained
@@ -205,6 +211,16 @@ M:	Sai Vemuri <svemuri@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/chelsio/cxgb4/
 
+DEVICE MAPPER SUPPORT
+M:	Mike Snitzer <snitzer@redhat.com>
+S:	Maintained
+F:	Documentation/device-mapper/
+F:	drivers/md/dm*
+F:	drivers/md/persistent-data/
+F:	include/linux/device-mapper.h
+F:	include/linux/dm-*.h
+F:	include/uapi/linux/dm-*.h
+
 DIRECT IO
 M:	Jeff Moyer <jmoyer@redhat.com>
 S:	Maintained
@@ -214,6 +230,11 @@ Disk Array driver for HP Smart Array SAS controllers (hpsa)
 M:	Tomas Henzl <thenzl@redhat.com>
 S:	Maintained
 F:	drivers/scsi/hpsa*
+
+DM-RAID SUPPORT
+M:	Jonathan Brassow <jbrassow@redhat.com>
+S:	Maintained
+F:	drivers/md/dm-raid*
 
 EDAC/HERM
 M:	Aristeu Rozanski <aris@redhat.com>
@@ -236,6 +257,12 @@ M:	Neil Horman <nhorman@redhat.com>
 S:	Maintained
 F:	drivers/firewire/
 F:	include/linux/firewire*.h
+
+FTRACE
+M:	Steve Rostedt <srostedt@redhat.com>
+S:	Maintained
+F:	kernel/trace/ftrace.c
+F:	include/linux/ftrace*
 
 FUSE FILESYSTEM
 M:	Brian Foster <bfoster@redhat.com>
@@ -268,11 +295,13 @@ S:	Maintained
 F:	drivers/net/ethernet/intel/i40evf/
 
 INTEL IGB ETHERNET DRIVERS (igb)
+M:	Corinna Vinschen <vinschen@redhat.com>
 M:	Stefan Assmann <sassmann@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/intel/igb/
 
 INTEL IGBVF ETHERNET DRIVERS (igbvf)
+M:	Corinna Vinschen <vinschen@redhat.com>
 M:	Stefan Assmann <sassmann@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/intel/igbvf/
@@ -286,14 +315,35 @@ F:	drivers/iommu/intel_iommu.c
 F:	include/linux/intel-iommu.h
 
 INTEL IXGBE ETHERNET DRIVER (ixgbe)
-M:	John Greene <jogreene@redhat.com>
+M:	Ken Cox <jkc@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/intel/ixgbe/
 
 INTEL IXGBEVF ETHERNET DRIVER (ixgbevf)
-M:	John Greene <jogreene@redhat.com>
+M:	Ken Cox <jkc@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/intel/ixgbevf/
+
+INTEL POWERCLAMP DRIVER
+M:	Steve Best <sbest@redhat.com>
+S:	Maintained
+F:	drivers/thermal/intel_powerclamp.c
+
+INTEL RAPL DRIVER
+M:	Steve Best <sbest@redhat.com>
+S:	Maintained
+F:	drivers/powercap/intel_rapl.c
+
+INTEL TRUSTED PLATFORM MODULE (TPM)
+M: 	Jerry Snitselaar <jsnitsel@redhat.com>
+S:	Maintained
+F:	drivers/char/tpm/*
+F:	include/linux/tpm.h
+
+INTEL QUICK ASSIST TECHNOLOGY (QAT)
+M:	Neil Horman <nhorman@redhat.com>
+S:	Maintained
+F:	drivers/crypto/qat/*
 
 KERNEL-BASED VIRTUAL MACHINE (kvm)
 M:	Paolo Bonzini <pbonzini@redhat.com>
@@ -334,7 +384,7 @@ F:	include/linux/hyperv.h
 F:	tools/hv/
 
 INFINIBAND SUBSYSTEM
-M:	Doug Ledford <dledford@redhat.com>
+M:	Don Dutile <ddutile@redhat.com>
 S:	Maintained
 F:	drivers/infiniband/
 
@@ -586,12 +636,6 @@ M:	Stanislaw Gruszka <sgruszka@redhat.com>
 S:	Maintained
 F:	drivers/net/wireless/rt2x00/
 
-ATHEROS WIRELESS LAN DRIVERS
-M:	John Greene <jogreene@redhat.com>
-S: 	Maintained
-F:	drivers/net/wireless/ath5k
-F: 	drivers/net/wireless/ath9k
-
 REALTEK WIRELESS LAN DRIVERS
 M: 	John Greene <jogreene@redhat.com>
 S:	Maintained
@@ -605,7 +649,6 @@ F:	net/rfkill/
 
 SCSI CORE SUBSYSTEM (NOT INDIVIDUAL DRIVERS)
 M:	David Milburn <dmilburn@redhat.com>
-M:	Doug Ledford <dledford@redhat.com>
 S:	Maintained
 F:	drivers/scsi/
 
@@ -625,7 +668,6 @@ F:	include/net/sctp/
 
 SERIAL ATA (SATA) SUBSYSTEM
 M:	David Milburn <dmilburn@redhat.com>
-M:	Jeff Garzik <jgarzik@redhat.com>
 S:	Maintained
 F:	drivers/ata/
 F:	include/linux/ata.h
@@ -670,21 +712,6 @@ M:	Jes Sorensen <Jes.Sorensen@redhat.com>
 S:	Maintained
 F:	drivers/md/
 
-DEVICE MAPPER SUPPORT
-M:	Mike Snitzer <snitzer@redhat.com>
-S:	Maintained
-F:      Documentation/device-mapper/
-F:      drivers/md/dm*
-F:      drivers/md/persistent-data/
-F:      include/linux/device-mapper.h
-F:      include/linux/dm-*.h
-F:      include/uapi/linux/dm-*.h
-
-DM-RAID SUPPORT
-M:	Jonathan Brassow <jbrassow@redhat.com>
-S:	Maintained
-F:	drivers/md/dm-raid*
-
 SUN REMOTE PROCEDURE CALL (sunrpc)
 M:	Red Hat NFS Team <nfs-team@redhat.com>
 S:	Maintained
@@ -694,7 +721,7 @@ SUSPEND/RESUME
 M:	Lenny Szubowicz <lszubowi@redhat.com>
 S:	Maintained
 
-X86 ARCHITECTURE (32-BIT AND 64-BIT)
+X86 ARCHITECTURE
 M:	Prarit Bhargava <prarit@redhat.com>
 S:	Maintained
 F:	arch/x86/
@@ -706,12 +733,14 @@ F:	drivers/staging/unisys
 
 UNIVERSAL EXTENSIBLE FIRMWARE INTERFACE (UEFI/EFI)
 M:	Lenny Szubowicz <lszubowi@redhat.com>
+M:	Myron Stowe	<mstowe@redhat.com>
 M:	Prarit Bhargava <prarit@redhat.com>
 S:	Maintained
 F:	arch/x86/kernel/efi*
 F:	include/linux/efi.h
 
 USB SUBSYSTEM
+M:	Torez Smith <torez@redhat.com>
 M:	Don Zickus <dzickus@redhat.com>
 S:	Maintained
 F:	drivers/usb/
