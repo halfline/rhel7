@@ -206,12 +206,12 @@ more:
 			dput(last);
 		}
 	}
-	filp->f_pos = di->offset + 1;
 	last = dentry;
 
 	if (err < 0)
 		goto out;
 
+	filp->f_pos = di->offset + 1;
 
 	spin_lock(&parent->d_lock);
 	p = p->prev;	/* advance to next dentry */
