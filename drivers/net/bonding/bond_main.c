@@ -978,7 +978,6 @@ static void bond_poll_controller(struct net_device *bond_dev)
 		if (bond_3ad_get_active_agg_info(bond, &ad_info))
 			return;
 
-	rcu_read_lock_bh();
 	bond_for_each_slave_rcu(bond, slave, iter) {
 		ops = slave->dev->netdev_ops;
 		if (!bond_slave_is_up(slave) || !ops->ndo_poll_controller)
@@ -999,7 +998,6 @@ static void bond_poll_controller(struct net_device *bond_dev)
 		ops->ndo_poll_controller(slave->dev);
 		up(&ni->dev_lock);
 	}
-	rcu_read_unlock_bh();
 }
 
 static void bond_netpoll_cleanup(struct net_device *bond_dev)
