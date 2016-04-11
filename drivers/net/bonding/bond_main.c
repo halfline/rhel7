@@ -4004,6 +4004,7 @@ static const struct net_device_ops bond_netdev_ops = {
 	.ndo_add_slave		= bond_enslave,
 	.ndo_del_slave		= bond_release,
 	.ndo_fix_features	= bond_fix_features,
+	.ndo_features_check	= passthru_features_check,
 };
 
 static const struct device_type bond_type = {
