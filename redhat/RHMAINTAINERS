@@ -568,7 +568,7 @@ F:	include/linux/nvme.h
 F:	include/uapi/linux/nvme.h
 
 OMNI-PATH ARCHITECTURE (opa)
-M:	David Sowa <dsowa@redhat.com>
+M:	Alexander Estrin <aestrin@redhat.com>
 S:	Maintained
 F:	drivers/staging/hfi*
 F:	drivers/infiniband/hw/hfi*
