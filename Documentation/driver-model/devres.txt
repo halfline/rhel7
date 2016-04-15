@@ -238,10 +238,12 @@ MEM
   devm_kfree()
 
 IO region
-  devm_request_region()
-  devm_request_mem_region()
-  devm_release_region()
   devm_release_mem_region()
+  devm_release_region()
+  devm_release_resource()
+  devm_request_mem_region()
+  devm_request_region()
+  devm_request_resource()
 
 IRQ
   devm_request_irq()
