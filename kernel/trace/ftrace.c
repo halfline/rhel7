@@ -1317,9 +1317,9 @@ alloc_and_copy_ftrace_hash(int size_bits, struct ftrace_hash *hash)
 	return NULL;
 }
 
-static void
+static bool
 ftrace_hash_rec_disable(struct ftrace_ops *ops, int filter_hash);
-static void
+static bool
 ftrace_hash_rec_enable(struct ftrace_ops *ops, int filter_hash);
 
 static int
@@ -1521,7 +1521,7 @@ int ftrace_text_reserved(void *start, void *end)
 	return (int)!!ret;
 }
 
-static void __ftrace_hash_rec_update(struct ftrace_ops *ops,
+static bool __ftrace_hash_rec_update(struct ftrace_ops *ops,
 				     int filter_hash,
 				     bool inc)
 {
@@ -1529,12 +1529,13 @@ static void __ftrace_hash_rec_update(struct ftrace_ops *ops,
 	struct ftrace_hash *other_hash;
 	struct ftrace_page *pg;
 	struct dyn_ftrace *rec;
+	bool update = false;
 	int count = 0;
 	int all = 0;
 
 	/* Only update if the ops has been registered */
 	if (!(ops->flags & FTRACE_OPS_FL_ENABLED))
-		return;
+		return false;
 
 	/*
 	 * In the filter_hash case:
@@ -1561,7 +1562,7 @@ static void __ftrace_hash_rec_update(struct ftrace_ops *ops,
 		 * then there's nothing to do.
 		 */
 		if (ftrace_hash_empty(hash))
-			return;
+			return false;
 	}
 
 	do_for_each_ftrace_rec(pg, rec) {
@@ -1595,7 +1596,7 @@ static void __ftrace_hash_rec_update(struct ftrace_ops *ops,
 		if (inc) {
 			rec->flags++;
 			if (FTRACE_WARN_ON((rec->flags & ~FTRACE_FL_MASK) == FTRACE_REF_MAX))
-				return;
+				return false;
 			/*
 			 * If any ops wants regs saved for this function
 			 * then all ops will get saved regs.
@@ -1604,26 +1605,32 @@ static void __ftrace_hash_rec_update(struct ftrace_ops *ops,
 				rec->flags |= FTRACE_FL_REGS;
 		} else {
 			if (FTRACE_WARN_ON((rec->flags & ~FTRACE_FL_MASK) == 0))
-				return;
+				return false;
 			rec->flags--;
 		}
 		count++;
+
+		/* Must match FTRACE_UPDATE_CALLS in ftrace_modify_all_code() */
+		update |= ftrace_test_record(rec, 1) != FTRACE_UPDATE_IGNORE;
+
 		/* Shortcut, if we handled all records, we are done. */
 		if (!all && count == hash->count)
-			return;
+			return update;
 	} while_for_each_ftrace_rec();
+
+	return update;
 }
 
-static void ftrace_hash_rec_disable(struct ftrace_ops *ops,
+static bool ftrace_hash_rec_disable(struct ftrace_ops *ops,
 				    int filter_hash)
 {
-	__ftrace_hash_rec_update(ops, filter_hash, 0);
+	return __ftrace_hash_rec_update(ops, filter_hash, 0);
 }
 
-static void ftrace_hash_rec_enable(struct ftrace_ops *ops,
+static bool ftrace_hash_rec_enable(struct ftrace_ops *ops,
 				   int filter_hash)
 {
-	__ftrace_hash_rec_update(ops, filter_hash, 1);
+	return __ftrace_hash_rec_update(ops, filter_hash, 1);
 }
 
 static void print_ip_ins(const char *fmt, unsigned char *p)
