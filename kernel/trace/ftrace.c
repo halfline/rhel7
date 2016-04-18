@@ -2049,7 +2049,6 @@ static int ftrace_startup(struct ftrace_ops *ops, int command)
 		return ret;
 
 	ftrace_start_up++;
-	command |= FTRACE_UPDATE_CALLS;
 
 	/* ops marked global share the filter hashes */
 	if (ops->flags & FTRACE_OPS_FL_GLOBAL) {
@@ -2061,8 +2060,8 @@ static int ftrace_startup(struct ftrace_ops *ops, int command)
 	}
 
 	ops->flags |= FTRACE_OPS_FL_ENABLED;
-	if (hash_enable)
-		ftrace_hash_rec_enable(ops, 1);
+	if (hash_enable && ftrace_hash_rec_enable(ops, 1))
+		command |= FTRACE_UPDATE_CALLS;
 
 	ftrace_startup_enable(command);
 
@@ -2100,13 +2099,11 @@ static int ftrace_shutdown(struct ftrace_ops *ops, int command)
 		}
 	}
 
-	if (hash_disable)
-		ftrace_hash_rec_disable(ops, 1);
+	if (hash_disable && ftrace_hash_rec_disable(ops, 1))
+		command |= FTRACE_UPDATE_CALLS;
 
 	if (ops != &global_ops || !global_start_up)
 		ops->flags &= ~FTRACE_OPS_FL_ENABLED;
-
-	command |= FTRACE_UPDATE_CALLS;
 
 	if (saved_ftrace_func != ftrace_trace_function) {
 		saved_ftrace_func = ftrace_trace_function;
