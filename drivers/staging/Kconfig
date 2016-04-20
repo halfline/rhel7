@@ -106,6 +106,8 @@ source "drivers/staging/nvec/Kconfig"
 
 source "drivers/staging/media/Kconfig"
 
+source "drivers/staging/rdma/Kconfig"
+
 source "drivers/staging/android/Kconfig"
 
 source "drivers/staging/ozwpan/Kconfig"
@@ -137,7 +139,5 @@ source "drivers/staging/netlogic/Kconfig"
 source "drivers/staging/dwc2/Kconfig"
 
 source "drivers/staging/unisys/Kconfig"
-
-source "drivers/staging/hfi1/Kconfig"
 
 endif # STAGING
