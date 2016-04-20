@@ -157,7 +157,12 @@ struct pv_cpu_ops {
 	u64 (*read_msr)(unsigned int msr, int *err);
 	int (*write_msr)(unsigned int msr, unsigned low, unsigned high);
 
-	RH_KABI_DEPRECATE_FN(u64, read_tsc, void)
+	/*
+	 * The member read_tsc() can't be deprecated because it is used
+	 * by get_cycles() indirectly.
+	 */
+
+	u64 (*read_tsc)(void);
 	u64 (*read_pmc)(int counter);
 	RH_KABI_DEPRECATE_FN(unsigned long long, read_tscp, unsigned int *aux)
 

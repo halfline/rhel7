@@ -361,6 +361,7 @@ struct pv_cpu_ops pv_cpu_ops = {
 	.wbinvd = native_wbinvd,
 	.read_msr = native_read_msr_safe,
 	.write_msr = native_write_msr_safe,
+	.read_tsc = native_read_tsc,
 	.read_pmc = native_read_pmc,
 	.load_tr_desc = native_load_tr_desc,
 	.set_ldt = native_set_ldt,
