@@ -55,4 +55,17 @@
 #define read_barrier_depends()		do { } while (0)
 #define smp_read_barrier_depends()	do { } while (0)
 
+/*
+ * Stop RDTSC speculation. This is needed when you need to use RDTSC
+ * (or get_cycles or vread that possibly accesses the TSC) in a defined
+ * code region.
+ *
+ * (Could use an alternative three way for this if there was one.)
+ */
+static inline void rdtsc_barrier(void)
+{
+	alternative(ASM_NOP3, "mfence", X86_FEATURE_MFENCE_RDTSC);
+	alternative(ASM_NOP3, "lfence", X86_FEATURE_LFENCE_RDTSC);
+}
+
 #endif
