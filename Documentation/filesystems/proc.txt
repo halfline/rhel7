@@ -434,8 +434,9 @@ indicates the amount of memory currently marked as referenced or accessed.
 "Anonymous" shows the amount of memory that does not belong to any file.  Even
 a mapping associated with a file may contain anonymous pages: when MAP_PRIVATE
 and a page is modified, the file page is replaced by a private anonymous copy.
-"Swap" shows how much would-be-anonymous memory is also used, but out on
-swap.
+"Swap" shows how much would-be-anonymous memory is also used, but out on swap.
+For shmem mappings, "Swap" includes also the size of the mapped (and not
+replaced by copy-on-write) part of the underlying shmem object out on swap.
 
 "VmFlags" field deserves a separate description. This member represents the kernel
 flags associated with the particular virtual memory area in two letter encoded

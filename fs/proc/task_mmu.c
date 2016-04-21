@@ -443,8 +443,47 @@ struct mem_size_stats {
 	unsigned long swap;
 	unsigned long nonlinear;
 	u64 pss;
+	bool check_shmem_swap;
 };
 
+#ifdef CONFIG_SHMEM
+static unsigned long smaps_shmem_swap(struct vm_area_struct *vma,
+		unsigned long addr)
+{
+	struct page *page;
+
+	page = find_get_entry(vma->vm_file->f_mapping,
+					linear_page_index(vma, addr));
+	if (!page)
+		return 0;
+
+	if (radix_tree_exceptional_entry(page))
+		return PAGE_SIZE;
+
+	page_cache_release(page);
+	return 0;
+
+}
+
+static int smaps_pte_hole(unsigned long addr, unsigned long end,
+		struct mm_walk *walk)
+{
+	struct mem_size_stats *mss = walk->private;
+
+	while (addr < end) {
+		mss->swap += smaps_shmem_swap(mss->vma, addr);
+		addr += PAGE_SIZE;
+	}
+
+	return 0;
+}
+#else
+static unsigned long smaps_shmem_swap(struct vm_area_struct *vma,
+		unsigned long addr)
+{
+	return 0;
+}
+#endif
 
 static void smaps_pte_entry(pte_t ptent, unsigned long addr,
 		unsigned long ptent_size, struct mm_walk *walk)
@@ -467,6 +506,11 @@ static void smaps_pte_entry(pte_t ptent, unsigned long addr,
 	} else if (pte_file(ptent)) {
 		if (pte_to_pgoff(ptent) != pgoff)
 			mss->nonlinear += ptent_size;
+	} else if (unlikely(IS_ENABLED(CONFIG_SHMEM) && mss->check_shmem_swap
+			    && pte_none(ptent))) {
+		/* We shouldn't encounter huge pages here */
+		WARN_ON(ptent_size != PAGE_SIZE);
+		mss->swap += smaps_shmem_swap(vma, addr);
 	}
 
 	if (!page)
@@ -602,8 +646,15 @@ static int show_smap(struct seq_file *m, void *v, int is_pid)
 	memset(&mss, 0, sizeof mss);
 	mss.vma = vma;
 	/* mmap_sem is held in m_start */
-	if (vma->vm_mm && !is_vm_hugetlb_page(vma))
+	if (vma->vm_mm && !is_vm_hugetlb_page(vma)) {
+#ifdef CONFIG_SHMEM
+		if (vma->vm_file && shmem_mapping(vma->vm_file->f_mapping)) {
+			mss.check_shmem_swap = true;
+			smaps_walk.pte_hole = smaps_pte_hole;
+		}
+#endif
 		walk_page_range(vma->vm_start, vma->vm_end, &smaps_walk);
+	}
 
 	show_map_vma(m, vma, is_pid);
 
