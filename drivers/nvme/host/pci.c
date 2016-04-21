@@ -1936,6 +1936,7 @@ static int nvme_revalidate_disk(struct gendisk *disk)
 		ns->lba_shift = 9;
 	bs = 1 << ns->lba_shift;
 
+	blk_mq_freeze_queue(disk->queue);
 	if (blk_get_integrity(disk) && (ns->ms != old_ms ||
 				bs != queue_logical_block_size(disk->queue) ||
 				(ns->ms && ns->ext)))
@@ -1955,6 +1956,7 @@ static int nvme_revalidate_disk(struct gendisk *disk)
 
 	if (dev->oncs & NVME_CTRL_ONCS_DSM)
 		nvme_config_discard(ns);
+	blk_mq_unfreeze_queue(disk->queue);
 
 	kfree(id);
 	return 0;
