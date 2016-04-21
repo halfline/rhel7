@@ -982,7 +982,6 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
 	ns->ns_id = nsid;
 	ns->disk = disk;
 	ns->lba_shift = 9; /* set to a default value for 512 until disk is validated */
-	list_add_tail(&ns->list, &ctrl->namespaces);
 
 	blk_queue_logical_block_size(ns->queue, 1 << ns->lba_shift);
 	if (ctrl->max_hw_sectors) {
@@ -1004,33 +1003,16 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
 	disk->flags = GENHD_FL_EXT_DEVT;
 	sprintf(disk->disk_name, "nvme%dn%d", ctrl->instance, nsid);
 
-	/*
-	 * Initialize capacity to 0 until we establish the namespace format and
-	 * setup integrity extentions if necessary. The revalidate_disk after
-	 * add_disk allows the driver to register with integrity if the format
-	 * requires it.
-	 */
-	set_capacity(disk, 0);
 	if (nvme_revalidate_disk(ns->disk))
 		goto out_free_disk;
 
+	list_add_tail(&ns->list, &ctrl->namespaces);
 	kref_get(&ctrl->kref);
 	add_disk(ns->disk);
-	if (ns->ms) {
-		struct block_device *bd = bdget_disk(ns->disk, 0);
-		if (!bd)
-			return;
-		if (blkdev_get(bd, FMODE_READ, NULL)) {
-			bdput(bd);
-			return;
-		}
-		blkdev_reread_part(bd);
-		blkdev_put(bd, FMODE_READ);
-	}
+
 	return;
  out_free_disk:
 	kfree(disk);
-	list_del(&ns->list);
  out_free_queue:
 	blk_cleanup_queue(ns->queue);
  out_free_ns:
