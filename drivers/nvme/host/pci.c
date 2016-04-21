@@ -527,7 +527,7 @@ static void req_completion(struct nvme_queue *nvmeq, void *ctx,
 	struct nvme_cmd_info *cmd_rq = blk_mq_rq_to_pdu(req);
 	bool requeue = false;
 	u16 status = le16_to_cpup(&cqe->status) >> 1;
-	int error;
+	int error = 0;
 
 	if (unlikely(status)) {
 		if (!(status & NVME_SC_DNR || blk_noretry_request(req))
