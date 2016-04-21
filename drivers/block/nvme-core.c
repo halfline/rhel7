@@ -733,10 +733,13 @@ static int nvme_submit_iod(struct nvme_queue *nvmeq, struct nvme_iod *iod,
 	cmnd.rw.slba = cpu_to_le64(nvme_block_nr(ns, blk_rq_pos(req)));
 	cmnd.rw.length = cpu_to_le16((blk_rq_bytes(req) >> ns->lba_shift) - 1);
 
-	if (blk_integrity_rq(req))
-		cmnd.rw.metadata = cpu_to_le64(sg_dma_address(iod->meta_sg));
-	else if (ns->ms)
-		control |= NVME_RW_PRINFO_PRACT;
+	if (ns->ms) {
+		if (blk_integrity_rq(req))
+			cmnd.rw.metadata =
+				cpu_to_le64(sg_dma_address(iod->meta_sg));
+		else
+			control |= NVME_RW_PRINFO_PRACT;
+	}
 
 	cmnd.rw.control = cpu_to_le16(control);
 	cmnd.rw.dsmgmt = cpu_to_le32(dsmgmt);
@@ -1938,8 +1941,7 @@ static int nvme_revalidate_disk(struct gendisk *disk)
 								!ns->ext)
 		nvme_init_integrity(ns);
 
-	if ((ns->ms && !blk_get_integrity(disk) &&
-					!(ns->pi_type && ns->ms == 8)))
+	if (ns->ms && !(ns->ms == 8 && ns->pi_type) && !blk_get_integrity(disk))
 		set_capacity(disk, 0);
 	else
 		set_capacity(disk, le64_to_cpup(&id->nsze) << (ns->lba_shift - 9));
