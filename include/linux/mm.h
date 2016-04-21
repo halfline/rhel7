@@ -1276,9 +1276,17 @@ int __get_user_pages_fast(unsigned long start, int nr_pages, int write,
 /*
  * per-process(per-mm_struct) statistics.
  */
+static inline atomic_long_t *__get_mm_counter(struct mm_struct *mm, int member)
+{
+	if (member == MM_SHMEMPAGES)
+		return &mm->mm_shmempages;
+	else
+		return &mm->rss_stat.count[member];
+}
+
 static inline unsigned long get_mm_counter(struct mm_struct *mm, int member)
 {
-	long val = atomic_long_read(&mm->rss_stat.count[member]);
+	long val = atomic_long_read(__get_mm_counter(mm, member));
 
 #ifdef SPLIT_RSS_COUNTING
 	/*
@@ -1293,17 +1301,17 @@ static inline unsigned long get_mm_counter(struct mm_struct *mm, int member)
 
 static inline void add_mm_counter(struct mm_struct *mm, int member, long value)
 {
-	atomic_long_add(value, &mm->rss_stat.count[member]);
+	atomic_long_add(value, __get_mm_counter(mm, member));
 }
 
 static inline void inc_mm_counter(struct mm_struct *mm, int member)
 {
-	atomic_long_inc(&mm->rss_stat.count[member]);
+	atomic_long_inc(__get_mm_counter(mm, member));
 }
 
 static inline void dec_mm_counter(struct mm_struct *mm, int member)
 {
-	atomic_long_dec(&mm->rss_stat.count[member]);
+	atomic_long_dec(__get_mm_counter(mm, member));
 }
 
 /* Optimized variant when page is already known not to be PageAnon */

@@ -1576,7 +1576,8 @@ struct task_struct {
 #else
 	RH_KABI_RESERVE(3)
 #endif
-	RH_KABI_RESERVE(4)
+	/* This would be in rss_stat[MM_SHMEMPAGES] if not for kABI */
+	RH_KABI_USE(4, int mm_shmempages)
 	RH_KABI_RESERVE(5)
 	RH_KABI_RESERVE(6)
 	RH_KABI_RESERVE(7)

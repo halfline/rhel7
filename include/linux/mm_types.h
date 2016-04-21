@@ -357,9 +357,22 @@ enum {
 	MM_FILEPAGES,	/* Resident file mapping pages */
 	MM_ANONPAGES,	/* Resident anonymous pages */
 	MM_SWAPENTS,	/* Anonymous swap entries */
-	MM_SHMEMPAGES,	/* Resident shared memory pages */
-	NR_MM_COUNTERS
+	NR_MM_COUNTERS,
+	/*
+	 * Resident shared memory pages
+	 *
+	 * We can't expand *_rss_stat without breaking kABI
+	 * MM_SHMEMPAGES need to be set apart
+	 */
+	MM_SHMEMPAGES = NR_MM_COUNTERS
 };
+
+/*
+ * While *_rss_stat does not contain MM_SHMEMPAGES, we still do some
+ * operations on all counters. We use the NR_MM_COUNTERS_EXTENDED
+ * constant for that.
+ */
+#define NR_MM_COUNTERS_EXTENDED (NR_MM_COUNTERS + 1)
 
 #if USE_SPLIT_PTE_PTLOCKS && defined(CONFIG_MMU)
 #define SPLIT_RSS_COUNTING
@@ -507,7 +520,8 @@ struct mm_struct {
 	/* RHEL7: consumed by x86, avoid re-use by other arches */
 	RH_KABI_RESERVE(3)
 #endif
-	RH_KABI_RESERVE(4)
+	/* This would be in rss_stat[MM_SHMEMPAGES] if not for kABI */
+	RH_KABI_USE(4, atomic_long_t mm_shmempages)
 	RH_KABI_RESERVE(5)
 	RH_KABI_RESERVE(6)
 	RH_KABI_RESERVE(7)

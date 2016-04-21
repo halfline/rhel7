@@ -144,6 +144,10 @@ void sync_mm_rss(struct mm_struct *mm)
 			current->rss_stat.count[i] = 0;
 		}
 	}
+	if (current->mm_shmempages) {
+		atomic_long_add(current->mm_shmempages, &mm->mm_shmempages);
+		current->mm_shmempages = 0;
+	}
 	current->rss_stat.events = 0;
 }
 
@@ -152,7 +156,10 @@ static void add_mm_counter_fast(struct mm_struct *mm, int member, int val)
 	struct task_struct *task = current;
 
 	if (likely(task->mm == mm))
-		task->rss_stat.count[member] += val;
+		if (member == MM_SHMEMPAGES)
+			task->mm_shmempages += val;
+		else
+			task->rss_stat.count[member] += val;
 	else
 		add_mm_counter(mm, member, val);
 }
@@ -641,7 +648,7 @@ int __pte_alloc_kernel(pmd_t *pmd, unsigned long address)
 
 static inline void init_rss_vec(int *rss)
 {
-	memset(rss, 0, sizeof(int) * NR_MM_COUNTERS);
+	memset(rss, 0, sizeof(int) * NR_MM_COUNTERS_EXTENDED);
 }
 
 static inline void add_mm_rss_vec(struct mm_struct *mm, int *rss)
@@ -650,7 +657,7 @@ static inline void add_mm_rss_vec(struct mm_struct *mm, int *rss)
 
 	if (current->mm == mm)
 		sync_mm_rss(mm);
-	for (i = 0; i < NR_MM_COUNTERS; i++)
+	for (i = 0; i < NR_MM_COUNTERS_EXTENDED; i++)
 		if (rss[i])
 			add_mm_counter(mm, i, rss[i]);
 }
@@ -911,7 +918,7 @@ int copy_pte_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
 	pte_t *src_pte, *dst_pte;
 	spinlock_t *src_ptl, *dst_ptl;
 	int progress = 0;
-	int rss[NR_MM_COUNTERS];
+	int rss[NR_MM_COUNTERS_EXTENDED];
 	swp_entry_t entry = (swp_entry_t){0};
 
 again:
@@ -1097,7 +1104,7 @@ static unsigned long zap_pte_range(struct mmu_gather *tlb,
 {
 	struct mm_struct *mm = tlb->mm;
 	int force_flush = 0;
-	int rss[NR_MM_COUNTERS];
+	int rss[NR_MM_COUNTERS_EXTENDED];
 	spinlock_t *ptl;
 	pte_t *start_pte;
 	pte_t *pte;

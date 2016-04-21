@@ -538,6 +538,7 @@ static struct mm_struct *mm_init(struct mm_struct *mm, struct task_struct *p)
 	mm->core_state = NULL;
 	atomic_long_set(&mm->nr_ptes, 0);
 	memset(&mm->rss_stat, 0, sizeof(mm->rss_stat));
+	atomic_long_set(&mm->mm_shmempages, 0);
 	spin_lock_init(&mm->page_table_lock);
 	mm->free_area_cache = TASK_UNMAPPED_BASE;
 	mm->cached_hole_size = ~0UL;
@@ -566,8 +567,8 @@ static void check_mm(struct mm_struct *mm)
 {
 	int i;
 
-	for (i = 0; i < NR_MM_COUNTERS; i++) {
-		long x = atomic_long_read(&mm->rss_stat.count[i]);
+	for (i = 0; i < NR_MM_COUNTERS_EXTENDED; i++) {
+		unsigned long x = get_mm_counter(mm, i);
 
 		if (unlikely(x))
 			printk(KERN_ALERT "BUG: Bad rss-counter state "
@@ -1266,6 +1267,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 
 #if defined(SPLIT_RSS_COUNTING)
 	memset(&p->rss_stat, 0, sizeof(p->rss_stat));
+	p->mm_shmempages = 0;
 #endif
 
 	p->default_timer_slack_ns = current->timer_slack_ns;
