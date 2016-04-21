@@ -448,40 +448,14 @@ struct mem_size_stats {
 };
 
 #ifdef CONFIG_SHMEM
-static unsigned long smaps_shmem_swap(struct vm_area_struct *vma,
-		unsigned long addr)
-{
-	struct page *page;
-
-	page = find_get_entry(vma->vm_file->f_mapping,
-					linear_page_index(vma, addr));
-	if (!page)
-		return 0;
-
-	if (radix_tree_exceptional_entry(page))
-		return PAGE_SIZE;
-
-	page_cache_release(page);
-	return 0;
-
-}
-
 static int smaps_pte_hole(unsigned long addr, unsigned long end,
 		struct mm_walk *walk)
 {
 	struct mem_size_stats *mss = walk->private;
 
-	while (addr < end) {
-		mss->swap += smaps_shmem_swap(mss->vma, addr);
-		addr += PAGE_SIZE;
-	}
+	mss->swap += shmem_partial_swap_usage(
+			mss->vma->vm_file->f_mapping, addr, end);
 
-	return 0;
-}
-#else
-static unsigned long smaps_shmem_swap(struct vm_area_struct *vma,
-		unsigned long addr)
-{
 	return 0;
 }
 #endif
@@ -511,7 +485,17 @@ static void smaps_pte_entry(pte_t ptent, unsigned long addr,
 			    && pte_none(ptent))) {
 		/* We shouldn't encounter huge pages here */
 		WARN_ON(ptent_size != PAGE_SIZE);
-		mss->swap += smaps_shmem_swap(vma, addr);
+		page = find_get_page(vma->vm_file->f_mapping,
+						linear_page_index(vma, addr));
+		if (!page)
+			return;
+
+		if (radix_tree_exceptional_entry(page))
+			mss->swap += PAGE_SIZE;
+		else
+			page_cache_release(page);
+
+		return;
 	}
 
 	if (!page)
