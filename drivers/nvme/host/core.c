@@ -78,7 +78,7 @@ int nvme_submit_sync_cmd(struct request_queue *q, struct nvme_command *cmd,
 	return __nvme_submit_sync_cmd(q, cmd, buffer, NULL, bufflen, NULL, 0);
 }
 
-int nvme_identify_ctrl(struct nvme_dev *dev, struct nvme_id_ctrl **id)
+int nvme_identify_ctrl(struct nvme_ctrl *dev, struct nvme_id_ctrl **id)
 {
 	struct nvme_command c = {
 		.identify.opcode = nvme_admin_identify,
@@ -97,7 +97,7 @@ int nvme_identify_ctrl(struct nvme_dev *dev, struct nvme_id_ctrl **id)
 	return error;
 }
 
-int nvme_identify_ns(struct nvme_dev *dev, unsigned nsid,
+int nvme_identify_ns(struct nvme_ctrl *dev, unsigned nsid,
 		struct nvme_id_ns **id)
 {
 	struct nvme_command c = {
@@ -117,7 +117,7 @@ int nvme_identify_ns(struct nvme_dev *dev, unsigned nsid,
 	return error;
 }
 
-int nvme_get_features(struct nvme_dev *dev, unsigned fid, unsigned nsid,
+int nvme_get_features(struct nvme_ctrl *dev, unsigned fid, unsigned nsid,
 					dma_addr_t dma_addr, u32 *result)
 {
 	struct nvme_command c;
@@ -132,7 +132,7 @@ int nvme_get_features(struct nvme_dev *dev, unsigned fid, unsigned nsid,
 			result, 0);
 }
 
-int nvme_set_features(struct nvme_dev *dev, unsigned fid, unsigned dword11,
+int nvme_set_features(struct nvme_ctrl *dev, unsigned fid, unsigned dword11,
 					dma_addr_t dma_addr, u32 *result)
 {
 	struct nvme_command c;
@@ -147,7 +147,7 @@ int nvme_set_features(struct nvme_dev *dev, unsigned fid, unsigned dword11,
 			result, 0);
 }
 
-int nvme_get_log_page(struct nvme_dev *dev, struct nvme_smart_log **log)
+int nvme_get_log_page(struct nvme_ctrl *dev, struct nvme_smart_log **log)
 {
 	struct nvme_command c = {
 		.common.opcode = nvme_admin_get_log_page,
