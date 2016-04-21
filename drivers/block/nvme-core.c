@@ -1630,6 +1630,7 @@ static int nvme_submit_io(struct nvme_ns *ns, struct nvme_user_io __user *uio)
 	int status, write;
 	dma_addr_t meta_dma = 0;
 	void *meta = NULL;
+	void __user *metadata;
 
 	if (copy_from_user(&io, uio, sizeof(io)))
 		return -EFAULT;
@@ -1645,6 +1646,8 @@ static int nvme_submit_io(struct nvme_ns *ns, struct nvme_user_io __user *uio)
 
 	length = (io.nblocks + 1) << ns->lba_shift;
 	meta_len = (io.nblocks + 1) * ns->ms;
+	metadata = (void __user *)(unsigned long)io.metadata;
+
 	write = io.opcode & 1;
 
 	if (meta_len) {
@@ -1658,13 +1661,13 @@ static int nvme_submit_io(struct nvme_ns *ns, struct nvme_user_io __user *uio)
 
 		meta = dma_alloc_coherent(dev->dev, meta_len,
 					  &meta_dma, GFP_KERNEL);
+
 		if (!meta) {
 			status = -ENOMEM;
 			goto unmap;
 		}
 		if (write) {
-			if (copy_from_user(meta, (void __user *)io.metadata,
-					   meta_len)) {
+			if (copy_from_user(meta, metadata, meta_len)) {
 				status = -EFAULT;
 				goto unmap;
 			}
@@ -1689,8 +1692,7 @@ static int nvme_submit_io(struct nvme_ns *ns, struct nvme_user_io __user *uio)
  unmap:
 	if (meta) {
 		if (status == NVME_SC_SUCCESS && !write) {
-			if (copy_to_user((void __user *)io.metadata, meta,
-					 meta_len))
+			if (copy_to_user(metadata, meta, meta_len))
 				status = -EFAULT;
 		}
 		dma_free_coherent(dev->dev, meta_len, meta, meta_dma);
