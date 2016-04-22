@@ -559,7 +559,7 @@ static int nvme_revalidate_disk(struct gendisk *disk)
 	}
 	if (nvme_identify_ns(ns->ctrl, ns->ns_id, &id)) {
 		dev_warn(ns->ctrl->dev, "%s: Identify failure\n", __func__);
-		return 0;
+		return -ENODEV;
 	}
 	if (id->ncap == 0) {
 		kfree(id);
