@@ -897,6 +897,9 @@ static void x86_init_cache_qos(struct cpuinfo_x86 *c)
  */
 static void identify_cpu(struct cpuinfo_x86 *c)
 {
+	struct rh_cpuinfo_x86 *rh_c = (c == &boot_cpu_data) ?
+				      &rh_boot_cpu_data :
+				      &rh_cpu_data(c->cpu_index);
 	int i;
 
 	c->loops_per_jiffy = loops_per_jiffy;
@@ -1016,6 +1019,9 @@ static void identify_cpu(struct cpuinfo_x86 *c)
 #ifdef CONFIG_NUMA
 	numa_add_cpu(smp_processor_id());
 #endif
+	/* The boot/hotplug time assigment got cleared, restore it */
+	rh_c->logical_proc_id = topology_phys_to_logical_pkg(c->phys_proc_id);
+
 }
 
 #ifdef CONFIG_X86_64

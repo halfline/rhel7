@@ -80,6 +80,8 @@ struct rh_cpuinfo_x86 {
 	/* Cache QoS architectural values: */
 	int			x86_cache_max_rmid;
 	int			x86_cache_occ_scale;
+	/* Logical processor id: */
+	u16			logical_proc_id;
 };
 
 /*
