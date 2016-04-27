@@ -3748,38 +3748,6 @@ __init int intel_pmu_init(void)
 }
 
 /*
- * The init function below is left out of compilation
- * in RHEL 7.2. We expect to enable it within 7.3.
- *
- * Code below is backport of upstream:
- *   b37609c30e41 perf/x86/intel: Make the HT bug workaround conditional on HT enabled
- *
- * It disables the HT bug workaround in case it detects
- * CPU without HT enabled. To disable it, we need to
- * change internal perf scheduling callbacks.
- *
- * At this point only the NMI watchdog could be using perf
- * events, hence the code below calls watchdog_nmi_disable_all
- * and watchdog_nmi_enable_all.
- *
- * This might race with lockup_detector_init as
- * explained in https://lkml.org/lkml/2015/7/31/296.
- *
- * The race within NMI watchdog is fixed by Ulrich Obergfell
- * in http://marc.info/?l=linux-kernel&m=143843318208917&w=2
- * and follow up patches.
- *
- * Unfortunately this change is too big to be accepted
- * at this stage of 7.2, so we decided to disable code
- * below and enable it back within 7.3, which will
- * backport the latest NMI watchdog code.
- *
- * The drawback of disabling code below is more overhead
- * during events scheduling.
-*/
-
-# if 0
-/*
  * HT bug: phase 2 init
  * Called once we have valid topology information to check
  * whether or not HT is enabled
@@ -3826,4 +3794,3 @@ static __init int fixup_ht_bug(void)
 }
 
 subsys_initcall(fixup_ht_bug);
-#endif
