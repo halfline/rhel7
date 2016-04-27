@@ -694,6 +694,7 @@ struct user_struct {
 	atomic_long_t locked_vm;
 #endif
 	RH_KABI_EXTEND(unsigned long unix_inflight)	/* How many files in flight in unix sockets */
+	RH_KABI_EXTEND(atomic_long_t pipe_bufs)	/* how many pages are allocated in pipe buffers */
 };
 
 extern int uids_sysfs_init(void);
