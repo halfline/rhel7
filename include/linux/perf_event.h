@@ -510,6 +510,7 @@ struct perf_event {
 	 */
 	RH_KABI_EXTEND(struct list_head		migrate_entry)
 	RH_KABI_EXTEND(struct list_head		active_entry)
+	RH_KABI_EXTEND(void			*pmu_private)
 #endif /* CONFIG_PERF_EVENTS */
 };
 
