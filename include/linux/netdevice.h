@@ -1586,7 +1586,8 @@ struct net_device {
 	/* group the device belongs to */
 	int group;
 
-	struct pm_qos_request	pm_qos_req;
+	/* RHEL: e1000e was the only in-tree driver that used this */
+	RH_KABI_DEPRECATE(struct pm_qos_request, pm_qos_req)
 
 	/* RHEL SPECIFIC
 	 *
