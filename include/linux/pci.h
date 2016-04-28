@@ -173,8 +173,6 @@ enum pci_dev_flags {
 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) (1 << 2),
 	/* Flag for quirk use to store if quirk-specific ACS is enabled */
 	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
-	/* Flag to indicate the device uses dma_alias_devfn */
-	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
 	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
 	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
 	/* Do not use bus resets for device */
@@ -398,7 +396,7 @@ struct pci_dev {
  * going forward.  This structure will never be under KABI restrictions.
  */
 struct pci_dev_rh {
-	RH_KABI_EXTEND(u8   dma_alias_devfn) /* devfn of DMA alias, if any */
+	RH_KABI_EXTEND(unsigned long *dma_alias_mask) /* mask of enabled devfn aliases */
 	RH_KABI_EXTEND(char *driver_override) /* Driver name to force a match */
 #ifdef CONFIG_PPC64
 	RH_KABI_EXTEND(struct pci_dn *pci_data) /* PCI device node*/
@@ -1899,6 +1897,7 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
 #endif
 
 void pci_add_dma_alias(struct pci_dev *dev, u8 devfn);
+bool pci_devs_are_dma_aliases(struct pci_dev *dev1, struct pci_dev *dev2);
 int pci_for_each_dma_alias(struct pci_dev *pdev,
 			   int (*fn)(struct pci_dev *pdev,
 				     u16 alias, void *data), void *data);

@@ -4278,10 +4278,24 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
  */
 void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
 {
-	dev->pci_dev_rh->dma_alias_devfn = devfn;
-	dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
+	if (!dev->pci_dev_rh->dma_alias_mask)
+		dev->pci_dev_rh->dma_alias_mask = kcalloc(BITS_TO_LONGS(U8_MAX),
+							  sizeof(long), GFP_KERNEL);
+	if (!dev->pci_dev_rh->dma_alias_mask) {
+		dev_warn(&dev->dev, "Unable to allocate DMA alias mask\n");
+		return;
+	}
+	set_bit(devfn, dev->pci_dev_rh->dma_alias_mask);
 	dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
 		 PCI_SLOT(devfn), PCI_FUNC(devfn));
+}
+
+bool pci_devs_are_dma_aliases(struct pci_dev *dev1, struct pci_dev *dev2)
+{
+	return (dev1->pci_dev_rh->dma_alias_mask &&
+		test_bit(dev2->devfn, dev1->pci_dev_rh->dma_alias_mask)) ||
+		(dev2->pci_dev_rh->dma_alias_mask &&
+		 test_bit(dev1->devfn, dev2->pci_dev_rh->dma_alias_mask));
 }
 
 bool pci_device_is_present(struct pci_dev *pdev)
