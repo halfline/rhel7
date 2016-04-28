@@ -133,8 +133,10 @@ void panic(const char *fmt, ...)
 	 * If we have crashed and we have a crash kernel loaded let it handle
 	 * everything else.
 	 * Do we want to call this before we try to display a message?
+	 *
+	 * Bypass the panic_cpu check and call __crash_kexec directly.
 	 */
-	crash_kexec(NULL);
+	__crash_kexec(NULL);
 
 	/*
 	 * Note smp_send_stop is the usual smp shutdown function, which
