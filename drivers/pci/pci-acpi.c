@@ -73,8 +73,7 @@ static void pci_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
 	pci_wakeup_event(pci_dev);
 	pm_runtime_resume(&pci_dev->dev);
 
-	if (pci_dev->subordinate)
-		pci_pme_wakeup_bus(pci_dev->subordinate);
+	pci_pme_wakeup_bus(pci_dev->subordinate);
 }
 
 /**
