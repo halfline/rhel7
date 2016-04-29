@@ -1537,6 +1537,41 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Apr 29 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-385.el7]
+- [tools] power turbostat: intel xeon x200: fix erroneous bclk value (Steve Best) [1330164]
+- [tools] power turbostat: intel xeon x200: fix turbo-ratio decoding (Steve Best) [1330167]
+- [x86] kvm: vmx: disable PEBS before a guest entry (Radim Krcmar) [1272097]
+- [net] netfilter: x_tables: introduce and use xt_copy_counters_from_user (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: do compat validation via translate_table (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: xt_compat_match_from_user doesn't need a retval (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: arp_tables: simplify translate_compat_table args (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: ip6_tables: simplify translate_compat_table args (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: ip_tables: simplify translate_compat_table args (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: remove unused comefrom hookmask argument (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: validate all offsets and sizes in a rule (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: check for bogus target offset (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: check standard target size too (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: add compat version of xt_check_entry_offsets (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: assert minimum target size (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: kill check_entry helper (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: add and use xt_check_entry_offsets (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: validate targets of jumps (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: don't move to non-existent next rule (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: fix unconditional helper (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: validate e->target_offset early (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: check for size overflow (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] ipv6: sit: set rtnl_link_ops before calling register_netdevice (Thadeu Lima de Souza Cascardo) [1284001]
+- [net] team: team should sync the port's uc/mc addrs when add a port (Xin Long) [1225396]
+- [net] ipv6: always add flag an address that failed DAD with DADFAILED (Hannes Frederic Sowa) [1299825]
+- [net] ipv6: keep existing flags when setting IFA_F_OPTIMISTIC (Hannes Frederic Sowa) [1299825]
+- [net] ipv6: restrict hop_limit sysctl setting to range [1; 255] (Hannes Frederic Sowa) [1299825]
+- [net] ipv6: Only act upon NETDEV_*_TYPE_CHANGE if we have ipv6 addresses (Hannes Frederic Sowa) [1299825]
+- [net] ipv6: clean up dev_snmp6 proc entry when we fail to initialize inet6_dev (Hannes Frederic Sowa) [1299825]
+- [net] ipv6: fail early when creating netdev named all or default (Hannes Frederic Sowa) [1299825]
+- [net] ipv4: fail early when creating netdev named all or default (Hannes Frederic Sowa) [1299825]
+- [net] ipv6: gre: setup default multicast routes over PtP links (Hannes Frederic Sowa) [1299825]
+- [net] addr IFLA_OPERSTATE to netlink message for ipv6 ifinfo (Hannes Frederic Sowa) [1299825]
+
 * Thu Apr 28 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-384.el7]
 - [block] nvme: Automatic namespace rescan fixup (David Milburn) [1288601]
 - [block] blk-mq: mark request queue as mq asap (David Milburn) [1288601]
