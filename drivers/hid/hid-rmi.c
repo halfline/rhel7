@@ -165,7 +165,8 @@ static int rmi_set_mode(struct hid_device *hdev, u8 mode)
 	int ret;
 	u8 txbuf[2] = {RMI_SET_RMI_MODE_REPORT_ID, mode};
 
-	ret = hdev->hid_output_raw_report(hdev, txbuf, sizeof(txbuf), HID_FEATURE_REPORT);
+	ret = hid_hw_raw_request(hdev, RMI_SET_RMI_MODE_REPORT_ID, txbuf,
+			sizeof(txbuf), HID_FEATURE_REPORT, HID_REQ_SET_REPORT);
 	if (ret < 0) {
 		dev_err(&hdev->dev, "unable to set rmi mode to %d (%d)\n", mode,
 			ret);
@@ -179,7 +180,7 @@ static int rmi_write_report(struct hid_device *hdev, u8 *report, int len)
 {
 	int ret;
 
-	ret = hdev->hid_output_raw_report(hdev, (void *)report, len, HID_OUTPUT_REPORT);
+	ret = hid_hw_output_report(hdev, (void *)report, len);
 	if (ret < 0) {
 		dev_err(&hdev->dev, "failed to write hid report (%d)\n", ret);
 		return ret;
