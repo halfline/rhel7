@@ -189,7 +189,8 @@ static int sixaxis_set_operational_usb(struct hid_device *hdev)
 static int sixaxis_set_operational_bt(struct hid_device *hdev)
 {
 	unsigned char buf[] = { 0xf4,  0x42, 0x03, 0x00, 0x00 };
-	return hdev->hid_output_raw_report(hdev, buf, sizeof(buf), HID_FEATURE_REPORT);
+	return hid_output_raw_report(hdev, buf, sizeof(buf),
+				     HID_FEATURE_REPORT);
 }
 
 static int sony_probe(struct hid_device *hdev, const struct hid_device_id *id)
