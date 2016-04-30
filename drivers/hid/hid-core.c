@@ -1037,13 +1037,13 @@ static u32 s32ton(__s32 value, unsigned n)
  * Search linux-kernel and linux-usb-devel archives for "hid-core extract".
  */
 
-static __u32 extract(const struct hid_device *hid, __u8 *report,
+__u32 hid_field_extract(const struct hid_device *hid, __u8 *report,
 		     unsigned offset, unsigned n)
 {
 	u64 x;
 
 	if (n > 32)
-		hid_warn(hid, "extract() called with n (%d) > 32! (%s)\n",
+		hid_warn(hid, "hid_field_extract() called with n (%d) > 32! (%s)\n",
 			 n, current->comm);
 
 	report += offset >> 3;  /* adjust byte index */
@@ -1052,6 +1052,7 @@ static __u32 extract(const struct hid_device *hid, __u8 *report,
 	x = (x >> offset) & ((1ULL << n) - 1);  /* extract bit field */
 	return (u32) x;
 }
+EXPORT_SYMBOL_GPL(hid_field_extract);
 
 /*
  * "implement" : set bits in a little endian bit stream.
@@ -1197,9 +1198,9 @@ static void hid_input_field(struct hid_device *hid, struct hid_field *field,
 	for (n = 0; n < count; n++) {
 
 		value[n] = min < 0 ?
-			snto32(extract(hid, data, offset + n * size, size),
-			       size) :
-			extract(hid, data, offset + n * size, size);
+			snto32(hid_field_extract(hid, data, offset + n * size,
+			       size), size) :
+			hid_field_extract(hid, data, offset + n * size, size);
 
 		/* Ignore report if ErrorRollOver */
 		if (!(field->flags & HID_MAIN_ITEM_VARIABLE) &&
