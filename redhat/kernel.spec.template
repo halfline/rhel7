@@ -1537,6 +1537,42 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon May 02 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-386.el7]
+- [pci] cpcihp: Add missing curly braces in cpci_configure_slot() (Myron Stowe) [1331507]
+- [pci] aer: Avoid info leak in __print_tlp_header() (Myron Stowe) [1331507]
+- [pci] Don't read past the end of sysfs "driver_override" buffer (Myron Stowe) [1331507]
+- [pci] Fail MSI-X mappings if there's no space assigned to MSI-X BAR (Myron Stowe) [1331507]
+- [pci] Fix infinite loop with ROM image of size 0 (Myron Stowe) [1331507]
+- [powerpc] rpc/pci: Add struct pci_ops member names to initialization (Myron Stowe) [1331507]
+- [pci] pciehp: Handle surprise add even if surprise removal isn't supported (Myron Stowe) [1331507]
+- [pci] pci/aspm: Use standard parsing functions for sysfs setters (Myron Stowe) [1331507]
+- [pci] Delete unnecessary NULL pointer checks (Myron Stowe) [1331507]
+- [pci] Prevent out of bounds access in numa_node override (Myron Stowe) [1331488]
+- [pci] Prevent out of bounds access in numa_node override (Myron Stowe) [1331488]
+- [pci] Remove unused and broken to_hotplug_slot() (Myron Stowe) [1331488]
+- [pci] Make FLR and AF FLR reset warning messages different (Myron Stowe) [1331488]
+- [pci] Simplify if-return sequences (Myron Stowe) [1331488]
+- [pci] Delete unnecessary NULL pointer checks (Myron Stowe) [1331488]
+- [pci] Allow numa_node override via sysfs (Myron Stowe) [1331488]
+- [x86] mm: pat: Avoid truncation when converting cpa->numpages to address (Larry Woodman) [1328755]
+- [fs] gfs2: Use gfs2 wrapper to sync inode before calling generic_file_splice_read() (Abhijith Das) [1331071]
+- [fs] lockd: create NSM handles per net namespace ("J. Bruce Fields") [1328938]
+- [fs] lockd: NLM grace period shouldn't block NFSv4 opens ("J. Bruce Fields") [1328938]
+- [fs] ext4: rate limit printk in buffer_io_error() (Carlos Maiolino) [1142771]
+- [fs] clarify rate limit suppressed buffer I/O errors (Carlos Maiolino) [1142771]
+- [fs] merge I/O error prints into one line (Carlos Maiolino) [1142771]
+- [fs] block: Remove annoying "unknown partition table" message (Carlos Maiolino) [1142771]
+- [fs] ovl: Ensure upper filesystem supports d_type (Vivek Goyal) [1288162]
+- [fs] epoll: restrict EPOLLEXCLUSIVE to POLLIN and POLLOUT (Hannes Frederic Sowa) [1245628]
+- [fs] epoll: add EPOLLEXCLUSIVE flag (Hannes Frederic Sowa) [1245628]
+- [fs] pipe: limit the per-user amount of pages allocated in pipes (Mateusz Guzik) [1313960] {CVE-2016-2847}
+- [sound] alsa: usb-audio: avoid freeing umidi object twice (Mateusz Guzik) [1310663] {CVE-2016-2384}
+- [netdrv] atl2: Disable unimplemented scatter/gather feature (Mateusz Guzik) [1320106] {CVE-2016-2117}
+- [misc] cxl: Configure the PSL for two CAPI ports on POWER8NVL (Steve Best) [1278793]
+- [powerpc] Define PVR value for POWER8NVL processor (Steve Best) [1278793]
+- [powerpc] powernv: Silence SYSPARAM warning on boot (Steve Best) [1331179]
+- [infiniband] hfi1: Move hfi1 driver to match upstream tree (Alex Estrin) [1328249]
+
 * Fri Apr 29 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-385.el7]
 - [tools] power turbostat: intel xeon x200: fix erroneous bclk value (Steve Best) [1330164]
 - [tools] power turbostat: intel xeon x200: fix turbo-ratio decoding (Steve Best) [1330167]
