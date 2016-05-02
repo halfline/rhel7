@@ -1,1 +1,1 @@
-# CONFIG_CAN is not set
+CONFIG_CAN=m
