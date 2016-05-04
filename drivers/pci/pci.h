@@ -233,6 +233,7 @@ struct pci_sriov {
 	struct work_struct mtask; /* Obsolete as of RHEL7.1 */
 	u8 __iomem *mstate;	/* Obsolete as of RHEL7.1 */
 	RH_KABI_EXTEND(resource_size_t barsz[PCI_SRIOV_NUM_BARS])	/* VF BAR size */
+	RH_KABI_EXTEND(u8 max_VF_buses)	/* max buses consumed by VFs */
 };
 
 #ifdef CONFIG_PCI_ATS
