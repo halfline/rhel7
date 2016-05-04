@@ -3018,7 +3018,9 @@ int hci_register_dev(struct hci_dev *hdev)
 {
 	int id, error;
 
-	if (!hdev->open || !hdev->close || !hdev->send)
+	/* RHEL-7 check for new or old 'send' function */
+	if (!hdev->open || !hdev->close ||
+	    !(hdev->send || hdev->rh_reserved_send))
 		return -EINVAL;
 
 	/* Do not allow HCI_AMP devices to register at index 0,
@@ -3310,6 +3312,22 @@ static void hci_send_frame(struct hci_dev *hdev, struct sk_buff *skb)
 
 	if (!test_bit(HCI_RUNNING, &hdev->flags)) {
 		kfree_skb(skb);
+		return;
+	}
+
+	/*
+ 	 * RHEL-7: handle kabi breaking of old function.
+ 	 * Check to see if old function was populated and if
+ 	 * so, add hdev to skb the old way before calling
+ 	 * the send function.
+ 	 */
+	if (hdev->rh_reserved_send) {
+		skb->dev = (void *) hdev;
+		err = hdev->rh_reserved_send(skb);
+		if (err < 0) {
+			BT_ERR("%s sending frame failed (%d)", hdev->name, err);
+			kfree_skb(skb);
+		}
 		return;
 	}
 

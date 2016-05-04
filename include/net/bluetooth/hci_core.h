@@ -69,6 +69,7 @@ struct discovery_state {
 	struct list_head	unknown;	/* Name state not known */
 	struct list_head	resolve;	/* Name needs to be resolved */
 	__u32			timestamp;
+#ifndef __GENKSYMS__
 	bdaddr_t		last_adv_addr;
 	u8			last_adv_addr_type;
 	s8			last_adv_rssi;
@@ -83,6 +84,7 @@ struct discovery_state {
 	u8			(*uuids)[16];
 	unsigned long		scan_start;
 	unsigned long		scan_duration;
+#endif
 };
 
 struct hci_conn_hash {
@@ -91,7 +93,9 @@ struct hci_conn_hash {
 	unsigned int     amp_num;
 	unsigned int     sco_num;
 	unsigned int     le_num;
+#ifndef __GENKSYMS__
 	unsigned int     le_num_slave;
+#endif
 };
 
 struct bdaddr_list {
@@ -156,6 +160,13 @@ struct oob_data {
 	u8 rand256[16];
 };
 
+struct le_scan_params {
+	u8 type;
+	u16 interval;
+	u16 window;
+	int timeout;
+};
+
 struct adv_info {
 	struct list_head list;
 	bool pending;
@@ -192,6 +203,7 @@ struct amp_assoc {
 
 #define HCI_MAX_PAGES	3
 
+#define NUM_REASSEMBLY	4
 struct hci_dev {
 	struct list_head list;
 	struct mutex	lock;
@@ -202,11 +214,6 @@ struct hci_dev {
 	__u8		bus;
 	__u8		dev_type;
 	bdaddr_t	bdaddr;
-	bdaddr_t	setup_addr;
-	bdaddr_t	public_addr;
-	bdaddr_t	random_addr;
-	bdaddr_t	static_addr;
-	__u8		adv_addr_type;
 	__u8		dev_name[HCI_MAX_NAME_LENGTH];
 	__u8		short_name[HCI_MAX_SHORT_NAME_LENGTH];
 	__u8		eir[HCI_MAX_EIR_LENGTH];
@@ -225,36 +232,11 @@ struct hci_dev {
 	__u16		manufacturer;
 	__u16		lmp_subver;
 	__u16		voice_setting;
-	__u8		num_iac;
-	__u8		stored_max_keys;
-	__u8		stored_num_keys;
 	__u8		io_capability;
 	__s8		inq_tx_power;
 	__u16		page_scan_interval;
 	__u16		page_scan_window;
 	__u8		page_scan_type;
-	__u8		le_adv_channel_map;
-	__u16		le_adv_min_interval;
-	__u16		le_adv_max_interval;
-	__u8		le_scan_type;
-	__u16		le_scan_interval;
-	__u16		le_scan_window;
-	__u16		le_conn_min_interval;
-	__u16		le_conn_max_interval;
-	__u16		le_conn_latency;
-	__u16		le_supv_timeout;
-	__u16		le_def_tx_len;
-	__u16		le_def_tx_time;
-	__u16		le_max_tx_len;
-	__u16		le_max_tx_time;
-	__u16		le_max_rx_len;
-	__u16		le_max_rx_time;
-	__u16		discov_interleaved_timeout;
-	__u16		conn_info_min_age;
-	__u16		conn_info_max_age;
-	__u8		ssp_debug_mode;
-	__u8		hw_error_code;
-	__u32		clock;
 
 	__u16		devid_source;
 	__u16		devid_vendor;
@@ -315,57 +297,55 @@ struct hci_dev {
 
 	struct work_struct	power_on;
 	struct delayed_work	power_off;
-	struct work_struct	error_reset;
 
 	__u16			discov_timeout;
 	struct delayed_work	discov_off;
 
 	struct delayed_work	service_cache;
 
-	struct delayed_work	cmd_timer;
+	/*
+	 * RHEL-7 struct was modified, grew larger and only used
+	 * internally. Deprecate here and add them at the bottom.
+	 * (cmd_timer)
+	 */
+	RH_KABI_DEPRECATE(struct timer_list, cmd_timer)
 
 	struct work_struct	rx_work;
 	struct work_struct	cmd_work;
 	struct work_struct	tx_work;
 
-	struct work_struct	discov_update;
-	struct work_struct	bg_scan_update;
-	struct work_struct	scan_update;
-	struct work_struct	connectable_update;
-	struct work_struct	discoverable_update;
-	struct delayed_work	le_scan_disable;
-	struct delayed_work	le_scan_restart;
-
 	struct sk_buff_head	rx_q;
 	struct sk_buff_head	raw_q;
 	struct sk_buff_head	cmd_q;
 
+	struct sk_buff		*recv_evt;
 	struct sk_buff		*sent_cmd;
+	struct sk_buff		*reassembly[NUM_REASSEMBLY];
 
 	struct mutex		req_lock;
 	wait_queue_head_t	req_wait_q;
 	__u32			req_status;
 	__u32			req_result;
-	struct sk_buff		*req_skb;
-
-	void			*smp_data;
-	void			*smp_bredr_data;
-
-	struct discovery_state	discovery;
-	struct hci_conn_hash	conn_hash;
 
 	struct list_head	mgmt_pending;
+
+	/*
+	 * RHEL-7 structs were expanded and only used internally.
+	 * Deprecate here and add them at the bottom.
+	 * (discovery and conn_hash)
+	 */
+	RH_KABI_DEPRECATE(struct discovery_state, discovery)
+	RH_KABI_DEPRECATE(struct hci_conn_hash, conn_hash)
+
 	struct list_head	blacklist;
-	struct list_head	whitelist;
+
 	struct list_head	uuids;
+
 	struct list_head	link_keys;
+
 	struct list_head	long_term_keys;
-	struct list_head	identity_resolving_keys;
+
 	struct list_head	remote_oob_data;
-	struct list_head	le_white_list;
-	struct list_head	le_conn_params;
-	struct list_head	pend_le_conns;
-	struct list_head	pend_le_reports;
 
 	struct hci_dev_stats	stat;
 
@@ -377,11 +357,87 @@ struct hci_dev {
 
 	struct rfkill		*rfkill;
 
-	DECLARE_BITMAP(dev_flags, __HCI_NUM_FLAGS);
+	/*
+	 * RHEL-7 struct was modified and only used internally.
+	 * Deprecate here and add them at the bottom.
+	 * (dev_flags)
+	 */
+	RH_KABI_DEPRECATE(unsigned long, dev_flags)
+
+	struct delayed_work	le_scan_disable;
+
+	struct work_struct	le_scan;
+	struct le_scan_params	le_scan_params;
 
 	__s8			adv_tx_power;
 	__u8			adv_data[HCI_MAX_AD_LENGTH];
 	__u8			adv_data_len;
+
+	int (*open)(struct hci_dev *hdev);
+	int (*close)(struct hci_dev *hdev);
+	int (*flush)(struct hci_dev *hdev);
+	int (*setup)(struct hci_dev *hdev);
+	/*
+	 * RHEL-7 added another parameter, deprecate the old function.
+	 * We still handle the old function internally.
+	 */
+	RH_KABI_DEPRECATE_FN(int, send, struct sk_buff *skb)
+	void (*notify)(struct hci_dev *hdev, unsigned int evt);
+	int (*ioctl)(struct hci_dev *hdev, unsigned int cmd, unsigned long arg);
+
+#ifndef __GENKSYMS__
+	/* new RHEL-7 stuff */
+	bdaddr_t	setup_addr;
+	bdaddr_t	public_addr;
+	bdaddr_t	random_addr;
+	bdaddr_t	static_addr;
+	__u8		adv_addr_type;
+	__u8		num_iac;
+	__u8		stored_max_keys;
+	__u8		stored_num_keys;
+	__u8		le_adv_channel_map;
+	__u16		le_adv_min_interval;
+	__u16		le_adv_max_interval;
+	__u8		le_scan_type;
+	__u16		le_scan_interval;
+	__u16		le_scan_window;
+	__u16		le_conn_min_interval;
+	__u16		le_conn_max_interval;
+	__u16		le_conn_latency;
+	__u16		le_supv_timeout;
+	__u16		le_def_tx_len;
+	__u16		le_def_tx_time;
+	__u16		le_max_tx_len;
+	__u16		le_max_tx_time;
+	__u16		le_max_rx_len;
+	__u16		le_max_rx_time;
+	__u16		discov_interleaved_timeout;
+	__u16		conn_info_min_age;
+	__u16		conn_info_max_age;
+	__u8		ssp_debug_mode;
+	__u8		hw_error_code;
+	__u32		clock;
+	struct work_struct	error_reset;
+	struct delayed_work	cmd_timer;
+	struct work_struct	discov_update;
+	struct work_struct	bg_scan_update;
+	struct work_struct	scan_update;
+	struct work_struct	connectable_update;
+	struct work_struct	discoverable_update;
+	struct delayed_work	le_scan_restart;
+
+	struct sk_buff		*req_skb;
+	void			*smp_data;
+	struct discovery_state	discovery;
+	struct hci_conn_hash	conn_hash;
+	void			*smp_bredr_data;
+	struct list_head	whitelist;
+	struct list_head	identity_resolving_keys;
+	struct list_head	le_white_list;
+	struct list_head	le_conn_params;
+	struct list_head	pend_le_conns;
+	struct list_head	pend_le_reports;
+	DECLARE_BITMAP(dev_flags, __HCI_NUM_FLAGS);
 	__u8			scan_rsp_data[HCI_MAX_AD_LENGTH];
 	__u8			scan_rsp_data_len;
 
@@ -395,18 +451,13 @@ struct hci_dev {
 	__u32			rpa_timeout;
 	struct delayed_work	rpa_expired;
 	bdaddr_t		rpa;
-
-	int (*open)(struct hci_dev *hdev);
-	int (*close)(struct hci_dev *hdev);
-	int (*flush)(struct hci_dev *hdev);
-	int (*setup)(struct hci_dev *hdev);
 	int (*shutdown)(struct hci_dev *hdev);
 	int (*send)(struct hci_dev *hdev, struct sk_buff *skb);
-	void (*notify)(struct hci_dev *hdev, unsigned int evt);
 	void (*hw_error)(struct hci_dev *hdev, u8 code);
 	int (*post_init)(struct hci_dev *hdev);
 	int (*set_diag)(struct hci_dev *hdev, bool enable);
 	int (*set_bdaddr)(struct hci_dev *hdev, const bdaddr_t *bdaddr);
+#endif
 };
 
 #define HCI_PHY_HANDLE(handle)	(handle & 0xff)
