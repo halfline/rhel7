@@ -271,7 +271,7 @@ int btintel_load_ddc_config(struct hci_dev *hdev, const char *ddc_name)
 	const u8 *fw_ptr;
 	int err;
 
-	err = request_firmware_direct(&fw, ddc_name, &hdev->dev);
+	err = request_firmware(&fw, ddc_name, &hdev->dev);
 	if (err < 0) {
 		bt_dev_err(hdev, "Failed to load Intel DDC file %s (%d)",
 			   ddc_name, err);
