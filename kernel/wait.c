@@ -170,7 +170,27 @@ int autoremove_wake_function(wait_queue_t *wait, unsigned mode, int sync, void *
 }
 EXPORT_SYMBOL(autoremove_wake_function);
 
+/*
+ * RH: the original wake_bit_function() is retained for possible 3rd-party
+ * users of DEFINE_WAIT_BIT before commit
+ * "sched: Allow wait_on_bit_action() functions to support a timeout"
+ */
 int wake_bit_function(wait_queue_t *wait, unsigned mode, int sync, void *arg)
+{
+	struct wait_bit_key_deprecated *key = arg;
+	struct wait_bit_queue_deprecated *wait_bit
+		= container_of(wait, struct wait_bit_queue_deprecated, wait);
+
+	if (wait_bit->key.flags != key->flags ||
+			wait_bit->key.bit_nr != key->bit_nr ||
+			test_bit(key->bit_nr, key->flags))
+		return 0;
+	else
+		return autoremove_wake_function(wait, mode, sync, key);
+}
+EXPORT_SYMBOL(wake_bit_function);
+
+int wake_bit_function_rh(wait_queue_t *wait, unsigned mode, int sync, void *arg)
 {
 	struct wait_bit_key *key = arg;
 	struct wait_bit_queue *wait_bit
@@ -183,7 +203,7 @@ int wake_bit_function(wait_queue_t *wait, unsigned mode, int sync, void *arg)
 	else
 		return autoremove_wake_function(wait, mode, sync, key);
 }
-EXPORT_SYMBOL(wake_bit_function);
+EXPORT_SYMBOL(wake_bit_function_rh);
 
 /*
  * To allow interruptible waiting and asynchronous (i.e. nonblocking)

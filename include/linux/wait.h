@@ -20,6 +20,21 @@ struct __wait_queue {
 	struct list_head task_list;
 };
 
+/*
+ * The following wait_bit_key_deprecated and wait_bit_queue_deprecated are
+ * retained for 3rd-party modules that used DEFINE_WAIT_BIT before commit
+ * "sched: Allow wait_on_bit_action() functions to support a timeout"
+ */
+struct wait_bit_key_deprecated {
+	void *flags;
+	int bit_nr;
+};
+
+struct wait_bit_queue_deprecated {
+	struct wait_bit_key_deprecated key;
+	wait_queue_t wait;
+};
+
 struct wait_bit_key {
 	void *flags;
 	int bit_nr;
@@ -955,7 +970,7 @@ void finish_wait(wait_queue_head_t *q, wait_queue_t *wait);
 void abort_exclusive_wait(wait_queue_head_t *q, wait_queue_t *wait,
 			unsigned int mode, void *key);
 int autoremove_wake_function(wait_queue_t *wait, unsigned mode, int sync, void *key);
-int wake_bit_function(wait_queue_t *wait, unsigned mode, int sync, void *key);
+int wake_bit_function_rh(wait_queue_t *wait, unsigned mode, int sync, void *key);
 
 #define DEFINE_WAIT_FUNC(name, function)				\
 	wait_queue_t name = {						\
@@ -971,7 +986,7 @@ int wake_bit_function(wait_queue_t *wait, unsigned mode, int sync, void *key);
 		.key = __WAIT_BIT_KEY_INITIALIZER(word, bit),		\
 		.wait	= {						\
 			.private	= current,			\
-			.func		= wake_bit_function,		\
+			.func		= wake_bit_function_rh,		\
 			.task_list	=				\
 				LIST_HEAD_INIT((name).wait.task_list),	\
 		},							\
