@@ -6,6 +6,10 @@ NAME = Unicycling Gorilla
 RHEL_MAJOR = 7
 RHEL_MINOR = 3
 RHEL_RELEASE = 395
+
+#
+# DRM backport version
+#
 RHEL_DRM_VERSION = 4
 RHEL_DRM_PATCHLEVEL = 1
 RHEL_DRM_SUBLEVEL = 0
