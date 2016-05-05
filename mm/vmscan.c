@@ -201,8 +201,21 @@ static inline int do_shrinker_shrink(struct shrinker *shrinker,
 				     struct shrink_control *sc,
 				     unsigned long nr_to_scan)
 {
+	int objects;
 	sc->nr_to_scan = nr_to_scan;
-	return (*shrinker->shrink)(shrinker, sc);
+	objects = (*shrinker->shrink)(shrinker, sc);
+	/*
+	 * A shrinker can legitimately return -1 meaning that it cannot do
+	 * much work without a risk of deadlock.
+	 * However, in some extreme cases, specially when there is abusive
+	 * usage of vm.vfs_cache_pressure, a shrinker might return a negative
+	 * value indicating that its integer return value has overflown.
+	 * In such cases, we just go ahead and cap the return val to INT_MAX.
+	 */
+	if (objects < -1)
+		return INT_MAX;
+
+	return objects;
 }
 
 #define SHRINK_BATCH 128
