@@ -19,6 +19,7 @@
 #include <linux/bit_spinlock.h>
 #include <linux/shrinker.h>
 #include <linux/resource.h>
+#include <linux/page_ref.h>
 
 struct mempolicy;
 struct anon_vma;
@@ -318,8 +319,8 @@ static inline int get_freepage_migratetype(struct page *page)
  */
 static inline int put_page_testzero(struct page *page)
 {
-	VM_BUG_ON_PAGE(atomic_read(&page->_count) == 0, page);
-	return atomic_dec_and_test(&page->_count);
+	VM_BUG_ON_PAGE(page_ref_count(page) == 0, page);
+	return page_ref_dec_and_test(page);
 }
 
 /*
@@ -328,7 +329,7 @@ static inline int put_page_testzero(struct page *page)
  */
 static inline int get_page_unless_zero(struct page *page)
 {
-	return atomic_inc_not_zero(&page->_count);
+	return page_ref_add_unless(page, 1, 0);
 }
 
 extern int page_is_ram(unsigned long pfn);
@@ -400,28 +401,6 @@ static inline void compound_unlock_irqrestore(struct page *page,
 #endif
 }
 
-static inline struct page *compound_head_by_tail(struct page *tail)
-{
-	struct page *head = tail->first_page;
-
-	/*
-	 * page->first_page may be a dangling pointer to an old
-	 * compound page, so recheck that it is still a tail
-	 * page before returning.
-	 */
-	smp_rmb();
-	if (likely(PageTail(tail)))
-		return head;
-	return tail;
-}
-
-static inline struct page *compound_head(struct page *page)
-{
-	if (unlikely(PageTail(page)))
-		return compound_head_by_tail(page);
-	return page;
-}
-
 /*
  * The atomic page->_mapcount, starts from -1: so that transitions
  * both from it and to it can be tracked, using atomic_inc_and_test
@@ -435,11 +414,6 @@ static inline void page_mapcount_reset(struct page *page)
 static inline int page_mapcount(struct page *page)
 {
 	return atomic_read(&(page)->_mapcount) + 1;
-}
-
-static inline int page_count(struct page *page)
-{
-	return atomic_read(&compound_head(page)->_count);
 }
 
 #ifdef CONFIG_HUGETLB_PAGE
@@ -477,7 +451,7 @@ static inline void get_huge_page_tail(struct page *page)
 	 */
 	VM_BUG_ON_PAGE(!PageTail(page), page);
 	VM_BUG_ON_PAGE(page_mapcount(page) < 0, page);
-	VM_BUG_ON_PAGE(atomic_read(&page->_count) != 0, page);
+	VM_BUG_ON_PAGE(page_ref_count(page) != 0, page);
 	if (compound_tail_refcounted(page->first_page))
 		atomic_inc(&page->_mapcount);
 }
@@ -493,23 +467,15 @@ static inline void get_page(struct page *page)
 	 * Getting a normal page or the head of a compound page
 	 * requires to already have an elevated page->_count.
 	 */
-	VM_BUG_ON_PAGE(atomic_read(&page->_count) <= 0, page);
-	atomic_inc(&page->_count);
+	VM_BUG_ON_PAGE(page_ref_count(page) <= 0, page);
+
+	page_ref_inc(page);
 }
 
 static inline struct page *virt_to_head_page(const void *x)
 {
 	struct page *page = virt_to_page(x);
 	return compound_head(page);
-}
-
-/*
- * Setup the page count before being freed into the page allocator for
- * the first time (boot or memory hotplug)
- */
-static inline void init_page_count(struct page *page)
-{
-	atomic_set(&page->_count, 1);
 }
 
 /*
