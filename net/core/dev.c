@@ -6240,7 +6240,7 @@ int __netdev_update_features(struct net_device *dev)
 	struct net_device *upper, *lower;
 	netdev_features_t features;
 	struct list_head *iter;
-	int err = 0;
+	int err = -1;
 
 	ASSERT_RTNL();
 
@@ -6257,7 +6257,7 @@ int __netdev_update_features(struct net_device *dev)
 		features = netdev_sync_upper_features(dev, upper, features);
 
 	if (dev->features == features)
-		return 0;
+		goto sync_lower;
 
 	netdev_dbg(dev, "Features changed: %pNF -> %pNF\n",
 		&dev->features, &features);
@@ -6272,6 +6272,7 @@ int __netdev_update_features(struct net_device *dev)
 		return -1;
 	}
 
+sync_lower:
 	/* some features must be disabled on lower devices when disabled
 	 * on an upper device (think: bonding master or bridge)
 	 */
@@ -6281,7 +6282,7 @@ int __netdev_update_features(struct net_device *dev)
 	if (!err)
 		dev->features = features;
 
-	return 1;
+	return err < 0 ? 0 : 1;
 }
 
 /**
