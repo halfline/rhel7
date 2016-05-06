@@ -581,4 +581,14 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15AC,
 			quirk_intel_soc_ixgbe_variant);
 DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15AE,
 			quirk_intel_soc_ixgbe_variant);
+
+static void quirk_intel_soc_knl_variant(struct pci_dev *dev)
+{
+	/* Only mark Knights Landing F unsupported */
+	if (boot_cpu_data.x86_model != 87)
+		return;
+	mark_hardware_unsupported("Intel CPU model");
+}
+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x24f1,
+			quirk_intel_soc_knl_variant);
 #endif
