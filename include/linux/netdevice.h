@@ -1707,7 +1707,7 @@ struct net_device {
 	void (*rh_reserved8)(void);
 #endif
 	RH_KABI_USE_P(9, const struct forwarding_accel_ops *fwd_ops)
-	RH_KABI_RESERVE_P(10)
+	RH_KABI_USE_P(10, const struct dcbnl_rtnl_ops_ext *dcbnl_ops_ext)
 	RH_KABI_RESERVE_P(11)
 	RH_KABI_RESERVE_P(12)
 	RH_KABI_RESERVE_P(13)
