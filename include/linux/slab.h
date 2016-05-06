@@ -432,7 +432,7 @@ static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
  * Note that interrupts must be enabled when calling these functions.
  */
 void kmem_cache_free_bulk(struct kmem_cache *, size_t, void **);
-bool kmem_cache_alloc_bulk(struct kmem_cache *, gfp_t, size_t, void **);
+int kmem_cache_alloc_bulk(struct kmem_cache *, gfp_t, size_t, void **);
 
 #if !defined(CONFIG_NUMA) && !defined(CONFIG_SLOB)
 /**
