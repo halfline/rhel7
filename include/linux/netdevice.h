@@ -61,6 +61,8 @@ struct device;
 struct phy_device;
 /* 802.11 specific */
 struct wireless_dev;
+/* 802.15.4 specific */
+struct wpan_dev;
 					/* source back-compat hooks */
 #define SET_ETHTOOL_OPS(netdev,ops) \
 	( (netdev)->ethtool_ops = (ops) )
@@ -1708,7 +1710,7 @@ struct net_device {
 #endif
 	RH_KABI_USE_P(9, const struct forwarding_accel_ops *fwd_ops)
 	RH_KABI_USE_P(10, const struct dcbnl_rtnl_ops_ext *dcbnl_ops_ext)
-	RH_KABI_RESERVE_P(11)
+	RH_KABI_USE_P(11, struct wpan_dev *ieee802154_ptr)
 	RH_KABI_RESERVE_P(12)
 	RH_KABI_RESERVE_P(13)
 	RH_KABI_RESERVE_P(14)
