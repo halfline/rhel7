@@ -16,6 +16,7 @@
 #include <net/netns/packet.h>
 #include <net/netns/ipv4.h>
 #include <net/netns/ipv6.h>
+#include <net/netns/ieee802154_6lowpan.h>
 #include <net/netns/sctp.h>
 #include <net/netns/dccp.h>
 #include <net/netns/netfilter.h>
@@ -151,6 +152,7 @@ struct net {
 	RH_KABI_EXTEND(bool ip_local_ports_warned)
 	RH_KABI_EXTEND(int ipv4_sysctl_ip_nonlocal_bind)
 	RH_KABI_EXTEND(int ipv6_sysctl_ip_nonlocal_bind)
+	RH_KABI_EXTEND(struct netns_ieee802154_lowpan ieee802154_lowpan)
 };
 
 /*
