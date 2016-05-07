@@ -591,4 +591,10 @@ struct mei_cl_device_id {
 	kernel_ulong_t driver_info;
 };
 
+struct ulpi_device_id {
+	__u16 vendor;
+	__u16 product;
+	kernel_ulong_t driver_data;
+};
+
 #endif /* LINUX_MOD_DEVICETABLE_H */

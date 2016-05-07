@@ -179,5 +179,9 @@ int main(void)
 	DEVID_FIELD(mei_cl_device_id, uuid);
 	DEVID_FIELD(mei_cl_device_id, version);
 
+	DEVID(ulpi_device_id);
+	DEVID_FIELD(ulpi_device_id, vendor);
+	DEVID_FIELD(ulpi_device_id, product);
+
 	return 0;
 }
