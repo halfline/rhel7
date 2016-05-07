@@ -177,7 +177,8 @@ struct opal_sg_list {
 #define OPAL_LEDS_GET_INDICATOR			114
 #define OPAL_LEDS_SET_INDICATOR			115
 #define OPAL_CEC_REBOOT2			116
-#define OPAL_LAST				116
+#define OPAL_CONSOLE_FLUSH			117
+#define OPAL_LAST				117
 
 /* Device tree flags */
 
@@ -1022,6 +1023,7 @@ int64_t opal_console_read(int64_t term_number, __be64 *length,
 			  uint8_t *buffer);
 int64_t opal_console_write_buffer_space(int64_t term_number,
 					__be64 *length);
+void opal_console_flush(void);
 int64_t opal_rtc_read(__be32 *year_month_day,
 		      __be64 *hour_minute_second_millisecond);
 int64_t opal_rtc_write(uint32_t year_month_day,
@@ -1243,6 +1245,8 @@ extern void opal_shutdown(void);
 extern int opal_resync_timebase(void);
 
 extern void opal_lpc_init(void);
+
+extern void opal_kmsg_init(void);
 
 struct opal_sg_list *opal_vmalloc_to_sg_list(void *vmalloc_addr,
 					     unsigned long vmalloc_size);
