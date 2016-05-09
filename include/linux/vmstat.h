@@ -180,11 +180,11 @@ extern void zone_statistics(struct zone *, struct zone *, gfp_t gfp);
 #define sub_zone_page_state(__z, __i, __d) mod_zone_page_state(__z, __i, -(__d))
 
 #ifdef CONFIG_SMP
-void __mod_zone_page_state(struct zone *, enum zone_stat_item item, int);
+void __mod_zone_page_state(struct zone *, enum zone_stat_item item, long);
 void __inc_zone_page_state(struct page *, enum zone_stat_item);
 void __dec_zone_page_state(struct page *, enum zone_stat_item);
 
-void mod_zone_page_state(struct zone *, enum zone_stat_item, int);
+void mod_zone_page_state(struct zone *, enum zone_stat_item, long);
 void inc_zone_page_state(struct page *, enum zone_stat_item);
 void dec_zone_page_state(struct page *, enum zone_stat_item);
 
@@ -221,7 +221,7 @@ static inline void __dec_zone_state(struct zone *zone, enum zone_stat_item item)
  * The functions directly modify the zone and global counters.
  */
 static inline void __mod_zone_page_state(struct zone *zone,
-			enum zone_stat_item item, int delta)
+			enum zone_stat_item item, long delta)
 {
 	zone_page_state_add(delta, zone, item);
 }
