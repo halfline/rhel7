@@ -1171,6 +1171,12 @@ void kvm_arch_flush_shadow_memslot(struct kvm *kvm,
 static int __init kvm_s390_init(void)
 {
 	int ret;
+
+	if (!sclp_has_sief2()) {
+		pr_info("SIE not available\n");
+		return -ENODEV;
+	}
+
 	ret = kvm_init(NULL, sizeof(struct kvm_vcpu), 0, THIS_MODULE);
 	if (ret)
 		return ret;
