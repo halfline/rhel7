@@ -624,8 +624,110 @@ make rh-cross-all-builds
 
 which will build i686, s390x, and ppc64.
 
-VIII.  Useful Links
--------------------
+
+VIII. Bugzilla use/reuse
+------------------------
+
+1. Background
+
+Bugzilla tickets are used by everyone interested in the status and history of
+a given issue or feature.  There are situations in which additional patches are
+required and the question if the same BZ should be reused or a new one should be
+created.
+
+One of the bugzilla heavy users is QE which uses it to determine how to test
+and verify that the work done by engineering was correct and complete.  QE
+classifies the BZs in two categories: bugfix and enhancement.
+
+Here are the rules QE goes by for informational purposes:
+
+* Bugfix: anything that is fixing a real issue and possibly has a reproducer
+	Rules to match as a bugfix:
+		- if the BZ is exclusively to fix a specific bug
+		AND/OR
+		- the BZ has a reproducer
+	-> QE will set "Bugfix" as keyword at the time of qa_ack+
+
+* Enhancement: rebases, new features, new hardware support.  In other words:
+	       everything that isn't a Bugfix.
+	Rules to match as enhancement:
+		- BZ fails to be matched as Bugfix
+
+Rules engineering go by:
+* Undetermined:
+	- qa_ack?
+	OR
+	- qa_ack-
+
+* Bugfix:
+	- qa_ack+
+	AND
+	- Keywords contains Bugfix
+
+* Enhancement:
+	- qa_ack+
+	AND
+	- Keywords doesn't contain Bugfix
+
+2. Bugzilla reuse
+
+[Required] In the event of additional patches being required these rules
+should be followed:
+
+* All BZs:
+a) In case the BZ is still in POST, contact the kernel maintainer to make sure
+   the patchset wasn't or isn't being integrated.  In case the patchset wasn't
+   integrated AND no other patches were integrated under the same BZ, it's
+   possible to reuse the BZ
+
+* Bugfix BZ:
+a) In case the BZ is ON_QA and QE marks it FailsQA AND changes it back to ASSIGNED,
+   it should be REUSED
+b) In case the BZ is in any state before VERIFIED and further patches are needed
+   to complement the fix, REUSE the BZ
+c) In case the BZ is VERIFIED and a new patch is needed for the same issue, a new BZ
+   and very likely a new reproducer will have to be supplied.
+	c.1) A comment must be added on the original BZ containing a note a new BZ
+	     was created to fix a similar case. No dependencies between BZs are
+	     needed.
+
+* Enhancement BZ:
+a) In case of FailsQA, a NEW BZ will be created
+	a.1) Original BZ only will move to VERIFIED when {all,} the
+	     required NEW BZ{s,} {are,is} merged and VERIFIED
+	a.2) Original BZ must depend (Depends:) on the new BZ
+	a.3) A comment must be added on the original BZ regarding the new BZ
+	     that was created
+b) In case of any additional patches, a NEW BZ will be created
+	b.1) original BZ can be moved to VERIFIED by QE despite NEW BZ's state
+	b.2) NEW BZ can be denied from being merged in the same release
+
+3. Full reverts and Bugzilla usage
+
+There are situations in which a set of patches is causing problems and the
+solution can't be found in a timely fashion to satisfy schedule requirements
+or the solution is deemed too intrusive for the stage the release is at.
+In such cases, it might be decided that the set of patches must be reverted.
+The intention of a "full revert" as described in this section is to completely
+restore the state the kernel was in before the problematic changes were
+introduced and must not be confused with 'patch reverts' which have the
+purpose of undoing certain changes while retaining the objective of
+implementing the bugfix or enhancement.
+
+[Required] The process to be followed in case of a full revert:
+a) NEW BZ will be created to track the FULL REVERT of changes
+   introduced by the original BZ
+b) To avoid confusion on the erratum log, the name of the new
+   BZ should be:
+	Revert all changes introduced by BZ# <original BZ>
+c) NEW BZ will be listed in the comments of the original BZ
+d) Once the patches from NEW BZ are merged, the original BZ is REMOVED from
+   the erratum and its state moved back to ASSIGNED (maintainer only)
+e) The original BZ's release flag will be reset for the next release
+   (e.g: rhel-9.2+ -> rhel-9.3?) (either maintainer or engineer)
+
+IX.  Useful Links
+-----------------
 
 1.  How do I patch .config or *-config options?
 
