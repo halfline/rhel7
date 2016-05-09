@@ -1537,6 +1537,46 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon May 09 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-395.el7]
+- [x86] compat: Add missing CLAC to entry_INT80_32 (Lauro Ramos Venancio) [1316055]
+- [net] netfilter: x_tables: enforce nul-terminated table name from getsockopt GET_ENTRIES (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] netfilter: x_tables: make sure e->next_offset covers remaining blob size (Florian Westphal) [1318693] {CVE-2016-3134}
+- [net] ipv4/fib: don't warn when primary address is missing if in_dev is dead (Paolo Abeni) [1318271] {CVE-2016-3156}
+- [net] ipv4: Don't do expensive useless work during inetdev destroy (Paolo Abeni) [1318271] {CVE-2016-3156}
+- [net] bridge: fdb: rearrange net_bridge_fdb_entry (Jakub Sitnicki) [1311131]
+- [net] ipv6: Count in extension headers in skb->network_header (Jakub Sitnicki) [1323716]
+- [net] if_link: Add control trust VF (Jakub Sitnicki) [1302101]
+- [net] rtnetlink: verify IFLA_VF_INFO attributes before passing them to driver (Jakub Sitnicki) [1302101]
+- [net] ip6_tunnel: set rtnl_link_ops before calling register_netdevice (Thadeu Lima de Souza Cascardo) [1306774]
+- [net] ipvs: correct initial offset of Call-ID header search in SIP persistence engine (Paolo Abeni) [1322716]
+- [net] ipvs: allow rescheduling after RST (Paolo Abeni) [1322716]
+- [net] ipvs: drop first packet to redirect conntrack (Paolo Abeni) [1322716]
+- [net] ipvs: handle ip_vs_fill_iph_skb_off failure (Paolo Abeni) [1322716]
+- [net] ipvs: replace ip_vs_fill_ip4hdr with ip_vs_fill_iph_skb_off (Paolo Abeni) [1322716]
+- [net] tuntap: restore default qdisc (Phil Sutter) [1152231]
+- [net] IFF_NO_QUEUE: Fix for drivers not calling ether_setup() (Phil Sutter) [1152231]
+- [net] macvlan: convert to use IFF_NO_QUEUE (Phil Sutter) [1152231]
+- [net] qdisc: enhance default_qdisc documentation (Phil Sutter) [1152231]
+- [net] sched: simplify attach_one_default_qdisc() (Phil Sutter) [1152231]
+- [net] sched: register noqueue qdisc (Phil Sutter) [1152231]
+- [net] sched: ignore tx_queue_len when assigning default qdisc (Phil Sutter) [1152231]
+- [net] fix IFF_NO_QUEUE for drivers using alloc_netdev (Phil Sutter) [1152231]
+- [net] sched: drop all special handling of tx_queue_len == 0 (Phil Sutter) [1152231]
+- [net] net_sched: gred: add TCA_GRED_LIMIT attribute (Phil Sutter) [1152231]
+- [net] warn if drivers set tx_queue_len = 0 (Phil Sutter) [1152231]
+- [net] bonding: convert to using IFF_NO_QUEUE (Phil Sutter) [1152231]
+- [net] bridge: convert to using IFF_NO_QUEUE (Phil Sutter) [1152231]
+- [net] 8021q: convert to using IFF_NO_QUEUE (Phil Sutter) [1152231]
+- [net] vxlan: convert to using IFF_NO_QUEUE (Phil Sutter) [1152231]
+- [net] team: convert to using IFF_NO_QUEUE (Phil Sutter) [1152231]
+- [net] nlmon: convert to using IFF_NO_QUEUE (Phil Sutter) [1152231]
+- [net] loopback: convert to using IFF_NO_QUEUE (Phil Sutter) [1152231]
+- [net] allow setting mac address of loopback device (Phil Sutter) [1152231]
+- [net] dummy: convert to using IFF_NO_QUEUE (Phil Sutter) [1152231]
+- [net] veth: enable noqueue operation by default (Phil Sutter) [1152231]
+- [net] sch_generic: react upon IFF_NO_QUEUE flag (Phil Sutter) [1152231]
+- [net] declare new net_device priv_flag IFF_NO_QUEUE (Phil Sutter) [1152231]
+
 * Fri May 06 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-394.el7]
 - [hv] vmbus: handle various crash scenarios (Vitaly Kuznetsov) [1298093]
 - [hv] vmbus: Support kexec on ws2012 r2 and above (Vitaly Kuznetsov) [1298093]
