@@ -28,7 +28,10 @@ struct sclp_ipl_info {
 
 struct sclp_cpu_entry {
 	u8 core_id;
-	u8 reserved0[2];
+	u8 reserved0;
+	u8 : 4;
+	u8 sief2 : 1;
+	u8 : 3;
 	u8 : 3;
 	u8 siif : 1;
 	u8 : 4;
@@ -68,5 +71,6 @@ int memcpy_hsa(void *dest, unsigned long src, size_t count, int mode);
 unsigned long sclp_get_hsa_size(void);
 void sclp_early_detect(void);
 int sclp_has_siif(void);
+int sclp_has_sief2(void);
 
 #endif /* _ASM_S390_SCLP_H */

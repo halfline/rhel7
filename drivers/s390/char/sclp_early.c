@@ -56,6 +56,7 @@ static unsigned int sclp_mtid;
 static unsigned int sclp_mtid_cp;
 static unsigned int sclp_mtid_max;
 static unsigned int sclp_mtid_prev;
+static unsigned char sclp_sief2;
 
 u64 sclp_facilities;
 u8 sclp_fac84;
@@ -136,6 +137,7 @@ static void __init sclp_facilities_detect(struct read_info_sccb *sccb)
 		if (boot_cpu_address != cpue->core_id)
 			continue;
 		sclp_siif = cpue->siif;
+		sclp_sief2 = cpue->sief2;
 		break;
 	}
 
@@ -196,6 +198,12 @@ int sclp_has_siif(void)
 	return sclp_siif;
 }
 EXPORT_SYMBOL(sclp_has_siif);
+
+int sclp_has_sief2(void)
+{
+	return sclp_sief2;
+}
+EXPORT_SYMBOL(sclp_has_sief2);
 
 /*
  * This function will be called after sclp_facilities_detect(), which gets
