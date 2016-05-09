@@ -78,6 +78,7 @@ EXPORT_SYMBOL(console_irq);
 unsigned long elf_hwcap = 0;
 char elf_platform[ELF_PLATFORM_SIZE];
 
+unsigned long int_hwcap = 0;
 struct mem_chunk __initdata memory_chunk[MEMORY_CHUNKS];
 
 int __initdata memory_end_set;
@@ -969,6 +970,12 @@ static void __init setup_hwcaps(void)
 		strcpy(elf_platform, "z13");
 		break;
 	}
+
+	/*
+	 * Virtualization support HWCAP_INT_SIE is bit 0.
+	 */
+	if (sclp_has_sief2())
+		int_hwcap |= HWCAP_INT_SIE;
 }
 
 /*
