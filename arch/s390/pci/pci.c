@@ -967,13 +967,16 @@ static inline int barsize(u8 size)
 
 static int zpci_mem_init(void)
 {
+	BUILD_BUG_ON(!is_power_of_2(__alignof__(struct zpci_fmb)) ||
+		     __alignof__(struct zpci_fmb) < sizeof(struct zpci_fmb));
+
 	zdev_irq_cache = kmem_cache_create("PCI_IRQ_cache", sizeof(struct zdev_irq_map),
 				L1_CACHE_BYTES, SLAB_HWCACHE_ALIGN, NULL);
 	if (!zdev_irq_cache)
 		goto error_zdev;
 
 	zdev_fmb_cache = kmem_cache_create("PCI_FMB_cache", sizeof(struct zpci_fmb),
-				16, 0, NULL);
+					   __alignof__(struct zpci_fmb), 0, NULL);
 	if (!zdev_fmb_cache)
 		goto error_fmb;
 
