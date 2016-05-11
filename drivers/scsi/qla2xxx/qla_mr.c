@@ -2927,8 +2927,9 @@ qlafx00_intr_handler(int irq, void *dev_id)
 	vha = pci_get_drvdata(ha->pdev);
 	for (iter = 50; iter--; clr_intr = 0) {
 		stat = QLAFX00_RD_INTR_REG(ha);
-		intr_stat = stat & QLAFX00_HST_INT_STS_BITS;
-		if (!intr_stat)
+		if (qla2x00_check_reg_for_disconnect(vha, stat))
+			break;
+		if ((stat & QLAFX00_HST_INT_STS_BITS) == 0)
 			break;
 
 		if (stat & QLAFX00_INTR_MB_CMPLT) {
