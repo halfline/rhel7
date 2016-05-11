@@ -468,9 +468,15 @@ F:	drivers/block/mtip32xx/mtip32xx.h
 
 MLX4 ETHERNET DRIVER (mlx4)
 M:	Kamal Heib <kheib@redhat.com>
-M:	Doug Ledford <dledford@redhat.com>
+M:	Slava Shwartsman <sshwarts@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/mellanox/mlx4/
+
+MLX5 ETHERNET DRIVER (mlx5)
+M:	Kamal Heib <kheib@redhat.com>
+M:	Slava Shwartsman <sshwarts@redhat.com>
+S:	Maintained
+F:	drivers/net/ethernet/mellanox/mlx5/
 
 MYRICOM MYRI-10G 10GbE DRIVER (MYRI10GE)
 M:	Stanislaw Gruszka <sgruszka@redhat.com>
