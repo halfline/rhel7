@@ -2007,6 +2007,7 @@ skip_explict_conf:
 	/* Sense with len > 24, is it possible ??? */
 }
 
+
 /*
  * Callback to setup response of xmit_type of QLA_TGT_XMIT_DATA and *
  * QLA_TGT_XMIT_STATUS for >= 24xx silicon
@@ -2183,6 +2184,7 @@ out_unlock_free_unmap:
 	return res;
 }
 EXPORT_SYMBOL(qlt_rdy_to_xfer);
+
 
 /* If hardware_lock held on entry, might drop it, then reaquire */
 /* This function sends the appropriate CTIO to ISP 2xxx or 24xx */
@@ -2526,18 +2528,10 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha, uint32_t handle,
 	if (cmd->state == QLA_TGT_STATE_PROCESSED) {
 		ql_dbg(ql_dbg_tgt, vha, 0xe01f, "Command %p finished\n", cmd);
 	} else if (cmd->state == QLA_TGT_STATE_NEED_DATA) {
-		int rx_status = 0;
-
 		cmd->state = QLA_TGT_STATE_DATA_IN;
 
-		if (unlikely(status != CTIO_SUCCESS))
-			rx_status = -EIO;
-		else
+		if (status == CTIO_SUCCESS)
 			cmd->write_data_transferred = 1;
-
-		ql_dbg(ql_dbg_tgt, vha, 0xe020,
-		    "Data received, context %x, rx_status %d\n",
-		    0x0, rx_status);
 
 		ha->tgt.tgt_ops->handle_data(cmd);
 		return;
@@ -2845,12 +2839,11 @@ static int qlt_handle_task_mgmt(struct scsi_qla_host *vha, void *iocb)
 	struct qla_tgt *tgt;
 	struct qla_tgt_sess *sess;
 	uint32_t lun, unpacked_lun;
-	int lun_size, fn;
+	int fn;
 
 	tgt = ha->tgt.qla_tgt;
 
 	lun = a->u.isp24.fcp_cmnd.lun;
-	lun_size = sizeof(a->u.isp24.fcp_cmnd.lun);
 	fn = a->u.isp24.fcp_cmnd.task_mgmt_flags;
 	sess = ha->tgt.tgt_ops->find_sess_by_s_id(vha,
 	    a->u.isp24.fcp_hdr.s_id);
@@ -4165,7 +4158,7 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
 	uint8_t *s_id = NULL; /* to hide compiler warnings */
 	int rc;
 	uint32_t lun, unpacked_lun;
-	int lun_size, fn;
+	int fn;
 	void *iocb;
 
 	spin_lock_irqsave(&ha->hardware_lock, flags);
@@ -4192,7 +4185,6 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
 
 	iocb = a;
 	lun = a->u.isp24.fcp_cmnd.lun;
-	lun_size = sizeof(lun);
 	fn = a->u.isp24.fcp_cmnd.task_mgmt_flags;
 	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
 

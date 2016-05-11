@@ -4855,7 +4855,6 @@ qla2x00_disable_board_on_pci_error(struct work_struct *work)
 static int
 qla2x00_do_dpc(void *data)
 {
-	int		rval;
 	scsi_qla_host_t *base_vha;
 	struct qla_hw_data *ha;
 
@@ -5088,7 +5087,7 @@ loop_resync_check:
 			if (!(test_and_set_bit(LOOP_RESYNC_ACTIVE,
 			    &base_vha->dpc_flags))) {
 
-				rval = qla2x00_loop_resync(base_vha);
+				qla2x00_loop_resync(base_vha);
 
 				clear_bit(LOOP_RESYNC_ACTIVE,
 						&base_vha->dpc_flags);
