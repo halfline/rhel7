@@ -1087,7 +1087,7 @@ static void qlt_send_notify_ack(struct scsi_qla_host *vha,
 	nack->u.isp24.nport_handle = ntfy->u.isp24.nport_handle;
 	if (le16_to_cpu(ntfy->u.isp24.status) == IMM_NTFY_ELS) {
 		nack->u.isp24.flags = ntfy->u.isp24.flags &
-			__constant_cpu_to_le32(NOTIFY24XX_FLAGS_PUREX_IOCB);
+			cpu_to_le32(NOTIFY24XX_FLAGS_PUREX_IOCB);
 	}
 	nack->u.isp24.srr_rx_id = ntfy->u.isp24.srr_rx_id;
 	nack->u.isp24.status = ntfy->u.isp24.status;
@@ -1143,7 +1143,7 @@ static void qlt_24xx_send_abts_resp(struct scsi_qla_host *vha,
 	resp->sof_type = abts->sof_type;
 	resp->exchange_address = abts->exchange_address;
 	resp->fcp_hdr_le = abts->fcp_hdr_le;
-	f_ctl = __constant_cpu_to_le32(F_CTL_EXCH_CONTEXT_RESP |
+	f_ctl = cpu_to_le32(F_CTL_EXCH_CONTEXT_RESP |
 	    F_CTL_LAST_SEQ | F_CTL_END_SEQ |
 	    F_CTL_SEQ_INITIATIVE);
 	p = (uint8_t *)&f_ctl;
@@ -1216,16 +1216,15 @@ static void qlt_24xx_retry_term_exchange(struct scsi_qla_host *vha,
 	ctio->entry_count = 1;
 	ctio->nport_handle = entry->nport_handle;
 	ctio->handle = QLA_TGT_SKIP_HANDLE |	CTIO_COMPLETION_HANDLE_MARK;
-	ctio->timeout = __constant_cpu_to_le16(QLA_TGT_TIMEOUT);
+	ctio->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
 	ctio->vp_index = vha->vp_idx;
 	ctio->initiator_id[0] = entry->fcp_hdr_le.d_id[0];
 	ctio->initiator_id[1] = entry->fcp_hdr_le.d_id[1];
 	ctio->initiator_id[2] = entry->fcp_hdr_le.d_id[2];
 	ctio->exchange_addr = entry->exchange_addr_to_abort;
-	ctio->u.status1.flags =
-	    __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
-		CTIO7_FLAGS_TERMINATE);
-	ctio->u.status1.ox_id = entry->fcp_hdr_le.ox_id;
+	ctio->u.status1.flags = cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
+					    CTIO7_FLAGS_TERMINATE);
+	ctio->u.status1.ox_id = cpu_to_le16(entry->fcp_hdr_le.ox_id);
 
 	qla2x00_start_iocbs(vha, vha->req);
 
@@ -1380,19 +1379,18 @@ static void qlt_24xx_send_task_mgmt_ctio(struct scsi_qla_host *ha,
 	ctio->entry_count = 1;
 	ctio->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
 	ctio->nport_handle = mcmd->sess->loop_id;
-	ctio->timeout = __constant_cpu_to_le16(QLA_TGT_TIMEOUT);
+	ctio->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
 	ctio->vp_index = ha->vp_idx;
 	ctio->initiator_id[0] = atio->u.isp24.fcp_hdr.s_id[2];
 	ctio->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
 	ctio->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
 	ctio->exchange_addr = atio->u.isp24.exchange_addr;
 	ctio->u.status1.flags = (atio->u.isp24.attr << 9) |
-	    __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
-		CTIO7_FLAGS_SEND_STATUS);
-	ctio->u.status1.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
+	    cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS);
+	ctio->u.status1.ox_id = cpu_to_le16(atio->u.isp24.fcp_hdr.ox_id);
 	ctio->u.status1.scsi_status =
-	    __constant_cpu_to_le16(SS_RESPONSE_INFO_LEN_VALID);
-	ctio->u.status1.response_len = __constant_cpu_to_le16(8);
+	    cpu_to_le16(SS_RESPONSE_INFO_LEN_VALID);
+	ctio->u.status1.response_len = cpu_to_le16(8);
 	ctio->u.status1.sense_data[0] = resp_code;
 
 	qla2x00_start_iocbs(ha, ha->req);
@@ -1593,7 +1591,7 @@ static int qlt_24xx_build_ctio_pkt(struct qla_tgt_prm *prm,
 
 	pkt->handle = h | CTIO_COMPLETION_HANDLE_MARK;
 	pkt->nport_handle = prm->cmd->loop_id;
-	pkt->timeout = __constant_cpu_to_le16(QLA_TGT_TIMEOUT);
+	pkt->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
 	pkt->initiator_id[0] = atio->u.isp24.fcp_hdr.s_id[2];
 	pkt->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
 	pkt->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
@@ -1946,10 +1944,9 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
 {
 	prm->sense_buffer_len = min_t(uint32_t, prm->sense_buffer_len,
 	    (uint32_t)sizeof(ctio->u.status1.sense_data));
-	ctio->u.status0.flags |=
-	    __constant_cpu_to_le16(CTIO7_FLAGS_SEND_STATUS);
+	ctio->u.status0.flags |= cpu_to_le16(CTIO7_FLAGS_SEND_STATUS);
 	if (qlt_need_explicit_conf(prm->tgt->ha, prm->cmd, 0)) {
-		ctio->u.status0.flags |= __constant_cpu_to_le16(
+		ctio->u.status0.flags |= cpu_to_le16(
 		    CTIO7_FLAGS_EXPLICIT_CONFORM |
 		    CTIO7_FLAGS_CONFORM_REQ);
 	}
@@ -1966,17 +1963,17 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
 				    "non GOOD status\n");
 				goto skip_explict_conf;
 			}
-			ctio->u.status1.flags |= __constant_cpu_to_le16(
+			ctio->u.status1.flags |= cpu_to_le16(
 			    CTIO7_FLAGS_EXPLICIT_CONFORM |
 			    CTIO7_FLAGS_CONFORM_REQ);
 		}
 skip_explict_conf:
 		ctio->u.status1.flags &=
-		    ~__constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_0);
+		    ~cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_0);
 		ctio->u.status1.flags |=
-		    __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1);
+		    cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1);
 		ctio->u.status1.scsi_status |=
-		    __constant_cpu_to_le16(SS_SENSE_LEN_VALID);
+		    cpu_to_le16(SS_SENSE_LEN_VALID);
 		ctio->u.status1.sense_length =
 		    cpu_to_le16(prm->sense_buffer_len);
 		for (i = 0; i < prm->sense_buffer_len/4; i++)
@@ -1996,9 +1993,9 @@ skip_explict_conf:
 #endif
 	} else {
 		ctio->u.status1.flags &=
-		    ~__constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_0);
+		    ~cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_0);
 		ctio->u.status1.flags |=
-		    __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1);
+		    cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1);
 		ctio->u.status1.sense_length = 0;
 		memset(ctio->u.status1.sense_data, 0,
 		    sizeof(ctio->u.status1.sense_data));
@@ -2056,7 +2053,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
 
 	if (qlt_has_data(cmd) && (xmit_type & QLA_TGT_XMIT_DATA)) {
 		pkt->u.status0.flags |=
-		    __constant_cpu_to_le16(CTIO7_FLAGS_DATA_IN |
+		    cpu_to_le16(CTIO7_FLAGS_DATA_IN |
 			CTIO7_FLAGS_STATUS_MODE_0);
 
 		qlt_load_data_segments(&prm, vha);
@@ -2067,11 +2064,11 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
 				    cpu_to_le16(prm.rq_result);
 				pkt->u.status0.residual =
 				    cpu_to_le32(prm.residual);
-				pkt->u.status0.flags |= __constant_cpu_to_le16(
+				pkt->u.status0.flags |= cpu_to_le16(
 				    CTIO7_FLAGS_SEND_STATUS);
 				if (qlt_need_explicit_conf(ha, cmd, 0)) {
 					pkt->u.status0.flags |=
-					    __constant_cpu_to_le16(
+					    cpu_to_le16(
 						CTIO7_FLAGS_EXPLICIT_CONFORM |
 						CTIO7_FLAGS_CONFORM_REQ);
 				}
@@ -2092,12 +2089,12 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
 			memcpy(ctio, pkt, sizeof(*ctio));
 			ctio->entry_count = 1;
 			ctio->dseg_count = 0;
-			ctio->u.status1.flags &= ~__constant_cpu_to_le16(
+			ctio->u.status1.flags &= ~cpu_to_le16(
 			    CTIO7_FLAGS_DATA_IN);
 
 			/* Real finish is ctio_m1's finish */
 			pkt->handle |= CTIO_INTERMEDIATE_HANDLE_MARK;
-			pkt->u.status0.flags |= __constant_cpu_to_le16(
+			pkt->u.status0.flags |= cpu_to_le16(
 			    CTIO7_FLAGS_DONT_RET_CTIO);
 			qlt_24xx_init_ctio_to_isp((struct ctio7_to_24xx *)ctio,
 			    &prm);
@@ -2165,7 +2162,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
 	if (unlikely(res != 0))
 		goto out_unlock_free_unmap;
 	pkt = (struct ctio7_to_24xx *)prm.pkt;
-	pkt->u.status0.flags |= __constant_cpu_to_le16(CTIO7_FLAGS_DATA_OUT |
+	pkt->u.status0.flags |= cpu_to_le16(CTIO7_FLAGS_DATA_OUT |
 	    CTIO7_FLAGS_STATUS_MODE_0);
 	qlt_load_data_segments(&prm, vha);
 
@@ -2223,14 +2220,14 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
 	ctio24 = (struct ctio7_to_24xx *)pkt;
 	ctio24->entry_type = CTIO_TYPE7;
 	ctio24->nport_handle = cmd ? cmd->loop_id : CTIO7_NHANDLE_UNRECOGNIZED;
-	ctio24->timeout = __constant_cpu_to_le16(QLA_TGT_TIMEOUT);
+	ctio24->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
 	ctio24->vp_index = vha->vp_idx;
 	ctio24->initiator_id[0] = atio->u.isp24.fcp_hdr.s_id[2];
 	ctio24->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
 	ctio24->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
 	ctio24->exchange_addr = atio->u.isp24.exchange_addr;
 	ctio24->u.status1.flags = (atio->u.isp24.attr << 9) |
-	    __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
+	    cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
 		CTIO7_FLAGS_TERMINATE);
 	ctio24->u.status1.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
 
@@ -2375,7 +2372,7 @@ static int qlt_term_ctio_exchange(struct scsi_qla_host *vha, void *ctio,
 	if (ctio != NULL) {
 		struct ctio7_from_24xx *c = (struct ctio7_from_24xx *)ctio;
 		term = !(c->flags &
-		    __constant_cpu_to_le16(OF_TERM_EXCH));
+		    cpu_to_le16(OF_TERM_EXCH));
 	} else
 		term = 1;
 
@@ -3577,14 +3574,14 @@ static void qlt_send_busy(struct scsi_qla_host *vha,
 	ctio24 = (struct ctio7_to_24xx *)pkt;
 	ctio24->entry_type = CTIO_TYPE7;
 	ctio24->nport_handle = sess->loop_id;
-	ctio24->timeout = __constant_cpu_to_le16(QLA_TGT_TIMEOUT);
+	ctio24->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
 	ctio24->vp_index = vha->vp_idx;
 	ctio24->initiator_id[0] = atio->u.isp24.fcp_hdr.s_id[2];
 	ctio24->initiator_id[1] = atio->u.isp24.fcp_hdr.s_id[1];
 	ctio24->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
 	ctio24->exchange_addr = atio->u.isp24.exchange_addr;
 	ctio24->u.status1.flags = (atio->u.isp24.attr << 9) |
-	    __constant_cpu_to_le16(
+	    cpu_to_le16(
 		CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS |
 		CTIO7_FLAGS_DONT_RET_CTIO);
 	/*
@@ -3757,7 +3754,7 @@ static void qlt_response_pkt(struct scsi_qla_host *vha, response_t *pkt)
 		    le32_to_cpu(atio->u.isp2x.data_length), GET_TARGET_ID(ha,
 		    atio), atio->u.isp2x.rx_id);
 		if (atio->u.isp2x.status !=
-		    __constant_cpu_to_le16(ATIO_CDB_VALID)) {
+		    cpu_to_le16(ATIO_CDB_VALID)) {
 			ql_dbg(ql_dbg_tgt, vha, 0xe05e,
 			    "qla_target(%d): ATIO with error "
 			    "status %x received\n", vha->vp_idx,
@@ -3833,7 +3830,7 @@ static void qlt_response_pkt(struct scsi_qla_host *vha, response_t *pkt)
 			    le16_to_cpu(entry->u.isp2x.status));
 			tgt->notify_ack_expected--;
 			if (entry->u.isp2x.status !=
-			    __constant_cpu_to_le16(NOTIFY_ACK_SUCCESS)) {
+			    cpu_to_le16(NOTIFY_ACK_SUCCESS)) {
 				ql_dbg(ql_dbg_tgt, vha, 0xe061,
 				    "qla_target(%d): NOTIFY_ACK "
 				    "failed %x\n", vha->vp_idx,
@@ -4689,25 +4686,26 @@ qlt_24xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_24xx *nv)
 			ha->tgt.saved_set = 1;
 		}
 
-		nv->exchange_count = __constant_cpu_to_le16(0xFFFF);
+		nv->exchange_count = cpu_to_le16(0xFFFF);
 
 		/* Enable target mode */
-		nv->firmware_options_1 |= __constant_cpu_to_le32(BIT_4);
+		nv->firmware_options_1 |= cpu_to_le32(BIT_4);
 
 		/* Disable ini mode, if requested */
 		if (!qla_ini_mode_enabled(vha))
-			nv->firmware_options_1 |= __constant_cpu_to_le32(BIT_5);
+			nv->firmware_options_1 |= cpu_to_le32(BIT_5);
 
 		/* Disable Full Login after LIP */
-		nv->firmware_options_1 &= __constant_cpu_to_le32(~BIT_13);
+		nv->firmware_options_1 &= cpu_to_le32(~BIT_13);
 		/* Enable initial LIP */
-		nv->firmware_options_1 &= __constant_cpu_to_le32(~BIT_9);
-		/* Enable FC tapes support */
-		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_12);
+		nv->firmware_options_1 &= cpu_to_le32(~BIT_9);
+		/* Enable FC Tape support */
+		nv->firmware_options_2 |= cpu_to_le32(BIT_12);
+
 		/* Disable Full Login after LIP */
-		nv->host_p &= __constant_cpu_to_le32(~BIT_10);
+		nv->host_p &= cpu_to_le32(~BIT_10);
 		/* Enable target PRLI control */
-		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_14);
+		nv->firmware_options_2 |= cpu_to_le32(BIT_14);
 	} else {
 		if (ha->tgt.saved_set) {
 			nv->exchange_count = ha->tgt.saved_exchange_count;
@@ -4729,12 +4727,12 @@ qlt_24xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_24xx *nv)
 			fc_host_supported_classes(vha->host) =
 				FC_COS_CLASS2 | FC_COS_CLASS3;
 
-		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_8);
+		nv->firmware_options_2 |= cpu_to_le32(BIT_8);
 	} else {
 		if (vha->flags.init_done)
 			fc_host_supported_classes(vha->host) = FC_COS_CLASS3;
 
-		nv->firmware_options_2 &= ~__constant_cpu_to_le32(BIT_8);
+		nv->firmware_options_2 &= ~cpu_to_le32(BIT_8);
 	}
 }
 
@@ -4746,7 +4744,7 @@ qlt_24xx_config_nvram_stage2(struct scsi_qla_host *vha,
 
 	if (ha->tgt.node_name_set) {
 		memcpy(icb->node_name, ha->tgt.tgt_node_name, WWN_SIZE);
-		icb->firmware_options_1 |= __constant_cpu_to_le32(BIT_14);
+		icb->firmware_options_1 |= cpu_to_le32(BIT_14);
 	}
 }
 
@@ -4771,26 +4769,26 @@ qlt_81xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_81xx *nv)
 			ha->tgt.saved_set = 1;
 		}
 
-		nv->exchange_count = __constant_cpu_to_le16(0xFFFF);
+		nv->exchange_count = cpu_to_le16(0xFFFF);
 
 		/* Enable target mode */
-		nv->firmware_options_1 |= __constant_cpu_to_le32(BIT_4);
+		nv->firmware_options_1 |= cpu_to_le32(BIT_4);
 
 		/* Disable ini mode, if requested */
 		if (!qla_ini_mode_enabled(vha))
-			nv->firmware_options_1 |=
-			    __constant_cpu_to_le32(BIT_5);
+			nv->firmware_options_1 |= cpu_to_le32(BIT_5);
 
 		/* Disable Full Login after LIP */
-		nv->firmware_options_1 &= __constant_cpu_to_le32(~BIT_13);
+		nv->firmware_options_1 &= cpu_to_le32(~BIT_13);
 		/* Enable initial LIP */
-		nv->firmware_options_1 &= __constant_cpu_to_le32(~BIT_9);
-		/* Enable FC tapes support */
-		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_12);
+		nv->firmware_options_1 &= cpu_to_le32(~BIT_9);
+		/* Enable FC tape support */
+		nv->firmware_options_2 |= cpu_to_le32(BIT_12);
+
 		/* Disable Full Login after LIP */
-		nv->host_p &= __constant_cpu_to_le32(~BIT_10);
+		nv->host_p &= cpu_to_le32(~BIT_10);
 		/* Enable target PRLI control */
-		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_14);
+		nv->firmware_options_2 |= cpu_to_le32(BIT_14);
 	} else {
 		if (ha->tgt.saved_set) {
 			nv->exchange_count = ha->tgt.saved_exchange_count;
@@ -4812,12 +4810,12 @@ qlt_81xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_81xx *nv)
 			fc_host_supported_classes(vha->host) =
 				FC_COS_CLASS2 | FC_COS_CLASS3;
 
-		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_8);
+		nv->firmware_options_2 |= cpu_to_le32(BIT_8);
 	} else {
 		if (vha->flags.init_done)
 			fc_host_supported_classes(vha->host) = FC_COS_CLASS3;
 
-		nv->firmware_options_2 &= ~__constant_cpu_to_le32(BIT_8);
+		nv->firmware_options_2 &= ~cpu_to_le32(BIT_8);
 	}
 }
 
@@ -4832,7 +4830,7 @@ qlt_81xx_config_nvram_stage2(struct scsi_qla_host *vha,
 
 	if (ha->tgt.node_name_set) {
 		memcpy(icb->node_name, ha->tgt.tgt_node_name, WWN_SIZE);
-		icb->firmware_options_1 |= __constant_cpu_to_le32(BIT_14);
+		icb->firmware_options_1 |= cpu_to_le32(BIT_14);
 	}
 }
 
