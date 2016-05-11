@@ -5,7 +5,7 @@ EXTRAVERSION =
 NAME = Unicycling Gorilla
 RHEL_MAJOR = 7
 RHEL_MINOR = 3
-RHEL_RELEASE = 397
+RHEL_RELEASE = 398
 
 #
 # DRM backport version
