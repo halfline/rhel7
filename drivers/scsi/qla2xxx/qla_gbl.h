@@ -116,6 +116,7 @@ extern int ql2xdontresethba;
 extern unsigned int ql2xmaxlun;
 extern int ql2xmdcapmask;
 extern int ql2xmdenable;
+extern int ql2xfwholdabts;
 
 extern int qla2x00_loop_reset(scsi_qla_host_t *);
 extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
