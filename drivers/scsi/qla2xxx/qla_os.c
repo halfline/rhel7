@@ -3120,13 +3120,11 @@ qla2x00_unmap_iobases(struct qla_hw_data *ha)
 }
 
 static void
-qla2x00_clear_drv_active(scsi_qla_host_t *vha)
+qla2x00_clear_drv_active(struct qla_hw_data *ha)
 {
-	struct qla_hw_data *ha = vha->hw;
-
 	if (IS_QLA8044(ha)) {
 		qla8044_idc_lock(ha);
-		qla8044_clear_drv_active(vha);
+		qla8044_clear_drv_active(ha);
 		qla8044_idc_unlock(ha);
 	} else if (IS_QLA82XX(ha)) {
 		qla82xx_idc_lock(ha);
@@ -3200,7 +3198,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
 
 	scsi_host_put(base_vha->host);
 
-	qla2x00_clear_drv_active(base_vha);
+	qla2x00_clear_drv_active(ha);
 
 	qla2x00_unmap_iobases(ha);
 
