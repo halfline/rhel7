@@ -696,8 +696,10 @@ qla2300_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
 
 	flags = 0;
 
+#ifndef __CHECKER__
 	if (!hardware_locked)
 		spin_lock_irqsave(&ha->hardware_lock, flags);
+#endif
 
 	if (!ha->fw_dump) {
 		ql_log(ql_log_warn, vha, 0xd002,
@@ -833,8 +835,12 @@ qla2300_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
 	qla2xxx_dump_post_process(base_vha, rval);
 
 qla2300_fw_dump_failed:
+#ifndef __CHECKER__
 	if (!hardware_locked)
 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+#else
+	;
+#endif
 }
 
 /**
@@ -860,8 +866,10 @@ qla2100_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
 	mb0 = mb2 = 0;
 	flags = 0;
 
+#ifndef __CHECKER__
 	if (!hardware_locked)
 		spin_lock_irqsave(&ha->hardware_lock, flags);
+#endif
 
 	if (!ha->fw_dump) {
 		ql_log(ql_log_warn, vha, 0xd004,
@@ -1031,8 +1039,12 @@ qla2100_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
 	qla2xxx_dump_post_process(base_vha, rval);
 
 qla2100_fw_dump_failed:
+#ifndef __CHECKER__
 	if (!hardware_locked)
 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+#else
+	;
+#endif
 }
 
 void
@@ -1058,8 +1070,10 @@ qla24xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
 	flags = 0;
 	ha->fw_dump_cap_flags = 0;
 
+#ifndef __CHECKER__
 	if (!hardware_locked)
 		spin_lock_irqsave(&ha->hardware_lock, flags);
+#endif
 
 	if (!ha->fw_dump) {
 		ql_log(ql_log_warn, vha, 0xd006,
@@ -1283,8 +1297,12 @@ qla24xx_fw_dump_failed_0:
 	qla2xxx_dump_post_process(base_vha, rval);
 
 qla24xx_fw_dump_failed:
+#ifndef __CHECKER__
 	if (!hardware_locked)
 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+#else
+	;
+#endif
 }
 
 void
@@ -1306,8 +1324,10 @@ qla25xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
 	flags = 0;
 	ha->fw_dump_cap_flags = 0;
 
+#ifndef __CHECKER__
 	if (!hardware_locked)
 		spin_lock_irqsave(&ha->hardware_lock, flags);
+#endif
 
 	if (!ha->fw_dump) {
 		ql_log(ql_log_warn, vha, 0xd008,
@@ -1599,8 +1619,12 @@ qla25xx_fw_dump_failed_0:
 	qla2xxx_dump_post_process(base_vha, rval);
 
 qla25xx_fw_dump_failed:
+#ifndef __CHECKER__
 	if (!hardware_locked)
 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+#else
+	;
+#endif
 }
 
 void
@@ -1622,8 +1646,10 @@ qla81xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
 	flags = 0;
 	ha->fw_dump_cap_flags = 0;
 
+#ifndef __CHECKER__
 	if (!hardware_locked)
 		spin_lock_irqsave(&ha->hardware_lock, flags);
+#endif
 
 	if (!ha->fw_dump) {
 		ql_log(ql_log_warn, vha, 0xd00a,
@@ -1917,8 +1943,12 @@ qla81xx_fw_dump_failed_0:
 	qla2xxx_dump_post_process(base_vha, rval);
 
 qla81xx_fw_dump_failed:
+#ifndef __CHECKER__
 	if (!hardware_locked)
 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+#else
+	;
+#endif
 }
 
 void
@@ -1940,8 +1970,10 @@ qla83xx_fw_dump(scsi_qla_host_t *vha, int hardware_locked)
 	flags = 0;
 	ha->fw_dump_cap_flags = 0;
 
+#ifndef __CHECKER__
 	if (!hardware_locked)
 		spin_lock_irqsave(&ha->hardware_lock, flags);
+#endif
 
 	if (!ha->fw_dump) {
 		ql_log(ql_log_warn, vha, 0xd00c,
@@ -2420,8 +2452,12 @@ qla83xx_fw_dump_failed_0:
 	qla2xxx_dump_post_process(base_vha, rval);
 
 qla83xx_fw_dump_failed:
+#ifndef __CHECKER__
 	if (!hardware_locked)
 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+#else
+	;
+#endif
 }
 
 /****************************************************************************/
