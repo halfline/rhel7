@@ -515,6 +515,9 @@ static void __init memblock_x86_reserve_range_setup_data(void)
 
 #ifdef CONFIG_KEXEC
 
+/* 16M alignment for crash kernel regions */
+#define CRASH_ALIGN            (16 << 20)
+
 /*
  * Keep the crash kernel below this limit.  On 32 bits earlier kernels
  * would limit the kernel to the low 512 MiB due to mapping restrictions.
@@ -531,7 +534,6 @@ static void __init memblock_x86_reserve_range_setup_data(void)
 static int __init reserve_crashkernel_low(void)
 {
 #ifdef CONFIG_X86_64
-	const unsigned long long alignment = 16<<20;	/* 16M */
 	unsigned long long low_base = 0, low_size = 0;
 	unsigned long total_low_mem;
 	unsigned long long base;
@@ -560,7 +562,7 @@ static int __init reserve_crashkernel_low(void)
 			return 0;
 	}
 
-	low_base = memblock_find_in_range(low_size, 1ULL << 32, low_size, alignment);
+	low_base = memblock_find_in_range(low_size, 1ULL << 32, low_size, CRASH_ALIGN);
 	if (!low_base) {
 		pr_err("Cannot reserve %ldMB crashkernel low memory, please try smaller size.\n",
 		       (unsigned long)(low_size >> 20));
@@ -583,7 +585,6 @@ static int __init reserve_crashkernel_low(void)
 
 static void __init reserve_crashkernel(void)
 {
-	const unsigned long long alignment = 16<<20;	/* 16M */
 	unsigned long long total_mem;
 	unsigned long long crash_size, crash_base;
 	bool high = false;
@@ -607,25 +608,25 @@ static void __init reserve_crashkernel(void)
 		/*
 		 *  kexec want bzImage is below CRASH_KERNEL_ADDR_MAX
 		 */
-		crash_base = memblock_find_in_range(alignment,
+		crash_base = memblock_find_in_range(CRASH_ALIGN,
 						    high ? CRASH_ADDR_HIGH_MAX
 							 : CRASH_ADDR_LOW_MAX,
-						    crash_size, alignment);
+						    crash_size, CRASH_ALIGN);
 #ifdef CONFIG_X86_64
 		/*
 		 * crashkernel=X reserve below 896M fails? Try below 4G
 		 */
 		if (!high && !crash_base)
-			crash_base = memblock_find_in_range(alignment,
+			crash_base = memblock_find_in_range(CRASH_ALIGN,
 						(1ULL << 32),
-						crash_size, alignment);
+						crash_size, CRASH_ALIGN);
 		/*
 		 * crashkernel=X reserve below 4G fails? Try MAXMEM
 		 */
 		if (!high && !crash_base)
-			crash_base = memblock_find_in_range(alignment,
+			crash_base = memblock_find_in_range(CRASH_ALIGN,
 						CRASH_ADDR_HIGH_MAX,
-						crash_size, alignment);
+						crash_size, CRASH_ALIGN);
 #endif
 		if (!crash_base) {
 			pr_info("crashkernel reservation failed - No suitable area found.\n");
