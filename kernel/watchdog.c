@@ -136,9 +136,9 @@ static int __init hardlockup_panic_setup(char *str)
 	else if (!strncmp(str, "nopanic", 7))
 		hardlockup_panic = 0;
 	else if (!strncmp(str, "0", 1))
-		watchdog_enabled &= ~NMI_WATCHDOG_ENABLED;
-	else if (!strncmp(str, "1", 1))
-		watchdog_enabled |= NMI_WATCHDOG_ENABLED;
+		watchdog_enabled = 0;
+	else if (!strncmp(str, "1", 1) || !strncmp(str, "2", 1))
+		watchdog_enabled = NMI_WATCHDOG_ENABLED|SOFT_WATCHDOG_ENABLED;
 	return 1;
 }
 __setup("nmi_watchdog=", hardlockup_panic_setup);
@@ -164,7 +164,7 @@ __setup("nowatchdog", nowatchdog_setup);
 
 static int __init nosoftlockup_setup(char *str)
 {
-	watchdog_enabled &= ~SOFT_WATCHDOG_ENABLED;
+	watchdog_enabled = 0;
 	return 1;
 }
 __setup("nosoftlockup", nosoftlockup_setup);
@@ -946,10 +946,11 @@ int proc_watchdog(struct ctl_table *table, int write,
 int proc_nmi_watchdog(struct ctl_table *table, int write,
 		      void __user *buffer, size_t *lenp, loff_t *ppos)
 {
-	return proc_watchdog_common(NMI_WATCHDOG_ENABLED,
+	return proc_watchdog_common(NMI_WATCHDOG_ENABLED|SOFT_WATCHDOG_ENABLED,
 				    table, write, buffer, lenp, ppos);
 }
 
+#if 0
 /*
  * /proc/sys/kernel/soft_watchdog
  */
@@ -959,6 +960,7 @@ int proc_soft_watchdog(struct ctl_table *table, int write,
 	return proc_watchdog_common(SOFT_WATCHDOG_ENABLED,
 				    table, write, buffer, lenp, ppos);
 }
+#endif
 
 /*
  * /proc/sys/kernel/watchdog_thresh

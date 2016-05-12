@@ -857,6 +857,7 @@ static struct ctl_table kern_table[] = {
 		.extra2		= &zero,
 #endif
 	},
+#if 0
 	{
 		.procname       = "soft_watchdog",
 		.data           = &soft_watchdog_enabled,
@@ -866,6 +867,7 @@ static struct ctl_table kern_table[] = {
 		.extra1		= &zero,
 		.extra2		= &one,
 	},
+#endif
 	{
 		.procname	= "watchdog_cpumask",
 		.data		= &watchdog_cpumask_bits,
