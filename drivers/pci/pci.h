@@ -94,6 +94,11 @@ struct pci_vpd {
 	unsigned int len;
 	const struct pci_vpd_ops *ops;
 	struct bin_attribute *attr; /* descriptor for sysfs VPD entry */
+	RH_KABI_EXTEND(struct mutex	lock)
+	RH_KABI_EXTEND(u16		flag)
+	RH_KABI_EXTEND(u8		cap)
+	RH_KABI_EXTEND(u8		busy:1)
+	RH_KABI_EXTEND(u8		valid:1)
 };
 
 int pci_vpd_init(struct pci_dev *dev);
