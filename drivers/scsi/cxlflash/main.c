@@ -23,6 +23,7 @@
 
 #include <scsi/scsi_cmnd.h>
 #include <scsi/scsi_host.h>
+#include <scsi/scsi_tcq.h>
 #include <uapi/scsi/cxlflash_ioctl.h>
 
 #include "main.h"
@@ -2013,18 +2014,23 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
  * cxlflash_change_queue_depth() - change the queue depth for the device
  * @sdev:	SCSI device destined for queue depth change.
  * @qdepth:	Requested queue depth value to set.
+ * @reason:	Reason why queue depth is changed.
  *
  * The requested queue depth is capped to the maximum supported value.
  *
  * Return: The actual queue depth set.
  */
-static int cxlflash_change_queue_depth(struct scsi_device *sdev, int qdepth)
+static int cxlflash_change_queue_depth(struct scsi_device *sdev, int qdepth,
+					int reason)
 {
+	/* Support only default path for change */
+	if (reason != SCSI_QDEPTH_DEFAULT)
+		return -EOPNOTSUPP;
 
 	if (qdepth > CXLFLASH_MAX_CMDS_PER_LUN)
 		qdepth = CXLFLASH_MAX_CMDS_PER_LUN;
 
-	scsi_change_queue_depth(sdev, qdepth);
+	scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, qdepth);
 	return sdev->queue_depth;
 }
 
