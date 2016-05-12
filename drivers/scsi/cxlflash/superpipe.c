@@ -2095,7 +2095,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
 	case DK_CXLFLASH_USER_VIRTUAL:
 	case DK_CXLFLASH_VLUN_RESIZE:
 	case DK_CXLFLASH_VLUN_CLONE:
-		dev_dbg(dev, "%s: %s (%08X) on dev(%d/%d/%d/%llu)\n",
+		dev_dbg(dev, "%s: %s (%08X) on dev(%d/%d/%d/%d)\n",
 			__func__, decode_ioctl(cmd), cmd, shost->host_no,
 			sdev->channel, sdev->id, sdev->lun);
 		rc = ioctl_common(sdev, cmd);
@@ -2155,12 +2155,12 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
 cxlflash_ioctl_exit:
 	up_read(&cfg->ioctl_rwsem);
 	if (unlikely(rc && known_ioctl))
-		dev_err(dev, "%s: ioctl %s (%08X) on dev(%d/%d/%d/%llu) "
+		dev_err(dev, "%s: ioctl %s (%08X) on dev(%d/%d/%d/%d) "
 			"returned rc %d\n", __func__,
 			decode_ioctl(cmd), cmd, shost->host_no,
 			sdev->channel, sdev->id, sdev->lun, rc);
 	else
-		dev_dbg(dev, "%s: ioctl %s (%08X) on dev(%d/%d/%d/%llu) "
+		dev_dbg(dev, "%s: ioctl %s (%08X) on dev(%d/%d/%d/%d) "
 			"returned rc %d\n", __func__, decode_ioctl(cmd),
 			cmd, shost->host_no, sdev->channel, sdev->id,
 			sdev->lun, rc);

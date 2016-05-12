@@ -516,7 +516,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
 	int rc = 0;
 	int kref_got = 0;
 
-	dev_dbg_ratelimited(dev, "%s: (scp=%p) %d/%d/%d/%llu "
+	dev_dbg_ratelimited(dev, "%s: (scp=%p) %d/%d/%d/%d "
 			    "cdb=(%08X-%08X-%08X-%08X)\n",
 			    __func__, scp, host->host_no, scp->device->channel,
 			    scp->device->id, scp->device->lun,
@@ -1931,7 +1931,7 @@ static int cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
 	struct afu *afu = cfg->afu;
 	int rcr = 0;
 
-	pr_debug("%s: (scp=%p) %d/%d/%d/%llu "
+	pr_debug("%s: (scp=%p) %d/%d/%d/%d "
 		 "cdb=(%08X-%08X-%08X-%08X)\n", __func__, scp,
 		 host->host_no, scp->device->channel,
 		 scp->device->id, scp->device->lun,
@@ -1974,7 +1974,7 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
 	struct Scsi_Host *host = scp->device->host;
 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
 
-	pr_debug("%s: (scp=%p) %d/%d/%d/%llu "
+	pr_debug("%s: (scp=%p) %d/%d/%d/%d "
 		 "cdb=(%08X-%08X-%08X-%08X)\n", __func__, scp,
 		 host->host_no, scp->device->channel,
 		 scp->device->id, scp->device->lun,
