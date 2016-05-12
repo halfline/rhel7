@@ -109,6 +109,7 @@ static int masq_inet_event(struct notifier_block *this,
 			   void *ptr)
 {
 	struct in_device *idev = ((struct in_ifaddr *)ptr)->ifa_dev;
+	struct netdev_notifier_info info;
 
 	/* The masq_dev_notifier will catch the case of the device going
 	 * down.  So if the inetdev is dead and being destroyed we have
@@ -118,7 +119,8 @@ static int masq_inet_event(struct notifier_block *this,
 	if (idev->dead)
 		return NOTIFY_DONE;
 
-	return masq_device_event(this, event, idev->dev);
+	netdev_notifier_info_init(&info, idev->dev);
+	return masq_device_event(this, event, &info);
 }
 
 static struct notifier_block masq_dev_notifier = {
