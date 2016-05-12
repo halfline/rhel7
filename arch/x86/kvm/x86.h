@@ -167,10 +167,12 @@ int kvm_write_guest_virt_system(struct x86_emulate_ctxt *ctxt,
 	struct x86_exception *exception);
 
 bool kvm_mtrr_valid(struct kvm_vcpu *vcpu, u32 msr, u64 data);
+bool kvm_vector_hashing_enabled(void);
 
 #define KVM_SUPPORTED_XCR0     (XSTATE_FP | XSTATE_SSE | XSTATE_YMM \
 				| XSTATE_BNDREGS | XSTATE_BNDCSR \
 				| XSTATE_AVX512)
+
 extern u64 host_xcr0;
 
 extern u64 kvm_supported_xcr0(void);

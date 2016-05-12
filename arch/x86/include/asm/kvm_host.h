@@ -652,6 +652,8 @@ struct kvm_arch {
 	u32 bsp_vcpu_id;
 
 	u64 disabled_quirks;
+
+	bool disabled_lapic_found;
 };
 
 struct kvm_vm_stat {
