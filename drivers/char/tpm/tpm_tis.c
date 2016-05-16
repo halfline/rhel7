@@ -644,6 +644,7 @@ static int tpm_tis_init(struct device *dev, struct tpm_info *tpm_info,
 {
 	u32 vendor, intfcaps, intmask;
 	int rc, i, irq_s, irq_e, probe;
+	int irq_r = -1;
 	struct tpm_chip *chip;
 	struct priv_data *priv;
 
@@ -750,6 +751,7 @@ static int tpm_tis_init(struct device *dev, struct tpm_info *tpm_info,
 		irq_s =
 		    ioread8(chip->vendor.iobase +
 			    TPM_INT_VECTOR(chip->vendor.locality));
+		irq_r = irq_s;
 		if (irq_s) {
 			irq_e = irq_s;
 		} else {
@@ -832,7 +834,9 @@ static int tpm_tis_init(struct device *dev, struct tpm_info *tpm_info,
 				  chip->vendor.iobase +
 				  TPM_INT_ENABLE(chip->vendor.locality));
 		}
-	}
+	} else if (irq_r != -1)
+		iowrite8(irq_r, chip->vendor.iobase +
+			 TPM_INT_VECTOR(chip->vendor.locality));
 
 	if (chip->flags & TPM_CHIP_FLAG_TPM2) {
 		chip->vendor.timeout_a = msecs_to_jiffies(TPM2_TIMEOUT_A);
