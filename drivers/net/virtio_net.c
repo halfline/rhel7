@@ -646,7 +646,6 @@ static int virtnet_poll(struct napi_struct *napi, int budget)
 	void *buf;
 	unsigned int r, len, received = 0;
 
-again:
 	while (received < budget &&
 	       (buf = virtqueue_get_buf(rq->vq, &len)) != NULL) {
 		receive_buf(vi, rq, buf, len);
@@ -667,7 +666,6 @@ again:
 		    napi_schedule_prep(napi)) {
 			virtqueue_disable_cb(rq->vq);
 			__napi_schedule(napi);
-			goto again;
 		}
 	}
 
