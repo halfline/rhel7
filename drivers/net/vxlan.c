@@ -1764,7 +1764,7 @@ static struct rtable *vxlan_get_route(struct vxlan_dev *vxlan,
 
 #if IS_ENABLED(CONFIG_IPV6)
 static struct dst_entry *vxlan6_get_route(struct vxlan_dev *vxlan,
-					  struct sk_buff *skb, int oif,
+					  struct sk_buff *skb, int oif, u8 tos,
 					  const struct in6_addr *daddr,
 					  struct in6_addr *saddr)
 {
@@ -1774,6 +1774,7 @@ static struct dst_entry *vxlan6_get_route(struct vxlan_dev *vxlan,
 
 	memset(&fl6, 0, sizeof(fl6));
 	fl6.flowi6_oif = oif;
+	fl6.flowi6_tos = RT_TOS(tos);
 	fl6.daddr = *daddr;
 	fl6.saddr = vxlan->cfg.saddr.sin6.sin6_addr;
 	fl6.flowi6_mark = skb->mark;
@@ -1978,7 +1979,7 @@ static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 		sk = vxlan->vn6_sock->sock->sk;
 
 		ndst = vxlan6_get_route(vxlan, skb,
-					rdst ? rdst->remote_ifindex : 0,
+					rdst ? rdst->remote_ifindex : 0, tos,
 					&dst->sin6.sin6_addr, &saddr);
 		if (IS_ERR(ndst)) {
 			netdev_dbg(dev, "no route to %pI6\n",
@@ -2014,6 +2015,7 @@ static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 		if (!info)
 			udp_sum = !(flags & VXLAN_F_UDP_ZERO_CSUM6_TX);
 
+		tos = ip_tunnel_ecn_encap(tos, old_iph, skb);
 		ttl = ttl ? : ip6_dst_hoplimit(ndst);
 		skb_scrub_packet(skb, xnet);
 		err = vxlan_build_skb(skb, ndst, sizeof(struct ipv6hdr),
@@ -2023,8 +2025,8 @@ static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 			return;
 		}
 		udp_tunnel6_xmit_skb(ndst, sk, skb, dev,
-				     &saddr, &dst->sin6.sin6_addr,
-				     0, ttl, src_port, dst_port, !udp_sum);
+				     &saddr, &dst->sin6.sin6_addr, tos, ttl,
+				     src_port, dst_port, !udp_sum);
 #endif
 	}
 
@@ -2346,7 +2348,7 @@ static int vxlan_fill_metadata_dst(struct net_device *dev, struct sk_buff *skb)
 
 		if (!vxlan->vn6_sock)
 			return -EINVAL;
-		ndst = vxlan6_get_route(vxlan, skb, 0,
+		ndst = vxlan6_get_route(vxlan, skb, 0, info->key.tos,
 					&info->key.u.ipv6.dst,
 					&info->key.u.ipv6.src);
 		if (IS_ERR(ndst))
