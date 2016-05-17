@@ -1069,6 +1069,11 @@ struct tc_to_netdev {
  *	by 'ndo_dfwd_add_station'. 'pdev' is the net device backing
  *	the station and priv is the structure returned by the add
  *	operation.
+ * int (*ndo_fill_metadata_dst)(struct net_device *dev, struct sk_buff *skb);
+ *	This function is used to get egress tunnel information for given skb.
+ *	This is useful for retrieving outer tunnel header parameters while
+ *	sampling packet.
+ *
  */
 struct net_device_ops {
 	int			(*ndo_init)(struct net_device *dev);
@@ -1259,7 +1264,8 @@ struct net_device_ops {
 						struct tc_to_netdev *tc))
 	RH_KABI_USE_P(11, int	(*ndo_set_vf_trust)(struct net_device *dev,
 						    int vf, bool setting))
-	RH_KABI_RESERVE_P(12)
+	RH_KABI_USE_P(12, int	(*ndo_fill_metadata_dst)(struct net_device *dev,
+						       struct sk_buff *skb))
 	RH_KABI_RESERVE_P(13)
 	RH_KABI_RESERVE_P(14)
 	RH_KABI_RESERVE_P(15)
@@ -2196,6 +2202,7 @@ void dev_remove_offload(struct packet_offload *po);
 void __dev_remove_offload(struct packet_offload *po);
 
 int dev_get_iflink(const struct net_device *dev);
+int dev_fill_metadata_dst(struct net_device *dev, struct sk_buff *skb);
 struct net_device *__dev_get_by_flags(struct net *net, unsigned short flags,
 				      unsigned short mask);
 struct net_device *dev_get_by_name(struct net *net, const char *name);
