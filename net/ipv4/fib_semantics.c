@@ -533,7 +533,7 @@ int fib_encap_match(struct net *net, u16 encap_type,
 {
 	struct lwtunnel_state *lwtstate;
 	struct net_device *dev = NULL;
-	int ret;
+	int ret, result = 0;
 
 	if (encap_type == LWTUNNEL_ENCAP_NONE)
 		return 0;
@@ -542,10 +542,12 @@ int fib_encap_match(struct net *net, u16 encap_type,
 		dev = __dev_get_by_index(net, oif);
 	ret = lwtunnel_build_state(dev, encap_type,
 				   encap, &lwtstate);
-	if (!ret)
-		return lwtunnel_cmp_encap(lwtstate, nh->nh_lwtstate);
+	if (!ret) {
+		result = lwtunnel_cmp_encap(lwtstate, nh->nh_lwtstate);
+		lwtstate_free(lwtstate);
+	}
 
-	return 0;
+	return result;
 }
 
 static void fib_rebalance(struct fib_info *fi)
