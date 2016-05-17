@@ -246,6 +246,18 @@ unlock:
 ssize_t drm_dp_dpcd_read(struct drm_dp_aux *aux, unsigned int offset,
 			 void *buffer, size_t size)
 {
+	int ret;
+
+	/*
+	 * Sometimes we just get the same incorrect byte repeated over the
+	 * entire buffer. Doing one throw away read initially seems to "solve"
+	 * it.
+	 */
+	ret = drm_dp_dpcd_access(aux, DP_AUX_NATIVE_READ, DP_DPCD_REV, buffer,
+				 1);
+	if (ret != 1)
+		return ret;
+
 	return drm_dp_dpcd_access(aux, DP_AUX_NATIVE_READ, offset, buffer,
 				  size);
 }
