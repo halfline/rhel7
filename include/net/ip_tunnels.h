@@ -84,6 +84,8 @@ struct ip_tunnel_dst {
 	__be32				 saddr;
 };
 
+struct metadata_dst;
+
 struct ip_tunnel {
 	struct ip_tunnel __rcu	*next;
 	struct hlist_node hash_node;
@@ -119,7 +121,7 @@ struct ip_tunnel {
 	struct gro_cells	gro_cells;
 
 	/* Reserved slots. For Red Hat usage only. */
-	RH_KABI_RESERVE(1)
+	RH_KABI_USE(1, bool	collect_md)
 	RH_KABI_RESERVE(2)
 	RH_KABI_RESERVE(3)
 	RH_KABI_RESERVE(4)
@@ -161,6 +163,7 @@ struct tnl_ptk_info {
 struct ip_tunnel_net {
 	struct net_device *fb_tunnel_dev;
 	struct hlist_head tunnels[IP_TNL_HASH_SIZE];
+	struct ip_tunnel __rcu *collect_md_tun;
 };
 
 struct ip_tunnel_encap_ops {
@@ -247,7 +250,8 @@ struct ip_tunnel *ip_tunnel_lookup(struct ip_tunnel_net *itn,
 				   __be32 key);
 
 int ip_tunnel_rcv(struct ip_tunnel *tunnel, struct sk_buff *skb,
-		  const struct tnl_ptk_info *tpi, bool log_ecn_error);
+		  const struct tnl_ptk_info *tpi, struct metadata_dst *tun_dst,
+		  bool log_ecn_error);
 int ip_tunnel_changelink(struct net_device *dev, struct nlattr *tb[],
 			 struct ip_tunnel_parm *p);
 int ip_tunnel_newlink(struct net_device *dev, struct nlattr *tb[],
