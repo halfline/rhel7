@@ -897,10 +897,6 @@ static int execute_set_action(struct sk_buff *skb,
 		skb_dst_drop(skb);
 		dst_hold((struct dst_entry *)tun->tun_dst);
 		skb_dst_set(skb, (struct dst_entry *)tun->tun_dst);
-
-		/* FIXME: Remove when all vports have been converted */
-		OVS_CB(skb)->egress_tun_info = &tun->tun_dst->u.tun_info;
-
 		return 0;
 	}
 
@@ -1174,7 +1170,6 @@ int ovs_execute_actions(struct datapath *dp, struct sk_buff *skb,
 		goto out;
 	}
 
-	OVS_CB(skb)->egress_tun_info = NULL;
 	err = do_execute_actions(dp, skb, key,
 				 acts->actions, acts->actions_len);
 
