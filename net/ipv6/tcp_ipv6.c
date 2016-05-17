@@ -1095,7 +1095,6 @@ static struct sock *tcp_v6_syn_recv_sock(struct sock *sk, struct sk_buff *skb,
 		newnp->opt	   = NULL;
 		newnp->mcast_oif   = inet6_iif(skb);
 		newnp->mcast_hops  = ipv6_hdr(skb)->hop_limit;
-		newnp->rcv_tclass  = ipv6_get_dsfield(ipv6_hdr(skb));
 		newnp->rcv_flowinfo = ip6_flowinfo(ipv6_hdr(skb));
 
 		/*
@@ -1178,7 +1177,6 @@ static struct sock *tcp_v6_syn_recv_sock(struct sock *sk, struct sk_buff *skb,
 	newnp->opt	  = NULL;
 	newnp->mcast_oif  = inet6_iif(skb);
 	newnp->mcast_hops = ipv6_hdr(skb)->hop_limit;
-	newnp->rcv_tclass = ipv6_get_dsfield(ipv6_hdr(skb));
 	newnp->rcv_flowinfo = ip6_flowinfo(ipv6_hdr(skb));
 
 	/* Clone native IPv6 options from listening socket (if any)
@@ -1368,9 +1366,7 @@ ipv6_pktoptions:
 			np->mcast_oif = inet6_iif(opt_skb);
 		if (np->rxopt.bits.rxhlim || np->rxopt.bits.rxohlim)
 			np->mcast_hops = ipv6_hdr(opt_skb)->hop_limit;
-		if (np->rxopt.bits.rxtclass)
-			np->rcv_tclass = ipv6_get_dsfield(ipv6_hdr(opt_skb));
-		if (np->rxopt.bits.rxflow)
+		if (np->rxopt.bits.rxflow || np->rxopt.bits.rxtclass)
 			np->rcv_flowinfo = ip6_flowinfo(ipv6_hdr(opt_skb));
 		if (ipv6_opt_accepted(sk, opt_skb)) {
 			skb_set_owner_r(opt_skb, sk);
