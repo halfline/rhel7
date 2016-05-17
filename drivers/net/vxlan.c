@@ -1164,8 +1164,10 @@ static void vxlan_parse_gbp_hdr(struct vxlanhdr *unparsed,
 	md->gbp = ntohs(gbp->policy_id);
 
 	tun_dst = (struct metadata_dst *)skb_dst(skb);
-	if (tun_dst)
+	if (tun_dst) {
 		tun_dst->u.tun_info.key.tun_flags |= TUNNEL_VXLAN_OPT;
+		tun_dst->u.tun_info.options_len = sizeof(*md);
+	}
 
 	if (gbp->dont_learn)
 		md->gbp |= VXLAN_GBP_DONT_LEARN;
