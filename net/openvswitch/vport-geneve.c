@@ -120,7 +120,7 @@ static void geneve_tnl_destroy(struct vport *vport)
 
 	geneve_sock_release(geneve_port->gs);
 
-	ovs_vport_tunnel_deferred_free(vport);
+	ovs_vport_deferred_free(vport);
 }
 
 static struct vport *geneve_tnl_create(const struct vport_parms *parms)
@@ -153,28 +153,17 @@ static struct vport *geneve_tnl_create(const struct vport_parms *parms)
 	if (IS_ERR(vport))
 		return vport;
 
-	vport->dev = alloc_netdev(0, parms->name, ovs_vport_tunnel_do_setup);
-	if (!vport->dev) {
-		err = -ENOMEM;
-		goto error_free_vport;
-	}
-
-	dev_net_set(vport->dev, ovs_dp_get_net(vport->dp));
 	geneve_port = geneve_vport(vport);
 	strncpy(geneve_port->name, parms->name, IFNAMSIZ);
 
 	gs = geneve_sock_add(net, htons(dst_port), geneve_rcv, vport, true, 0);
 	if (IS_ERR(gs)) {
-		free_netdev(vport->dev);
 		ovs_vport_free(vport);
 		return (void *)gs;
 	}
 	geneve_port->gs = gs;
 
 	return vport;
-
-error_free_vport:
-	ovs_vport_free(vport);
 error:
 	return ERR_PTR(err);
 }

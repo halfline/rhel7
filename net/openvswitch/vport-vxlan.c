@@ -120,7 +120,7 @@ static void vxlan_tnl_destroy(struct vport *vport)
 
 	vxlan_sock_release(vxlan_port->vs);
 
-	ovs_vport_tunnel_deferred_free(vport);
+	ovs_vport_deferred_free(vport);
 }
 
 static const struct nla_policy exts_policy[OVS_VXLAN_EXT_MAX+1] = {
@@ -177,13 +177,6 @@ static struct vport *vxlan_tnl_create(const struct vport_parms *parms)
 	if (IS_ERR(vport))
 		return vport;
 
-	vport->dev = alloc_netdev(0, parms->name, ovs_vport_tunnel_do_setup);
-	if (!vport->dev) {
-		err = -ENOMEM;
-		goto error_free_vport;
-	}
-
-	dev_net_set(vport->dev, ovs_dp_get_net(vport->dp));
 	vxlan_port = vxlan_vport(vport);
 	strncpy(vxlan_port->name, parms->name, IFNAMSIZ);
 
@@ -191,7 +184,6 @@ static struct vport *vxlan_tnl_create(const struct vport_parms *parms)
 	if (a) {
 		err = vxlan_configure_exts(vport, a);
 		if (err) {
-			free_netdev(vport->dev);
 			ovs_vport_free(vport);
 			goto error;
 		}
@@ -200,7 +192,6 @@ static struct vport *vxlan_tnl_create(const struct vport_parms *parms)
 	vs = vxlan_sock_add(net, htons(dst_port), vxlan_rcv, vport, true,
 			    vxlan_port->exts);
 	if (IS_ERR(vs)) {
-		free_netdev(vport->dev);
 		ovs_vport_free(vport);
 		return (void *)vs;
 	}
@@ -208,8 +199,6 @@ static struct vport *vxlan_tnl_create(const struct vport_parms *parms)
 
 	return vport;
 
-error_free_vport:
-	ovs_vport_free(vport);
 error:
 	return ERR_PTR(err);
 }

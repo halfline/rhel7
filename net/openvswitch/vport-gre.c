@@ -255,19 +255,10 @@ static struct vport *gre_create(const struct vport_parms *parms)
 	if (IS_ERR(vport))
 		goto error;
 
-	vport->dev = alloc_netdev(0, parms->name, ovs_vport_tunnel_do_setup);
-	if (!vport->dev) {
-		err = -ENOMEM;
-		goto error_free_vport;
-	}
-
-	dev_net_set(vport->dev, ovs_dp_get_net(vport->dp));
 	strncpy(vport_priv(vport), parms->name, IFNAMSIZ);
 	rcu_assign_pointer(ovs_net->vport_net.gre_vport, vport);
 	return vport;
 
-error_free_vport:
-	ovs_vport_free(vport);
 error:
 	gre_exit();
 	return vport;
@@ -281,7 +272,7 @@ static void gre_tnl_destroy(struct vport *vport)
 	ovs_net = net_generic(net, ovs_net_id);
 
 	RCU_INIT_POINTER(ovs_net->vport_net.gre_vport, NULL);
-	ovs_vport_tunnel_deferred_free(vport);
+	ovs_vport_deferred_free(vport);
 	gre_exit();
 }
 
