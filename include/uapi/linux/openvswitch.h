@@ -329,7 +329,7 @@ enum ovs_key_attr {
 	OVS_KEY_ATTR_CT_LABELS,	/* 16-octet connection tracking label */
 
 #ifdef __KERNEL__
-	OVS_KEY_ATTR_TUNNEL_INFO,  /* struct ovs_tunnel_info */
+	OVS_KEY_ATTR_TUNNEL_INFO,  /* struct ip_tunnel_info */
 #endif
 	__OVS_KEY_ATTR_MAX
 };

@@ -25,6 +25,7 @@
 #include <linux/netdevice.h>
 #include <linux/skbuff.h>
 #include <linux/u64_stats_sync.h>
+#include <net/ip_tunnels.h>
 
 #include "conntrack.h"
 #include "flow.h"
@@ -101,7 +102,7 @@ struct datapath {
  * fragmented.
  */
 struct ovs_skb_cb {
-	struct ovs_tunnel_info  *egress_tun_info;
+	struct ip_tunnel_info  *egress_tun_info;
 	struct vport		*input_vport;
 	u16			mru;
 };
@@ -119,7 +120,7 @@ struct ovs_skb_cb {
  * @mru: If not zero, Maximum received IP fragment size.
  */
 struct dp_upcall_info {
-	const struct ovs_tunnel_info *egress_tun_info;
+	const struct ip_tunnel_info *egress_tun_info;
 	const struct nlattr *userdata;
 	const struct nlattr *actions;
 	int actions_len;
