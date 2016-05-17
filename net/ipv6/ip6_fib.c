@@ -34,6 +34,7 @@
 #include <net/ipv6.h>
 #include <net/ndisc.h>
 #include <net/addrconf.h>
+#include <net/lwtunnel.h>
 
 #include <net/ip6_fib.h>
 #include <net/ip6_route.h>
@@ -163,8 +164,10 @@ static __inline__ void node_free(struct fib6_node * fn)
 
 static __inline__ void rt6_release(struct rt6_info *rt)
 {
-	if (atomic_dec_and_test(&rt->rt6i_ref))
+	if (atomic_dec_and_test(&rt->rt6i_ref)) {
+		lwtunnel_state_put(rt->rt6i_lwtstate);
 		dst_free(&rt->dst);
+	}
 }
 
 static void fib6_link_table(struct net *net, struct fib6_table *tb)
