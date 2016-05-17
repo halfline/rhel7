@@ -791,12 +791,20 @@ typedef struct pglist_data {
 	unsigned long numabalancing_migrate_nr_pages;
 #endif
 
-	/* reserved for Red Hat */
+#ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
+	/*
+	 * If memory initialisation on large machines is deferred then this
+	 * is the first PFN that needs to be initialised.
+	 */
+	RH_KABI_USE(1, unsigned long first_deferred_pfn)
+#else
 	RH_KABI_RESERVE(1)
+#endif /* CONFIG_DEFERRED_STRUCT_PAGE_INIT */
+
+	/* reserved for Red Hat */
 	RH_KABI_RESERVE(2)
 	RH_KABI_RESERVE(3)
 	RH_KABI_RESERVE(4)
-
 } pg_data_t;
 
 #define node_present_pages(nid)	(NODE_DATA(nid)->node_present_pages)
