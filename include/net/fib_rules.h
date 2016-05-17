@@ -25,6 +25,11 @@ struct fib_rule {
 	char			oifname[IFNAMSIZ];
 	struct rcu_head		rcu;
 	struct net *		fr_net;
+	RH_KABI_EXTEND(__be64	tun_id)
+	/* kABI: use these reserved fields to add new items; the structure
+	 * can't be further extended after we whitelist fib_rules_register.
+	 */
+	RH_KABI_EXTEND(u32	rh_reserved[4])
 };
 
 struct fib_lookup_arg {
