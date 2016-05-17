@@ -115,8 +115,12 @@ struct dst_entry {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
+#ifdef __GENKSYMS__
 	u32			rh_reserved1;
 	u32			rh_reserved2;
+#else
+	struct lwtunnel_state   *lwtstate;
+#endif
 	u32			rh_reserved3;
 	u32			rh_reserved4;
 };

@@ -137,7 +137,6 @@ struct rt6_info {
 
 	u8				rt6i_protocol;
 	RH_KABI_EXTEND(u32		rt6i_pmtu)
-	RH_KABI_EXTEND(struct lwtunnel_state	*rt6i_lwtstate)
 
 	/* kABI: use these reserved fields to add new items; the structure
 	 * can't be further extended after we whitelist fib_rules_register.

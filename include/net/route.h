@@ -64,7 +64,6 @@ struct rtable {
 	u32			rt_pmtu;
 
 	struct list_head	rt_uncached;
-	RH_KABI_EXTEND(struct lwtunnel_state   *rt_lwtstate)
 };
 
 static inline bool rt_is_input_route(const struct rtable *rt)
