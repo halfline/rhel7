@@ -10,6 +10,8 @@
 #define DRM_BACKPORT_H_
 
 #include <linux/hrtimer.h>
+#include <linux/err.h>
+#include <linux/io.h>
 
 /**
  * ktime_mono_to_real - Convert monotonic time to clock realtime
@@ -37,6 +39,8 @@ static inline ktime_t ktime_mono_to_real(ktime_t mono)
 
 #define module_param_named_unsafe(name, value, type, perm)		\
 	module_param_named(name, value, type, perm)
+#define module_param_unsafe(name, type, perm)			\
+	module_param(name, type, perm)
 
 /*
  *
@@ -154,6 +158,71 @@ static inline int mipi_dsi_attach(struct mipi_dsi_device *dsi)
 	return -ENOSYS;
 }
 
+#define cpu_relax_lowlatency() cpu_relax()
+#define pagefault_disabled()   in_atomic()
+
+static inline int arch_phys_wc_index(int handle)
+{
+#ifdef CONFIG_X86
+	int phys_wc_to_mtrr_index(int handle);
+	return phys_wc_to_mtrr_index(handle);
+#else
+	return -1;
+#endif
+}
+
+#ifdef CONFIG_X86
+static inline void __iomem *acpi_os_ioremap(u64 phys, u32 size)
+{
+	return ioremap_cache(phys, size);
+}
+#endif
+
+/*
+ * Stub gpiod for i915
+ */
+struct gpio_desc;
+/* bogus enum to avoid subtle problems if someone somehow manages to backport
+ * the real gpiod:
+ */
+enum gpiod_flags {
+	GPIOD_OUT_HIGH,
+};
+static inline struct gpio_desc *__must_check
+gpiod_get(struct device *dev, const char *con_id, enum gpiod_flags flags)
+{
+	return ERR_PTR(-ENOENT);
+}
+
+static inline void gpiod_put(struct gpio_desc *desc) {}
+static inline void gpiod_set_value_cansleep(struct gpio_desc *desc, int value) {}
+
+/*
+ * avoiding/emulating 87521e16a7abbf3fa337f56cb4d1e18247f15e8a upstream:
+ */
+
+enum acpi_backlight_type {
+	acpi_backlight_undef = -1,
+	acpi_backlight_none = 0,
+	acpi_backlight_video,
+	acpi_backlight_vendor,
+	acpi_backlight_native,
+};
+
+static inline enum acpi_backlight_type acpi_video_get_backlight_type(void)
+{
+	int acpi_video_backlight_support(void);
+	bool acpi_video_verify_backlight_support(void);
+	if (acpi_video_backlight_support() &&
+			!acpi_video_verify_backlight_support())
+		return acpi_backlight_native;
+	return acpi_backlight_undef;
+}
+
+/*
+ * avoiding/emulating 01c8f1c44b83a0825b573e7c723b033cece37b86 upstream:
+ */
+#define __pfn_to_pfn_t(pfn, flags) (pfn)
 
 int __init drm_backport_init(void);
 void __exit drm_backport_exit(void);
