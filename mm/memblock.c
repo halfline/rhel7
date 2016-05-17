@@ -826,6 +826,10 @@ void __init_memblock __next_mem_range(u64 *idx, int nid, ulong flags,
 		if (nid != NUMA_NO_NODE && nid != m_nid)
 			continue;
 
+		/* skip hotpluggable memory regions if needed */
+		if (movable_node_is_enabled() && memblock_is_hotpluggable(m))
+			continue;
+
 		/* if we want mirror memory skip non-mirror memory regions */
 		if ((flags & MEMBLOCK_MIRROR) && !memblock_is_mirror(m))
 			continue;
