@@ -254,21 +254,43 @@ static inline bool early_page_nid_uninitialised(unsigned long pfn, int nid)
 	return false;
 }
 
+#ifdef CONFIG_MEMCG
+/*
+ * Return the number of pages needed to hold the page_cgroup structure for
+ * the given number of memory pages.
+ */
+static inline unsigned long page_cgroup_size(unsigned long pages)
+{
+	return pages >> 8;
+}
+#else
+static inline unsigned long page_cgroup_size(unsigned long pages)
+{
+	return 0;
+}
+#endif
+
 /*
  * Returns false when the remaining initialisation should be deferred until
  * later in the boot cycle when it can be parallelised.
  */
 static inline bool update_defer_init(pg_data_t *pgdat,
-				unsigned long pfn, unsigned long zone_end,
+				unsigned long pfn, unsigned long zone_size,
+				unsigned long zone_end,
 				unsigned long *nr_initialised)
 {
 	/* Always populate low zones for address-contrained allocations */
 	if (zone_end < pgdat_end_pfn(pgdat))
 		return true;
 
-	/* Initialise at least 2G of the highest zone */
+	/*
+	 * Initialise at least 2G plus 1/256 of the available pages (for struct
+	 * page_cgroup when memory cgroup is enabled) of the highest zone.
+	 */
+
 	(*nr_initialised)++;
-	if (*nr_initialised > (2UL << (30 - PAGE_SHIFT)) &&
+	if (*nr_initialised > (2UL << (30 - PAGE_SHIFT)) +
+			      page_cgroup_size(zone_size) &&
 	    (pfn & (PAGES_PER_SECTION - 1)) == 0) {
 		pgdat->first_deferred_pfn = pfn;
 		return false;
@@ -292,7 +314,8 @@ static inline bool early_page_nid_uninitialised(unsigned long pfn, int nid)
 }
 
 static inline bool update_defer_init(pg_data_t *pgdat,
-				unsigned long pfn, unsigned long zone_end,
+				unsigned long pfn, unsigned long zone_size,
+				unsigned long zone_end,
 				unsigned long *nr_initialised)
 {
 	return true;
@@ -4404,7 +4427,7 @@ void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
 			continue;
 		if (!early_pfn_in_nid(pfn, nid))
 			continue;
-		if (!update_defer_init(pgdat, pfn, end_pfn,
+		if (!update_defer_init(pgdat, pfn, size, end_pfn,
 				       &nr_initialised))
 			break;
 
