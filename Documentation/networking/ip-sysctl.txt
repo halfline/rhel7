@@ -1128,6 +1128,13 @@ mld_qrv - INTEGER
 	Default: 2 (as specified by RFC3810 9.1)
 	Minimum: 1 (as specified by RFC6636 4.5)
 
+anycast_src_echo_reply - BOOLEAN
+	Controls the use of anycast addresses as source addresses for ICMPv6
+	echo reply
+	TRUE:  enabled
+	FALSE: disabled
+	Default: FALSE
+
 IPv6 Fragmentation:
 
 ip6frag_high_thresh - INTEGER
