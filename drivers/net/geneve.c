@@ -75,7 +75,7 @@ struct geneve_dev {
 };
 
 /* Geneve device flags */
-#define GENEVE_F_UDP_CSUM		BIT(0)
+#define GENEVE_F_UDP_ZERO_CSUM_TX	BIT(0)
 #define GENEVE_F_UDP_ZERO_CSUM6_TX	BIT(1)
 #define GENEVE_F_UDP_ZERO_CSUM6_RX	BIT(2)
 
@@ -694,7 +694,7 @@ static int geneve_build_skb(struct rtable *rt, struct sk_buff *skb,
 	struct genevehdr *gnvh;
 	int min_headroom;
 	int err;
-	bool udp_sum = !!(flags & GENEVE_F_UDP_CSUM);
+	bool udp_sum = !(flags & GENEVE_F_UDP_ZERO_CSUM_TX);
 
 	skb_scrub_packet(skb, xnet);
 
@@ -907,9 +907,9 @@ static netdev_tx_t geneve_xmit_skb(struct sk_buff *skb, struct net_device *dev,
 			opts = ip_tunnel_info_opts(info);
 
 		if (key->tun_flags & TUNNEL_CSUM)
-			flags |= GENEVE_F_UDP_CSUM;
+			flags &= ~GENEVE_F_UDP_ZERO_CSUM_TX;
 		else
-			flags &= ~GENEVE_F_UDP_CSUM;
+			flags |= GENEVE_F_UDP_ZERO_CSUM_TX;
 
 		err = geneve_build_skb(rt, skb, key->tun_flags, vni,
 				       info->options_len, opts, flags, xnet);
@@ -935,7 +935,7 @@ static netdev_tx_t geneve_xmit_skb(struct sk_buff *skb, struct net_device *dev,
 	udp_tunnel_xmit_skb(rt, gs4->sock->sk, skb, fl4.saddr, fl4.daddr,
 			    tos, ttl, df, sport, geneve->dst_port,
 			    !net_eq(geneve->net, dev_net(geneve->dev)),
-			    !(flags & GENEVE_F_UDP_CSUM));
+			    !!(flags & GENEVE_F_UDP_ZERO_CSUM_TX));
 
 	return NETDEV_TX_OK;
 
@@ -1373,8 +1373,8 @@ static int geneve_newlink(struct net *net, struct net_device *dev,
 		metadata = true;
 
 	if (data[IFLA_GENEVE_UDP_CSUM] &&
-	    nla_get_u8(data[IFLA_GENEVE_UDP_CSUM]))
-		flags |= GENEVE_F_UDP_CSUM;
+	    !nla_get_u8(data[IFLA_GENEVE_UDP_CSUM]))
+		flags |= GENEVE_F_UDP_ZERO_CSUM_TX;
 
 	if (data[IFLA_GENEVE_UDP_ZERO_CSUM6_TX] &&
 	    nla_get_u8(data[IFLA_GENEVE_UDP_ZERO_CSUM6_TX]))
@@ -1444,7 +1444,7 @@ static int geneve_fill_info(struct sk_buff *skb, const struct net_device *dev)
 	}
 
 	if (nla_put_u8(skb, IFLA_GENEVE_UDP_CSUM,
-		       !!(geneve->flags & GENEVE_F_UDP_CSUM)) ||
+		       !(geneve->flags & GENEVE_F_UDP_ZERO_CSUM_TX)) ||
 	    nla_put_u8(skb, IFLA_GENEVE_UDP_ZERO_CSUM6_TX,
 		       !!(geneve->flags & GENEVE_F_UDP_ZERO_CSUM6_TX)) ||
 	    nla_put_u8(skb, IFLA_GENEVE_UDP_ZERO_CSUM6_RX,
