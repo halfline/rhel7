@@ -200,7 +200,7 @@ static netdev_tx_t vti_xmit(struct sk_buff *skb, struct net_device *dev,
 	err = dst_output(skb);
 	if (net_xmit_eval(err) == 0)
 		err = skb->len;
-	iptunnel_xmit_stats(err, &dev->stats, dev->tstats);
+	iptunnel_xmit_stats(dev, err);
 	return NETDEV_TX_OK;
 
 tx_error_icmp:
