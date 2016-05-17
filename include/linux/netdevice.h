@@ -1030,6 +1030,19 @@ struct tc_to_netdev {
  *	a new port starts listening. The operation is protected by the
  *	vxlan_net->sock_lock.
  *
+ * void (*ndo_add_geneve_port)(struct net_device *dev,
+ *			      sa_family_t sa_family, __be16 port);
+ *	Called by geneve to notify a driver about the UDP port and socket
+ *	address family that geneve is listnening to. It is called only when
+ *	a new port starts listening. The operation is protected by the
+ *	geneve_net->sock_lock.
+ *
+ * void (*ndo_del_geneve_port)(struct net_device *dev,
+ *			      sa_family_t sa_family, __be16 port);
+ *	Called by geneve to notify the driver about a UDP port and socket
+ *	address family that geneve is not listening to anymore. The operation
+ *	is protected by the geneve_net->sock_lock.
+ *
  * void (*ndo_del_vxlan_port)(struct  net_device *dev,
  *			      sa_family_t sa_family, __be16 port);
  *	Called by vxlan to notify the driver about a UDP port and socket
@@ -1266,8 +1279,12 @@ struct net_device_ops {
 						    int vf, bool setting))
 	RH_KABI_USE_P(12, int	(*ndo_fill_metadata_dst)(struct net_device *dev,
 						       struct sk_buff *skb))
-	RH_KABI_RESERVE_P(13)
-	RH_KABI_RESERVE_P(14)
+	RH_KABI_USE_P(13, void	(*ndo_add_geneve_port)(struct  net_device *dev,
+						       sa_family_t sa_family,
+						       __be16 port))
+	RH_KABI_USE_P(14, void	(*ndo_del_geneve_port)(struct  net_device *dev,
+						       sa_family_t sa_family,
+						       __be16 port))
 	RH_KABI_RESERVE_P(15)
 	RH_KABI_RESERVE_P(16)
 };
