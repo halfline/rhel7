@@ -134,6 +134,12 @@ struct rt6_info {
 	unsigned short			rt6i_nfheader_len;
 
 	u8				rt6i_protocol;
+	RH_KABI_EXTEND(u32		rt6i_pmtu)
+
+	/* kABI: use these reserved fields to add new items; the structure
+	 * can't be further extended after we whitelist fib_rules_register.
+	 */
+	RH_KABI_EXTEND(u64        rh_reserved[4])
 };
 
 static inline struct inet_peer *rt6_peer_ptr(struct rt6_info *rt)
@@ -194,15 +200,6 @@ static inline void rt6_update_expires(struct rt6_info *rt0, int timeout)
 
 	dst_set_expires(&rt0->dst, timeout);
 	rt0->rt6i_flags |= RTF_EXPIRES;
-}
-
-static inline void rt6_set_from(struct rt6_info *rt, struct rt6_info *from)
-{
-	struct dst_entry *new = (struct dst_entry *) from;
-
-	rt->rt6i_flags &= ~RTF_EXPIRES;
-	dst_hold(new);
-	rt->dst.from = new;
 }
 
 static inline void ip6_rt_put(struct rt6_info *rt)
