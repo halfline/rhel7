@@ -1765,6 +1765,7 @@ static struct rtable *vxlan_get_route(struct vxlan_dev *vxlan,
 #if IS_ENABLED(CONFIG_IPV6)
 static struct dst_entry *vxlan6_get_route(struct vxlan_dev *vxlan,
 					  struct sk_buff *skb, int oif, u8 tos,
+					  __be32 label,
 					  const struct in6_addr *daddr,
 					  struct in6_addr *saddr)
 {
@@ -1777,6 +1778,7 @@ static struct dst_entry *vxlan6_get_route(struct vxlan_dev *vxlan,
 	fl6.flowi6_tos = RT_TOS(tos);
 	fl6.daddr = *daddr;
 	fl6.saddr = vxlan->cfg.saddr.sin6.sin6_addr;
+	fl6.flowlabel = label;
 	fl6.flowi6_mark = skb->mark;
 	fl6.flowi6_proto = IPPROTO_UDP;
 
@@ -1849,7 +1851,7 @@ static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 	struct vxlan_metadata _md;
 	struct vxlan_metadata *md = &_md;
 	__be16 src_port = 0, dst_port;
-	__be32 vni;
+	__be32 vni, label;
 	__be16 df = 0;
 	__u8 tos, ttl;
 	int err;
@@ -1898,12 +1900,14 @@ static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 	if (tos == 1)
 		tos = ip_tunnel_get_dsfield(old_iph, skb);
 
+	label = vxlan->cfg.label;
 	src_port = udp_flow_src_port(dev_net(dev), skb, vxlan->cfg.port_min,
 				     vxlan->cfg.port_max, true);
 
 	if (info) {
 		ttl = info->key.ttl;
 		tos = info->key.tos;
+		label = info->key.label;
 		udp_sum = !!(info->key.tun_flags & TUNNEL_CSUM);
 
 		if (info->options_len)
@@ -1980,7 +1984,7 @@ static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 
 		ndst = vxlan6_get_route(vxlan, skb,
 					rdst ? rdst->remote_ifindex : 0, tos,
-					&dst->sin6.sin6_addr, &saddr);
+					label, &dst->sin6.sin6_addr, &saddr);
 		if (IS_ERR(ndst)) {
 			netdev_dbg(dev, "no route to %pI6\n",
 				   &dst->sin6.sin6_addr);
@@ -2025,8 +2029,8 @@ static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 			return;
 		}
 		udp_tunnel6_xmit_skb(ndst, sk, skb, dev,
-				     &saddr, &dst->sin6.sin6_addr, tos, ttl, 0,
-				     src_port, dst_port, !udp_sum);
+				     &saddr, &dst->sin6.sin6_addr, tos, ttl,
+				     label, src_port, dst_port, !udp_sum);
 #endif
 	}
 
@@ -2349,7 +2353,7 @@ static int vxlan_fill_metadata_dst(struct net_device *dev, struct sk_buff *skb)
 		if (!vxlan->vn6_sock)
 			return -EINVAL;
 		ndst = vxlan6_get_route(vxlan, skb, 0, info->key.tos,
-					&info->key.u.ipv6.dst,
+					info->key.label, &info->key.u.ipv6.dst,
 					&info->key.u.ipv6.src);
 		if (IS_ERR(ndst))
 			return PTR_ERR(ndst);
@@ -2464,6 +2468,7 @@ static const struct nla_policy vxlan_policy[IFLA_VXLAN_MAX + 1] = {
 	[IFLA_VXLAN_LOCAL6]	= { .len = sizeof(struct in6_addr) },
 	[IFLA_VXLAN_TOS]	= { .type = NLA_U8 },
 	[IFLA_VXLAN_TTL]	= { .type = NLA_U8 },
+	[IFLA_VXLAN_LABEL]	= { .type = NLA_U32 },
 	[IFLA_VXLAN_LEARNING]	= { .type = NLA_U8 },
 	[IFLA_VXLAN_AGEING]	= { .type = NLA_U32 },
 	[IFLA_VXLAN_LIMIT]	= { .type = NLA_U32 },
@@ -2698,6 +2703,11 @@ static int vxlan_dev_configure(struct net *src_net, struct net_device *dev,
 		vxlan->flags |= VXLAN_F_IPV6;
 	}
 
+	if (conf->label && !use_ipv6) {
+		pr_info("label only supported in use with IPv6\n");
+		return -EINVAL;
+	}
+
 	if (conf->remote_ifindex) {
 		lowerdev = __dev_get_by_index(src_net, conf->remote_ifindex);
 		dst->remote_ifindex = conf->remote_ifindex;
@@ -2846,6 +2856,10 @@ static int vxlan_newlink(struct net *src_net, struct net_device *dev,
 	if (data[IFLA_VXLAN_TTL])
 		conf.ttl = nla_get_u8(data[IFLA_VXLAN_TTL]);
 
+	if (data[IFLA_VXLAN_LABEL])
+		conf.label = nla_get_be32(data[IFLA_VXLAN_LABEL]) &
+			     IPV6_FLOWLABEL_MASK;
+
 	if (!data[IFLA_VXLAN_LEARNING] || nla_get_u8(data[IFLA_VXLAN_LEARNING]))
 		conf.flags |= VXLAN_F_LEARN;
 
@@ -2948,6 +2962,7 @@ static size_t vxlan_get_size(const struct net_device *dev)
 		nla_total_size(sizeof(struct in6_addr)) + /* IFLA_VXLAN_LOCAL{6} */
 		nla_total_size(sizeof(__u8)) +	/* IFLA_VXLAN_TTL */
 		nla_total_size(sizeof(__u8)) +	/* IFLA_VXLAN_TOS */
+		nla_total_size(sizeof(__be32)) + /* IFLA_VXLAN_LABEL */
 		nla_total_size(sizeof(__u8)) +	/* IFLA_VXLAN_LEARNING */
 		nla_total_size(sizeof(__u8)) +	/* IFLA_VXLAN_PROXY */
 		nla_total_size(sizeof(__u8)) +	/* IFLA_VXLAN_RSC */
@@ -3011,6 +3026,7 @@ static int vxlan_fill_info(struct sk_buff *skb, const struct net_device *dev)
 
 	if (nla_put_u8(skb, IFLA_VXLAN_TTL, vxlan->cfg.ttl) ||
 	    nla_put_u8(skb, IFLA_VXLAN_TOS, vxlan->cfg.tos) ||
+	    nla_put_be32(skb, IFLA_VXLAN_LABEL, vxlan->cfg.label) ||
 	    nla_put_u8(skb, IFLA_VXLAN_LEARNING,
 			!!(vxlan->flags & VXLAN_F_LEARN)) ||
 	    nla_put_u8(skb, IFLA_VXLAN_PROXY,
