@@ -726,7 +726,7 @@ static void ovs_fragment(struct vport *vport, struct sk_buff *skb, u16 mru,
 		refdst_drop(orig_dst);
 	} else {
 		WARN_ONCE(1, "Failed fragment ->%s: eth=%04x, MRU=%d, MTU=%d.",
-			  ovs_netdev_get_name(vport), ntohs(ethertype), mru,
+			  ovs_vport_name(vport), ntohs(ethertype), mru,
 			  vport->dev->mtu);
 		goto err;
 	}
