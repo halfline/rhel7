@@ -1346,7 +1346,7 @@ static void ipv4_dst_destroy(struct dst_entry *dst)
 		list_del(&rt->rt_uncached);
 		spin_unlock_bh(&rt_uncached_lock);
 	}
-	lwtunnel_state_put(rt->rt_lwtstate);
+	lwtstate_put(rt->rt_lwtstate);
 }
 
 void rt_flush_dev(struct net_device *dev)
@@ -1392,12 +1392,7 @@ static void rt_set_nexthop(struct rtable *rt, __be32 daddr,
 #ifdef CONFIG_IP_ROUTE_CLASSID
 		rt->dst.tclassid = nh->nh_tclassid;
 #endif
-		if (nh->nh_lwtstate) {
-			lwtunnel_state_get(nh->nh_lwtstate);
-			rt->rt_lwtstate = nh->nh_lwtstate;
-		} else {
-			rt->rt_lwtstate = NULL;
-		}
+		rt->rt_lwtstate = lwtstate_get(nh->nh_lwtstate);
 		if (unlikely(fnhe))
 			cached = rt_bind_exception(rt, fnhe, daddr);
 		else if (!(rt->dst.flags & DST_NOCACHE))

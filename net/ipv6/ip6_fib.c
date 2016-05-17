@@ -165,7 +165,7 @@ static __inline__ void node_free(struct fib6_node * fn)
 static __inline__ void rt6_release(struct rt6_info *rt)
 {
 	if (atomic_dec_and_test(&rt->rt6i_ref)) {
-		lwtunnel_state_put(rt->rt6i_lwtstate);
+		lwtstate_put(rt->rt6i_lwtstate);
 		dst_free(&rt->dst);
 	}
 }
