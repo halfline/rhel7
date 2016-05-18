@@ -112,6 +112,7 @@
 #include <asm/mce.h>
 #include <asm/alternative.h>
 #include <asm/prom.h>
+#include <asm/microcode.h>
 
 /*
  * max_low_pfn_mapped: highest direct mapped pfn under 4GB
@@ -581,6 +582,8 @@ static int __init reserve_crashkernel_low(void)
 	crashk_low_res.end   = low_base + low_size - 1;
 	insert_resource(&iomem_resource, &crashk_low_res);
 #endif
+
+	microcode_init();
 	return 0;
 }
 
