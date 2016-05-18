@@ -128,6 +128,7 @@ static struct perf_pmu_events_attr event_attr_##v = {				\
 struct rapl_pmu {
 	raw_spinlock_t		lock;
 	int			n_active;
+	int			cpu;
 	struct list_head	active_list;
 	struct pmu		*pmu;
 	ktime_t			timer_interval;
@@ -209,7 +210,7 @@ static void rapl_start_hrtimer(struct rapl_pmu *pmu)
 
 static enum hrtimer_restart rapl_hrtimer_handle(struct hrtimer *hrtimer)
 {
-	struct rapl_pmu *pmu = __get_cpu_var(rapl_pmu);
+	struct rapl_pmu *pmu = container_of(hrtimer, struct rapl_pmu, hrtimer);
 	struct perf_event *event;
 	unsigned long flags;
 
@@ -255,7 +256,7 @@ static void __rapl_pmu_event_start(struct rapl_pmu *pmu,
 
 static void rapl_pmu_event_start(struct perf_event *event, int mode)
 {
-	struct rapl_pmu *pmu = __get_cpu_var(rapl_pmu);
+	struct rapl_pmu *pmu = event->pmu_private;
 	unsigned long flags;
 
 	raw_spin_lock_irqsave(&pmu->lock, flags);
@@ -265,7 +266,7 @@ static void rapl_pmu_event_start(struct perf_event *event, int mode)
 
 static void rapl_pmu_event_stop(struct perf_event *event, int mode)
 {
-	struct rapl_pmu *pmu = __get_cpu_var(rapl_pmu);
+	struct rapl_pmu *pmu = event->pmu_private;
 	struct hw_perf_event *hwc = &event->hw;
 	unsigned long flags;
 
@@ -299,7 +300,7 @@ static void rapl_pmu_event_stop(struct perf_event *event, int mode)
 
 static int rapl_pmu_event_add(struct perf_event *event, int mode)
 {
-	struct rapl_pmu *pmu = __get_cpu_var(rapl_pmu);
+	struct rapl_pmu *pmu = event->pmu_private;
 	struct hw_perf_event *hwc = &event->hw;
 	unsigned long flags;
 
@@ -322,6 +323,7 @@ static void rapl_pmu_event_del(struct perf_event *event, int flags)
 
 static int rapl_pmu_event_init(struct perf_event *event)
 {
+	struct rapl_pmu *pmu = __this_cpu_read(rapl_pmu);
 	u64 cfg = event->attr.config & RAPL_EVENT_MASK;
 	int bit, msr, ret = 0;
 
@@ -331,6 +333,9 @@ static int rapl_pmu_event_init(struct perf_event *event)
 
 	/* check only supported bits are set */
 	if (event->attr.config & ~RAPL_EVENT_MASK)
+		return -EINVAL;
+
+	if (event->cpu < 0)
 		return -EINVAL;
 
 	/*
@@ -371,6 +376,8 @@ static int rapl_pmu_event_init(struct perf_event *event)
 		return -EINVAL;
 
 	/* must be done before validate_group */
+	event->cpu = pmu->cpu;
+	event->pmu_private = pmu;
 	event->hw.event_base = msr;
 	event->hw.config = cfg;
 	event->hw.idx = bit;
@@ -582,6 +589,7 @@ static int rapl_cpu_prepare(int cpu)
 	INIT_LIST_HEAD(&pmu->active_list);
 
 	pmu->pmu = &rapl_pmu_class;
+	pmu->cpu = cpu;
 
 	pmu->timer_interval = ms_to_ktime(rapl_timer_ms);
 
