@@ -583,8 +583,6 @@ static int __init reserve_crashkernel_low(void)
 	crashk_low_res.end   = low_base + low_size - 1;
 	insert_resource(&iomem_resource, &crashk_low_res);
 #endif
-
-	microcode_init();
 	return 0;
 }
 
