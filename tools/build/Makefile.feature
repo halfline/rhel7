@@ -30,6 +30,7 @@ endef
 FEATURE_TESTS_BASIC :=			\
 	backtrace			\
 	dwarf				\
+	dwarf_getlocations		\
 	fortify-source			\
 	sync-compare-and-swap		\
 	glibc				\
@@ -77,6 +78,7 @@ endif
 
 FEATURE_DISPLAY ?=			\
 	dwarf				\
+	dwarf_getlocations		\
 	glibc				\
 	gtk2				\
 	libaudit			\
