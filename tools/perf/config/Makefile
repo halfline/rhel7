@@ -306,6 +306,13 @@ ifndef NO_LIBELF
   endif # NO_DWARF
 endif # NO_LIBELF
 
+ifdef PERF_HAVE_JITDUMP
+  ifndef NO_DWARF
+    $(call detected,CONFIG_JITDUMP)
+    CFLAGS += -DHAVE_JITDUMP
+  endif
+endif
+
 ifeq ($(ARCH),powerpc)
   ifndef NO_DWARF
     CFLAGS += -DHAVE_SKIP_CALLCHAIN_IDX
