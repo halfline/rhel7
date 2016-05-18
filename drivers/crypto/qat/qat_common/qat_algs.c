@@ -1300,7 +1300,7 @@ int qat_algs_register(void)
 	return ret;
 }
 
-int qat_algs_unregister(void)
+void qat_algs_unregister(void)
 {
 	int ret = 0;
 
@@ -1311,16 +1311,4 @@ int qat_algs_unregister(void)
 		crypto_put_default_rng();
 	}
 	mutex_unlock(&algs_lock);
-	return ret;
-}
-
-int qat_algs_init(void)
-{
-	crypto_get_default_rng();
-	return 0;
-}
-
-void qat_algs_exit(void)
-{
-	crypto_put_default_rng();
 }
