@@ -361,6 +361,7 @@ struct pci_dev {
 	RH_KABI_FILL_HOLE(unsigned int no_64bit_msi:1) /* device may only use 32-bit MSIs */
 	RH_KABI_FILL_HOLE(unsigned int irq_managed:1)
 	RH_KABI_FILL_HOLE(unsigned int has_secondary_link:1)
+	RH_KABI_FILL_HOLE(unsigned int non_compliant_bars:1) /* broken BARs; ignore them */
 	pci_dev_flags_t dev_flags;
 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
 
