@@ -546,6 +546,8 @@ int main(int argc, const char **argv)
 
 	srandom(time(NULL));
 
+	perf_config(perf_default_config, NULL);
+
 	/* get debugfs/tracefs mount point from /proc/mounts */
 	tracing_path_mount();
 
