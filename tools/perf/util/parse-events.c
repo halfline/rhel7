@@ -1951,6 +1951,7 @@ void parse_events_terms__purge(struct list_head *terms)
 void parse_events__free_terms(struct list_head *terms)
 {
 	parse_events_terms__purge(terms);
+	free(terms);
 }
 
 void parse_events_evlist_error(struct parse_events_evlist *data,
