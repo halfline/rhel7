@@ -116,7 +116,7 @@ static struct kobj_attribute format_attr_##_var =		\
 	.config	= _config,					\
 }
 
-#define RAPL_CNTR_WIDTH 32 /* 32-bit rapl counters */
+#define RAPL_CNTR_WIDTH 32
 
 #define RAPL_EVENT_ATTR_STR(_name, v, str)					\
 static struct perf_pmu_events_attr event_attr_##v = {				\
@@ -126,15 +126,16 @@ static struct perf_pmu_events_attr event_attr_##v = {				\
 };
 
 struct rapl_pmu {
-	spinlock_t	 lock;
-	int		 n_active; /* number of active events */
-	struct list_head active_list;
-	struct pmu	 *pmu; /* pointer to rapl_pmu_class */
-	ktime_t		 timer_interval; /* in ktime_t unit */
-	struct hrtimer   hrtimer;
+	spinlock_t		lock;
+	int			n_active;
+	struct list_head	active_list;
+	struct pmu		*pmu;
+	ktime_t			timer_interval;
+	struct hrtimer		hrtimer;
 };
 
-static int rapl_hw_unit[NR_RAPL_DOMAINS] __read_mostly;  /* 1/2^hw_unit Joule */
+ /* 1/2^hw_unit Joule */
+static int rapl_hw_unit[NR_RAPL_DOMAINS] __read_mostly;
 static struct pmu rapl_pmu_class;
 static cpumask_t rapl_cpu_mask;
 static int rapl_cntr_mask;
@@ -206,11 +207,6 @@ static void rapl_start_hrtimer(struct rapl_pmu *pmu)
 		     HRTIMER_MODE_REL_PINNED);
 }
 
-static void rapl_stop_hrtimer(struct rapl_pmu *pmu)
-{
-	hrtimer_cancel(&pmu->hrtimer);
-}
-
 static enum hrtimer_restart rapl_hrtimer_handle(struct hrtimer *hrtimer)
 {
 	struct rapl_pmu *pmu = __get_cpu_var(rapl_pmu);
@@ -222,9 +218,8 @@ static enum hrtimer_restart rapl_hrtimer_handle(struct hrtimer *hrtimer)
 
 	spin_lock_irqsave(&pmu->lock, flags);
 
-	list_for_each_entry(event, &pmu->active_list, active_entry) {
+	list_for_each_entry(event, &pmu->active_list, active_entry)
 		rapl_event_update(event);
-	}
 
 	spin_unlock_irqrestore(&pmu->lock, flags);
 
@@ -281,7 +276,7 @@ static void rapl_pmu_event_stop(struct perf_event *event, int mode)
 		WARN_ON_ONCE(pmu->n_active <= 0);
 		pmu->n_active--;
 		if (pmu->n_active == 0)
-			rapl_stop_hrtimer(pmu);
+			hrtimer_cancel(&pmu->hrtimer);
 
 		list_del(&event->active_entry);
 
@@ -552,7 +547,7 @@ static void rapl_cpu_exit(int cpu)
 		perf_pmu_migrate_context(pmu->pmu, cpu, target);
 
 	/* cancel overflow polling timer for CPU */
-	rapl_stop_hrtimer(pmu);
+	hrtimer_cancel(&pmu->hrtimer);
 }
 
 static void rapl_cpu_init(int cpu)
@@ -708,6 +703,20 @@ static void __init rapl_advertise(void)
 	}
 }
 
+static int __init rapl_prepare_cpus(void)
+{
+	unsigned int cpu;
+	int ret;
+
+	for_each_online_cpu(cpu) {
+		ret = rapl_cpu_prepare(cpu);
+		if (ret)
+			return ret;
+		rapl_cpu_init(cpu);
+	}
+	return 0;
+}
+
 static void __init cleanup_rapl_pmus(void)
 {
 	int cpu;
@@ -716,7 +725,7 @@ static void __init cleanup_rapl_pmus(void)
 		kfree(per_cpu(rapl_pmu, cpu));
 }
 
-static const struct x86_cpu_id rapl_cpu_match[] = {
+static const struct x86_cpu_id rapl_cpu_match[] __initconst = {
 	[0] = { .vendor = X86_VENDOR_INTEL, .family = 6 },
 	[1] = {},
 };
@@ -724,15 +733,11 @@ static const struct x86_cpu_id rapl_cpu_match[] = {
 static int __init rapl_pmu_init(void)
 {
 	void (*quirk)(void) = NULL;
-	int cpu, ret;
+	int ret;
 
-	/*
-	 * check for Intel processor family 6
-	 */
 	if (!x86_match_cpu(rapl_cpu_match))
 		return -ENODEV;
 
-	/* check supported CPU */
 	switch (boot_cpu_data.x86_model) {
 	case 42: /* Sandy Bridge */
 	case 58: /* Ivy Bridge */
@@ -761,7 +766,6 @@ static int __init rapl_pmu_init(void)
 		rapl_pmu_events_group.attrs = rapl_events_knl_attr;
 		break;
 	default:
-		/* unsupported */
 		return -ENODEV;
 	}
 
@@ -771,12 +775,9 @@ static int __init rapl_pmu_init(void)
 
 	cpu_notifier_register_begin();
 
-	for_each_online_cpu(cpu) {
-		ret = rapl_cpu_prepare(cpu);
-		if (ret)
-			goto out;
-		rapl_cpu_init(cpu);
-	}
+	ret = rapl_prepare_cpus();
+	if (ret)
+		goto out;
 
 	ret = perf_pmu_register(&rapl_pmu_class, "power", -1);
 	if (ret)
