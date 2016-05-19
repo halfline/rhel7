@@ -1882,11 +1882,7 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
 static int netdev_notify(struct notifier_block *nb,
 			 unsigned long state, void *ptr)
 {
-#if 0 /* Not in RHEL */
 	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
-#else
-	struct net_device *dev = ptr;
-#endif
 	struct ieee80211_sub_if_data *sdata;
 
 	if (state != NETDEV_CHANGENAME)
@@ -1911,10 +1907,10 @@ static struct notifier_block mac80211_netdev_notifier = {
 
 int ieee80211_iface_init(void)
 {
-	return register_netdevice_notifier(&mac80211_netdev_notifier);
+	return register_netdevice_notifier_rh(&mac80211_netdev_notifier);
 }
 
 void ieee80211_iface_exit(void)
 {
-	unregister_netdevice_notifier(&mac80211_netdev_notifier);
+	unregister_netdevice_notifier_rh(&mac80211_netdev_notifier);
 }

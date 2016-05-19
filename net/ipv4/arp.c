@@ -1237,7 +1237,7 @@ out:
 static int arp_netdev_event(struct notifier_block *this, unsigned long event,
 			    void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 
 	switch (event) {
 	case NETDEV_CHANGEADDR:
@@ -1285,7 +1285,7 @@ void __init arp_init(void)
 #ifdef CONFIG_SYSCTL
 	neigh_sysctl_register(NULL, &arp_tbl.parms, NULL);
 #endif
-	register_netdevice_notifier(&arp_netdev_notifier);
+	register_netdevice_notifier_rh(&arp_netdev_notifier);
 }
 
 #ifdef CONFIG_PROC_FS

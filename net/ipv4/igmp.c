@@ -2661,7 +2661,7 @@ static struct pernet_operations igmp_net_ops = {
 static int igmp_netdev_event(struct notifier_block *this,
 			     unsigned long event, void *ptr)
 {
-	struct net_device *dev = (struct net_device *) ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct in_device *in_dev;
 
 	switch (event) {
@@ -2687,7 +2687,7 @@ int __init igmp_mc_proc_init(void)
 	err = register_pernet_subsys(&igmp_net_ops);
 	if (err)
 		return err;
-	err = register_netdevice_notifier(&igmp_notifier);
+	err = register_netdevice_notifier_rh(&igmp_notifier);
 	if (err)
 		goto reg_notif_fail;
 	return 0;

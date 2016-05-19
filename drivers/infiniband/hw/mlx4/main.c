@@ -2055,7 +2055,7 @@ static void mlx4_ib_scan_netdevs(struct mlx4_ib_dev *ibdev,
 static int mlx4_ib_netdev_event(struct notifier_block *this,
 				unsigned long event, void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct mlx4_ib_dev *ibdev;
 
 	if (!net_eq(dev_net(dev), &init_net))
@@ -2432,7 +2432,7 @@ static void *mlx4_ib_add(struct mlx4_dev *dev)
 	if (dev->caps.flags & MLX4_DEV_CAP_FLAG_IBOE) {
 		if (!iboe->nb.notifier_call) {
 			iboe->nb.notifier_call = mlx4_ib_netdev_event;
-			err = register_netdevice_notifier(&iboe->nb);
+			err = register_netdevice_notifier_rh(&iboe->nb);
 			if (err) {
 				iboe->nb.notifier_call = NULL;
 				goto err_notif;
@@ -2484,7 +2484,7 @@ static void *mlx4_ib_add(struct mlx4_dev *dev)
 
 err_notif:
 	if (ibdev->iboe.nb.notifier_call) {
-		if (unregister_netdevice_notifier(&ibdev->iboe.nb))
+		if (unregister_netdevice_notifier_rh(&ibdev->iboe.nb))
 			pr_warn("failure unregistering notifier\n");
 		ibdev->iboe.nb.notifier_call = NULL;
 	}
@@ -2614,7 +2614,7 @@ static void mlx4_ib_remove(struct mlx4_dev *dev, void *ibdev_ptr)
 	mlx4_ib_mad_cleanup(ibdev);
 	ib_unregister_device(&ibdev->ib_dev);
 	if (ibdev->iboe.nb.notifier_call) {
-		if (unregister_netdevice_notifier(&ibdev->iboe.nb))
+		if (unregister_netdevice_notifier_rh(&ibdev->iboe.nb))
 			pr_warn("failure unregistering notifier\n");
 		ibdev->iboe.nb.notifier_call = NULL;
 	}

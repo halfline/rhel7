@@ -2340,7 +2340,7 @@ static void efx_update_name(struct efx_nic *efx)
 static int efx_netdev_event(struct notifier_block *this,
 			    unsigned long event, void *ptr)
 {
-	struct net_device *net_dev = ptr;
+	struct net_device *net_dev = netdev_notifier_info_to_dev(ptr);
 
 	if ((net_dev->netdev_ops == &efx_netdev_ops) &&
 	    event == NETDEV_CHANGENAME)
@@ -3462,7 +3462,7 @@ static int __init efx_init_module(void)
 
 	printk(KERN_INFO "Solarflare NET driver v" EFX_DRIVER_VERSION "\n");
 
-	rc = register_netdevice_notifier(&efx_netdev_notifier);
+	rc = register_netdevice_notifier_rh(&efx_netdev_notifier);
 	if (rc)
 		goto err_notifier;
 
@@ -3491,7 +3491,7 @@ static int __init efx_init_module(void)
 	efx_fini_sriov();
  err_sriov:
 #endif
-	unregister_netdevice_notifier(&efx_netdev_notifier);
+	unregister_netdevice_notifier_rh(&efx_netdev_notifier);
  err_notifier:
 	return rc;
 }
@@ -3505,7 +3505,7 @@ static void __exit efx_exit_module(void)
 #ifdef CONFIG_SFC_SRIOV
 	efx_fini_sriov();
 #endif
-	unregister_netdevice_notifier(&efx_netdev_notifier);
+	unregister_netdevice_notifier_rh(&efx_netdev_notifier);
 
 }
 

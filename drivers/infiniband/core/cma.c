@@ -3441,9 +3441,9 @@ static int cma_netdev_change(struct net_device *ndev, struct rdma_id_private *id
 }
 
 static int cma_netdev_callback(struct notifier_block *self, unsigned long event,
-			       void *ctx)
+			       void *ptr)
 {
-	struct net_device *ndev = (struct net_device *)ctx;
+	struct net_device *ndev = netdev_notifier_info_to_dev(ptr);
 	struct cma_device *cma_dev;
 	struct rdma_id_private *id_priv;
 	int ret = NOTIFY_DONE;
@@ -3656,7 +3656,7 @@ static int __init cma_init(void)
 
 	ib_sa_register_client(&sa_client);
 	rdma_addr_register_client(&addr_client);
-	register_netdevice_notifier(&cma_nb);
+	register_netdevice_notifier_rh(&cma_nb);
 
 	ret = ib_register_client(&cma_client);
 	if (ret)
@@ -3668,7 +3668,7 @@ static int __init cma_init(void)
 	return 0;
 
 err:
-	unregister_netdevice_notifier(&cma_nb);
+	unregister_netdevice_notifier_rh(&cma_nb);
 	rdma_addr_unregister_client(&addr_client);
 	ib_sa_unregister_client(&sa_client);
 	destroy_workqueue(cma_wq);
@@ -3679,7 +3679,7 @@ static void __exit cma_cleanup(void)
 {
 	ibnl_remove_client(RDMA_NL_RDMA_CM);
 	ib_unregister_client(&cma_client);
-	unregister_netdevice_notifier(&cma_nb);
+	unregister_netdevice_notifier_rh(&cma_nb);
 	rdma_addr_unregister_client(&addr_client);
 	ib_sa_unregister_client(&sa_client);
 	destroy_workqueue(cma_wq);

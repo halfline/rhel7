@@ -966,11 +966,7 @@ EXPORT_SYMBOL(cfg80211_stop_iface);
 static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
 					 unsigned long state, void *ptr)
 {
-#if 0 /* Not in RHEL */
 	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
-#else
-	struct net_device *dev = ptr;
-#endif
 	struct wireless_dev *wdev = dev->ieee80211_ptr;
 	struct cfg80211_registered_device *rdev;
 	struct cfg80211_sched_scan_request *sched_scan_req;
@@ -1177,7 +1173,7 @@ static int __init cfg80211_init(void)
 	if (err)
 		goto out_fail_sysfs;
 
-	err = register_netdevice_notifier(&cfg80211_netdev_notifier);
+	err = register_netdevice_notifier_rh(&cfg80211_netdev_notifier);
 	if (err)
 		goto out_fail_notifier;
 
@@ -1205,7 +1201,7 @@ out_fail_reg:
 	debugfs_remove(ieee80211_debugfs_dir);
 	nl80211_exit();
 out_fail_nl80211:
-	unregister_netdevice_notifier(&cfg80211_netdev_notifier);
+	unregister_netdevice_notifier_rh(&cfg80211_netdev_notifier);
 out_fail_notifier:
 	wiphy_sysfs_exit();
 out_fail_sysfs:
@@ -1219,7 +1215,7 @@ static void __exit cfg80211_exit(void)
 {
 	debugfs_remove(ieee80211_debugfs_dir);
 	nl80211_exit();
-	unregister_netdevice_notifier(&cfg80211_netdev_notifier);
+	unregister_netdevice_notifier_rh(&cfg80211_netdev_notifier);
 	wiphy_sysfs_exit();
 	regulatory_exit();
 	unregister_pernet_device(&cfg80211_pernet_ops);

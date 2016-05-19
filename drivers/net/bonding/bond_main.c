@@ -3011,7 +3011,7 @@ static int bond_slave_netdev_event(unsigned long event,
 static int bond_netdev_event(struct notifier_block *this,
 			     unsigned long event, void *ptr)
 {
-	struct net_device *event_dev = (struct net_device *)ptr;
+	struct net_device *event_dev = netdev_notifier_info_to_dev(ptr);
 
 	netdev_dbg(event_dev, "event: %lx\n", event);
 
@@ -4674,7 +4674,7 @@ static int __init bonding_init(void)
 			goto err;
 	}
 
-	register_netdevice_notifier(&bond_netdev_notifier);
+	register_netdevice_notifier_rh(&bond_netdev_notifier);
 out:
 	return res;
 err:
@@ -4688,7 +4688,7 @@ err_link:
 
 static void __exit bonding_exit(void)
 {
-	unregister_netdevice_notifier(&bond_netdev_notifier);
+	unregister_netdevice_notifier_rh(&bond_netdev_notifier);
 
 	bond_destroy_debugfs();
 

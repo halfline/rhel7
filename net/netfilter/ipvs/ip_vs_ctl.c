@@ -1502,9 +1502,9 @@ ip_vs_forget_dev(struct ip_vs_dest *dest, struct net_device *dev)
  * Currently only NETDEV_DOWN is handled to release refs to cached dsts
  */
 static int ip_vs_dst_event(struct notifier_block *this, unsigned long event,
-			    void *ptr)
+			   void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct net *net = dev_net(dev);
 	struct netns_ipvs *ipvs = net_ipvs(net);
 	struct ip_vs_service *svc;
@@ -3900,7 +3900,7 @@ int __init ip_vs_control_init(void)
 
 	smp_wmb();	/* Do we really need it now ? */
 
-	ret = register_netdevice_notifier(&ip_vs_dst_notifier);
+	ret = register_netdevice_notifier_rh(&ip_vs_dst_notifier);
 	if (ret < 0)
 		return ret;
 
@@ -3912,6 +3912,6 @@ int __init ip_vs_control_init(void)
 void ip_vs_control_cleanup(void)
 {
 	EnterFunction(2);
-	unregister_netdevice_notifier(&ip_vs_dst_notifier);
+	unregister_netdevice_notifier_rh(&ip_vs_dst_notifier);
 	LeaveFunction(2);
 }

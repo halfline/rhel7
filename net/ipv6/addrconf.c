@@ -2840,9 +2840,9 @@ ipv6_inherit_linklocal(struct inet6_dev *idev, struct net_device *link_dev)
 }
 
 static int addrconf_notify(struct notifier_block *this, unsigned long event,
-			   void *data)
+			   void *ptr)
 {
-	struct net_device *dev = (struct net_device *) data;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct inet6_dev *idev = __in6_dev_get(dev);
 	int run_pending = 0;
 	int err;
@@ -5394,7 +5394,7 @@ int __init addrconf_init(void)
 	for (i = 0; i < IN6_ADDR_HSIZE; i++)
 		INIT_HLIST_HEAD(&inet6_addr_lst[i]);
 
-	register_netdevice_notifier(&ipv6_dev_notf);
+	register_netdevice_notifier_rh(&ipv6_dev_notf);
 
 	addrconf_verify();
 
@@ -5425,7 +5425,7 @@ int __init addrconf_init(void)
 errout:
 	rtnl_af_unregister(&inet6_ops);
 errout_af:
-	unregister_netdevice_notifier(&ipv6_dev_notf);
+	unregister_netdevice_notifier_rh(&ipv6_dev_notf);
 errlo:
 	destroy_workqueue(addrconf_wq);
 out_nowq:
@@ -5441,7 +5441,7 @@ void addrconf_cleanup(void)
 	struct net_device *dev;
 	int i;
 
-	unregister_netdevice_notifier(&ipv6_dev_notf);
+	unregister_netdevice_notifier_rh(&ipv6_dev_notf);
 	unregister_pernet_subsys(&addrconf_ops);
 	ipv6_addr_label_cleanup();
 

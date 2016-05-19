@@ -1082,7 +1082,7 @@ static struct rtnl_link_ops macvlan_link_ops = {
 static int macvlan_device_event(struct notifier_block *unused,
 				unsigned long event, void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct macvlan_dev *vlan, *next;
 	struct macvlan_port *port;
 	LIST_HEAD(list_kill);
@@ -1129,21 +1129,21 @@ static int __init macvlan_init_module(void)
 {
 	int err;
 
-	register_netdevice_notifier(&macvlan_notifier_block);
+	register_netdevice_notifier_rh(&macvlan_notifier_block);
 
 	err = macvlan_link_register(&macvlan_link_ops);
 	if (err < 0)
 		goto err1;
 	return 0;
 err1:
-	unregister_netdevice_notifier(&macvlan_notifier_block);
+	unregister_netdevice_notifier_rh(&macvlan_notifier_block);
 	return err;
 }
 
 static void __exit macvlan_cleanup_module(void)
 {
 	rtnl_link_unregister(&macvlan_link_ops);
-	unregister_netdevice_notifier(&macvlan_notifier_block);
+	unregister_netdevice_notifier_rh(&macvlan_notifier_block);
 }
 
 module_init(macvlan_init_module);

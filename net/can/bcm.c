@@ -1350,9 +1350,9 @@ static int bcm_sendmsg(struct kiocb *iocb, struct socket *sock,
  * notification handler for netdevice status changes
  */
 static int bcm_notifier(struct notifier_block *nb, unsigned long msg,
-			void *data)
+			void *ptr)
 {
-	struct net_device *dev = (struct net_device *)data;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct bcm_sock *bo = container_of(nb, struct bcm_sock, notifier);
 	struct sock *sk = &bo->sk;
 	struct bcm_op *op;
@@ -1419,7 +1419,7 @@ static int bcm_init(struct sock *sk)
 	/* set notifier */
 	bo->notifier.notifier_call = bcm_notifier;
 
-	register_netdevice_notifier(&bo->notifier);
+	register_netdevice_notifier_rh(&bo->notifier);
 
 	return 0;
 }
@@ -1440,7 +1440,7 @@ static int bcm_release(struct socket *sock)
 
 	/* remove bcm_ops, timer, rx_unregister(), etc. */
 
-	unregister_netdevice_notifier(&bo->notifier);
+	unregister_netdevice_notifier_rh(&bo->notifier);
 
 	lock_sock(sk);
 

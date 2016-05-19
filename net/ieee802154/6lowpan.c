@@ -1352,10 +1352,9 @@ static inline void lowpan_netlink_fini(void)
 }
 
 static int lowpan_device_event(struct notifier_block *unused,
-				unsigned long event,
-				void *ptr)
+			       unsigned long event, void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	LIST_HEAD(del_list);
 	struct lowpan_dev_record *entry, *tmp;
 
@@ -1394,7 +1393,7 @@ static int __init lowpan_init_module(void)
 
 	dev_add_pack(&lowpan_packet_type);
 
-	err = register_netdevice_notifier(&lowpan_dev_notifier);
+	err = register_netdevice_notifier_rh(&lowpan_dev_notifier);
 	if (err < 0) {
 		dev_remove_pack(&lowpan_packet_type);
 		lowpan_netlink_fini();
@@ -1411,7 +1410,7 @@ static void __exit lowpan_cleanup_module(void)
 
 	dev_remove_pack(&lowpan_packet_type);
 
-	unregister_netdevice_notifier(&lowpan_dev_notifier);
+	unregister_netdevice_notifier_rh(&lowpan_dev_notifier);
 
 	/* Now 6lowpan packet_type is removed, so no new fragments are
 	 * expected on RX, therefore that's the time to clean incomplete

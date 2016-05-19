@@ -794,9 +794,9 @@ EXPORT_SYMBOL(can_proto_unregister);
  * af_can notifier to create/remove CAN netdevice specific structs
  */
 static int can_notifier(struct notifier_block *nb, unsigned long msg,
-			void *data)
+			void *ptr)
 {
-	struct net_device *dev = (struct net_device *)data;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct dev_rcv_lists *d;
 
 	if (!net_eq(dev_net(dev), &init_net))
@@ -894,7 +894,7 @@ static __init int can_init(void)
 
 	/* protocol register */
 	sock_register(&can_family_ops);
-	register_netdevice_notifier(&can_netdev_notifier);
+	register_netdevice_notifier_rh(&can_netdev_notifier);
 	dev_add_pack(&can_packet);
 	dev_add_pack(&canfd_packet);
 
@@ -913,7 +913,7 @@ static __exit void can_exit(void)
 	/* protocol unregister */
 	dev_remove_pack(&canfd_packet);
 	dev_remove_pack(&can_packet);
-	unregister_netdevice_notifier(&can_netdev_notifier);
+	unregister_netdevice_notifier_rh(&can_netdev_notifier);
 	sock_unregister(PF_CAN);
 
 	/* remove created dev_rcv_lists from still registered CAN devices */

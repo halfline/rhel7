@@ -2078,8 +2078,30 @@ struct pcpu_sw_netstats {
 #define NETDEV_RESEND_IGMP	0x0016
 #define NETDEV_CHANGEINFODATA	0x0018
 
+/* (Un)registration functions for the notifiers that takes
+ * 'struct net_device *' as parameter
+ */
 int register_netdevice_notifier(struct notifier_block *nb);
 int unregister_netdevice_notifier(struct notifier_block *nb);
+
+/* (Un)registration functions for the notifiers that takes
+ * 'struct netdev_notifier_info *' as parameter
+ */
+int register_netdevice_notifier_rh(struct notifier_block *nb);
+int unregister_netdevice_notifier_rh(struct notifier_block *nb);
+
+struct netdev_notifier_info {
+	struct net_device *dev;
+};
+
+static inline struct net_device *
+netdev_notifier_info_to_dev(const struct netdev_notifier_info *info)
+{
+	return info->dev;
+}
+
+int call_netdevice_notifiers_info(unsigned long val, struct net_device *dev,
+				  struct netdev_notifier_info *info);
 int call_netdevice_notifiers(unsigned long val, struct net_device *dev);
 
 

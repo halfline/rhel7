@@ -3706,7 +3706,7 @@ static const struct file_operations skge_debug_fops = {
 static int skge_device_event(struct notifier_block *unused,
 			     unsigned long event, void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct skge_port *skge;
 	struct dentry *d;
 
@@ -3766,13 +3766,13 @@ static __init void skge_debug_init(void)
 	}
 
 	skge_debug = ent;
-	register_netdevice_notifier(&skge_notifier);
+	register_netdevice_notifier_rh(&skge_notifier);
 }
 
 static __exit void skge_debug_cleanup(void)
 {
 	if (skge_debug) {
-		unregister_netdevice_notifier(&skge_notifier);
+		unregister_netdevice_notifier_rh(&skge_notifier);
 		debugfs_remove(skge_debug);
 		skge_debug = NULL;
 	}

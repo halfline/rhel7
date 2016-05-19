@@ -200,7 +200,7 @@ tee_tg6(struct sk_buff *skb, const struct xt_action_param *par)
 static int tee_netdev_event(struct notifier_block *this, unsigned long event,
 			    void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct xt_tee_priv *priv;
 
 	priv = container_of(this, struct xt_tee_priv, notifier);
@@ -247,7 +247,7 @@ static int tee_tg_check(const struct xt_tgchk_param *par)
 		priv->notifier.notifier_call = tee_netdev_event;
 		info->priv    = priv;
 
-		register_netdevice_notifier(&priv->notifier);
+		register_netdevice_notifier_rh(&priv->notifier);
 	} else
 		info->priv = NULL;
 
@@ -259,7 +259,7 @@ static void tee_tg_destroy(const struct xt_tgdtor_param *par)
 	struct xt_tee_tginfo *info = par->targinfo;
 
 	if (info->priv) {
-		unregister_netdevice_notifier(&info->priv->notifier);
+		unregister_netdevice_notifier_rh(&info->priv->notifier);
 		kfree(info->priv);
 	}
 }

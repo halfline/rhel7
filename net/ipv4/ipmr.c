@@ -1618,7 +1618,7 @@ int ipmr_compat_ioctl(struct sock *sk, unsigned int cmd, void __user *arg)
 
 static int ipmr_device_event(struct notifier_block *this, unsigned long event, void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct net *net = dev_net(dev);
 	struct mr_table *mrt;
 	struct vif_device *v;
@@ -2758,7 +2758,7 @@ int __init ip_mr_init(void)
 	if (err)
 		goto reg_pernet_fail;
 
-	err = register_netdevice_notifier(&ip_mr_notifier);
+	err = register_netdevice_notifier_rh(&ip_mr_notifier);
 	if (err)
 		goto reg_notif_fail;
 #ifdef CONFIG_IP_PIMSM_V2
@@ -2774,7 +2774,7 @@ int __init ip_mr_init(void)
 
 #ifdef CONFIG_IP_PIMSM_V2
 add_proto_fail:
-	unregister_netdevice_notifier(&ip_mr_notifier);
+	unregister_netdevice_notifier_rh(&ip_mr_notifier);
 #endif
 reg_notif_fail:
 	unregister_pernet_subsys(&ipmr_net_ops);

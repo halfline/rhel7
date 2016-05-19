@@ -2328,7 +2328,7 @@ static int __init dp_init(void)
 	if (err)
 		goto error_vport_exit;
 
-	err = register_netdevice_notifier(&ovs_dp_device_notifier);
+	err = register_netdevice_notifier_rh(&ovs_dp_device_notifier);
 	if (err)
 		goto error_netns_exit;
 
@@ -2345,7 +2345,7 @@ static int __init dp_init(void)
 error_unreg_netdev:
 	ovs_netdev_exit();
 error_unreg_notifier:
-	unregister_netdevice_notifier(&ovs_dp_device_notifier);
+	unregister_netdevice_notifier_rh(&ovs_dp_device_notifier);
 error_netns_exit:
 	unregister_pernet_device(&ovs_net_ops);
 error_vport_exit:
@@ -2364,7 +2364,7 @@ static void dp_cleanup(void)
 {
 	dp_unregister_genl(ARRAY_SIZE(dp_genl_families));
 	ovs_netdev_exit();
-	unregister_netdevice_notifier(&ovs_dp_device_notifier);
+	unregister_netdevice_notifier_rh(&ovs_dp_device_notifier);
 	unregister_pernet_device(&ovs_net_ops);
 	rcu_barrier();
 	ovs_vport_exit();

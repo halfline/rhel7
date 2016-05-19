@@ -774,7 +774,7 @@ static int
 nfqnl_rcv_dev_event(struct notifier_block *this,
 		    unsigned long event, void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 
 	/* Drop any packets associated with the downed device */
 	if (event == NETDEV_DOWN)
@@ -1294,7 +1294,7 @@ static int __init nfnetlink_queue_init(void)
 		pr_err("nf_queue: failed to register pernet ops\n");
 		goto cleanup_subsys;
 	}
-	register_netdevice_notifier(&nfqnl_dev_notifier);
+	register_netdevice_notifier_rh(&nfqnl_dev_notifier);
 	nf_register_queue_handler(&nfqh);
 	return status;
 
@@ -1308,7 +1308,7 @@ cleanup_netlink_notifier:
 static void __exit nfnetlink_queue_fini(void)
 {
 	nf_unregister_queue_handler();
-	unregister_netdevice_notifier(&nfqnl_dev_notifier);
+	unregister_netdevice_notifier_rh(&nfqnl_dev_notifier);
 	unregister_pernet_subsys(&nfnl_queue_net_ops);
 	nfnetlink_subsys_unregister(&nfqnl_subsys);
 	netlink_unregister_notifier(&nfqnl_rtnl_notifier);

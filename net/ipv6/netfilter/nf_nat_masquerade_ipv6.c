@@ -64,7 +64,7 @@ static int device_cmp(struct nf_conn *ct, void *ifindex)
 static int masq_device_event(struct notifier_block *this,
 			     unsigned long event, void *ptr)
 {
-	const struct net_device *dev = ptr;
+	const struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct net *net = dev_net(dev);
 
 	if (event == NETDEV_DOWN)
@@ -98,7 +98,7 @@ void nf_nat_masquerade_ipv6_register_notifier(void)
 	if (atomic_inc_return(&masquerade_notifier_refcount) > 1)
 		return;
 
-	register_netdevice_notifier(&masq_dev_notifier);
+	register_netdevice_notifier_rh(&masq_dev_notifier);
 	register_inet6addr_notifier(&masq_inet_notifier);
 }
 EXPORT_SYMBOL_GPL(nf_nat_masquerade_ipv6_register_notifier);
@@ -110,7 +110,7 @@ void nf_nat_masquerade_ipv6_unregister_notifier(void)
 		return;
 
 	unregister_inet6addr_notifier(&masq_inet_notifier);
-	unregister_netdevice_notifier(&masq_dev_notifier);
+	unregister_netdevice_notifier_rh(&masq_dev_notifier);
 }
 EXPORT_SYMBOL_GPL(nf_nat_masquerade_ipv6_unregister_notifier);
 

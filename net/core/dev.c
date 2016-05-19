@@ -250,6 +250,11 @@ static void unlist_netdevice(struct net_device *dev)
 
 static RAW_NOTIFIER_HEAD(netdev_chain);
 
+/* RHEL specific notifier chain for old style notifiers that takes net_device
+ * pointer as parameter.
+ */
+static RAW_NOTIFIER_HEAD(netdev_chain_old);
+
 /*
  *	Device drivers call our routines to queue packets here. We empty the
  *	queue in the local softnet handler.
@@ -1466,39 +1471,47 @@ void dev_disable_lro(struct net_device *dev)
 }
 EXPORT_SYMBOL(dev_disable_lro);
 
+static void netdev_notifier_info_init(struct netdev_notifier_info *info,
+				      struct net_device *dev)
+{
+	info->dev = dev;
+}
+
+static int call_netdevice_notifier(struct notifier_block *nb, unsigned long val,
+				   struct net_device *dev)
+{
+	struct netdev_notifier_info info;
+
+	netdev_notifier_info_init(&info, dev);
+	return nb->notifier_call(nb, val, &info);
+}
 
 static int dev_boot_phase = 1;
 
-/**
- *	register_netdevice_notifier - register a network notifier block
- *	@nb: notifier
- *
- *	Register a notifier to be called when network device events occur.
- *	The notifier passed is linked into the kernel structures and must
- *	not be reused until it has been unregistered. A negative errno code
- *	is returned on a failure.
- *
- * 	When registered all registration and up events are replayed
- *	to the new notifier to allow device to have a race free
- *	view of the network device list.
- */
-
-int register_netdevice_notifier(struct notifier_block *nb)
+static int __register_netdevice_notifier(struct notifier_block *nb, bool old)
 {
 	struct net_device *dev;
 	struct net_device *last;
 	struct net *net;
+	struct raw_notifier_head *chain = &netdev_chain;
+	notifier_fn_t notify = (notifier_fn_t)call_netdevice_notifier;
 	int err;
 
+	if (unlikely(old)) {
+		/* Old style notifiers uses different chain */
+		chain = &netdev_chain_old;
+		notify = nb->notifier_call;
+	}
+
 	rtnl_lock();
-	err = raw_notifier_chain_register(&netdev_chain, nb);
+	err = raw_notifier_chain_register(chain, nb);
 	if (err)
 		goto unlock;
 	if (dev_boot_phase)
 		goto unlock;
 	for_each_net(net) {
 		for_each_netdev(net, dev) {
-			err = nb->notifier_call(nb, NETDEV_REGISTER, dev);
+			err = notify(nb, NETDEV_REGISTER, dev);
 			err = notifier_to_errno(err);
 			if (err)
 				goto rollback;
@@ -1506,7 +1519,7 @@ int register_netdevice_notifier(struct notifier_block *nb)
 			if (!(dev->flags & IFF_UP))
 				continue;
 
-			nb->notifier_call(nb, NETDEV_UP, dev);
+			notify(nb, NETDEV_UP, dev);
 		}
 	}
 
@@ -1522,18 +1535,94 @@ rollback:
 				goto outroll;
 
 			if (dev->flags & IFF_UP) {
-				nb->notifier_call(nb, NETDEV_GOING_DOWN, dev);
-				nb->notifier_call(nb, NETDEV_DOWN, dev);
+				notify(nb, NETDEV_GOING_DOWN, dev);
+				notify(nb, NETDEV_DOWN, dev);
 			}
-			nb->notifier_call(nb, NETDEV_UNREGISTER, dev);
+			notify(nb, NETDEV_UNREGISTER, dev);
 		}
 	}
 
 outroll:
-	raw_notifier_chain_unregister(&netdev_chain, nb);
+	raw_notifier_chain_unregister(chain, nb);
 	goto unlock;
 }
+
+/**
+ *	register_netdevice_notifier - register a network notifier block
+ *	@nb: notifier
+ *
+ *	Register a notifier to be called when network device events occur.
+ *	The notifier passed is linked into the kernel structures and must
+ *	not be reused until it has been unregistered. A negative errno code
+ *	is returned on a failure.
+ *
+ * 	When registered all registration and up events are replayed
+ *	to the new notifier to allow device to have a race free
+ *	view of the network device list.
+ *
+ *	NOTE THAT this function must be used for notifiers that takes
+ *	pointer to 'struct net_device' as 3rd parameter.
+ */
+int register_netdevice_notifier(struct notifier_block *nb)
+{
+	return __register_netdevice_notifier(nb, true);
+}
 EXPORT_SYMBOL(register_netdevice_notifier);
+
+/**
+ *	register_netdevice_notifier_rh - register a network notifier block
+ *	@nb: notifier
+ *
+ *	Register a notifier to be called when network device events occur.
+ *	The notifier passed is linked into the kernel structures and must
+ *	not be reused until it has been unregistered. A negative errno code
+ *	is returned on a failure.
+ *
+ * 	When registered all registration and up events are replayed
+ *	to the new notifier to allow device to have a race free
+ *	view of the network device list.
+ *
+ *	NOTE THAT this function must be used for notifiers that takes
+ *	pointer to 'struct netdev_notifier_info' as 3rd parameter.
+ */
+int register_netdevice_notifier_rh(struct notifier_block *nb)
+{
+	return __register_netdevice_notifier(nb, false);
+}
+EXPORT_SYMBOL(register_netdevice_notifier_rh);
+
+static int __unregister_netdevice_notifier(struct notifier_block *nb, bool old)
+{
+	struct net_device *dev;
+	struct net *net;
+	struct raw_notifier_head *chain = &netdev_chain;
+	notifier_fn_t notify = (notifier_fn_t)call_netdevice_notifier;
+	int err;
+
+	if (unlikely(old)) {
+		/* Old style notifiers uses different chain */
+		chain = &netdev_chain_old;
+		notify = nb->notifier_call;
+	}
+
+	rtnl_lock();
+	err = raw_notifier_chain_unregister(chain, nb);
+	if (err)
+		goto unlock;
+
+	for_each_net(net) {
+		for_each_netdev(net, dev) {
+			if (dev->flags & IFF_UP) {
+				notify(nb, NETDEV_GOING_DOWN, dev);
+				notify(nb, NETDEV_DOWN, dev);
+			}
+			notify(nb, NETDEV_UNREGISTER, dev);
+		}
+	}
+unlock:
+	rtnl_unlock();
+	return err;
+}
 
 /**
  *	unregister_netdevice_notifier - unregister a network notifier block
@@ -1547,33 +1636,66 @@ EXPORT_SYMBOL(register_netdevice_notifier);
  * 	After unregistering unregister and down device events are synthesized
  *	for all devices on the device list to the removed notifier to remove
  *	the need for special case cleanup code.
+ *
+ *	NOTE THAT this function must be used for notifiers that takes
+ *	pointer to 'struct net_device' as 3rd parameter.
  */
-
 int unregister_netdevice_notifier(struct notifier_block *nb)
 {
-	struct net_device *dev;
-	struct net *net;
-	int err;
-
-	rtnl_lock();
-	err = raw_notifier_chain_unregister(&netdev_chain, nb);
-	if (err)
-		goto unlock;
-
-	for_each_net(net) {
-		for_each_netdev(net, dev) {
-			if (dev->flags & IFF_UP) {
-				nb->notifier_call(nb, NETDEV_GOING_DOWN, dev);
-				nb->notifier_call(nb, NETDEV_DOWN, dev);
-			}
-			nb->notifier_call(nb, NETDEV_UNREGISTER, dev);
-		}
-	}
-unlock:
-	rtnl_unlock();
-	return err;
+	return __unregister_netdevice_notifier(nb, true);
 }
 EXPORT_SYMBOL(unregister_netdevice_notifier);
+
+/**
+ *	unregister_netdevice_notifier - unregister a network notifier block
+ *	@nb: notifier
+ *
+ *	Unregister a notifier previously registered by
+ *	register_netdevice_notifier(). The notifier is unlinked into the
+ *	kernel structures and may then be reused. A negative errno code
+ *	is returned on a failure.
+ *
+ * 	After unregistering unregister and down device events are synthesized
+ *	for all devices on the device list to the removed notifier to remove
+ *	the need for special case cleanup code.
+ *
+ *	NOTE THAT this function must be used for notifiers that takes
+ *	pointer to 'struct netdev_notifier_info' as 3rd parameter.
+ */
+int unregister_netdevice_notifier_rh(struct notifier_block *nb)
+{
+	return __unregister_netdevice_notifier(nb, false);
+}
+EXPORT_SYMBOL(unregister_netdevice_notifier_rh);
+
+/**
+ *	call_netdevice_notifiers_info - call all network notifier blocks
+ *	@val: value passed unmodified to notifier function
+ *	@dev: net_device pointer passed unmodified to notifier function
+ *	@info: notifier information data
+ *
+ *	Call all network notifier blocks.  Parameters and return value
+ *	are as for raw_notifier_call_chain().
+ */
+
+int call_netdevice_notifiers_info(unsigned long val, struct net_device *dev,
+				  struct netdev_notifier_info *info)
+{
+	int ret;
+
+	ASSERT_RTNL();
+
+	/* We need to call old style notifiers first as there is at least
+	 * one in core that needs to be called as the last one.
+	 */
+	ret = raw_notifier_call_chain(&netdev_chain_old, val, dev);
+	if ((ret & NOTIFY_STOP_MASK) == NOTIFY_STOP_MASK)
+		return ret;
+
+	netdev_notifier_info_init(info, dev);
+	return raw_notifier_call_chain(&netdev_chain, val, info);
+}
+EXPORT_SYMBOL(call_netdevice_notifiers_info);
 
 /**
  *	call_netdevice_notifiers - call all network notifier blocks
@@ -1586,8 +1708,9 @@ EXPORT_SYMBOL(unregister_netdevice_notifier);
 
 int call_netdevice_notifiers(unsigned long val, struct net_device *dev)
 {
-	ASSERT_RTNL();
-	return raw_notifier_call_chain(&netdev_chain, val, dev);
+	struct netdev_notifier_info info;
+
+	return call_netdevice_notifiers_info(val, dev, &info);
 }
 EXPORT_SYMBOL(call_netdevice_notifiers);
 

@@ -4192,7 +4192,7 @@ static int qlcnic_netdev_event(struct notifier_block *this,
 				 unsigned long event, void *ptr)
 {
 	struct qlcnic_adapter *adapter;
-	struct net_device *dev = (struct net_device *)ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 
 recheck:
 	if (dev == NULL)
@@ -4308,7 +4308,7 @@ static int __init qlcnic_init_module(void)
 	printk(KERN_INFO "%s\n", qlcnic_driver_string);
 
 #ifdef CONFIG_INET
-	register_netdevice_notifier(&qlcnic_netdev_cb);
+	register_netdevice_notifier_rh(&qlcnic_netdev_cb);
 	register_inetaddr_notifier(&qlcnic_inetaddr_cb);
 #endif
 
@@ -4316,7 +4316,7 @@ static int __init qlcnic_init_module(void)
 	if (ret) {
 #ifdef CONFIG_INET
 		unregister_inetaddr_notifier(&qlcnic_inetaddr_cb);
-		unregister_netdevice_notifier(&qlcnic_netdev_cb);
+		unregister_netdevice_notifier_rh(&qlcnic_netdev_cb);
 #endif
 	}
 
@@ -4331,7 +4331,7 @@ static void __exit qlcnic_exit_module(void)
 
 #ifdef CONFIG_INET
 	unregister_inetaddr_notifier(&qlcnic_inetaddr_cb);
-	unregister_netdevice_notifier(&qlcnic_netdev_cb);
+	unregister_netdevice_notifier_rh(&qlcnic_netdev_cb);
 #endif
 }
 

@@ -1325,7 +1325,7 @@ static int ip6mr_mfc_delete(struct mr6_table *mrt, struct mf6cctl *mfc,
 static int ip6mr_device_event(struct notifier_block *this,
 			      unsigned long event, void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct net *net = dev_net(dev);
 	struct mr6_table *mrt;
 	struct mif_device *v;
@@ -1412,7 +1412,7 @@ int __init ip6_mr_init(void)
 	if (err)
 		goto reg_pernet_fail;
 
-	err = register_netdevice_notifier(&ip6_mr_notifier);
+	err = register_netdevice_notifier_rh(&ip6_mr_notifier);
 	if (err)
 		goto reg_notif_fail;
 #ifdef CONFIG_IPV6_PIMSM_V2
@@ -1427,7 +1427,7 @@ int __init ip6_mr_init(void)
 	return 0;
 #ifdef CONFIG_IPV6_PIMSM_V2
 add_proto_fail:
-	unregister_netdevice_notifier(&ip6_mr_notifier);
+	unregister_netdevice_notifier_rh(&ip6_mr_notifier);
 #endif
 reg_notif_fail:
 	unregister_pernet_subsys(&ip6mr_net_ops);
@@ -1438,7 +1438,7 @@ reg_pernet_fail:
 
 void ip6_mr_cleanup(void)
 {
-	unregister_netdevice_notifier(&ip6_mr_notifier);
+	unregister_netdevice_notifier_rh(&ip6_mr_notifier);
 	unregister_pernet_subsys(&ip6mr_net_ops);
 	kmem_cache_destroy(mrt_cachep);
 }

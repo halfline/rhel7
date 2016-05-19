@@ -52,7 +52,7 @@ static int __init br_init(void)
 	if (err)
 		goto err_out2;
 
-	err = register_netdevice_notifier(&br_device_notifier);
+	err = register_netdevice_notifier_rh(&br_device_notifier);
 	if (err)
 		goto err_out3;
 
@@ -73,7 +73,7 @@ static int __init br_init(void)
 	return 0;
 
 err_out4:
-	unregister_netdevice_notifier(&br_device_notifier);
+	unregister_netdevice_notifier_rh(&br_device_notifier);
 err_out3:
 	br_nf_core_fini();
 err_out2:
@@ -89,7 +89,7 @@ static void __exit br_deinit(void)
 {
 	stp_proto_unregister(&br_stp_proto);
 	br_netlink_fini();
-	unregister_netdevice_notifier(&br_device_notifier);
+	unregister_netdevice_notifier_rh(&br_device_notifier);
 	brioctl_set(NULL);
 	unregister_pernet_subsys(&br_net_ops);
 

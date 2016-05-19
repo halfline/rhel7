@@ -1368,7 +1368,7 @@ EXPORT_SYMBOL_GPL(macvtap_get_socket);
 static int macvtap_device_event(struct notifier_block *unused,
 				unsigned long event, void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct macvlan_dev *vlan;
 	struct device *classdev;
 	dev_t devt;
@@ -1431,7 +1431,7 @@ static int macvtap_init(void)
 		goto out3;
 	}
 
-	err = register_netdevice_notifier(&macvtap_notifier_block);
+	err = register_netdevice_notifier_rh(&macvtap_notifier_block);
 	if (err)
 		goto out4;
 
@@ -1442,7 +1442,7 @@ static int macvtap_init(void)
 	return 0;
 
 out5:
-	unregister_netdevice_notifier(&macvtap_notifier_block);
+	unregister_netdevice_notifier_rh(&macvtap_notifier_block);
 out4:
 	class_unregister(macvtap_class);
 out3:
@@ -1457,7 +1457,7 @@ module_init(macvtap_init);
 static void macvtap_exit(void)
 {
 	rtnl_link_unregister(&macvtap_link_ops);
-	unregister_netdevice_notifier(&macvtap_notifier_block);
+	unregister_netdevice_notifier_rh(&macvtap_notifier_block);
 	class_unregister(macvtap_class);
 	cdev_del(&macvtap_cdev);
 	unregister_chrdev_region(macvtap_major, MACVTAP_NUM_DEVS);

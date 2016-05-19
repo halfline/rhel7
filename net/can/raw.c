@@ -239,9 +239,9 @@ static int raw_enable_allfilters(struct net_device *dev, struct sock *sk)
 }
 
 static int raw_notifier(struct notifier_block *nb,
-			unsigned long msg, void *data)
+			unsigned long msg, void *ptr)
 {
-	struct net_device *dev = (struct net_device *)data;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct raw_sock *ro = container_of(nb, struct raw_sock, notifier);
 	struct sock *sk = &ro->sk;
 
@@ -306,7 +306,7 @@ static int raw_init(struct sock *sk)
 	/* set notifier */
 	ro->notifier.notifier_call = raw_notifier;
 
-	register_netdevice_notifier(&ro->notifier);
+	register_netdevice_notifier_rh(&ro->notifier);
 
 	return 0;
 }
@@ -321,7 +321,7 @@ static int raw_release(struct socket *sock)
 
 	ro = raw_sk(sk);
 
-	unregister_netdevice_notifier(&ro->notifier);
+	unregister_netdevice_notifier_rh(&ro->notifier);
 
 	lock_sock(sk);
 

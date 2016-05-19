@@ -370,7 +370,7 @@ static void dst_ifdown(struct dst_entry *dst, struct net_device *dev,
 static int dst_dev_event(struct notifier_block *this, unsigned long event,
 			 void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct dst_entry *dst, *last = NULL;
 
 	switch (event) {
@@ -406,5 +406,5 @@ static struct notifier_block dst_dev_notifier = {
 
 void __init dst_subsys_init(void)
 {
-	register_netdevice_notifier(&dst_dev_notifier);
+	register_netdevice_notifier_rh(&dst_dev_notifier);
 }

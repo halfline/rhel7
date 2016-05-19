@@ -2921,7 +2921,7 @@ static void vxlan_handle_lowerdev_unregister(struct vxlan_net *vn,
 static int vxlan_lowerdev_event(struct notifier_block *unused,
 				unsigned long event, void *ptr)
 {
-	struct net_device *dev = ptr;
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct vxlan_net *vn = net_generic(dev_net(dev), vxlan_net_id);
 
 	if (event == NETDEV_UNREGISTER)
@@ -2993,7 +2993,7 @@ static int __init vxlan_init_module(void)
 	if (rc)
 		goto out1;
 
-	rc = register_netdevice_notifier(&vxlan_notifier_block);
+	rc = register_netdevice_notifier_rh(&vxlan_notifier_block);
 	if (rc)
 		goto out2;
 
@@ -3003,7 +3003,7 @@ static int __init vxlan_init_module(void)
 
 	return 0;
 out3:
-	unregister_netdevice_notifier(&vxlan_notifier_block);
+	unregister_netdevice_notifier_rh(&vxlan_notifier_block);
 out2:
 	unregister_pernet_subsys(&vxlan_net_ops);
 out1:
@@ -3015,7 +3015,7 @@ late_initcall(vxlan_init_module);
 static void __exit vxlan_cleanup_module(void)
 {
 	rtnl_link_unregister(&vxlan_link_ops);
-	unregister_netdevice_notifier(&vxlan_notifier_block);
+	unregister_netdevice_notifier_rh(&vxlan_notifier_block);
 	destroy_workqueue(vxlan_wq);
 	unregister_pernet_subsys(&vxlan_net_ops);
 	/* rcu_barrier() is called by netns */
