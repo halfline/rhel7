@@ -293,7 +293,8 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
 	}
 	WARN_ON_ONCE(!blk_get_queue(sdev->request_queue));
 	sdev->request_queue->queuedata = sdev;
-	scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
+	scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun ?
+					sdev->host->cmd_per_lun : 1);
 
 	scsi_sysfs_device_initialize(sdev);
 
