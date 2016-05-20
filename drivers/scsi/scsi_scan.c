@@ -256,6 +256,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
 	INIT_LIST_HEAD(&sdev->starved_entry);
 	INIT_LIST_HEAD(&sdev->event_list);
 	spin_lock_init(&sdev->list_lock);
+	spin_lock_init(&sdev->inquiry_lock);
 	INIT_WORK(&sdev->event_work, scsi_evt_thread);
 	INIT_WORK(&sdev->requeue_work, scsi_requeue_run_queue);
 
@@ -1616,6 +1617,9 @@ void scsi_rescan_device(struct device *dev)
 	struct scsi_driver *drv;
 	
 	device_lock(dev);
+
+	scsi_attach_vpd(to_scsi_device(dev));
+
 	if (dev->driver) {
 		drv = to_scsi_driver(dev->driver);
 		if (try_module_get(drv->owner)) {
