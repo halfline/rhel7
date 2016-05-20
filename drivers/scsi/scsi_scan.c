@@ -1607,15 +1607,16 @@ void scsi_rescan_device(struct device *dev)
 {
 	struct scsi_driver *drv;
 	
-	if (!dev->driver)
-		return;
-
-	drv = to_scsi_driver(dev->driver);
-	if (try_module_get(drv->owner)) {
-		if (drv->rescan)
-			drv->rescan(dev);
-		module_put(drv->owner);
+	device_lock(dev);
+	if (dev->driver) {
+		drv = to_scsi_driver(dev->driver);
+		if (try_module_get(drv->owner)) {
+			if (drv->rescan)
+				drv->rescan(dev);
+			module_put(drv->owner);
+		}
 	}
+	device_unlock(dev);
 }
 EXPORT_SYMBOL(scsi_rescan_device);
 
