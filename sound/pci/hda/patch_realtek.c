@@ -5951,12 +5951,6 @@ static int patch_alc269(struct hda_codec *codec)
 #endif
 	spec->shutup = alc269_shutup;
 
-#ifdef CONFIG_PM
-	codec->patch_ops.suspend = alc269_suspend;
-	codec->patch_ops.resume = alc269_resume;
-#endif
-	spec->shutup = alc269_shutup;
-
 	snd_hda_pick_fixup(codec, alc269_fixup_models,
 		       alc269_fixup_tbl, alc269_fixups);
 	snd_hda_pick_pin_fixup(codec, alc269_pin_fixup_tbl, alc269_fixups);
