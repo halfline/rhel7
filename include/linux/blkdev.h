@@ -329,7 +329,7 @@ struct queue_limits {
 	 */
 	unsigned int		xcopy_reserved;
 	RH_KABI_USE(1, unsigned int chunk_sectors)
-	RH_KABI_RESERVE(2)
+	RH_KABI_USE(2, unsigned int max_dev_sectors)
 	RH_KABI_RESERVE(3)
 };
 

@@ -103,7 +103,7 @@ struct scsi_disk {
 	u32		xcopy_reserved;
 
 	RH_KABI_USE(1, u32 max_xfer_blocks)
-	RH_KABI_RESERVE(2)
+	RH_KABI_USE(2, u32 opt_xfer_blocks)
 };
 #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
 
