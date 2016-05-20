@@ -38,18 +38,12 @@ bool acpi_force_hot_remove;
 
 static const char *dummy_hid = "device";
 
-static LIST_HEAD(acpi_bus_id_list);
+LIST_HEAD(acpi_bus_id_list);
 static DEFINE_MUTEX(acpi_scan_lock);
 static LIST_HEAD(acpi_scan_handlers_list);
 DEFINE_MUTEX(acpi_device_lock);
 LIST_HEAD(acpi_wakeup_device_list);
 static DEFINE_MUTEX(acpi_hp_context_lock);
-
-struct acpi_device_bus_id{
-	char bus_id[15];
-	unsigned int instance_no;
-	struct list_head node;
-};
 
 void acpi_scan_lock_acquire(void)
 {
