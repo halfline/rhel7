@@ -46,6 +46,8 @@ enum {
 };
 
 enum {
+	SD_DEF_XFER_BLOCKS = 0xffff,
+	SD_MAX_XFER_BLOCKS = 0xffffffff,
 	SD_MAX_WS10_BLOCKS = 0xffff,
 	SD_MAX_WS16_BLOCKS = 0x7fffff,
 };
@@ -100,7 +102,7 @@ struct scsi_disk {
 	 */
 	u32		xcopy_reserved;
 
-	RH_KABI_RESERVE(1)
+	RH_KABI_USE(1, u32 max_xfer_blocks)
 	RH_KABI_RESERVE(2)
 };
 #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
