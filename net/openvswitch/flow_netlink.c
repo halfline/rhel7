@@ -1605,10 +1605,12 @@ static struct sw_flow_actions *nla_alloc_flow_actions(int size, bool log)
 static void ovs_nla_free_set_action(const struct nlattr *a)
 {
 	const struct nlattr *ovs_key = nla_data(a);
+	struct ovs_tunnel_info *ovs_tun;
 
 	switch (nla_type(ovs_key)) {
 	case OVS_KEY_ATTR_TUNNEL_INFO:
-		/* RHEL-7 does not have lwtunnel */
+		ovs_tun = nla_data(ovs_key);
+		dst_release((struct dst_entry *)ovs_tun->tun_dst);
 		break;
 	}
 }
@@ -1839,7 +1841,9 @@ static int validate_and_copy_set_tun(const struct nlattr *attr,
 {
 	struct sw_flow_match match;
 	struct sw_flow_key key;
+	struct metadata_dst *tun_dst;
 	struct ip_tunnel_info *tun_info;
+	struct ovs_tunnel_info *ovs_tun;
 	struct nlattr *a;
 	int err = 0, start, opts_type;
 
@@ -1864,12 +1868,22 @@ static int validate_and_copy_set_tun(const struct nlattr *attr,
 	if (start < 0)
 		return start;
 
-	a = __add_action(sfa, OVS_KEY_ATTR_TUNNEL_INFO, NULL,
-			 sizeof(*tun_info) + key.tun_opts_len, log);
-	if (IS_ERR(a))
-		return PTR_ERR(a);
+	tun_dst = metadata_dst_alloc(key.tun_opts_len, GFP_KERNEL);
+	if (!tun_dst)
+		return -ENOMEM;
 
-	tun_info = nla_data(a);
+	a = __add_action(sfa, OVS_KEY_ATTR_TUNNEL_INFO, NULL,
+			 sizeof(*ovs_tun), log);
+	if (IS_ERR(a)) {
+		dst_release((struct dst_entry *)tun_dst);
+		return PTR_ERR(a);
+	}
+
+	ovs_tun = nla_data(a);
+	ovs_tun->tun_dst = tun_dst;
+
+	tun_info = &tun_dst->u.tun_info;
+	tun_info->mode = IP_TUNNEL_INFO_TX;
 	tun_info->key = key.tun_key;
 	tun_info->options_len = key.tun_opts_len;
 
@@ -2331,7 +2345,8 @@ static int set_action_to_attr(const struct nlattr *a, struct sk_buff *skb)
 
 	switch (key_type) {
 	case OVS_KEY_ATTR_TUNNEL_INFO: {
-		struct ip_tunnel_info *tun_info = nla_data(ovs_key);
+		struct ovs_tunnel_info *ovs_tun = nla_data(ovs_key);
+		struct ip_tunnel_info *tun_info = &ovs_tun->tun_dst->u.tun_info;
 
 		start = nla_nest_start(skb, OVS_ACTION_ATTR_SET);
 		if (!start)
