@@ -70,6 +70,7 @@ struct device_node {
 	struct of_irq_controller *irq_trans;
 #endif
 	RH_KABI_EXTEND(struct	kobject kobj)
+	RH_KABI_EXTEND(struct   fwnode_handle fwnode)
 };
 
 #define MAX_PHANDLE_ARGS 8
@@ -86,6 +87,7 @@ extern struct kobj_type of_node_ktype;
 static inline void of_node_init(struct device_node *node)
 {
 	kobject_init(&node->kobj, &of_node_ktype);
+	node->fwnode.type = FWNODE_OF;
 }
 
 /* true when node is initialized */
@@ -119,6 +121,16 @@ extern struct device_node *of_allnodes;
 extern struct device_node *of_chosen;
 extern struct device_node *of_aliases;
 extern raw_spinlock_t devtree_lock;
+
+static inline bool is_of_node(struct fwnode_handle *fwnode)
+{
+	return fwnode && fwnode->type == FWNODE_OF;
+}
+
+static inline struct device_node *of_node(struct fwnode_handle *fwnode)
+{
+	return fwnode ? container_of(fwnode, struct device_node, fwnode) : NULL;
+}
 
 static inline bool of_have_populated_dt(void)
 {
@@ -337,6 +349,16 @@ const char *of_prop_next_string(struct property *prop, const char *cur);
 		s = of_prop_next_string(prop, s))
 
 #else /* CONFIG_OF */
+
+static inline bool is_of_node(struct fwnode_handle *fwnode)
+{
+	return false;
+}
+
+static inline struct device_node *of_node(struct fwnode_handle *fwnode)
+{
+	return NULL;
+}
 
 static inline const char* of_node_full_name(struct device_node *np)
 {
