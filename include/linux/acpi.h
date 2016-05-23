@@ -62,6 +62,11 @@ static inline void acpi_preset_companion(struct device *dev,
 	ACPI_COMPANION_SET(dev, acpi_find_child_device(parent, addr, NULL));
 }
 
+static inline const char *acpi_dev_name(struct acpi_device *adev)
+{
+	return dev_name(&adev->dev);
+}
+
 enum acpi_irq_model_id {
 	ACPI_IRQ_MODEL_PIC = 0,
 	ACPI_IRQ_MODEL_IOAPIC,
@@ -459,6 +464,11 @@ static inline struct acpi_device *acpi_node(struct fwnode_handle *fwnode)
 }
 
 static inline struct fwnode_handle *acpi_fwnode_handle(struct acpi_device *adev)
+{
+	return NULL;
+}
+
+static inline const char *acpi_dev_name(struct acpi_device *adev)
 {
 	return NULL;
 }
