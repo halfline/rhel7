@@ -805,6 +805,9 @@ struct tc_to_netdev {
 };
 
 
+struct net_device_ops_extended {
+};
+
 /*
  * This structure defines the management hooks for network devices.
  * The following hooks can be defined; unless noted otherwise, they are
@@ -1286,8 +1289,24 @@ struct net_device_ops {
 						       sa_family_t sa_family,
 						       __be16 port))
 	RH_KABI_RESERVE_P(15)
-	RH_KABI_RESERVE_P(16)
+	RH_KABI_USE_P(16, size_t ndo_size)
+	/* RHEL: put all new non-performance critical ndo's into
+	 * net_device_ops_extended. The reserved slots above can be used
+	 * only for performance critical operations.
+	 * Drivers may access the extended fields directly from
+	 * net_device_ops, if they allocated the net_device_ops structure
+	 * themselves (usually statically). The kernel core and drivers
+	 * using others' net_device_ops must access the extended fields
+	 * using the get_ndo_ext macro.
+	 */
+	RH_KABI_EXTEND(struct net_device_ops_extended extended)
 };
+
+#define get_ndo_ext(ops, field)		({				\
+	const struct net_device_ops *__ops = (ops);			\
+	size_t __off = offsetof(struct net_device_ops, extended.field);	\
+	__ops->ndo_size > __off ? __ops->extended.field : NULL;		\
+	})
 
 /**
  * enum net_device_priv_flags - &struct net_device priv_flags
