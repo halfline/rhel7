@@ -923,8 +923,8 @@ static ssize_t set_tx_maxrate(struct netdev_queue *queue,
 		return restart_syscall();
 
 	err = -EOPNOTSUPP;
-	if (dev->netdev_ops->ndo_set_tx_maxrate)
-		err = dev->netdev_ops->ndo_set_tx_maxrate(dev, index, rate);
+	if (get_ndo_ext(dev->netdev_ops, ndo_set_tx_maxrate))
+		err = get_ndo_ext(dev->netdev_ops, ndo_set_tx_maxrate)(dev, index, rate);
 
 	rtnl_unlock();
 	if (!err) {

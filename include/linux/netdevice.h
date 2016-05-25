@@ -805,7 +805,20 @@ struct tc_to_netdev {
 };
 
 
+/* This structure defines the management hooks for network devices.
+ * It is an extension of net_device_ops. Drivers that want to use any of the
+ * fields defined here must initialize net_device_ops->ndo_size to
+ * sizeof(struct net_device_ops).
+ *
+ * int (*ndo_set_tx_maxrate)(struct net_device *dev,
+ *			     int queue_index, u32 maxrate);
+ *	Called when a user wants to set a max-rate limitation of specific
+ *	TX queue.
+ */
 struct net_device_ops_extended {
+	int			(*ndo_set_tx_maxrate)(struct net_device *dev,
+						      int queue_index,
+						      u32 maxrate);
 };
 
 /*
@@ -1066,11 +1079,6 @@ struct net_device_ops_extended {
  *	the set of features that the stack has calculated and it returns
  *	those the driver believes to be appropriate.
  *
- * int (*ndo_set_tx_maxrate)(struct net_device *dev,
- *			     int queue_index, u32 maxrate);
- *	Called when a user wants to set a max-rate limitation of specific
- *	TX queue.
- *
  * void* (*ndo_dfwd_add_station)(struct net_device *pdev,
  *				 struct net_device *dev)
  *	Called by upper layer devices to accelerate switching or other
@@ -1259,9 +1267,7 @@ struct net_device_ops {
 	RH_KABI_USE_P(5, int    (*ndo_set_vf_rss_query_en)(struct net_device *dev,
 							   int vf, bool setting))
 
-	RH_KABI_USE_P(6, int	(*ndo_set_tx_maxrate)(struct net_device *dev,
-						      int queue_index,
-						      u32 maxrate))
+	RH_KABI_RESERVE_P(6)
 	RH_KABI_USE_P(7, void*	(*ndo_dfwd_add_station)(struct net_device *pdev,
 							struct net_device *dev))
 	RH_KABI_USE_P(8, void	(*ndo_dfwd_del_station)(struct net_device *pdev,
