@@ -1272,28 +1272,28 @@ struct net_device_ops {
 	RH_KABI_USE_P(5, int    (*ndo_set_vf_rss_query_en)(struct net_device *dev,
 							   int vf, bool setting))
 
-	RH_KABI_RESERVE_P(6)
-	RH_KABI_RESERVE_P(7)
-	RH_KABI_RESERVE_P(8)
-	RH_KABI_USE_P(9, int	(*ndo_fdb_add)(struct ndmsg *ndm,
+	RH_KABI_USE_P(6, int	(*ndo_fdb_add)(struct ndmsg *ndm,
 					       struct nlattr *tb[],
 					       struct net_device *dev,
 					       const unsigned char *addr,
 					       u16 vid,
 					       u16 flags))
-	RH_KABI_USE_P(10,int	(*ndo_setup_tc)(struct net_device *dev,
+	RH_KABI_USE_P(7,int	(*ndo_setup_tc)(struct net_device *dev,
 						u32 handle,
 						__be16 protocol,
 						struct tc_to_netdev *tc))
-	RH_KABI_RESERVE_P(11)
-	RH_KABI_USE_P(12, int	(*ndo_fill_metadata_dst)(struct net_device *dev,
+	RH_KABI_USE_P(8, int	(*ndo_fill_metadata_dst)(struct net_device *dev,
 						       struct sk_buff *skb))
-	RH_KABI_USE_P(13, void	(*ndo_add_geneve_port)(struct  net_device *dev,
+	RH_KABI_USE_P(9, void	(*ndo_add_geneve_port)(struct  net_device *dev,
 						       sa_family_t sa_family,
 						       __be16 port))
-	RH_KABI_USE_P(14, void	(*ndo_del_geneve_port)(struct  net_device *dev,
+	RH_KABI_USE_P(10, void	(*ndo_del_geneve_port)(struct  net_device *dev,
 						       sa_family_t sa_family,
 						       __be16 port))
+	RH_KABI_RESERVE_P(11)
+	RH_KABI_RESERVE_P(12)
+	RH_KABI_RESERVE_P(13)
+	RH_KABI_RESERVE_P(14)
 	RH_KABI_RESERVE_P(15)
 	RH_KABI_USE_P(16, size_t ndo_size)
 	/* RHEL: put all new non-performance critical ndo's into
