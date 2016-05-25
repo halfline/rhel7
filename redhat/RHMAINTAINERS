@@ -347,7 +347,8 @@ F:	drivers/crypto/qat/*
 
 KERNEL-BASED VIRTUAL MACHINE (kvm)
 M:	Paolo Bonzini <pbonzini@redhat.com>
-M:	Marcelo Tosatti <mtosatti@redhat.com>
+M:	Radim Krcmar <rkrcmar@redhat.com>
+M:	Bandan Das <bsd@redhat.com>
 L:	rhvirt-patches@redhat.com
 S:	Maintained
 F:	arch/x86/include/asm/kvm*.h
