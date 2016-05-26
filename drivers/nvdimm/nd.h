@@ -98,7 +98,7 @@ struct nd_region {
 	u16 ndr_mappings;
 	u64 ndr_size;
 	u64 ndr_start;
-	int id, num_lanes;
+	int id, num_lanes, ro;
 	void *provider_data;
 	struct nd_interleave_set *nd_set;
 	struct nd_percpu_lane __percpu *lane;
@@ -190,6 +190,7 @@ u64 nd_region_interleave_set_cookie(struct nd_region *nd_region);
 void nvdimm_bus_lock(struct device *dev);
 void nvdimm_bus_unlock(struct device *dev);
 bool is_nvdimm_bus_locked(struct device *dev);
+int nvdimm_revalidate_disk(struct gendisk *disk);
 void nvdimm_drvdata_release(struct kref *kref);
 void put_ndd(struct nvdimm_drvdata *ndd);
 int nd_label_reserve_dpa(struct nvdimm_drvdata *ndd);
