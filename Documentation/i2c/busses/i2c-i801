@@ -26,6 +26,7 @@ Supported adapters:
   * Intel Wellsburg (PCH)
   * Intel Coleto Creek (PCH)
   * Intel Wildcat Point-LP (PCH)
+  * Intel BayTrail (SOC)
   * Intel Sunrise Point-H (PCH)
   * Intel Sunrise Point-LP (PCH)
   * Intel Lewisburg (PCH)
