@@ -60,29 +60,17 @@ static void pmem_make_request(struct request_queue *q, struct bio *bio)
 {
 	struct block_device *bdev = bio->bi_bdev;
 	struct pmem_device *pmem = bdev->bd_disk->private_data;
-	int rw;
 	struct bio_vec *bvec;
 	sector_t sector;
 	int i;
-	int err = 0;
 
-	if (bio_end_sector(bio) > get_capacity(bdev->bd_disk)) {
-		err = -EIO;
-		goto out;
-	}
-
-	BUG_ON(bio->bi_rw & REQ_DISCARD);
-
-	rw = bio_data_dir(bio);
 	sector = bio->bi_sector;
 	bio_for_each_segment(bvec, bio, i) {
 		pmem_do_bvec(pmem, bvec->bv_page, bvec->bv_len, bvec->bv_offset,
-			     rw, sector);
+			     bio_data_dir(bio), sector);
 		sector += bvec->bv_len >> 9;
 	}
-
-out:
-	bio_endio(bio, err);
+	bio_endio(bio, 0);
 }
 
 static int pmem_rw_page(struct block_device *bdev, sector_t sector,
