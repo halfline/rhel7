@@ -13,6 +13,7 @@
 #include <linux/libnvdimm.h>
 #include <linux/export.h>
 #include <linux/module.h>
+#include <linux/blkdev.h>
 #include <linux/device.h>
 #include <linux/ctype.h>
 #include <linux/ndctl.h>
@@ -360,6 +361,46 @@ void nvdimm_bus_unregister(struct nvdimm_bus *nvdimm_bus)
 	device_unregister(&nvdimm_bus->dev);
 }
 EXPORT_SYMBOL_GPL(nvdimm_bus_unregister);
+
+#ifdef CONFIG_BLK_DEV_INTEGRITY
+static void nd_pi_nop_generate(struct blk_integrity_exchg *bix)
+{
+	return;
+}
+static int nd_pi_nop_verify(struct blk_integrity_exchg *bix)
+{
+	return 0;
+}
+
+int nd_integrity_init(struct gendisk *disk, unsigned long meta_size)
+{
+	struct blk_integrity integrity = {
+		.name = "ND-PI-NOP",
+		.generate_fn = nd_pi_nop_generate,
+		.verify_fn = nd_pi_nop_verify,
+		.tuple_size = meta_size,
+		.tag_size = meta_size,
+	};
+	int ret;
+
+	ret = blk_integrity_register(disk, &integrity);
+	if (ret)
+		return ret;
+
+	blk_queue_max_integrity_segments(disk->queue, 1);
+
+	return 0;
+}
+EXPORT_SYMBOL(nd_integrity_init);
+
+#else /* CONFIG_BLK_DEV_INTEGRITY */
+int nd_integrity_init(struct gendisk *disk, unsigned long meta_size)
+{
+	return 0;
+}
+EXPORT_SYMBOL(nd_integrity_init);
+
+#endif
 
 static __init int libnvdimm_init(void)
 {
