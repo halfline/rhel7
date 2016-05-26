@@ -383,6 +383,9 @@ int nd_integrity_init(struct gendisk *disk, unsigned long meta_size)
 	};
 	int ret;
 
+	if (meta_size == 0)
+		return 0;
+
 	ret = blk_integrity_register(disk, &integrity);
 	if (ret)
 		return ret;
