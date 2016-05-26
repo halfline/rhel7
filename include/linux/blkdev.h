@@ -1667,7 +1667,8 @@ struct block_device_operations {
 	RH_KABI_REPLACE(void *rh_reserved_ptrs1, const struct pr_ops *pr_ops)
 
 	/* future placeholders for nvdimm */
-	void *rh_reserved_ptrs2;
+	RH_KABI_REPLACE(void *rh_reserved_ptrs2,
+		int (*rw_page)(struct block_device *, sector_t, struct page *, int rw))
 	void *rh_reserved_ptrs3;
 	void *rh_reserved_ptrs4;
 	void *rh_reserved_ptrs5;
@@ -1677,6 +1678,9 @@ struct block_device_operations {
 
 extern int __blkdev_driver_ioctl(struct block_device *, fmode_t, unsigned int,
 				 unsigned long);
+extern int bdev_read_page(struct block_device *, sector_t, struct page *);
+extern int bdev_write_page(struct block_device *, sector_t, struct page *,
+						struct writeback_control *);
 #else /* CONFIG_BLOCK */
 /*
  * stubs for when the block layer is configured out
