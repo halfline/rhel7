@@ -169,7 +169,7 @@ config INTEL_POWERCLAMP
 	  user interface is exposed via generic thermal framework.
 
 config INT340X_THERMAL
-	bool
+	tristate "ACPI INT340X thermal drivers"
 	depends on X86 && ACPI
 	help
 	  Newer laptops and tablets that use ACPI may have thermal sensors and
