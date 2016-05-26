@@ -1821,7 +1821,7 @@ struct super_operations {
 #define S_NOSEC		4096	/* no suid or xattr security attributes */
 #define S_IOPS_WRAPPER	8192	/* i_op points to struct inode_operations_wrapper */
 
-#ifdef CONFIG_FS_XIP
+#ifdef CONFIG_FS_DAX
 #define S_DAX		16384	/* Direct Access, avoiding the page cache */
 #else
 #define S_DAX		0	/* Make all the DAX code disappear */
