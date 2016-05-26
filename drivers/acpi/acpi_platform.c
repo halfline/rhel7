@@ -131,3 +131,4 @@ void __init acpi_platform_init(void)
 {
 	acpi_scan_add_handler(&platform_handler);
 }
+EXPORT_SYMBOL_GPL(acpi_create_platform_device);

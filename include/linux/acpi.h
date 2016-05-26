@@ -434,6 +434,7 @@ static inline bool acpi_driver_match_device(struct device *dev,
 	return !!acpi_match_device(drv->acpi_match_table, dev);
 }
 
+struct platform_device *acpi_create_platform_device(struct acpi_device *);
 #define ACPI_PTR(_ptr)	(_ptr)
 
 #else	/* !CONFIG_ACPI */
