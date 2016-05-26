@@ -225,6 +225,9 @@ struct vm_fault {
 					 * is set (which is also implied by
 					 * VM_FAULT_ERROR).
 					 */
+#ifndef __GENKSYMS__
+	struct page *cow_page;		/* Handler may choose to COW */
+#endif
 };
 
 /*
