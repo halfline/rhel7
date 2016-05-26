@@ -79,6 +79,7 @@ static struct lpss_device_desc lpss_dma_desc = {
 struct lpss_private_data {
 	void __iomem *mmio_base;
 	resource_size_t mmio_size;
+	unsigned int fixed_clk_rate;
 	struct clk *clk;
 	const struct lpss_device_desc *dev_desc;
 	u32 prv_reg_ctx[LPSS_PRV_REG_COUNT];
@@ -106,7 +107,7 @@ static void lpss_uart_setup(struct lpss_private_data *pdata)
 	}
 }
 
-static void lpss_i2c_setup(struct lpss_private_data *pdata)
+static void byt_i2c_setup(struct lpss_private_data *pdata)
 {
 	unsigned int offset;
 	u32 val;
@@ -115,6 +116,9 @@ static void lpss_i2c_setup(struct lpss_private_data *pdata)
 	val = readl(pdata->mmio_base + offset);
 	val |= LPSS_RESETS_RESET_APB | LPSS_RESETS_RESET_FUNC;
 	writel(val, pdata->mmio_base + offset);
+
+	if (readl(pdata->mmio_base + pdata->dev_desc->prv_offset))
+		pdata->fixed_clk_rate = 133000000;
 }
 
 static struct lpss_device_desc lpt_dev_desc = {
@@ -163,7 +167,7 @@ static struct lpss_device_desc byt_sdio_dev_desc = {
 static struct lpss_device_desc byt_i2c_dev_desc = {
 	.flags = LPSS_CLK | LPSS_SAVE_CTX,
 	.prv_offset = 0x800,
-	.setup = lpss_i2c_setup,
+	.setup = byt_i2c_setup,
 };
 
 #else
@@ -243,6 +247,12 @@ static int register_device_clock(struct acpi_device *adev,
 	parent = clk_data->name;
 	prv_base = pdata->mmio_base + dev_desc->prv_offset;
 
+	if (pdata->fixed_clk_rate) {
+		clk = clk_register_fixed_rate(NULL, devname, parent, 0,
+					      pdata->fixed_clk_rate);
+		goto out;
+	}
+
 	if (dev_desc->flags & LPSS_CLK_GATE) {
 		clk = clk_register_gate(NULL, devname, parent, 0,
 					prv_base, 0, 0, NULL);
@@ -273,7 +283,7 @@ static int register_device_clock(struct acpi_device *adev,
 		kfree(parent);
 		kfree(clk_name);
 	}
-
+out:
 	if (IS_ERR(clk))
 		return PTR_ERR(clk);
 
@@ -326,6 +336,9 @@ static int acpi_lpss_create_device(struct acpi_device *adev,
 
 	pdata->dev_desc = dev_desc;
 
+	if (dev_desc->setup)
+		dev_desc->setup(pdata);
+
 	if (dev_desc->flags & LPSS_CLK) {
 		ret = register_device_clock(adev, pdata);
 		if (ret) {
@@ -346,9 +359,6 @@ static int acpi_lpss_create_device(struct acpi_device *adev,
 		ret = 0;
 		goto err_out;
 	}
-
-	if (dev_desc->setup)
-		dev_desc->setup(pdata);
 
 	adev->driver_data = pdata;
 	pdev = acpi_create_platform_device(adev);
