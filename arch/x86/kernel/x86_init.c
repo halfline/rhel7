@@ -118,6 +118,7 @@ struct x86_msi_ops x86_msi = {
 	.msi_mask_irq		= default_msi_mask_irq,
 	.msix_mask_irq		= default_msix_mask_irq,
 };
+EXPORT_SYMBOL_GPL(x86_msi);
 
 /* MSI arch specific hooks */
 int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
