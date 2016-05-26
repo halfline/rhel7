@@ -673,6 +673,9 @@ struct net_device_context {
 	/* Ethtool settings */
 	u8 duplex;
 	u32 speed;
+
+	/* the device is going away */
+	bool start_remove;
 };
 
 /* Per netvsc device */
@@ -683,7 +686,6 @@ struct netvsc_device {
 
 	atomic_t num_outstanding_sends;
 	wait_queue_head_t wait_drain;
-	bool start_remove;
 	bool destroy;
 
 	/* Receive buffer allocated by us but manages by NetVSP */
