@@ -556,8 +556,10 @@ struct hwmon_attr {
 };
 
 struct hwmon_buff {
-	struct device *device;
-	struct hwmon_attr *hwmon_list;
+	struct attribute_group group;
+	const struct attribute_group *groups[2];
+	struct attribute *attrs[IXGBE_MAX_SENSORS * 4 + 1];
+	struct hwmon_attr hwmon_list[IXGBE_MAX_SENSORS * 4];
 	unsigned int n_hwmon;
 };
 #endif /* CONFIG_IXGBE_HWMON */
@@ -789,7 +791,7 @@ struct ixgbe_adapter {
 	struct ixgbe_mac_addr *mac_table;
 	struct kobject *info_kobj;
 #ifdef CONFIG_IXGBE_HWMON
-	struct hwmon_buff ixgbe_hwmon_buff;
+	struct hwmon_buff *ixgbe_hwmon_buff;
 #endif /* CONFIG_IXGBE_HWMON */
 #ifdef CONFIG_DEBUG_FS
 	struct dentry *ixgbe_dbg_adapter;
