@@ -337,7 +337,7 @@ struct vm_area_struct {
 
 	/* reserved for Red Hat */
 	RH_KABI_USE(1, struct vm_userfaultfd_ctx vm_userfaultfd_ctx)
-	RH_KABI_RESERVE(2)
+	RH_KABI_USE(2, unsigned long vm_flags2) /* Flags, see mm.h. */
 	RH_KABI_RESERVE(3)
 	RH_KABI_RESERVE(4)
 };

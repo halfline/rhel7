@@ -233,6 +233,7 @@ static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
 	if (IS_DAX(file_inode(file))) {
 		vma->vm_ops = &ext4_dax_vm_ops;
 		vma->vm_flags |= VM_MIXEDMAP;
+		vma->vm_flags2 |= VM_PFN_MKWRITE;
 	} else {
 		vma->vm_ops = &ext4_file_vm_ops;
 	}

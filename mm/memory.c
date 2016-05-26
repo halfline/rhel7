@@ -3033,7 +3033,7 @@ static int wp_pfn_shared(struct mm_struct *mm,
 			pte_t *page_table, spinlock_t *ptl, pte_t orig_pte,
 			pmd_t *pmd)
 {
-	if (vma->vm_ops && vma->vm_ops->pfn_mkwrite) {
+	if (vma->vm_ops && (vma->vm_flags2 & VM_PFN_MKWRITE) && vma->vm_ops->pfn_mkwrite) {
 		struct vm_fault vmf = {
 			.page = NULL,
 			.pgoff = linear_page_index(vma, address),
