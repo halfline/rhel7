@@ -136,7 +136,8 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 		unsigned len, fail = 0;
 		if (pos == max) {
 			unsigned blkbits = inode->i_blkbits;
-			sector_t block = pos >> blkbits;
+			long page = pos >> PAGE_SHIFT;
+			sector_t block = page << (PAGE_SHIFT - blkbits);
 			unsigned first = pos - (block << blkbits);
 			long size;
 
