@@ -937,9 +937,7 @@ const struct file_operations cifs_file_ops = {
 	.mmap  = cifs_file_mmap,
 	.splice_read = generic_file_splice_read,
 	.llseek = cifs_llseek,
-#ifdef CONFIG_CIFS_POSIX
 	.unlocked_ioctl	= cifs_ioctl,
-#endif /* CONFIG_CIFS_POSIX */
 	.setlease = cifs_setlease,
 	.fallocate = cifs_fallocate,
 };
@@ -957,9 +955,7 @@ const struct file_operations cifs_file_strict_ops = {
 	.mmap = cifs_file_strict_mmap,
 	.splice_read = generic_file_splice_read,
 	.llseek = cifs_llseek,
-#ifdef CONFIG_CIFS_POSIX
 	.unlocked_ioctl	= cifs_ioctl,
-#endif /* CONFIG_CIFS_POSIX */
 	.setlease = cifs_setlease,
 	.fallocate = cifs_fallocate,
 };
@@ -977,9 +973,7 @@ const struct file_operations cifs_file_direct_ops = {
 	.flush = cifs_flush,
 	.mmap = cifs_file_mmap,
 	.splice_read = generic_file_splice_read,
-#ifdef CONFIG_CIFS_POSIX
 	.unlocked_ioctl  = cifs_ioctl,
-#endif /* CONFIG_CIFS_POSIX */
 	.llseek = cifs_llseek,
 	.setlease = cifs_setlease,
 	.fallocate = cifs_fallocate,
@@ -997,9 +991,7 @@ const struct file_operations cifs_file_nobrl_ops = {
 	.mmap  = cifs_file_mmap,
 	.splice_read = generic_file_splice_read,
 	.llseek = cifs_llseek,
-#ifdef CONFIG_CIFS_POSIX
 	.unlocked_ioctl	= cifs_ioctl,
-#endif /* CONFIG_CIFS_POSIX */
 	.setlease = cifs_setlease,
 	.fallocate = cifs_fallocate,
 };
@@ -1016,9 +1008,7 @@ const struct file_operations cifs_file_strict_nobrl_ops = {
 	.mmap = cifs_file_strict_mmap,
 	.splice_read = generic_file_splice_read,
 	.llseek = cifs_llseek,
-#ifdef CONFIG_CIFS_POSIX
 	.unlocked_ioctl	= cifs_ioctl,
-#endif /* CONFIG_CIFS_POSIX */
 	.setlease = cifs_setlease,
 	.fallocate = cifs_fallocate,
 };
@@ -1035,9 +1025,7 @@ const struct file_operations cifs_file_direct_nobrl_ops = {
 	.flush = cifs_flush,
 	.mmap = cifs_file_mmap,
 	.splice_read = generic_file_splice_read,
-#ifdef CONFIG_CIFS_POSIX
 	.unlocked_ioctl  = cifs_ioctl,
-#endif /* CONFIG_CIFS_POSIX */
 	.llseek = cifs_llseek,
 	.setlease = cifs_setlease,
 	.fallocate = cifs_fallocate,
