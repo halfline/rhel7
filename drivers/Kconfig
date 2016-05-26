@@ -172,4 +172,6 @@ source "drivers/reset/Kconfig"
 
 source "drivers/ras/Kconfig"
 
+source "drivers/nvdimm/Kconfig"
+
 endmenu
