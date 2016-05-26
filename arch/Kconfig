@@ -432,6 +432,9 @@ config HAVE_ARCH_TRANSPARENT_HUGEPAGE
 config HAVE_ARCH_SOFT_DIRTY
 	bool
 
+config HAVE_ARCH_HUGE_VMAP
+	bool
+
 config HAVE_MOD_ARCH_SPECIFIC
 	bool
 	help
