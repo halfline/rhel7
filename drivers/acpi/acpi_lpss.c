@@ -140,6 +140,10 @@ static struct lpss_device_desc lpt_sdio_dev_desc = {
 	.prv_size_override = 0x1018,
 };
 
+static struct lpss_device_desc byt_pwm_dev_desc = {
+	.flags = LPSS_SAVE_CTX,
+};
+
 static struct lpss_device_desc byt_uart_dev_desc = {
 	.flags = LPSS_CLK | LPSS_CLK_GATE | LPSS_CLK_DIVIDER | LPSS_SAVE_CTX,
 	.clk_con_id = "baudclk",
@@ -184,6 +188,7 @@ static const struct acpi_device_id acpi_lpss_device_ids[] = {
 	{ "INT33C7", },
 
 	/* BayTrail LPSS devices */
+	{ "80860F09", LPSS_ADDR(byt_pwm_dev_desc) },
 	{ "80860F0A", LPSS_ADDR(byt_uart_dev_desc) },
 	{ "80860F0E", LPSS_ADDR(byt_spi_dev_desc) },
 	{ "80860F14", LPSS_ADDR(byt_sdio_dev_desc) },
