@@ -309,6 +309,9 @@ extern void cred_to_ucred(struct pid *pid, const struct cred *cred, struct ucred
 
 extern int memcpy_fromiovecend(unsigned char *kdata, const struct iovec *iov,
 			       int offset, int len);
+extern int memcpy_fromiovecend_nocache(unsigned char *kdata,
+				       const struct iovec *iov,
+				       int offset, int len);
 extern int csum_partial_copy_fromiovecend(unsigned char *kdata, 
 					  struct iovec *iov, 
 					  int offset, 
