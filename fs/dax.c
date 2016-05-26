@@ -180,7 +180,7 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 			break;
 
 		if (rw == WRITE) {
-			if (memcpy_fromiovecend(addr, iov, pos - start, max - pos))
+			if (memcpy_fromiovecend_nocache(addr, iov, pos - start, max - pos))
 				fail = 1;
 		} else if (!hole) {
 			if (memcpy_toiovecend(iov, addr, pos - start, max - pos))
