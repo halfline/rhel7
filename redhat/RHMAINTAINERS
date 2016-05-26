@@ -380,6 +380,7 @@ F:	drivers/hid/hid-hyperv.c
 F:	drivers/hv/
 F:	drivers/input/serio/hyperv-keyboard.c
 F:	drivers/net/hyperv/
+F:	drivers/pci/pci-hyperv.c
 F:	drivers/scsi/storvsc_drv.c
 F:	drivers/video/hyperv_fb.c
 F:	include/linux/hyperv.h
