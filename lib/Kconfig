@@ -465,4 +465,7 @@ config OID_REGISTRY
 config UCS2_STRING
         tristate
 
+config ARCH_HAS_PMEM_API
+	bool
+
 endmenu
