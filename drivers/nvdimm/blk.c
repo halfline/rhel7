@@ -164,8 +164,10 @@ static void nd_blk_make_request(struct request_queue *q, struct bio *bio)
 	struct bio_integrity_payload *bip;
 	struct nd_blk_device *blk_dev;
 	struct bio_vec *bvec;
+	unsigned long start;
 	sector_t sector = bio->bi_sector;
 	int err = 0, rw, i;
+	bool do_acct;
 
 	/*
 	 * bio_integrity_enabled also checks if the bio already has an
@@ -181,6 +183,7 @@ static void nd_blk_make_request(struct request_queue *q, struct bio *bio)
 	bip = bio->bi_integrity;
 	blk_dev = disk->private_data;
 	rw = bio_data_dir(bio);
+	do_acct = nd_iostat_start(bio, &start);
 	bio_for_each_segment(bvec, bio, i) {
 		unsigned int len = bvec->bv_len;
 
@@ -192,10 +195,12 @@ static void nd_blk_make_request(struct request_queue *q, struct bio *bio)
 					"io error in %s sector %lld, len %d,\n",
 					(rw == READ) ? "READ" : "WRITE",
 					(unsigned long long) sector, len);
-			goto out;
+			break;
 		}
 		sector += len >> SECTOR_SHIFT;
 	}
+	if (do_acct)
+		nd_iostat_end(bio, start);
 
  out:
 	bio_endio(bio, err);

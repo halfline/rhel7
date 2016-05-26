@@ -58,18 +58,23 @@ static void pmem_do_bvec(struct pmem_device *pmem, struct page *page,
 
 static void pmem_make_request(struct request_queue *q, struct bio *bio)
 {
+	bool do_acct;
+	unsigned long start;
 	struct block_device *bdev = bio->bi_bdev;
 	struct pmem_device *pmem = bdev->bd_disk->private_data;
 	struct bio_vec *bvec;
 	sector_t sector;
 	int i;
 
+	do_acct = nd_iostat_start(bio, &start);
 	sector = bio->bi_sector;
 	bio_for_each_segment(bvec, bio, i) {
 		pmem_do_bvec(pmem, bvec->bv_page, bvec->bv_len, bvec->bv_offset,
 			     bio_data_dir(bio), sector);
 		sector += bvec->bv_len >> 9;
 	}
+	if (do_acct)
+		nd_iostat_end(bio, start);
 	bio_endio(bio, 0);
 }
 
