@@ -45,6 +45,7 @@ config THERMAL_DEFAULT_GOV_FAIR_SHARE
 config THERMAL_DEFAULT_GOV_USER_SPACE
 	bool "user_space"
 	select THERMAL_GOV_USER_SPACE
+	select ACPI_THERMAL_REL
 	help
 	  Select this if you want to let the user space manage the
 	  lpatform thermals.
@@ -184,5 +185,9 @@ config INT340X_THERMAL
 	  decisions. For example, the Intel Thermal Daemon can use this
 	  information to allow the user to select his laptop to run without
 	  turning on the fans.
+
+config ACPI_THERMAL_REL
+	tristate
+	depends on ACPI
 
 endif
