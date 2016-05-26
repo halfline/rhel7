@@ -71,7 +71,7 @@ static void do_set_multicast(struct work_struct *w)
 	struct netvsc_device *nvdev;
 	struct rndis_device *rdev;
 
-	nvdev = hv_get_drvdata(ndevctx->device_ctx);
+	nvdev = ndevctx->nvdev;
 	if (nvdev == NULL || nvdev->ndev == NULL)
 		return;
 
@@ -100,7 +100,7 @@ static int netvsc_open(struct net_device *net)
 {
 	struct net_device_context *net_device_ctx = netdev_priv(net);
 	struct hv_device *device_obj = net_device_ctx->device_ctx;
-	struct netvsc_device *nvdev;
+	struct netvsc_device *nvdev = net_device_ctx->nvdev;
 	struct rndis_device *rdev;
 	int ret = 0;
 
@@ -115,7 +115,6 @@ static int netvsc_open(struct net_device *net)
 
 	netif_tx_wake_all_queues(net);
 
-	nvdev = hv_get_drvdata(device_obj);
 	rdev = nvdev->extension;
 	if (!rdev->link_state)
 		netif_carrier_on(net);
@@ -127,7 +126,7 @@ static int netvsc_close(struct net_device *net)
 {
 	struct net_device_context *net_device_ctx = netdev_priv(net);
 	struct hv_device *device_obj = net_device_ctx->device_ctx;
-	struct netvsc_device *nvdev = hv_get_drvdata(device_obj);
+	struct netvsc_device *nvdev = net_device_ctx->nvdev;
 	int ret;
 	u32 aread, awrite, i, msec = 10, retry = 0, retry_max = 20;
 	struct vmbus_channel *chn;
@@ -206,8 +205,7 @@ static u16 netvsc_select_queue(struct net_device *ndev, struct sk_buff *skb,
 		       void *accel_priv, select_queue_fallback_t fallback)
 {
 	struct net_device_context *net_device_ctx = netdev_priv(ndev);
-	struct hv_device *hdev =  net_device_ctx->device_ctx;
-	struct netvsc_device *nvsc_dev = hv_get_drvdata(hdev);
+	struct netvsc_device *nvsc_dev = net_device_ctx->nvdev;
 	u32 hash;
 	u16 q_idx = 0;
 
@@ -581,7 +579,6 @@ void netvsc_linkstatus_callback(struct hv_device *device_obj,
 	struct rndis_indicate_status *indicate = &resp->msg.indicate_status;
 	struct net_device *net;
 	struct net_device_context *ndev_ctx;
-	struct netvsc_device *net_device;
 	struct netvsc_reconfig *event;
 	unsigned long flags;
 
@@ -591,8 +588,7 @@ void netvsc_linkstatus_callback(struct hv_device *device_obj,
 	    indicate->status != RNDIS_STATUS_MEDIA_DISCONNECT)
 		return;
 
-	net_device = hv_get_drvdata(device_obj);
-	net = net_device->ndev;
+	net = hv_get_drvdata(device_obj);
 
 	if (!net || net->reg_state != NETREG_REGISTERED)
 		return;
@@ -660,16 +656,15 @@ int netvsc_recv_callback(struct hv_device *device_obj,
 				struct vmbus_channel *channel,
 				u16 vlan_tci)
 {
-	struct net_device *net;
-	struct net_device_context *net_device_ctx;
+	struct net_device *net = hv_get_drvdata(device_obj);
+	struct net_device_context *net_device_ctx = netdev_priv(net);
 	struct sk_buff *skb;
 	struct sk_buff *vf_skb;
 	struct netvsc_stats *rx_stats;
-	struct netvsc_device *netvsc_dev = hv_get_drvdata(device_obj);
+	struct netvsc_device *netvsc_dev = net_device_ctx->nvdev;
 	u32 bytes_recvd = packet->total_data_buflen;
 	int ret = 0;
 
-	net = netvsc_dev->ndev;
 	if (!net || net->reg_state != NETREG_REGISTERED)
 		return NVSP_STAT_FAIL;
 
@@ -744,8 +739,7 @@ static void netvsc_get_channels(struct net_device *net,
 				struct ethtool_channels *channel)
 {
 	struct net_device_context *net_device_ctx = netdev_priv(net);
-	struct hv_device *dev = net_device_ctx->device_ctx;
-	struct netvsc_device *nvdev = hv_get_drvdata(dev);
+	struct netvsc_device *nvdev = net_device_ctx->nvdev;
 
 	if (nvdev) {
 		channel->max_combined	= nvdev->max_chn;
@@ -758,7 +752,7 @@ static int netvsc_set_channels(struct net_device *net,
 {
 	struct net_device_context *net_device_ctx = netdev_priv(net);
 	struct hv_device *dev = net_device_ctx->device_ctx;
-	struct netvsc_device *nvdev = hv_get_drvdata(dev);
+	struct netvsc_device *nvdev = net_device_ctx->nvdev;
 	struct netvsc_device_info device_info;
 	u32 num_chn;
 	u32 max_chn;
@@ -799,9 +793,6 @@ static int netvsc_set_channels(struct net_device *net,
 
 	nvdev->num_chn = channels->combined_count;
 
-	net_device_ctx->device_ctx = dev;
-	hv_set_drvdata(dev, net);
-
 	memset(&device_info, 0, sizeof(device_info));
 	device_info.num_chn = nvdev->num_chn; /* passed to RNDIS */
 	device_info.ring_size = ring_size;
@@ -816,7 +807,7 @@ static int netvsc_set_channels(struct net_device *net,
 		goto recover;
 	}
 
-	nvdev = hv_get_drvdata(dev);
+	nvdev = net_device_ctx->nvdev;
 
 	ret = netif_set_real_num_tx_queues(net, nvdev->num_chn);
 	if (ret) {
@@ -909,8 +900,8 @@ static int netvsc_set_settings(struct net_device *dev, struct ethtool_cmd *cmd)
 static int netvsc_change_mtu(struct net_device *ndev, int mtu)
 {
 	struct net_device_context *ndevctx = netdev_priv(ndev);
-	struct hv_device *hdev =  ndevctx->device_ctx;
-	struct netvsc_device *nvdev = hv_get_drvdata(hdev);
+	struct netvsc_device *nvdev = ndevctx->nvdev;
+	struct hv_device *hdev = ndevctx->device_ctx;
 	struct netvsc_device_info device_info;
 	int limit = ETH_DATA_LEN;
 	u32 num_chn;
@@ -935,9 +926,6 @@ static int netvsc_change_mtu(struct net_device *ndev, int mtu)
 	rndis_filter_device_remove(hdev);
 
 	ndev->mtu = mtu;
-
-	ndevctx->device_ctx = hdev;
-	hv_set_drvdata(hdev, ndev);
 
 	memset(&device_info, 0, sizeof(device_info));
 	device_info.ring_size = ring_size;
@@ -1077,7 +1065,7 @@ static void netvsc_link_change(struct work_struct *w)
 	if (ndev_ctx->start_remove)
 		goto out_unlock;
 
-	net_device = hv_get_drvdata(ndev_ctx->device_ctx);
+	net_device = ndev_ctx->nvdev;
 	rdev = net_device->extension;
 	net = net_device->ndev;
 
@@ -1202,7 +1190,7 @@ static struct netvsc_device *get_netvsc_device(char *mac)
 	if (netvsc_ctx == NULL)
 		return NULL;
 
-	return hv_get_drvdata(netvsc_ctx->device_ctx);
+	return netvsc_ctx->nvdev;
 }
 
 static int netvsc_register_vf(struct net_device *vf_netdev)
@@ -1408,7 +1396,7 @@ static int netvsc_probe(struct hv_device *dev,
 	}
 	memcpy(net->dev_addr, device_info.mac_adr, ETH_ALEN);
 
-	nvdev = hv_get_drvdata(dev);
+	nvdev = net_device_ctx->nvdev;
 	netif_set_real_num_tx_queues(net, nvdev->num_chn);
 	netif_set_real_num_rx_queues(net, nvdev->num_chn);
 
@@ -1430,8 +1418,7 @@ static int netvsc_remove(struct hv_device *dev)
 	struct net_device_context *ndev_ctx;
 	struct netvsc_device *net_device;
 
-	net_device = hv_get_drvdata(dev);
-	net = net_device->ndev;
+	net = hv_get_drvdata(dev);
 
 	if (net == NULL) {
 		dev_err(&dev->device, "No net device to remove\n");
@@ -1440,6 +1427,8 @@ static int netvsc_remove(struct hv_device *dev)
 
 
 	ndev_ctx = netdev_priv(net);
+	net_device = ndev_ctx->nvdev;
+
 	ndev_ctx->start_remove = true;
 
 	cancel_delayed_work_sync(&ndev_ctx->dwork);
@@ -1455,6 +1444,8 @@ static int netvsc_remove(struct hv_device *dev)
 	 * removed
 	 */
 	rndis_filter_device_remove(dev);
+
+	hv_set_drvdata(dev, NULL);
 
 	netvsc_free_netdev(net);
 	return 0;

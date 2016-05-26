@@ -159,7 +159,7 @@ enum rndis_device_state {
 };
 
 struct rndis_device {
-	struct netvsc_device *net_dev;
+	struct net_device *ndev;
 
 	enum rndis_device_state state;
 	bool link_state;
@@ -174,6 +174,7 @@ struct rndis_device {
 
 /* Interface */
 struct rndis_message;
+struct netvsc_device;
 int netvsc_device_add(struct hv_device *device, void *additional_info);
 int netvsc_device_remove(struct hv_device *device);
 int netvsc_send(struct hv_device *device,
@@ -654,6 +655,8 @@ struct garp_wrk {
 struct net_device_context {
 	/* point back to our device context */
 	struct hv_device *device_ctx;
+	/* netvsc_device */
+	struct netvsc_device *nvdev;
 	/* reconfigure work */
 	struct delayed_work dwork;
 	/* last reconfig time */
@@ -680,8 +683,6 @@ struct net_device_context {
 
 /* Per netvsc device */
 struct netvsc_device {
-	struct hv_device *dev;
-
 	u32 nvsp_version;
 
 	atomic_t num_outstanding_sends;
@@ -734,9 +735,6 @@ struct netvsc_device {
 	struct multi_send_data msd[VRSS_CHANNEL_MAX];
 	u32 max_pkt; /* max number of pkt in one send, e.g. 8 */
 	u32 pkt_align; /* alignment bytes, e.g. 8 */
-
-	/* The net device context */
-	struct net_device_context *nd_ctx;
 
 	/* 1: allocated, serial number is valid. 0: not allocated */
 	u32 vf_alloc;
