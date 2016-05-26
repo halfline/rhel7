@@ -1652,11 +1652,10 @@ struct block_device_operations {
 	void (*release) (struct gendisk *, fmode_t);
 	int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
 	int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-	/* New param goes away on next patch, then it's just s/int/long/ */
 	RH_KABI_REPLACE(int (*direct_access) (struct block_device *, sector_t,
 						void **, unsigned long *),
 			long (*direct_access)(struct block_device *, sector_t,
-					void **, unsigned long *pfn, long size))
+						void **, unsigned long *pfn))
 	unsigned int (*check_events) (struct gendisk *disk,
 				      unsigned int clearing);
 	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
