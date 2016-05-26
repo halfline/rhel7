@@ -549,6 +549,8 @@ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
 		spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
 		/* Choose the function to be read. (See comment above) */
 		writel(hpdev->desc.win_slot.slot, hpdev->hbus->cfg_addr);
+		/* Make sure the function was chosen before we start reading. */
+		mb();
 		/* Read from that function's config space. */
 		switch (size) {
 		case 1:
@@ -561,6 +563,11 @@ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
 			*val = readl(addr);
 			break;
 		}
+		/*
+		 * Make sure the write was done before we release the spinlock
+		 * allowing consecutive reads/writes.
+		 */
+		mb();
 		spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
 	} else {
 		dev_err(&hpdev->hbus->hdev->device,
@@ -588,6 +595,8 @@ static void _hv_pcifront_write_config(struct hv_pci_dev *hpdev, int where,
 		spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
 		/* Choose the function to be written. (See comment above) */
 		writel(hpdev->desc.win_slot.slot, hpdev->hbus->cfg_addr);
+		/* Make sure the function was chosen before we start writing. */
+		wmb();
 		/* Write to that function's config space. */
 		switch (size) {
 		case 1:
@@ -600,6 +609,11 @@ static void _hv_pcifront_write_config(struct hv_pci_dev *hpdev, int where,
 			writel(val, addr);
 			break;
 		}
+		/*
+		 * Make sure the write was done before we release the spinlock
+		 * allowing consecutive reads/writes.
+		 */
+		mb();
 		spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
 	} else {
 		dev_err(&hpdev->hbus->hdev->device,
