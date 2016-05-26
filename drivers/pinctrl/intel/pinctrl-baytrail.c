@@ -29,7 +29,6 @@
 #include <linux/gpio.h>
 #include <linux/irqdomain.h>
 #include <linux/acpi.h>
-#include <linux/acpi_gpio.h>
 #include <linux/platform_device.h>
 #include <linux/seq_file.h>
 #include <linux/io.h>
@@ -606,9 +605,6 @@ static int byt_gpio_probe(struct platform_device *pdev)
 
 		irq_set_handler_data(hwirq, vg);
 		irq_set_chained_handler(hwirq, byt_gpio_irq_handler);
-
-		/* Register interrupt handlers for gpio signaled acpi events */
-		acpi_gpiochip_request_interrupts(gc);
 	}
 
 	ret = gpiochip_add(gc);
