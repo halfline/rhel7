@@ -1820,6 +1820,12 @@ struct super_operations {
 #define S_NOSEC		4096	/* no suid or xattr security attributes */
 #define S_IOPS_WRAPPER	8192	/* i_op points to struct inode_operations_wrapper */
 
+#ifdef CONFIG_FS_XIP
+#define S_DAX		16384	/* Direct Access, avoiding the page cache */
+#else
+#define S_DAX		0	/* Make all the DAX code disappear */
+#endif
+
 /*
  * Note that nosuid etc flags are inode-specific: setting some file-system
  * flags just means all the inodes inherit those flags by default. It might be
@@ -1857,6 +1863,7 @@ struct super_operations {
 #define IS_AUTOMOUNT(inode)	((inode)->i_flags & S_AUTOMOUNT)
 #define IS_NOSEC(inode)		((inode)->i_flags & S_NOSEC)
 #define IS_IOPS_WRAPPER(inode)	((inode)->i_flags & S_IOPS_WRAPPER)
+#define IS_DAX(inode)		((inode)->i_flags & S_DAX)
 
 #define IS_WHITEOUT(inode)	(S_ISCHR(inode->i_mode) && \
 				 (inode)->i_rdev == WHITEOUT_DEV)
