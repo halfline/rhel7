@@ -580,7 +580,7 @@ static void atom_set_pstate(struct cpudata *cpudata, int pstate)
 
 	val |= vid;
 
-	wrmsrl(MSR_IA32_PERF_CTL, val);
+	wrmsrl_on_cpu(cpudata->cpu, MSR_IA32_PERF_CTL, val);
 }
 
 #define ATOM_BCLK_FREQS 5
