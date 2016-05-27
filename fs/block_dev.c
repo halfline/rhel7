@@ -161,6 +161,9 @@ blkdev_direct_IO(int rw, struct kiocb *iocb, const struct iovec *iov,
 	struct file *file = iocb->ki_filp;
 	struct inode *inode = file->f_mapping->host;
 
+	if (IS_DAX(inode))
+		return dax_do_io(rw, iocb, inode, iov, offset, nr_segs,
+				 blkdev_get_block, NULL, DIO_SKIP_DIO_COUNT);
 	return __blockdev_direct_IO(rw, iocb, inode, I_BDEV(inode), iov, offset,
 				    nr_segs, blkdev_get_block, NULL, NULL,
 				    DIO_SKIP_DIO_COUNT);
@@ -1199,6 +1202,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
 		bdev->bd_disk = disk;
 		bdev->bd_queue = disk->queue;
 		bdev->bd_contains = bdev;
+		bdev->bd_inode->i_flags = disk->fops->direct_access ? S_DAX : 0;
 		if (!partno) {
 			struct backing_dev_info *bdi;
 

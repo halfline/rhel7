@@ -241,7 +241,8 @@ ssize_t dax_do_io(int rw, struct kiocb *iocb, struct inode *inode,
 	}
 
 	/* Protects against truncate */
-	inode_dio_begin(inode);
+	if (!(flags & DIO_SKIP_DIO_COUNT))
+		inode_dio_begin(inode);
 
 	retval = dax_io(rw, inode, iov, pos, end, get_block, &bh);
 
@@ -251,7 +252,8 @@ ssize_t dax_do_io(int rw, struct kiocb *iocb, struct inode *inode,
 	if ((retval > 0) && end_io)
 		end_io(iocb, pos, retval, bh.b_private, retval, false);
 
-	inode_dio_end(inode);
+	if (!(flags & DIO_SKIP_DIO_COUNT))
+		inode_dio_end(inode);
  out:
 	return retval;
 }
