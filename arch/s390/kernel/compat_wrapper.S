@@ -146,7 +146,7 @@ ENTRY(compat_sys_times_wrapper)
 	jg	compat_sys_times	# branch to system call
 
 ENTRY(sys32_brk_wrapper)
-	llgtr	%r2,%r2			# unsigned long
+	llgfr	%r2,%r2			# unsigned long
 	jg	sys_brk			# branch to system call
 
 ENTRY(sys32_setgid16_wrapper)
