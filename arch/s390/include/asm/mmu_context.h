@@ -18,13 +18,30 @@ static inline int init_new_context(struct task_struct *tsk,
 	atomic_set(&mm->context.attach_count, 0);
 	mm->context.flush_mm = 0;
 	mm->context.has_pgste = 0;
-	if (mm->context.asce_limit == 0) {
+	switch (mm->context.asce_limit) {
+	case 1UL << 42:
+		/*
+		 * forked 3-level task, fall through to set new asce with new
+		 * mm->pgd
+		 */
+	case 0:
 		/* context created by exec, set asce limit to 4TB */
-		mm->context.asce_bits = _ASCE_TABLE_LENGTH | _ASCE_USER_BITS;
+		mm->context.asce = __pa(mm->pgd) | _ASCE_TABLE_LENGTH |
+				   _ASCE_USER_BITS;
 #ifdef CONFIG_64BIT
-		mm->context.asce_bits |= _ASCE_TYPE_REGION3;
+		mm->context.asce |= _ASCE_TYPE_REGION3;
 #endif
 		mm->context.asce_limit = STACK_TOP_MAX;
+		break;
+	case 1UL << 53:
+		/* forked 4-level task, set new asce with new mm->pgd */
+		mm->context.asce = __pa(mm->pgd) | _ASCE_TABLE_LENGTH |
+				   _ASCE_USER_BITS | _ASCE_TYPE_REGION2;
+		break;
+	case 1UL << 31:
+		/* forked 2-level compat task, set new asce with new mm->pgd */
+		mm->context.asce = __pa(mm->pgd) | _ASCE_TABLE_LENGTH |
+				   _ASCE_USER_BITS | _ASCE_TYPE_SEGMENT;
 	}
 	crst_table_init((unsigned long *) mm->pgd, pgd_entry_type(mm));
 	return 0;
@@ -44,9 +61,7 @@ static inline void update_primary_asce(struct task_struct *tsk)
 
 static inline void update_mm(struct mm_struct *mm, struct task_struct *tsk)
 {
-	pgd_t *pgd = mm->pgd;
-
-	S390_lowcore.user_asce = mm->context.asce_bits | __pa(pgd);
+	S390_lowcore.user_asce = mm->context.asce;
 	set_fs(current->thread.mm_segment);
 	update_primary_asce(tsk);
 }
