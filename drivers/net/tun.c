@@ -185,6 +185,7 @@ struct tun_struct {
 #define TUN_USER_FEATURES (NETIF_F_HW_CSUM|NETIF_F_TSO_ECN|NETIF_F_TSO| \
 			  NETIF_F_TSO6|NETIF_F_UFO)
 
+	int			align;
 	int			vnet_hdr_sz;
 	int			sndbuf;
 	struct tap_filter	txflt;
@@ -894,6 +895,17 @@ static void tun_poll_controller(struct net_device *dev)
 	return;
 }
 #endif
+
+static void tun_set_headroom(struct net_device *dev, int new_hr)
+{
+	struct tun_struct *tun = netdev_priv(dev);
+
+	if (new_hr < NET_SKB_PAD)
+		new_hr = NET_SKB_PAD;
+
+	tun->align = new_hr;
+}
+
 static const struct net_device_ops tun_netdev_ops = {
 	.ndo_uninit		= tun_net_uninit,
 	.ndo_open		= tun_net_open,
@@ -905,6 +917,8 @@ static const struct net_device_ops tun_netdev_ops = {
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller	= tun_poll_controller,
 #endif
+	.ndo_size		= sizeof(struct net_device_ops),
+	.extended.ndo_set_rx_headroom	= tun_set_headroom,
 };
 
 static const struct net_device_ops tap_netdev_ops = {
@@ -921,6 +935,8 @@ static const struct net_device_ops tap_netdev_ops = {
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller	= tun_poll_controller,
 #endif
+	.ndo_size		= sizeof(struct net_device_ops),
+	.extended.ndo_set_rx_headroom	= tun_set_headroom,
 };
 
 static int tun_flow_init(struct tun_struct *tun)
@@ -1147,7 +1163,7 @@ static ssize_t tun_get_user(struct tun_struct *tun, struct tun_file *tfile,
 {
 	struct tun_pi pi = { 0, cpu_to_be16(ETH_P_IP) };
 	struct sk_buff *skb;
-	size_t len = total_len, align = NET_SKB_PAD, linear;
+	size_t len = total_len, align = tun->align, linear;
 	struct virtio_net_hdr gso = { 0 };
 	int good_linear;
 	int offset = 0;
@@ -1780,6 +1796,7 @@ static int tun_set_iff(struct net *net, struct file *file, struct ifreq *ifr)
 		tun->txflt.count = 0;
 		tun->vnet_hdr_sz = sizeof(struct virtio_net_hdr);
 
+		tun->align = NET_SKB_PAD;
 		tun->filter_attached = false;
 		tun->sndbuf = tfile->socket.sk->sk_sndbuf;
 
