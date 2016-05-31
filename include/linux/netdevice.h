@@ -826,6 +826,12 @@ struct tc_to_netdev {
  *			     int queue_index, u32 maxrate);
  *	Called when a user wants to set a max-rate limitation of specific
  *	TX queue.
+ * void (*ndo_set_rx_headroom)(struct net_device *dev, int needed_headroom);
+ *	This function is used to specify the headroom that the skb must
+ *	consider when allocation skb during packet reception. Setting
+ *	appropriate rx headroom value allows avoiding skb head copy on
+ *	forward. Setting a negative value reset the rx headroom to the
+ *	default value.
  */
 struct net_device_ops_extended {
 	int			(*ndo_set_vf_trust)(struct net_device *dev,
@@ -837,6 +843,8 @@ struct net_device_ops_extended {
 	int			(*ndo_set_tx_maxrate)(struct net_device *dev,
 						      int queue_index,
 						      u32 maxrate);
+	void			(*ndo_set_rx_headroom)(struct net_device *dev,
+						       int needed_headroom);
 };
 
 /*
@@ -1350,6 +1358,8 @@ struct net_device_ops {
  * @IFF_MACVLAN: Macvlan device
  * @IFF_NO_QUEUE: device can run without qdisc attached
  * @IFF_RXFH_CONFIGURED: device has had Rx Flow indirection table configured
+ * @IFF_PHONY_HEADROOM: the headroom value is controlled by an external
+ *	entity (i.e. the master device for bridged veth)
  */
 enum netdev_priv_flags {
 	IFF_802_1Q_VLAN			= 1<<0,
@@ -1377,6 +1387,7 @@ enum netdev_priv_flags {
 	IFF_XMIT_DST_RELEASE_PERM	= 1<<22,
 	IFF_RXFH_CONFIGURED		= 1<<25,
 	IFF_NO_QUEUE			= 1<<26,
+	IFF_PHONY_HEADROOM		= 1<<27,
 };
 
 #define IFF_802_1Q_VLAN			IFF_802_1Q_VLAN
@@ -1848,6 +1859,26 @@ static inline void netdev_for_each_tx_queue(struct net_device *dev,
 struct netdev_queue *netdev_pick_tx(struct net_device *dev,
 				    struct sk_buff *skb,
 				    void *accel_priv);
+
+/* returns the headroom that the master device needs to take in account
+ * when forwarding to this dev
+ */
+static inline unsigned netdev_get_fwd_headroom(struct net_device *dev)
+{
+	return dev->priv_flags & IFF_PHONY_HEADROOM ? 0 : dev->needed_headroom;
+}
+
+static inline void netdev_set_rx_headroom(struct net_device *dev, int new_hr)
+{
+	if (get_ndo_ext(dev->netdev_ops, ndo_set_rx_headroom))
+		get_ndo_ext(dev->netdev_ops, ndo_set_rx_headroom)(dev, new_hr);
+}
+
+/* set the device rx headroom to the dev's default */
+static inline void netdev_reset_rx_headroom(struct net_device *dev)
+{
+	netdev_set_rx_headroom(dev, -1);
+}
 
 /*
  * Net namespace inlines
