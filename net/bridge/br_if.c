@@ -493,6 +493,9 @@ int br_add_if(struct net_bridge *br, struct net_device *dev)
 
 	netdev_update_features(br->dev);
 
+	if (br->dev->needed_headroom < dev->needed_headroom)
+		br->dev->needed_headroom = dev->needed_headroom;
+
 	if (br_fdb_insert(br, p, dev->dev_addr, 0))
 		netdev_err(dev, "failed insert local address bridge forwarding table\n");
 
