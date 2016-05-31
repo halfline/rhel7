@@ -189,7 +189,7 @@ static inline struct lowpan_peer *peer_lookup_dst(struct lowpan_dev *dev,
 		if (ipv6_addr_any(nexthop))
 			return NULL;
 	} else {
-		nexthop = rt6_nexthop(rt, daddr);
+		nexthop = rt6_nexthop(rt);
 
 		/* We need to remember the address because it is needed
 		 * by bt_xmit() when sending the packet. In bt_xmit(), the
@@ -809,8 +809,7 @@ static int setup_netdev(struct l2cap_chan *chan, struct lowpan_dev **dev)
 	int err = 0;
 
 	netdev = alloc_netdev(LOWPAN_PRIV_SIZE(sizeof(struct lowpan_dev)),
-			      IFACE_NAME_TEMPLATE, NET_NAME_UNKNOWN,
-			      netdev_setup);
+			      IFACE_NAME_TEMPLATE, netdev_setup);
 	if (!netdev)
 		return -ENOMEM;
 
