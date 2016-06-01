@@ -331,6 +331,7 @@ struct pmu {
  */
 enum perf_event_active_state {
 #ifndef __GENKSYMS__
+	PERF_EVENT_STATE_DEAD		= -4,
 	PERF_EVENT_STATE_EXIT		= -3,
 #endif
 	PERF_EVENT_STATE_ERROR		= -2,
