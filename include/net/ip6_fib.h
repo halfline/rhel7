@@ -134,6 +134,7 @@ struct rt6_info {
 	RH_KABI_EXTEND(u32		rt6i_pmtu)
 	RH_KABI_EXTEND(struct list_head			rt6i_uncached)
 	RH_KABI_EXTEND(struct uncached_list		*rt6i_uncached_list)
+	RH_KABI_EXTEND(struct rt6_info * __percpu	*rt6i_pcpu)
 
 	/* kABI: use these reserved fields to add new items; the structure
 	 * can't be further extended after we whitelist fib_rules_register.
@@ -173,7 +174,7 @@ static inline void rt6_update_expires(struct rt6_info *rt0, int timeout)
 
 static inline u32 rt6_get_cookie(const struct rt6_info *rt)
 {
-	if (unlikely(rt->dst.flags & DST_NOCACHE))
+	if (rt->rt6i_flags & RTF_PCPU || unlikely(rt->dst.flags & DST_NOCACHE))
 		rt = (struct rt6_info *)(rt->dst.from);
 
 	return rt->rt6i_node ? rt->rt6i_node->fn_sernum : 0;
