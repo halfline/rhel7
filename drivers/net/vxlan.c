@@ -1800,6 +1800,8 @@ static struct dst_entry *vxlan6_get_route(struct vxlan_dev *vxlan,
 	struct flowi6 fl6;
 	int err;
 
+	if (tos && !info)
+		use_cache = false;
 	if (use_cache) {
 		ndst = dst_cache_get_ip6(dst_cache, saddr);
 		if (ndst)
