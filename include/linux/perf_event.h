@@ -600,6 +600,9 @@ struct perf_cpu_context {
 
 	struct pmu			*unique_pmu;
 	struct perf_cgroup		*cgrp;
+
+	RH_KABI_EXTEND(raw_spinlock_t	hrtimer_lock)
+	RH_KABI_EXTEND(unsigned int	hrtimer_active)
 };
 
 struct perf_output_handle {
