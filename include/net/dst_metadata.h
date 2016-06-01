@@ -65,6 +65,7 @@ static inline int skb_metadata_dst_cmp(const struct sk_buff *skb_a,
 		      sizeof(a->u.tun_info) + a->u.tun_info.options_len);
 }
 
+void metadata_dst_free(struct metadata_dst *);
 struct metadata_dst *metadata_dst_alloc(u8 optslen, gfp_t flags);
 
 static inline struct metadata_dst *tun_rx_dst(int md_size)

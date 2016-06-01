@@ -1764,7 +1764,7 @@ static struct rtable *vxlan_get_route(struct vxlan_dev *vxlan,
 	/* when the ip_tunnel_info is availble, the tos used for lookup is
 	 * packet independent, so we can use the cache
 	 */
-	if (dst_cache && !skb->mark && (!tos || info)) {
+	if (!skb->mark && (!tos || info)) {
 		use_cache = true;
 		rt = dst_cache_get_ip4(dst_cache, saddr);
 		if (rt)
@@ -1796,13 +1796,11 @@ static struct dst_entry *vxlan6_get_route(struct vxlan_dev *vxlan,
 					  struct in6_addr *saddr,
 					  struct dst_cache *dst_cache)
 {
-	bool use_cache = false;
 	struct dst_entry *ndst;
 	struct flowi6 fl6;
 	int err;
 
-	if (dst_cache && !skb->mark) {
-		use_cache = true;
+	if (!skb->mark) {
 		ndst = dst_cache_get_ip6(dst_cache, saddr);
 		if (ndst)
 			return ndst;
@@ -1823,7 +1821,7 @@ static struct dst_entry *vxlan6_get_route(struct vxlan_dev *vxlan,
 		return ERR_PTR(err);
 
 	*saddr = fl6.saddr;
-	if (use_cache)
+	if (!skb->mark)
 		dst_cache_set_ip6(dst_cache, ndst, saddr);
 	return ndst;
 }
@@ -1877,6 +1875,7 @@ static void vxlan_encap_bypass(struct sk_buff *skb, struct vxlan_dev *src_vxlan,
 static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 			   struct vxlan_rdst *rdst, bool did_rsc)
 {
+	struct dst_cache *dst_cache;
 	struct ip_tunnel_info *info;
 	struct vxlan_dev *vxlan = netdev_priv(dev);
 	struct sock *sk;
@@ -1901,6 +1900,7 @@ static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 		dst_port = rdst->remote_port ? rdst->remote_port : vxlan->cfg.dst_port;
 		vni = rdst->remote_vni;
 		dst = &rdst->remote_ip;
+		dst_cache = &rdst->dst_cache;
 	} else {
 		if (!info) {
 			WARN_ONCE(1, "%s: Missing encapsulation instructions\n",
@@ -1915,6 +1915,7 @@ static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 		else
 			remote_ip.sin6.sin6_addr = info->key.u.ipv6.dst;
 		dst = &remote_ip;
+		dst_cache = &info->dst_cache;
 	}
 
 	if (vxlan_addr_any(dst)) {
@@ -1969,7 +1970,7 @@ static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 		rt = vxlan_get_route(vxlan, skb,
 				     rdst ? rdst->remote_ifindex : 0, tos,
 				     dst->sin.sin_addr.s_addr, &saddr,
-				     rdst ? &rdst->dst_cache : NULL, info);
+				     dst_cache, info);
 		if (IS_ERR(rt)) {
 			netdev_dbg(dev, "no route to %pI4\n",
 				   &dst->sin.sin_addr.s_addr);
@@ -2022,7 +2023,7 @@ static void vxlan_xmit_one(struct sk_buff *skb, struct net_device *dev,
 		ndst = vxlan6_get_route(vxlan, skb,
 					rdst ? rdst->remote_ifindex : 0, tos,
 					label, &dst->sin6.sin6_addr, &saddr,
-					rdst ? &rdst->dst_cache : NULL);
+					dst_cache);
 		if (IS_ERR(ndst)) {
 			netdev_dbg(dev, "no route to %pI6\n",
 				   &dst->sin6.sin6_addr);
