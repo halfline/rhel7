@@ -2321,6 +2321,12 @@ static void ctx_sched_out(struct perf_event_context *ctx,
 	lockdep_assert_held(&ctx->lock);
 
 	ctx->is_active &= ~event_type;
+	if (ctx->task) {
+		WARN_ON_ONCE(cpuctx->task_ctx != ctx);
+		if (!ctx->is_active)
+			cpuctx->task_ctx = NULL;
+	}
+
 	if (likely(!ctx->nr_events))
 		return;
 
@@ -2621,7 +2627,6 @@ static void task_ctx_sched_out(struct perf_cpu_context *cpuctx,
 		return;
 
 	ctx_sched_out(ctx, cpuctx, EVENT_ALL);
-	cpuctx->task_ctx = NULL;
 }
 
 /*
@@ -2704,6 +2709,13 @@ ctx_sched_in(struct perf_event_context *ctx,
 	lockdep_assert_held(&ctx->lock);
 
 	ctx->is_active |= event_type;
+	if (ctx->task) {
+		if (!is_active)
+			cpuctx->task_ctx = ctx;
+		else
+			WARN_ON_ONCE(cpuctx->task_ctx != ctx);
+	}
+
 	if (likely(!ctx->nr_events))
 		return;
 
@@ -2748,12 +2760,7 @@ static void perf_event_context_sched_in(struct perf_event_context *ctx,
 	 * cpu flexible, task flexible.
 	 */
 	cpu_ctx_sched_out(cpuctx, EVENT_FLEXIBLE);
-
-	if (ctx->nr_events)
-		cpuctx->task_ctx = ctx;
-
-	perf_event_sched_in(cpuctx, cpuctx->task_ctx, task);
-
+	perf_event_sched_in(cpuctx, ctx, task);
 	perf_pmu_enable(ctx->pmu);
 	perf_ctx_unlock(cpuctx, ctx);
 }
