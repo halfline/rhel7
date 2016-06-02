@@ -223,18 +223,14 @@ static int raid6_idx_to_slot(int idx, struct stripe_head *sh,
 	return slot;
 }
 
-static void return_io(struct bio *return_bi)
+static void return_io(struct bio_list *return_bi)
 {
-	struct bio *bi = return_bi;
-	while (bi) {
-
-		return_bi = bi->bi_next;
-		bi->bi_next = NULL;
+	struct bio *bi;
+	while ((bi = bio_list_pop(return_bi)) != NULL) {
 		bi->bi_size = 0;
 		trace_block_bio_complete(bdev_get_queue(bi->bi_bdev),
 					 bi, 0);
 		bio_endio(bi, 0);
-		bi = return_bi;
 	}
 }
 
@@ -1172,7 +1168,7 @@ async_copy_data(int frombio, struct bio *bio, struct page **page,
 static void ops_complete_biofill(void *stripe_head_ref)
 {
 	struct stripe_head *sh = stripe_head_ref;
-	struct bio *return_bi = NULL;
+	struct bio_list return_bi = BIO_EMPTY_LIST;
 	int i;
 
 	pr_debug("%s: stripe %llu\n", __func__,
@@ -1196,17 +1192,15 @@ static void ops_complete_biofill(void *stripe_head_ref)
 			while (rbi && rbi->bi_sector <
 				dev->sector + STRIPE_SECTORS) {
 				rbi2 = r5_next_bio(rbi, dev->sector);
-				if (!raid5_dec_bi_active_stripes(rbi)) {
-					rbi->bi_next = return_bi;
-					return_bi = rbi;
-				}
+				if (!raid5_dec_bi_active_stripes(rbi))
+					bio_list_add(&return_bi, rbi);
 				rbi = rbi2;
 			}
 		}
 	}
 	clear_bit(STRIPE_BIOFILL_RUN, &sh->state);
 
-	return_io(return_bi);
+	return_io(&return_bi);
 
 	set_bit(STRIPE_HANDLE, &sh->state);
 	release_stripe(sh);
@@ -3061,7 +3055,7 @@ static void stripe_set_idx(sector_t stripe, struct r5conf *conf, int previous,
 static void
 handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
 				struct stripe_head_state *s, int disks,
-				struct bio **return_bi)
+				struct bio_list *return_bi)
 {
 	int i;
 	BUG_ON(sh->batch_head);
@@ -3105,8 +3099,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
 			clear_bit(BIO_UPTODATE, &bi->bi_flags);
 			if (!raid5_dec_bi_active_stripes(bi)) {
 				md_write_end(conf->mddev);
-				bi->bi_next = *return_bi;
-				*return_bi = bi;
+				bio_list_add(return_bi, bi);
 			}
 			bi = nextbi;
 		}
@@ -3129,8 +3122,7 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
 			clear_bit(BIO_UPTODATE, &bi->bi_flags);
 			if (!raid5_dec_bi_active_stripes(bi)) {
 				md_write_end(conf->mddev);
-				bi->bi_next = *return_bi;
-				*return_bi = bi;
+				bio_list_add(return_bi, bi);
 			}
 			bi = bi2;
 		}
@@ -3152,10 +3144,8 @@ handle_failed_stripe(struct r5conf *conf, struct stripe_head *sh,
 				struct bio *nextbi =
 					r5_next_bio(bi, sh->dev[i].sector);
 				clear_bit(BIO_UPTODATE, &bi->bi_flags);
-				if (!raid5_dec_bi_active_stripes(bi)) {
-					bi->bi_next = *return_bi;
-					*return_bi = bi;
-				}
+				if (!raid5_dec_bi_active_stripes(bi))
+					bio_list_add(return_bi, bi);
 				bi = nextbi;
 			}
 		}
@@ -3434,7 +3424,7 @@ static void break_stripe_batch_list(struct stripe_head *head_sh,
  * never LOCKED, so we don't need to test 'failed' directly.
  */
 static void handle_stripe_clean_event(struct r5conf *conf,
-	struct stripe_head *sh, int disks, struct bio **return_bi)
+	struct stripe_head *sh, int disks, struct bio_list *return_bi)
 {
 	int i;
 	struct r5dev *dev;
@@ -3468,8 +3458,7 @@ returnbi:
 					wbi2 = r5_next_bio(wbi, dev->sector);
 					if (!raid5_dec_bi_active_stripes(wbi)) {
 						md_write_end(conf->mddev);
-						wbi->bi_next = *return_bi;
-						*return_bi = wbi;
+						bio_list_add(return_bi, wbi);
 					}
 					wbi = wbi2;
 				}
@@ -4602,7 +4591,7 @@ finish:
 			md_wakeup_thread(conf->mddev->thread);
 	}
 
-	return_io(s.return_bi);
+	return_io(&s.return_bi);
 
 	clear_bit_unlock(STRIPE_ACTIVE, &sh->state);
 }
