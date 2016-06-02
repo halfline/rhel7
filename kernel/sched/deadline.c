@@ -236,8 +236,6 @@ static int start_dl_timer(struct sched_dl_entity *dl_se)
 	struct dl_rq *dl_rq = dl_rq_of_se(dl_se);
 	struct rq *rq = rq_of_dl_rq(dl_rq);
 	ktime_t now, act;
-	ktime_t soft, hard;
-	unsigned long range;
 	s64 delta;
 
 	/*
@@ -258,15 +256,9 @@ static int start_dl_timer(struct sched_dl_entity *dl_se)
 	if (ktime_us_delta(act, now) < 0)
 		return 0;
 
-	hrtimer_set_expires(&dl_se->dl_timer, act);
+	hrtimer_start(&dl_se->dl_timer, act, HRTIMER_MODE_ABS);
 
-	soft = hrtimer_get_softexpires(&dl_se->dl_timer);
-	hard = hrtimer_get_expires(&dl_se->dl_timer);
-	range = ktime_to_ns(ktime_sub(hard, soft));
-	hrtimer_start_range_ns(&dl_se->dl_timer, soft,
-				 range, HRTIMER_MODE_ABS);
-
-	return hrtimer_active(&dl_se->dl_timer);
+	return 1;
 }
 
 /*
