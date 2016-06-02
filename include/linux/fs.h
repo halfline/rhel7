@@ -2059,6 +2059,17 @@ static inline dop_select_inode_t get_select_inode_dop(struct dentry *dentry)
 	return (offsetof(struct dentry_operations_wrapper, d_select_inode) < wrapper->size) ? wrapper->d_select_inode : NULL;
 }
 
+static inline struct inode *vfs_select_inode(struct dentry *dentry,
+					     unsigned open_flags)
+{
+	struct inode *inode = dentry->d_inode;
+
+	if (inode && unlikely(dentry->d_flags & DCACHE_OP_SELECT_INODE))
+		inode = (get_select_inode_dop(dentry))(dentry, open_flags);
+
+	return inode;
+}
+
 /*
  * the fs address space operations contain a new invalidatepage_rang () op
  * which supports a length parameter

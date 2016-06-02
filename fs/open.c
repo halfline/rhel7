@@ -878,19 +878,18 @@ EXPORT_SYMBOL(dentry_open);
 int vfs_open(const struct path *path, struct file *filp,
 	     const struct cred *cred)
 {
-	struct dentry *dentry = path->dentry;
 	struct inode *inode = path->dentry->d_inode;
 	iop_dentry_open_t dentry_open = get_dentry_open_iop(inode);
 
 	if (dentry_open)
 		return dentry_open(path->dentry, filp, cred);
 	else {
+		inode = vfs_select_inode(path->dentry, filp->f_flags);
+
+		if (IS_ERR(inode))
+			return PTR_ERR(inode);
+
 		filp->f_path = *path;
-		if (dentry->d_flags & DCACHE_OP_SELECT_INODE) {
-			inode = (get_select_inode_dop(dentry))(dentry, filp->f_flags);
-			if (IS_ERR(inode))
-				return PTR_ERR(inode);
-		}
 		return do_dentry_open(filp, inode, NULL, cred);
 	}
 }
