@@ -1656,6 +1656,15 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
 		case MD_DISK_ROLE_FAULTY: /* faulty */
 			set_bit(Faulty, &rdev->flags);
 			break;
+		case MD_DISK_ROLE_JOURNAL: /* journal device */
+			if (!(le32_to_cpu(sb->feature_map) & MD_FEATURE_JOURNAL)) {
+				/* journal device without journal feature */
+				printk(KERN_WARNING
+				  "md: journal device provided without journal feature, ignoring the device\n");
+				return -EINVAL;
+			}
+			set_bit(Journal, &rdev->flags);
+			break;
 		default:
 			rdev->saved_raid_disk = role;
 			if ((le32_to_cpu(sb->feature_map) &
@@ -1811,7 +1820,10 @@ retry:
 			sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_FAULTY);
 		else if (test_bit(In_sync, &rdev2->flags))
 			sb->dev_roles[i] = cpu_to_le16(rdev2->raid_disk);
-		else if (rdev2->raid_disk >= 0)
+		else if (test_bit(Journal, &rdev2->flags)) {
+			sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_JOURNAL);
+			sb->feature_map |= cpu_to_le32(MD_FEATURE_JOURNAL);
+		} else if (rdev2->raid_disk >= 0)
 			sb->dev_roles[i] = cpu_to_le16(rdev2->raid_disk);
 		else
 			sb->dev_roles[i] = cpu_to_le16(MD_DISK_ROLE_SPARE);
@@ -5767,7 +5779,8 @@ static int get_disk_info(struct mddev *mddev, void __user * arg)
 		else if (test_bit(In_sync, &rdev->flags)) {
 			info.state |= (1<<MD_DISK_ACTIVE);
 			info.state |= (1<<MD_DISK_SYNC);
-		}
+		} else if (test_bit(Journal, &rdev->flags))
+			info.state |= (1<<MD_DISK_JOURNAL);
 		if (test_bit(WriteMostly, &rdev->flags))
 			info.state |= (1<<MD_DISK_WRITEMOSTLY);
 	} else {
@@ -5875,12 +5888,17 @@ static int add_new_disk(struct mddev *mddev, mdu_disk_info_t *info)
 		else
 			clear_bit(WriteMostly, &rdev->flags);
 
+		if (info->state & (1<<MD_DISK_JOURNAL))
+			set_bit(Journal, &rdev->flags);
+
 		rdev->raid_disk = -1;
 		err = bind_rdev_to_array(rdev, mddev);
+
 		if (err)
 			export_rdev(rdev);
 		else
 			err = add_bound_rdev(rdev);
+
 		return err;
 	}
 
@@ -7178,6 +7196,10 @@ static int md_seq_show(struct seq_file *seq, void *v)
 				seq_printf(seq, "(W)");
 			if (test_bit(Faulty, &rdev->flags)) {
 				seq_printf(seq, "(F)");
+				continue;
+			}
+			if (test_bit(Journal, &rdev->flags)) {
+				seq_printf(seq, "(J)");
 				continue;
 			}
 			if (rdev->raid_disk < 0)

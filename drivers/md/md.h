@@ -170,6 +170,14 @@ enum flag_bits {
 				 * a want_replacement device with same
 				 * raid_disk number.
 				 */
+	__Reserved__,		/* Reserved for clustered environments
+				 * Not used by RHEL
+				 */
+	Journal,		/* This device is used as journal for
+				 * raid-5/6.
+				 * Usually, this device should be faster
+				 * than other devices in the array
+				 */
 };
 
 #define BB_LEN_MASK	(0x00000000000001FFULL)
