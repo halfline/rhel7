@@ -359,8 +359,8 @@ COMPAT_SYS(process_vm_readv)
 COMPAT_SYS(process_vm_writev)
 SYSCALL(finit_module)
 SYSCALL(kcmp) /* sys_kcmp */
-SYSCALL(ni_syscall) /* sys_sched_setattr */
-SYSCALL(ni_syscall) /* sys_sched_getattr */
+SYSCALL_SPU(sched_setattr)
+SYSCALL_SPU(sched_getattr)
 SYSCALL(ni_syscall) /* sys_renameat2 */
 SYSCALL(ni_syscall) /* sys_seccomp */
 SYSCALL(ni_syscall) /* sys_getrandom */
