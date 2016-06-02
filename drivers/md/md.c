@@ -1664,6 +1664,7 @@ static int super_1_validate(struct mddev *mddev, struct md_rdev *rdev)
 				return -EINVAL;
 			}
 			set_bit(Journal, &rdev->flags);
+			rdev->journal_tail = le64_to_cpu(sb->journal_tail);
 			break;
 		default:
 			rdev->saved_raid_disk = role;
@@ -1739,6 +1740,9 @@ static void super_1_sync(struct mddev *mddev, struct md_rdev *rdev)
 			sb->feature_map |=
 				cpu_to_le32(MD_FEATURE_RECOVERY_BITMAP);
 	}
+	/* Note: recovery_offset and journal_tail share space  */
+	if (test_bit(Journal, &rdev->flags))
+		sb->journal_tail = cpu_to_le64(rdev->journal_tail);
 	if (test_bit(Replacement, &rdev->flags))
 		sb->feature_map |=
 			cpu_to_le32(MD_FEATURE_REPLACEMENT);
@@ -7884,6 +7888,8 @@ static int remove_and_add_spares(struct mddev *mddev,
 		if (rdev->raid_disk >= 0)
 			continue;
 		if (test_bit(Faulty, &rdev->flags))
+			continue;
+		if (test_bit(Journal, &rdev->flags))
 			continue;
 		if (mddev->ro &&
 		    ! (rdev->saved_raid_disk >= 0 &&
