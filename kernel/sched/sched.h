@@ -12,6 +12,7 @@
 #include <linux/rh_kabi.h>
 
 #include "cpupri.h"
+#include "cpudeadline.h"
 #include "cpuacct.h"
 
 extern __read_mostly int scheduler_running;
@@ -528,6 +529,7 @@ struct root_domain {
 	RH_KABI_EXTEND(cpumask_var_t dlo_mask)
 	RH_KABI_EXTEND(atomic_t dlo_count)
 	RH_KABI_EXTEND(struct dl_bw dl_bw)
+	RH_KABI_EXTEND(struct cpudl cpudl)
 };
 
 extern struct root_domain def_root_domain;
