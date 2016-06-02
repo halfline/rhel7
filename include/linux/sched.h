@@ -1712,6 +1712,9 @@ struct task_struct {
 	atomic_t tracing_graph_pause;
 #endif
 	struct sched_dl_entity dl;
+	#ifdef CONFIG_SMP
+		struct rb_node pushable_dl_tasks;
+	#endif
 #endif /* __GENKSYMS__ */
 };
 
