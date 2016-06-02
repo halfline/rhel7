@@ -1082,6 +1082,7 @@ struct sched_class {
 	void (*task_move_group) (struct task_struct *p, int on_rq);
 #endif
 	RH_KABI_EXTEND(void (*update_curr) (struct rq *rq))
+	RH_KABI_EXTEND(void (*task_dead) (struct task_struct *p))
 };
 
 #define sched_class_highest (&stop_sched_class)
