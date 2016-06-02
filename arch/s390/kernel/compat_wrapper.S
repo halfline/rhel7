@@ -1413,6 +1413,17 @@ ENTRY(sys_finit_module_wrapper)
 	lgfr	%r4,%r4			# int
 	jg	sys_finit_module
 
+ENTRY(sys_sched_setattr_wrapper)
+	lgfr	%r2,%r2			# pid_t
+	llgtr	%r3,%r3			# struct sched_attr __user *
+	jg	sys_sched_setattr
+
+ENTRY(sys_sched_getattr_wrapper)
+	lgfr	%r2,%r2			# pid_t
+	llgtr	%r3,%r3			# const char __user *
+	llgfr	%r3,%r3			# unsigned int
+	jg	sys_sched_getattr
+
 ENTRY(sys_s390_pci_mmio_write_wrapper)
 	llgfr   %r2,%r2                 # unsigned long
 	llgtr   %r3,%r3                 # void __user *
