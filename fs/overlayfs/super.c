@@ -349,6 +349,7 @@ static const struct dentry_operations_wrapper ovl_reval_dentry_operations = {
 		.d_weak_revalidate = ovl_dentry_weak_revalidate,
 	},
 	.size = sizeof(struct dentry_operations_wrapper),
+	.d_select_inode = ovl_d_select_inode,
 };
 
 static struct ovl_entry *ovl_alloc_entry(unsigned int numlower)
