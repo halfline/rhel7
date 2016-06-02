@@ -112,13 +112,14 @@ S:      Maintained
 F:      drivers/scsi/arcmsr/
 
 ATHEROS WIRELESS LAN DRIVERS
-M:	John Greene <jogreene@redhat.com>
+M:	Stanislaw Gruszka <sgruszka@redhat.com>
+M:	John Linville <linville@redhat.com>
 S: 	Maintained
 F:	drivers/net/wireless/ath5k
 F: 	drivers/net/wireless/ath9k
 
-ATLX ETHERNET DRIVERS
-M:	John Greene <jogreene@redhat.com>
+ATHEROS ETHERNET DRIVERS
+M:	Jarod Wilson <jarod@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/atheros/
 
@@ -275,12 +276,12 @@ S:	Maintained
 F:	drivers/message/fusion/
 
 INTEL E1000 ETHERNET DRIVER (e1000)
-M:	Ken Cox <jkc@redhat.com>
+M:	Jarod Wilson <jarod@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/intel/e1000/
 
 INTEL E1000E ETHERNET DRIVER (e1000e)
-M:	Ken Cox <jkc@redhat.com>
+M:	Jarod Wilson <jarod@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/intel/e1000e/
 
@@ -644,8 +645,9 @@ S:	Maintained
 F:	drivers/net/wireless/rt2x00/
 
 REALTEK WIRELESS LAN DRIVERS
-M: 	John Greene <jogreene@redhat.com>
-S:	Maintained
+M:	Stanislaw Gruszka <sgruszka@redhat.com>
+M:	John Linville <linville@redhat.com>
+S: 	Maintained
 F:	drivers/net/wireless/rtl818x
 
 RFKILL
