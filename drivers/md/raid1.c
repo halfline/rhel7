@@ -1660,7 +1660,9 @@ static int raid1_add_disk(struct mddev *mddev, struct md_rdev *rdev)
 		unfreeze_array(conf);
 		clear_bit(Unmerged, &rdev->flags);
 	}
+	mddev_suspend(mddev);
 	md_integrity_add_rdev(rdev, mddev);
+	mddev_resume(mddev);
 	if (mddev->queue && blk_queue_discard(bdev_get_queue(rdev->bdev)))
 		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, mddev->queue);
 	print_conf(conf);
