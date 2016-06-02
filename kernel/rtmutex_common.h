@@ -59,6 +59,7 @@ struct rt_mutex_waiter {
 	struct pid		*deadlock_task_pid;
 	struct rt_mutex		*deadlock_lock;
 #endif
+	RH_KABI_EXTEND(int prio)
 };
 
 /*
