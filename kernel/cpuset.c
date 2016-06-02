@@ -490,6 +490,16 @@ static int validate_change(const struct cpuset *cur, const struct cpuset *trial)
 	     nodes_empty(trial->mems_allowed)))
 		goto out;
 
+	/*
+	 * We can't shrink if we won't have enough room for SCHED_DEADLINE
+	 * tasks.
+	 */
+	ret = -EBUSY;
+	if (is_cpu_exclusive(cur) &&
+	    !cpuset_cpumask_can_shrink(cur->cpus_allowed,
+				       trial->cpus_allowed))
+		goto out;
+
 	ret = 0;
 out:
 	rcu_read_unlock();
