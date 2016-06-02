@@ -887,6 +887,12 @@ static void yield_task_dl(struct rq *rq)
 	}
 	update_rq_clock(rq);
 	update_curr_dl(rq);
+	/*
+	 * Tell update_rq_clock() that we've just updated,
+	 * so we don't do microscopic update in schedule()
+	 * and double the fastpath cost.
+	 */
+	rq->skip_clock_update = 1;
 }
 
 #ifdef CONFIG_SMP
