@@ -5923,6 +5923,11 @@ S:	Supported
 F:	drivers/nvme/host/
 F:	include/linux/nvme.h
 
+OBJTOOL
+M:	Josh Poimboeuf <jpoimboe@redhat.com>
+S:	Supported
+F:	tools/objtool/
+
 OMAP SUPPORT
 M:	Tony Lindgren <tony@atomide.com>
 L:	linux-omap@vger.kernel.org
