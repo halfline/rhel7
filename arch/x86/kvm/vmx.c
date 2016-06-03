@@ -1442,9 +1442,10 @@ static inline void ept_sync_context(u64 eptp)
 static __always_inline unsigned long vmcs_readl(unsigned long field)
 {
 	unsigned long value;
+	register void *__sp asm("rsp");
 
 	asm volatile (__ex_clear(ASM_VMX_VMREAD_RDX_RAX, "%0")
-		      : "=a"(value) : "d"(field) : "cc");
+		      : "=a"(value), "+r" (__sp) : "d"(field) : "cc");
 	return value;
 }
 
