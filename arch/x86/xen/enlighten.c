@@ -33,6 +33,7 @@
 #include <linux/memblock.h>
 #include <linux/edd.h>
 #include <linux/crash_dump.h>
+#include <linux/frame.h>
 
 #ifdef CONFIG_KEXEC
 #include <linux/kexec.h>
@@ -347,8 +348,8 @@ static void xen_cpuid(unsigned int *ax, unsigned int *bx,
 	*cx &= maskecx;
 	*cx |= setecx;
 	*dx &= maskedx;
-
 }
+STACK_FRAME_NON_STANDARD(xen_cpuid); /* XEN_EMULATE_PREFIX */
 
 static bool __init xen_check_mwait(void)
 {
