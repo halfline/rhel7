@@ -2233,7 +2233,7 @@ static void sync_sbs(struct mddev *mddev, int nospares)
 	}
 }
 
-static void md_update_sb(struct mddev *mddev, int force_change)
+void md_update_sb(struct mddev *mddev, int force_change)
 {
 	struct md_rdev *rdev;
 	int sync_req;
@@ -2394,6 +2394,7 @@ repeat:
 		wake_up(&rdev->blocked_wait);
 	}
 }
+EXPORT_SYMBOL(md_update_sb);
 
 static int add_bound_rdev(struct md_rdev *rdev)
 {
