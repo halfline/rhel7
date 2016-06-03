@@ -1142,7 +1142,7 @@ static void raid10_unplug(struct blk_plug_cb *cb, bool from_schedule)
 	kfree(plug);
 }
 
-static void make_request(struct mddev *mddev, struct bio * bio)
+static void raid10_make_request(struct mddev *mddev, struct bio * bio)
 {
 	struct r10conf *conf = mddev->private;
 	struct r10bio *r10_bio;
@@ -1198,8 +1198,8 @@ static void make_request(struct mddev *mddev, struct bio * bio)
 		conf->nr_waiting++;
 		spin_unlock_irq(&conf->resync_lock);
 
-		make_request(mddev, &bp->bio1);
-		make_request(mddev, &bp->bio2);
+		raid10_make_request(mddev, &bp->bio1);
+		raid10_make_request(mddev, &bp->bio2);
 
 		spin_lock_irq(&conf->resync_lock);
 		conf->nr_waiting--;
@@ -1591,7 +1591,7 @@ retry_write:
 	wake_up(&conf->wait_barrier);
 }
 
-static void status(struct seq_file *seq, struct mddev *mddev)
+static void raid10_status(struct seq_file *seq, struct mddev *mddev)
 {
 	struct r10conf *conf = mddev->private;
 	int i;
@@ -1669,7 +1669,7 @@ static int enough(struct r10conf *conf, int ignore)
 		_enough(conf, 1, ignore);
 }
 
-static void error(struct mddev *mddev, struct md_rdev *rdev)
+static void raid10_error(struct mddev *mddev, struct md_rdev *rdev)
 {
 	char b[BDEVNAME_SIZE];
 	struct r10conf *conf = mddev->private;
@@ -2933,7 +2933,7 @@ static int init_resync(struct r10conf *conf)
  *
  */
 
-static sector_t sync_request(struct mddev *mddev, sector_t sector_nr,
+static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
 			     int *skipped)
 {
 	struct r10conf *conf = mddev->private;
@@ -3652,7 +3652,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
 	return ERR_PTR(err);
 }
 
-static int run(struct mddev *mddev)
+static int raid10_run(struct mddev *mddev)
 {
 	struct r10conf *conf;
 	int i, disk_idx, chunk_size;
@@ -4748,15 +4748,15 @@ static struct md_personality raid10_personality =
 	.name		= "raid10",
 	.level		= 10,
 	.owner		= THIS_MODULE,
-	.make_request	= make_request,
-	.run		= run,
+	.make_request	= raid10_make_request,
+	.run		= raid10_run,
 	.free		= raid10_free,
-	.status		= status,
-	.error_handler	= error,
+	.status		= raid10_status,
+	.error_handler	= raid10_error,
 	.hot_add_disk	= raid10_add_disk,
 	.hot_remove_disk= raid10_remove_disk,
 	.spare_active	= raid10_spare_active,
-	.sync_request	= sync_request,
+	.sync_request	= raid10_sync_request,
 	.quiesce	= raid10_quiesce,
 	.size		= raid10_size,
 	.resize		= raid10_resize,
