@@ -77,6 +77,7 @@ struct r5l_log {
 
 	struct kmem_cache *io_kc;
 	struct bio_set *bs;
+	mempool_t *meta_pool;
 
 	struct md_thread *reclaim_thread;
 	unsigned long reclaim_target;	/* number of space that need to be
@@ -160,7 +161,7 @@ static bool r5l_has_free_space(struct r5l_log *log, sector_t size)
 
 static void r5l_free_io_unit(struct r5l_log *log, struct r5l_io_unit *io)
 {
-	__free_page(io->meta_page);
+	mempool_free(io->meta_page, log->meta_pool);
 	kmem_cache_free(log->io_kc, io);
 }
 
@@ -309,8 +310,9 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
 	INIT_LIST_HEAD(&io->stripe_list);
 	io->state = IO_UNIT_RUNNING;
 
-	io->meta_page = alloc_page(GFP_NOIO | __GFP_NOFAIL | __GFP_ZERO);
+	io->meta_page = mempool_alloc(log->meta_pool, GFP_NOIO);
 	block = page_address(io->meta_page);
+	clear_page(block);
 	block->magic = cpu_to_le32(R5LOG_MAGIC);
 	block->version = R5LOG_VERSION;
 	block->seq = cpu_to_le64(log->seq);
@@ -1183,6 +1185,10 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
 	if (!log->bs)
 		goto io_bs;
 
+	log->meta_pool = mempool_create_page_pool(R5L_POOL_SIZE, 0);
+	if (!log->meta_pool)
+		goto out_mempool;
+
 	log->reclaim_thread = md_register_thread(r5l_reclaim_thread,
 						 log->rdev->mddev, "reclaim");
 	if (!log->reclaim_thread)
@@ -1197,9 +1203,12 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
 
 	rcu_assign_pointer(conf->log, log);
 	return 0;
+
 error:
 	md_unregister_thread(&log->reclaim_thread);
 reclaim_thread:
+	mempool_destroy(log->meta_pool);
+out_mempool:
 	bioset_free(log->bs);
 io_bs:
 	kmem_cache_destroy(log->io_kc);
@@ -1211,6 +1220,7 @@ io_kc:
 void r5l_exit_log(struct r5l_log *log)
 {
 	md_unregister_thread(&log->reclaim_thread);
+	mempool_destroy(log->meta_pool);
 	bioset_free(log->bs);
 	kmem_cache_destroy(log->io_kc);
 	kfree(log);
