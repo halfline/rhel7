@@ -1782,6 +1782,7 @@ struct iscsi_scan_data {
 	unsigned int channel;
 	unsigned int id;
 	unsigned int lun;
+	enum scsi_scan_mode rescan;
 };
 
 static int iscsi_user_scan_session(struct device *dev, void *data)
@@ -1813,7 +1814,7 @@ static int iscsi_user_scan_session(struct device *dev, void *data)
 		    (scan_data->id == SCAN_WILD_CARD ||
 		     scan_data->id == id))
 			scsi_scan_target(&session->dev, 0, id,
-					 scan_data->lun, 1);
+					 scan_data->lun, scan_data->rescan);
 	}
 
 user_scan_exit:
@@ -1830,6 +1831,7 @@ static int iscsi_user_scan(struct Scsi_Host *shost, uint channel,
 	scan_data.channel = channel;
 	scan_data.id = id;
 	scan_data.lun = lun;
+	scan_data.rescan = SCSI_SCAN_MANUAL;
 
 	return device_for_each_child(&shost->shost_gendev, &scan_data,
 				     iscsi_user_scan_session);
@@ -1846,6 +1848,7 @@ static void iscsi_scan_session(struct work_struct *work)
 	scan_data.channel = 0;
 	scan_data.id = SCAN_WILD_CARD;
 	scan_data.lun = SCAN_WILD_CARD;
+	scan_data.rescan = SCSI_SCAN_RESCAN;
 
 	iscsi_user_scan_session(&session->dev, &scan_data);
 	atomic_dec(&ihost->nr_scans);

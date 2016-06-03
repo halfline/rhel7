@@ -2744,7 +2744,7 @@ static int srp_add_target(struct srp_host *host, struct srp_target_port *target)
 	spin_unlock(&host->target_lock);
 
 	scsi_scan_target(&target->scsi_host->shost_gendev,
-			 0, target->scsi_id, SCAN_WILD_CARD, 0);
+			 0, target->scsi_id, SCAN_WILD_CARD, SCSI_SCAN_INITIAL);
 
 	if (!target->connected || target->qp_in_error) {
 		shost_printk(KERN_INFO, target->scsi_host,
