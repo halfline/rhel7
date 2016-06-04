@@ -799,8 +799,7 @@ static ssize_t path_info_show(struct device *dev,
 				PATH_STRING_LEN,
 				"PORT: %.2s ",
 				phys_connector);
-		if (hdev->devtype == TYPE_DISK &&
-			hdev->expose_state != HPSA_DO_NOT_EXPOSE) {
+		if (hdev->devtype == TYPE_DISK && hdev->expose_device) {
 			if (box == 0 || box == 0xFF) {
 				output_len += snprintf(path[i] + output_len,
 					PATH_STRING_LEN,
@@ -1159,7 +1158,7 @@ static void hpsa_show_dev_msg(const char *level, struct ctlr_info *h,
 				"RAID-?" : raid_label[dev->raid_level],
 			dev->offload_config ? '+' : '-',
 			dev->offload_enabled ? '+' : '-',
-			dev->expose_state);
+			dev->expose_device);
 }
 
 /* Add an entry into h->dev[] array. */
@@ -1232,7 +1231,7 @@ lun_assigned:
 	added[*nadded] = device;
 	(*nadded)++;
 	hpsa_show_dev_msg(KERN_INFO, h, device,
-		device->expose_state & HPSA_SCSI_ADD ? "added" : "masked");
+		device->expose_device ? "added" : "masked");
 	device->offload_to_be_enabled = device->offload_enabled;
 	device->offload_enabled = 0;
 	return 0;
@@ -1795,7 +1794,7 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
 	for (i = 0; i < nremoved; i++) {
 		if (removed[i] == NULL)
 			continue;
-		if (removed[i]->expose_state & HPSA_SCSI_ADD) {
+		if (removed[i]->expose_device) {
 			struct scsi_device *sdev =
 				scsi_device_lookup(sh, removed[i]->bus,
 					removed[i]->target, removed[i]->lun);
@@ -1820,7 +1819,7 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h,
 	for (i = 0; i < nadded; i++) {
 		if (added[i] == NULL)
 			continue;
-		if (!(added[i]->expose_state & HPSA_SCSI_ADD))
+		if (!(added[i]->expose_device))
 			continue;
 		if (scsi_add_device(sh, added[i]->bus,
 			added[i]->target, added[i]->lun) == 0)
@@ -1870,7 +1869,7 @@ static int hpsa_slave_alloc(struct scsi_device *sdev)
 
 	if (likely(sd)) {
 		atomic_set(&sd->ioaccel_cmds_out, 0);
-		sdev->hostdata = (sd->expose_state & HPSA_SCSI_ADD) ? sd : NULL;
+		sdev->hostdata = sd->expose_device ? sd : NULL;
 		queue_depth = sd->queue_depth != 0 ?
 			sd->queue_depth : sdev->host->can_queue;
 	} else {
@@ -1896,7 +1895,7 @@ static int hpsa_slave_configure(struct scsi_device *sdev)
 	struct hpsa_scsi_dev_t *sd;
 
 	sd = sdev->hostdata;
-	sdev->no_uld_attach = !sd || !(sd->expose_state & HPSA_ULD_ATTACH);
+	sdev->no_uld_attach = !sd || !sd->expose_device;
 
 
 	return 0;
@@ -3875,12 +3874,10 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
 
 		/* do not expose masked devices */
 		if (MASKED_DEVICE(lunaddrbytes) &&
-			i < nphysicals + (raid_ctlr_position == 0)) {
-			this_device->expose_state = HPSA_DO_NOT_EXPOSE;
-		} else {
-			this_device->expose_state =
-					HPSA_SG_ATTACH | HPSA_ULD_ATTACH;
-		}
+			i < nphysicals + (raid_ctlr_position == 0))
+			this_device->expose_device = 0;
+		else
+			this_device->expose_device = 1;
 
 		switch (this_device->devtype) {
 		case TYPE_ROM:
