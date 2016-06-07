@@ -18,6 +18,7 @@
 #include <net/netfilter/ipv6/nf_reject.h>
 #include <linux/ip.h>
 #include <net/ip.h>
+#include <net/ip6_checksum.h>
 #include "../br_private.h"
 
 static void nft_reject_br_push_etherhdr(struct sk_buff *oldskb,
