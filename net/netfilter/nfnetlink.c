@@ -294,7 +294,6 @@ replay:
 	if (!nskb)
 		return netlink_ack(oskb, nlh, -ENOMEM);
 
-	nskb->sk = oskb->sk;
 	skb = nskb;
 
 	nfnl_lock(subsys_id);
