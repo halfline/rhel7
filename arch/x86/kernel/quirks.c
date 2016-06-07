@@ -577,8 +577,6 @@ static void quirk_intel_soc_ixgbe_variant(struct pci_dev *dev)
 		return;
 	mark_hardware_unsupported("Intel ixgbe device");
 }
-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15AC,
-			quirk_intel_soc_ixgbe_variant);
 DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15AE,
 			quirk_intel_soc_ixgbe_variant);
 
