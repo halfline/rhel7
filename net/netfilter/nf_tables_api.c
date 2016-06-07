@@ -2604,7 +2604,7 @@ static int nf_tables_newset(struct sock *nlsk, struct sk_buff *skb,
 	}
 
 	desc.klen = ntohl(nla_get_be32(nla[NFTA_SET_KEY_LEN]));
-	if (desc.klen == 0 || desc.klen > FIELD_SIZEOF(struct nft_data, data))
+	if (desc.klen == 0 || desc.klen > NFT_DATA_VALUE_MAXLEN)
 		return -EINVAL;
 
 	flags = 0;
@@ -2630,11 +2630,10 @@ static int nf_tables_newset(struct sock *nlsk, struct sk_buff *skb,
 			if (nla[NFTA_SET_DATA_LEN] == NULL)
 				return -EINVAL;
 			desc.dlen = ntohl(nla_get_be32(nla[NFTA_SET_DATA_LEN]));
-			if (desc.dlen == 0 ||
-			    desc.dlen > FIELD_SIZEOF(struct nft_data, data))
+			if (desc.dlen == 0 || desc.dlen > NFT_DATA_VALUE_MAXLEN)
 				return -EINVAL;
 		} else
-			desc.dlen = sizeof(struct nft_data);
+			desc.dlen = sizeof(struct nft_verdict);
 	} else if (flags & NFT_SET_MAP)
 		return -EINVAL;
 
@@ -2850,12 +2849,10 @@ void nf_tables_unbind_set(const struct nft_ctx *ctx, struct nft_set *set,
 
 const struct nft_set_ext_type nft_set_ext_types[] = {
 	[NFT_SET_EXT_KEY]		= {
-		.len	= sizeof(struct nft_data),
-		.align	= __alignof__(struct nft_data),
+		.align	= __alignof__(u32),
 	},
 	[NFT_SET_EXT_DATA]		= {
-		.len	= sizeof(struct nft_data),
-		.align	= __alignof__(struct nft_data),
+		.align	= __alignof__(u32),
 	},
 	[NFT_SET_EXT_FLAGS]		= {
 		.len	= sizeof(u8),
@@ -3294,7 +3291,7 @@ static int nft_add_set_elem(struct nft_ctx *ctx, struct nft_set *set,
 		timeout = set->timeout;
 	}
 
-	err = nft_data_init(ctx, &elem.key, sizeof(elem.key), &d1,
+	err = nft_data_init(ctx, &elem.key.val, sizeof(elem.key), &d1,
 			    nla[NFTA_SET_ELEM_KEY]);
 	if (err < 0)
 		goto err1;
@@ -3302,7 +3299,7 @@ static int nft_add_set_elem(struct nft_ctx *ctx, struct nft_set *set,
 	if (d1.type != NFT_DATA_VALUE || d1.len != set->klen)
 		goto err2;
 
-	nft_set_ext_add(&tmpl, NFT_SET_EXT_KEY);
+	nft_set_ext_add_length(&tmpl, NFT_SET_EXT_KEY, d1.len);
 	if (timeout > 0) {
 		nft_set_ext_add(&tmpl, NFT_SET_EXT_EXPIRATION);
 		if (timeout != set->timeout)
@@ -3337,7 +3334,7 @@ static int nft_add_set_elem(struct nft_ctx *ctx, struct nft_set *set,
 				goto err3;
 		}
 
-		nft_set_ext_add(&tmpl, NFT_SET_EXT_DATA);
+		nft_set_ext_add_length(&tmpl, NFT_SET_EXT_DATA, d2.len);
 	}
 
 	/* The full maximum length of userdata can exceed the maximum
@@ -3353,7 +3350,7 @@ static int nft_add_set_elem(struct nft_ctx *ctx, struct nft_set *set,
 	}
 
 	err = -ENOMEM;
-	elem.priv = nft_set_elem_init(set, &tmpl, elem.key.data, data.data,
+	elem.priv = nft_set_elem_init(set, &tmpl, elem.key.val.data, data.data,
 				      timeout, GFP_KERNEL);
 	if (elem.priv == NULL)
 		goto err3;
@@ -3388,7 +3385,7 @@ err3:
 	if (nla[NFTA_SET_ELEM_DATA] != NULL)
 		nft_data_uninit(&data, d2.type);
 err2:
-	nft_data_uninit(&elem.key, d1.type);
+	nft_data_uninit(&elem.key.val, d1.type);
 err1:
 	return err;
 }
@@ -3455,7 +3452,7 @@ static int nft_del_setelem(struct nft_ctx *ctx, struct nft_set *set,
 	if (nla[NFTA_SET_ELEM_KEY] == NULL)
 		goto err1;
 
-	err = nft_data_init(ctx, &elem.key, sizeof(elem.key), &desc,
+	err = nft_data_init(ctx, &elem.key.val, sizeof(elem.key), &desc,
 			    nla[NFTA_SET_ELEM_KEY]);
 	if (err < 0)
 		goto err1;
@@ -3483,7 +3480,7 @@ static int nft_del_setelem(struct nft_ctx *ctx, struct nft_set *set,
 err3:
 	kfree(trans);
 err2:
-	nft_data_uninit(&elem.key, desc.type);
+	nft_data_uninit(&elem.key.val, desc.type);
 err1:
 	return err;
 }
