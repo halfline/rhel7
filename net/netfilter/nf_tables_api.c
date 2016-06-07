@@ -4044,10 +4044,10 @@ static int nf_tables_loop_check_setelem(const struct nft_ctx *ctx,
 		return 0;
 
 	data = nft_set_ext_data(ext);
-	switch (data->verdict) {
+	switch (data->verdict.code) {
 	case NFT_JUMP:
 	case NFT_GOTO:
-		return nf_tables_check_loops(ctx, data->chain);
+		return nf_tables_check_loops(ctx, data->verdict.chain);
 	default:
 		return 0;
 	}
@@ -4080,10 +4080,11 @@ static int nf_tables_check_loops(const struct nft_ctx *ctx,
 			if (data == NULL)
 				continue;
 
-			switch (data->verdict) {
+			switch (data->verdict.code) {
 			case NFT_JUMP:
 			case NFT_GOTO:
-				err = nf_tables_check_loops(ctx, data->chain);
+				err = nf_tables_check_loops(ctx,
+							data->verdict.chain);
 				if (err < 0)
 					return err;
 			default:
@@ -4166,15 +4167,17 @@ int nft_validate_register_store(const struct nft_ctx *ctx,
 			return -EINVAL;
 
 		if (data != NULL &&
-		    (data->verdict == NFT_GOTO || data->verdict == NFT_JUMP)) {
-			err = nf_tables_check_loops(ctx, data->chain);
+		    (data->verdict.code == NFT_GOTO ||
+		     data->verdict.code == NFT_JUMP)) {
+			err = nf_tables_check_loops(ctx, data->verdict.chain);
 			if (err < 0)
 				return err;
 
-			if (ctx->chain->level + 1 > data->chain->level) {
+			if (ctx->chain->level + 1 >
+			    data->verdict.chain->level) {
 				if (ctx->chain->level + 1 == NFT_JUMP_STACK_SIZE)
 					return -EMLINK;
-				data->chain->level = ctx->chain->level + 1;
+				data->verdict.chain->level = ctx->chain->level + 1;
 			}
 		}
 
@@ -4215,11 +4218,11 @@ static int nft_verdict_init(const struct nft_ctx *ctx, struct nft_data *data,
 
 	if (!tb[NFTA_VERDICT_CODE])
 		return -EINVAL;
-	data->verdict = ntohl(nla_get_be32(tb[NFTA_VERDICT_CODE]));
+	data->verdict.code = ntohl(nla_get_be32(tb[NFTA_VERDICT_CODE]));
 
-	switch (data->verdict) {
+	switch (data->verdict.code) {
 	default:
-		switch (data->verdict & NF_VERDICT_MASK) {
+		switch (data->verdict.code & NF_VERDICT_MASK) {
 		case NF_ACCEPT:
 		case NF_DROP:
 		case NF_QUEUE:
@@ -4245,7 +4248,7 @@ static int nft_verdict_init(const struct nft_ctx *ctx, struct nft_data *data,
 			return -EOPNOTSUPP;
 
 		chain->use++;
-		data->chain = chain;
+		data->verdict.chain = chain;
 		desc->len = sizeof(data);
 		break;
 	}
@@ -4256,10 +4259,10 @@ static int nft_verdict_init(const struct nft_ctx *ctx, struct nft_data *data,
 
 static void nft_verdict_uninit(const struct nft_data *data)
 {
-	switch (data->verdict) {
+	switch (data->verdict.code) {
 	case NFT_JUMP:
 	case NFT_GOTO:
-		data->chain->use--;
+		data->verdict.chain->use--;
 		break;
 	}
 }
@@ -4272,13 +4275,14 @@ static int nft_verdict_dump(struct sk_buff *skb, const struct nft_data *data)
 	if (!nest)
 		goto nla_put_failure;
 
-	if (nla_put_be32(skb, NFTA_VERDICT_CODE, htonl(data->verdict)))
+	if (nla_put_be32(skb, NFTA_VERDICT_CODE, htonl(data->verdict.code)))
 		goto nla_put_failure;
 
-	switch (data->verdict) {
+	switch (data->verdict.code) {
 	case NFT_JUMP:
 	case NFT_GOTO:
-		if (nla_put_string(skb, NFTA_VERDICT_CHAIN, data->chain->name))
+		if (nla_put_string(skb, NFTA_VERDICT_CHAIN,
+				   data->verdict.chain->name))
 			goto nla_put_failure;
 	}
 	nla_nest_end(skb, nest);
