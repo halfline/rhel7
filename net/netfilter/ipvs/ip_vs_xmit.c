@@ -259,7 +259,7 @@ __ip_vs_get_out_rt(struct sk_buff *skb, struct ip_vs_dest *dest,
 			goto err_put;
 		}
 		ort = skb_rtable(skb);
-		if (!skb->dev && sk && sk->sk_state != TCP_TIME_WAIT)
+		if (!skb->dev && sk && sk_fullsock(sk))
 			ort->dst.ops->update_pmtu(&ort->dst, sk, NULL, mtu);
 		/* MTU check allowed? */
 		df = sysctl_pmtu_disc(ipvs) ? iph->frag_off & htons(IP_DF) : 0;
