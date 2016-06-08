@@ -222,6 +222,13 @@ F:	include/linux/device-mapper.h
 F:	include/linux/dm-*.h
 F:	include/uapi/linux/dm-*.h
 
+DEVLINK
+M:	Ivan Vecera <ivecera@redhat.com>
+S:	Maintained
+F:	net/core/devlink.c
+F:	include/net/devlink.h
+F:	include/uapi/linux/devlink.h
+
 DIRECT IO
 M:	Jeff Moyer <jmoyer@redhat.com>
 S:	Maintained
