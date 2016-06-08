@@ -66,6 +66,29 @@ enum {
 	NETIF_F_GSO_GRE_CSUM_BIT,	/* ... GRE with csum with TSO */
 	NETIF_F_GSO_UDP_TUNNEL_CSUM_BIT,/* ... UDP TUNNEL with TSO & CSUM */
 	NETIF_F_GSO_TUNNEL_REMCSUM_BIT, /* ... TUNNEL with TSO & REMCSUM */
+
+	/*
+	 * RHEL only: Make sure to leave space to allow adding new GSO bits
+	 * to this second arena of GSO bits so as not having to add another,
+	 * third, GSO arena. Please add new GSO bits upwards starting
+	 * at __NETIF_F_GSO2_PLACEHOLDER_1.
+	 *
+	 * !!! Make sure to add accompanying SKB flags to SKB_GSO2_MASK !!!
+	 *
+	 * Add non-GSO bits right before NETDEV_FEATURE_COUNT, as long as
+	 * there's space left.  Otherwise add further non-GSO bits starting
+	 * at __NETIF_F_GSO2_PLACEHOLDER_8 downwards.  If we ever need more
+	 * than 64 bits here it requires an upstream change anyway.
+	 */
+	__NETIF_F_GSO2_PLACEHOLDER_1,
+	__NETIF_F_GSO2_PLACEHOLDER_2,
+	__NETIF_F_GSO2_PLACEHOLDER_3,
+	__NETIF_F_GSO2_PLACEHOLDER_4,
+	__NETIF_F_GSO2_PLACEHOLDER_5,
+	__NETIF_F_GSO2_PLACEHOLDER_6,
+	__NETIF_F_GSO2_PLACEHOLDER_7,
+	__NETIF_F_GSO2_PLACEHOLDER_8,
+
 	NETIF_F_HW_L2FW_DOFFLOAD_BIT,	/* Allow L2 Forwarding in Hardware */
 
 	NETIF_F_HW_TC_BIT,		/* Offload TC infrastructure */
