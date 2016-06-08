@@ -493,7 +493,7 @@ static int br_setport(struct net_bridge_port *p, struct nlattr *tb[])
 }
 
 /* Change state and parameters on port. */
-int br_setlink(struct net_device *dev, struct nlmsghdr *nlh)
+int br_setlink(struct net_device *dev, struct nlmsghdr *nlh, u16 flags)
 {
 	struct nlattr *protinfo;
 	struct nlattr *afspec;
@@ -549,7 +549,7 @@ out:
 }
 
 /* Delete port information */
-int br_dellink(struct net_device *dev, struct nlmsghdr *nlh)
+int br_dellink(struct net_device *dev, struct nlmsghdr *nlh, u16 flags)
 {
 	struct nlattr *afspec;
 	struct net_bridge_port *p;

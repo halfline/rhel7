@@ -1242,14 +1242,20 @@ struct net_device_ops {
 						struct net_device *dev,
 						int idx);
 
-	int			(*ndo_bridge_setlink)(struct net_device *dev,
-						      struct nlmsghdr *nlh);
+	RH_KABI_REPLACE(int	(*ndo_bridge_setlink)(struct net_device *dev,
+						      struct nlmsghdr *nlh),
+			int	(*ndo_bridge_setlink)(struct net_device *dev,
+						      struct nlmsghdr *nlh,
+						      u16 flags))
 	int			(*ndo_bridge_getlink)(struct sk_buff *skb,
 						      u32 pid, u32 seq,
 						      struct net_device *dev,
 						      u32 filter_mask);
-	int			(*ndo_bridge_dellink)(struct net_device *dev,
-						      struct nlmsghdr *nlh);
+	RH_KABI_REPLACE(int	(*ndo_bridge_dellink)(struct net_device *dev,
+						      struct nlmsghdr *nlh),
+			int	(*ndo_bridge_dellink)(struct net_device *dev,
+						      struct nlmsghdr *nlh,
+						      u16 flags))
 	int			(*ndo_change_carrier)(struct net_device *dev,
 						      bool new_carrier);
 	int			(*ndo_get_phys_port_id)(struct net_device *dev,

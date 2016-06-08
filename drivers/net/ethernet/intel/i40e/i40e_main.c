@@ -8934,7 +8934,8 @@ static int i40e_ndo_fdb_add(struct ndmsg *ndm, struct nlattr *tb[],
  * bridge mode enabled.
  **/
 static int i40e_ndo_bridge_setlink(struct net_device *dev,
-				   struct nlmsghdr *nlh)
+				   struct nlmsghdr *nlh,
+				   u16 flags)
 {
 	struct i40e_netdev_priv *np = netdev_priv(dev);
 	struct i40e_vsi *vsi = np->vsi;

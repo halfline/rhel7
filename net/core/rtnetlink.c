@@ -3050,7 +3050,7 @@ static int rtnl_bridge_setlink(struct sk_buff *skb, struct nlmsghdr *nlh)
 			goto out;
 		}
 
-		err = br_dev->netdev_ops->ndo_bridge_setlink(dev, nlh);
+		err = br_dev->netdev_ops->ndo_bridge_setlink(dev, nlh, flags);
 		if (err)
 			goto out;
 
@@ -3061,7 +3061,8 @@ static int rtnl_bridge_setlink(struct sk_buff *skb, struct nlmsghdr *nlh)
 		if (!dev->netdev_ops->ndo_bridge_setlink)
 			err = -EOPNOTSUPP;
 		else
-			err = dev->netdev_ops->ndo_bridge_setlink(dev, nlh);
+			err = dev->netdev_ops->ndo_bridge_setlink(dev, nlh,
+								  flags);
 		if (!err) {
 			flags &= ~BRIDGE_FLAGS_SELF;
 
@@ -3120,7 +3121,7 @@ static int rtnl_bridge_dellink(struct sk_buff *skb, struct nlmsghdr *nlh)
 			goto out;
 		}
 
-		err = br_dev->netdev_ops->ndo_bridge_dellink(dev, nlh);
+		err = br_dev->netdev_ops->ndo_bridge_dellink(dev, nlh, flags);
 		if (err)
 			goto out;
 
@@ -3131,7 +3132,8 @@ static int rtnl_bridge_dellink(struct sk_buff *skb, struct nlmsghdr *nlh)
 		if (!dev->netdev_ops->ndo_bridge_dellink)
 			err = -EOPNOTSUPP;
 		else
-			err = dev->netdev_ops->ndo_bridge_dellink(dev, nlh);
+			err = dev->netdev_ops->ndo_bridge_dellink(dev, nlh,
+								  flags);
 
 		if (!err) {
 			flags &= ~BRIDGE_FLAGS_SELF;
