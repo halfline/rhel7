@@ -5232,13 +5232,13 @@ static netdev_features_t be_features_check(struct sk_buff *skb,
 #endif
 
 static int be_get_phys_port_id(struct net_device *dev,
-			       struct netdev_phys_port_id *ppid)
+			       struct netdev_phys_item_id *ppid)
 {
 	int i, id_len = CNTL_SERIAL_NUM_WORDS * CNTL_SERIAL_NUM_WORD_SZ + 1;
 	struct be_adapter *adapter = netdev_priv(dev);
 	u8 *id;
 
-	if (MAX_PHYS_PORT_ID_LEN < id_len)
+	if (MAX_PHYS_ITEM_ID_LEN < id_len)
 		return -ENOSPC;
 
 	ppid->id[0] = adapter->hba_port_num + 1;

@@ -2273,7 +2273,7 @@ static int mlx4_en_get_vf_stats(struct net_device *dev, int vf,
 
 #define PORT_ID_BYTE_LEN 8
 static int mlx4_en_get_phys_port_id(struct net_device *dev,
-				    struct netdev_phys_port_id *ppid)
+				    struct netdev_phys_item_id *ppid)
 {
 	struct mlx4_en_priv *priv = netdev_priv(dev);
 	struct mlx4_dev *mdev = priv->mdev->dev;

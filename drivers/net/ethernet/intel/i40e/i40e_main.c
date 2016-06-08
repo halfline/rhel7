@@ -8859,7 +8859,7 @@ static void i40e_del_geneve_port(struct net_device *netdev,
 #endif
 
 static int i40e_get_phys_port_id(struct net_device *netdev,
-				 struct netdev_phys_port_id *ppid)
+				 struct netdev_phys_item_id *ppid)
 {
 	struct i40e_netdev_priv *np = netdev_priv(netdev);
 	struct i40e_pf *pf = np->vsi->back;
