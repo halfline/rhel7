@@ -9009,7 +9009,7 @@ static int i40e_ndo_bridge_setlink(struct net_device *dev,
  **/
 static int i40e_ndo_bridge_getlink(struct sk_buff *skb, u32 pid, u32 seq,
 				   struct net_device *dev,
-				   u32 __always_unused filter_mask)
+				   u32 __always_unused filter_mask, int nlflags)
 {
 	struct i40e_netdev_priv *np = netdev_priv(dev);
 	struct i40e_vsi *vsi = np->vsi;
@@ -9030,7 +9030,8 @@ static int i40e_ndo_bridge_getlink(struct sk_buff *skb, u32 pid, u32 seq,
 	if (!veb)
 		return 0;
 
-	return ndo_dflt_bridge_getlink(skb, pid, seq, dev, veb->bridge_mode, 0, 0);
+	return ndo_dflt_bridge_getlink(skb, pid, seq, dev, veb->bridge_mode, 0,
+				       0, nlflags);
 }
 
 /* Hardware supports L4 tunnel length of 128B (=2^7) which includes

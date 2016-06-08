@@ -1056,7 +1056,8 @@ struct net_device_ops_extended {
  * int (*ndo_bridge_setlink)(struct net_device *dev, struct nlmsghdr *nlh,
  *			     u16 flags)
  * int (*ndo_bridge_getlink)(struct sk_buff *skb, u32 pid, u32 seq,
- *			     struct net_device *dev, u32 filter_mask)
+ *			     struct net_device *dev, u32 filter_mask,
+ *			     int nlflags)
  * int (*ndo_bridge_dellink)(struct net_device *dev, struct nlmsghdr *nlh,
  *			     u16 flags);
  *
@@ -1252,10 +1253,15 @@ struct net_device_ops {
 			int	(*ndo_bridge_setlink)(struct net_device *dev,
 						      struct nlmsghdr *nlh,
 						      u16 flags))
-	int			(*ndo_bridge_getlink)(struct sk_buff *skb,
+	RH_KABI_REPLACE(int	(*ndo_bridge_getlink)(struct sk_buff *skb,
 						      u32 pid, u32 seq,
 						      struct net_device *dev,
-						      u32 filter_mask);
+						      u32 filter_mask),
+			int	(*ndo_bridge_getlink)(struct sk_buff *skb,
+						      u32 pid, u32 seq,
+						      struct net_device *dev,
+						      u32 filter_mask,
+						      int nlflags))
 	RH_KABI_REPLACE(int	(*ndo_bridge_dellink)(struct net_device *dev,
 						      struct nlmsghdr *nlh),
 			int	(*ndo_bridge_dellink)(struct net_device *dev,
