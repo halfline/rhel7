@@ -431,7 +431,8 @@ enum {
 
 /* NETIF_F_GSO flags are no longer part of a single range */
 #define SKB_GSO1_MASK (SKB_GSO_GRE_CSUM - 1)
-#define SKB_GSO2_MASK (SKB_GSO_GRE_CSUM|SKB_GSO_UDP_TUNNEL_CSUM)
+#define SKB_GSO2_MASK (SKB_GSO_GRE_CSUM|SKB_GSO_UDP_TUNNEL_CSUM|\
+		       SKB_GSO_TUNNEL_REMCSUM)
 
 #if BITS_PER_LONG > 32
 #define NET_SKBUFF_DATA_USES_OFFSET 1
