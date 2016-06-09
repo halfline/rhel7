@@ -28,17 +28,6 @@ static struct sk_buff *gre_gso_segment(struct sk_buff *skb,
 	int tnl_hlen;
 	bool csum;
 
-	if (unlikely(skb_shinfo(skb)->gso_type &
-				~(SKB_GSO_TCPV4 |
-				  SKB_GSO_TCPV6 |
-				  SKB_GSO_UDP |
-				  SKB_GSO_DODGY |
-				  SKB_GSO_TCP_ECN |
-				  SKB_GSO_GRE |
-				  SKB_GSO_GRE_CSUM |
-				  SKB_GSO_IPIP)))
-		goto out;
-
 	if (!skb->encapsulation)
 		goto out;
 
