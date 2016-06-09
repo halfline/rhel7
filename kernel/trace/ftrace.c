@@ -4355,9 +4355,21 @@ static void ftrace_init_module(struct module *mod,
 
 void ftrace_module_init(struct module *mod)
 {
+#ifdef CONFIG_S390
+	struct module_ext *mod_ext;
+
+	mutex_lock(&module_ext_mutex);
+	mod_ext = find_module_ext(mod);
+	mutex_unlock(&module_ext_mutex);
+
+	ftrace_init_module(mod, mod_ext->ftrace_callsites,
+			   mod_ext->ftrace_callsites +
+			   mod_ext->num_ftrace_callsites);
+#else
 	ftrace_init_module(mod, mod->ftrace_callsites,
 			   mod->ftrace_callsites +
 			   mod->num_ftrace_callsites);
+#endif
 }
 
 static int ftrace_module_notify_exit(struct notifier_block *self,

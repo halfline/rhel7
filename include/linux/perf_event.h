@@ -494,7 +494,7 @@ struct perf_event {
 #ifdef CONFIG_EVENT_TRACING
 	struct ftrace_event_call	*tp_event;
 	struct event_filter		*filter;
-#ifdef CONFIG_FUNCTION_TRACER
+#if defined(CONFIG_FUNCTION_TRACER) && !defined(CONFIG_S390)
 	struct ftrace_ops               ftrace_ops;
 #endif
 #endif
@@ -512,6 +512,9 @@ struct perf_event {
 	RH_KABI_EXTEND(struct list_head		migrate_entry)
 	RH_KABI_EXTEND(struct list_head		active_entry)
 	RH_KABI_EXTEND(void			*pmu_private)
+#if defined(CONFIG_FUNCTION_TRACER) && defined(CONFIG_S390)
+	RH_KABI_EXTEND(struct ftrace_ops	 ftrace_ops)
+#endif
 #endif /* CONFIG_PERF_EVENTS */
 };
 
