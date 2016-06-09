@@ -278,7 +278,8 @@ struct sctp_datamsg *sctp_datamsg_from_user(struct sctp_association *asoc,
 				frag |= SCTP_DATA_SACK_IMM;
 		}
 
-		chunk = sctp_make_datafrag_empty(asoc, sinfo, len, frag, 0);
+		chunk = sctp_make_datafrag_empty(asoc, sinfo, len, frag,
+						 0, GFP_KERNEL);
 
 		if (!chunk) {
 			err = -ENOMEM;
@@ -316,7 +317,8 @@ struct sctp_datamsg *sctp_datamsg_from_user(struct sctp_association *asoc,
 		    (sinfo->sinfo_flags & SCTP_SACK_IMMEDIATELY))
 			frag |= SCTP_DATA_SACK_IMM;
 
-		chunk = sctp_make_datafrag_empty(asoc, sinfo, over, frag, 0);
+		chunk = sctp_make_datafrag_empty(asoc, sinfo, over, frag,
+						 0, GFP_KERNEL);
 
 		if (!chunk) {
 			err = -ENOMEM;
