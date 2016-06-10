@@ -66,6 +66,7 @@ enum {
 	NETIF_F_GSO_GRE_CSUM_BIT,	/* ... GRE with csum with TSO */
 	NETIF_F_GSO_UDP_TUNNEL_CSUM_BIT,/* ... UDP TUNNEL with TSO & CSUM */
 	NETIF_F_GSO_TUNNEL_REMCSUM_BIT, /* ... TUNNEL with TSO & REMCSUM */
+	NETIF_F_GSO_SCTP_BIT,		/* ... SCTP fragmentation */
 
 	/*
 	 * RHEL only: Make sure to leave space to allow adding new GSO bits
@@ -87,7 +88,6 @@ enum {
 	__NETIF_F_GSO2_PLACEHOLDER_5,
 	__NETIF_F_GSO2_PLACEHOLDER_6,
 	__NETIF_F_GSO2_PLACEHOLDER_7,
-	__NETIF_F_GSO2_PLACEHOLDER_8,
 
 	NETIF_F_HW_L2FW_DOFFLOAD_BIT,	/* Allow L2 Forwarding in Hardware */
 
@@ -146,6 +146,7 @@ enum {
 #define NETIF_F_GSO_UDP_TUNNEL_CSUM __NETIF_F(GSO_UDP_TUNNEL_CSUM)
 #define NETIF_F_GSO_MPLS	__NETIF_F(GSO_MPLS)
 #define NETIF_F_GSO_TUNNEL_REMCSUM __NETIF_F(GSO_TUNNEL_REMCSUM)
+#define NETIF_F_GSO_SCTP	__NETIF_F(GSO_SCTP)
 #define NETIF_F_HW_VLAN_STAG_FILTER __NETIF_F(HW_VLAN_STAG_FILTER)
 #define NETIF_F_HW_VLAN_STAG_RX	__NETIF_F(HW_VLAN_STAG_RX)
 #define NETIF_F_HW_VLAN_STAG_TX	__NETIF_F(HW_VLAN_STAG_TX)
@@ -168,7 +169,7 @@ enum {
 
 /* Segmentation offload feature mask */
 #define NETIF_F_GSO2_MASK (NETIF_F_GSO_GRE_CSUM|NETIF_F_GSO_UDP_TUNNEL_CSUM|\
-			   NETIF_F_GSO_TUNNEL_REMCSUM)
+			   NETIF_F_GSO_TUNNEL_REMCSUM|NETIF_F_GSO_SCTP)
 #define NETIF_F_GSO_MASK	((__NETIF_F_BIT(NETIF_F_GSO_LAST + 1) - \
 				 __NETIF_F_BIT(NETIF_F_GSO_SHIFT)) | \
 				NETIF_F_GSO2_MASK)
@@ -190,7 +191,8 @@ enum {
 				 NETIF_F_FSO)
 
 /* List of features with software fallbacks. */
-#define NETIF_F_GSO_SOFTWARE	(NETIF_F_ALL_TSO | NETIF_F_UFO)
+#define NETIF_F_GSO_SOFTWARE	(NETIF_F_ALL_TSO | NETIF_F_UFO | \
+				 NETIF_F_GSO_SCTP)
 
 /*
  * If one device supports one of these features, then enable them
