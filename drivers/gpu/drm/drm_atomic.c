@@ -139,7 +139,7 @@ void drm_atomic_state_default_clear(struct drm_atomic_state *state)
 	for (i = 0; i < state->num_connector; i++) {
 		struct drm_connector *connector = state->connectors[i];
 
-		if (!connector)
+		if (!connector || !connector->funcs)
 			continue;
 
 		/*
@@ -150,6 +150,7 @@ void drm_atomic_state_default_clear(struct drm_atomic_state *state)
 		 * case by setting all connector pointers to NULL.
 		 */
 		state->connector_states[i]->connector = NULL;
+
 		connector->funcs->atomic_destroy_state(NULL,
 						       state->connector_states[i]);
 		state->connectors[i] = NULL;
