@@ -1057,13 +1057,13 @@ static acpi_status vmbus_walk_resources(struct acpi_resource *res, void *ctx)
 	 * devices.
 	 */
 	case ACPI_RESOURCE_TYPE_ADDRESS32:
-		start = res->data.address32.minimum;
-		end = res->data.address32.maximum;
+		start = res->data.address32.address.minimum;
+		end = res->data.address32.address.maximum;
 		break;
 
 	case ACPI_RESOURCE_TYPE_ADDRESS64:
-		start = res->data.address64.minimum;
-		end = res->data.address64.maximum;
+		start = res->data.address64.address.minimum;
+		end = res->data.address64.address.maximum;
 		break;
 
 	default:

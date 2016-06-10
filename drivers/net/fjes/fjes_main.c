@@ -174,9 +174,9 @@ fjes_get_acpi_resource(struct acpi_resource *acpi_res, void *data)
 	switch (acpi_res->type) {
 	case ACPI_RESOURCE_TYPE_ADDRESS32:
 		addr = &acpi_res->data.address32;
-		res[0].start = addr->minimum;
-		res[0].end = addr->minimum +
-			addr->address_length - 1;
+		res[0].start = addr->address.minimum;
+		res[0].end = addr->address.minimum +
+			addr->address.address_length - 1;
 		break;
 
 	case ACPI_RESOURCE_TYPE_IRQ:
