@@ -1378,8 +1378,9 @@ static const struct net_device_ops fm10k_netdev_ops = {
 	.ndo_del_vxlan_port	= fm10k_del_vxlan_port,
 	.ndo_do_ioctl		= fm10k_ioctl,
 #if 0
-	.ndo_dfwd_add_station	= fm10k_dfwd_add_station,
-	.ndo_dfwd_del_station	= fm10k_dfwd_del_station,
+	.ndo_size		= sizeof(struct net_device_ops),
+	.extended.ndo_dfwd_add_station	= fm10k_dfwd_add_station,
+	.extended.ndo_dfwd_del_station	= fm10k_dfwd_del_station,
 #endif
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller	= fm10k_netpoll,

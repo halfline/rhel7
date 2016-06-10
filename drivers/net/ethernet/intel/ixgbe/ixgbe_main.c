@@ -8655,6 +8655,7 @@ ixgbe_features_check(struct sk_buff *skb, struct net_device *dev,
 }
 
 static const struct net_device_ops ixgbe_netdev_ops = {
+	.ndo_size		= sizeof(struct net_device_ops),
 	.ndo_open		= ixgbe_open,
 	.ndo_stop		= ixgbe_close,
 	.ndo_start_xmit		= ixgbe_xmit_frame,
@@ -8703,8 +8704,8 @@ static const struct net_device_ops ixgbe_netdev_ops = {
 	.ndo_del_vxlan_port	= ixgbe_del_vxlan_port,
 #endif /* CONFIG_IXGBE_VXLAN */
 	.ndo_features_check	= ixgbe_features_check,
-	.ndo_dfwd_add_station	= ixgbe_fwd_add,
-	.ndo_dfwd_del_station	= ixgbe_fwd_del,
+	.extended.ndo_dfwd_add_station	= ixgbe_fwd_add,
+	.extended.ndo_dfwd_del_station	= ixgbe_fwd_del,
 };
 
 /**

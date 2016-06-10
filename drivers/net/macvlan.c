@@ -423,7 +423,7 @@ static int macvlan_open(struct net_device *dev)
 
 	if (lowerdev->features & NETIF_F_HW_L2FW_DOFFLOAD) {
 		vlan->fwd_priv =
-		      lowerdev->netdev_ops->ndo_dfwd_add_station(lowerdev, dev);
+		      get_ndo_ext(lowerdev->netdev_ops, ndo_dfwd_add_station)(lowerdev, dev);
 
 		/* If we get a NULL pointer back, or if we get an error
 		 * then we should just fall through to the non accelerated path
@@ -455,8 +455,8 @@ del_unicast:
 	dev_uc_del(lowerdev, dev->dev_addr);
 out:
 	if (vlan->fwd_priv) {
-		lowerdev->netdev_ops->ndo_dfwd_del_station(lowerdev,
-							   vlan->fwd_priv);
+		get_ndo_ext(lowerdev->netdev_ops, ndo_dfwd_del_station)(lowerdev,
+									vlan->fwd_priv);
 		vlan->fwd_priv = NULL;
 	}
 	return err;
@@ -468,8 +468,8 @@ static int macvlan_stop(struct net_device *dev)
 	struct net_device *lowerdev = vlan->lowerdev;
 
 	if (vlan->fwd_priv) {
-		lowerdev->netdev_ops->ndo_dfwd_del_station(lowerdev,
-							   vlan->fwd_priv);
+		get_ndo_ext(lowerdev->netdev_ops, ndo_dfwd_del_station)(lowerdev,
+									vlan->fwd_priv);
 		vlan->fwd_priv = NULL;
 		return 0;
 	}

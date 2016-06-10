@@ -810,12 +810,28 @@ struct tc_to_netdev {
  * fields defined here must initialize net_device_ops->ndo_size to
  * sizeof(struct net_device_ops).
  *
+ * void* (*ndo_dfwd_add_station)(struct net_device *pdev,
+ *				 struct net_device *dev)
+ *	Called by upper layer devices to accelerate switching or other
+ *	station functionality into hardware. 'pdev is the lowerdev
+ *	to use for the offload and 'dev' is the net device that will
+ *	back the offload. Returns a pointer to the private structure
+ *	the upper layer will maintain.
+ * void (*ndo_dfwd_del_station)(struct net_device *pdev, void *priv)
+ *	Called by upper layer device to delete the station created
+ *	by 'ndo_dfwd_add_station'. 'pdev' is the net device backing
+ *	the station and priv is the structure returned by the add
+ *	operation.
  * int (*ndo_set_tx_maxrate)(struct net_device *dev,
  *			     int queue_index, u32 maxrate);
  *	Called when a user wants to set a max-rate limitation of specific
  *	TX queue.
  */
 struct net_device_ops_extended {
+	void*			(*ndo_dfwd_add_station)(struct net_device *pdev,
+							struct net_device *dev);
+	void			(*ndo_dfwd_del_station)(struct net_device *pdev,
+							void *priv);
 	int			(*ndo_set_tx_maxrate)(struct net_device *dev,
 						      int queue_index,
 						      u32 maxrate);
@@ -1078,19 +1094,6 @@ struct net_device_ops_extended {
  *	be otherwise expressed by feature flags. The check is called with
  *	the set of features that the stack has calculated and it returns
  *	those the driver believes to be appropriate.
- *
- * void* (*ndo_dfwd_add_station)(struct net_device *pdev,
- *				 struct net_device *dev)
- *	Called by upper layer devices to accelerate switching or other
- *	station functionality into hardware. 'pdev is the lowerdev
- *	to use for the offload and 'dev' is the net device that will
- *	back the offload. Returns a pointer to the private structure
- *	the upper layer will maintain.
- * void (*ndo_dfwd_del_station)(struct net_device *pdev, void *priv)
- *	Called by upper layer device to delete the station created
- *	by 'ndo_dfwd_add_station'. 'pdev' is the net device backing
- *	the station and priv is the structure returned by the add
- *	operation.
  * int (*ndo_fill_metadata_dst)(struct net_device *dev, struct sk_buff *skb);
  *	This function is used to get egress tunnel information for given skb.
  *	This is useful for retrieving outer tunnel header parameters while
@@ -1268,10 +1271,8 @@ struct net_device_ops {
 							   int vf, bool setting))
 
 	RH_KABI_RESERVE_P(6)
-	RH_KABI_USE_P(7, void*	(*ndo_dfwd_add_station)(struct net_device *pdev,
-							struct net_device *dev))
-	RH_KABI_USE_P(8, void	(*ndo_dfwd_del_station)(struct net_device *pdev,
-							void *priv))
+	RH_KABI_RESERVE_P(7)
+	RH_KABI_RESERVE_P(8)
 	RH_KABI_USE_P(9, int	(*ndo_fdb_add)(struct ndmsg *ndm,
 					       struct nlattr *tb[],
 					       struct net_device *dev,
