@@ -1,0 +1,2 @@
+#3-
+0x20520db0	fc_lport_destroy	drivers/scsi/libfc/libfc	EXPORT_SYMBOL
