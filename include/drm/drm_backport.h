@@ -21,6 +21,11 @@ static inline ktime_t ktime_mono_to_real(ktime_t mono)
 	return ktime_sub(mono, ktime_get_monotonic_offset());
 }
 
+static inline void get_monotonic_boottime64(struct timespec64 *ts)
+{
+	*ts = ktime_to_timespec64(ktime_get_boottime());
+}
+
 /*
  *
  */
@@ -87,7 +92,7 @@ struct shrinker2 {
 	/* compat: */
 	struct shrinker compat;
 };
-void register_shrinker2(struct shrinker2 *shrinker);
+int register_shrinker2(struct shrinker2 *shrinker);
 void unregister_shrinker2(struct shrinker2 *shrinker);
 
 #define shrinker            shrinker2
@@ -223,6 +228,8 @@ static inline enum acpi_backlight_type acpi_video_get_backlight_type(void)
  * avoiding/emulating 01c8f1c44b83a0825b573e7c723b033cece37b86 upstream:
  */
 #define __pfn_to_pfn_t(pfn, flags) (pfn)
+
+static inline bool apple_gmux_present(void) { return false; }
 
 int __init drm_backport_init(void);
 void __exit drm_backport_exit(void);

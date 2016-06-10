@@ -548,7 +548,7 @@ static int gmux_probe(struct pnp_dev *pnp, const struct pnp_device_id *id)
 		gmux_data->gpe = -1;
 	}
 
-	if (vga_switcheroo_register_handler(&gmux_handler)) {
+	if (vga_switcheroo_register_handler(&gmux_handler, VGA_SWITCHEROO_CAN_SWITCH_DDC)) {
 		ret = -ENODEV;
 		goto err_register_handler;
 	}

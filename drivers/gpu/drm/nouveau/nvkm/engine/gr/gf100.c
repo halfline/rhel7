@@ -27,6 +27,8 @@
 
 #include <core/client.h>
 #include <core/option.h>
+#include <core/firmware.h>
+#include <subdev/secboot.h>
 #include <subdev/fb.h>
 #include <subdev/mc.h>
 #include <subdev/pmu.h>
@@ -1429,21 +1431,40 @@ gf100_gr_init_ctxctl(struct gf100_gr *gr)
 	const struct gf100_grctx_func *grctx = gr->func->grctx;
 	struct nvkm_subdev *subdev = &gr->base.engine.subdev;
 	struct nvkm_device *device = subdev->device;
+	struct nvkm_secboot *sb = device->secboot;
 	int i;
 
 	if (gr->firmware) {
 		/* load fuc microcode */
 		nvkm_mc_unk260(device->mc, 0);
-		gf100_gr_init_fw(gr, 0x409000, &gr->fuc409c, &gr->fuc409d);
-		gf100_gr_init_fw(gr, 0x41a000, &gr->fuc41ac, &gr->fuc41ad);
+
+		/* securely-managed falcons must be reset using secure boot */
+		if (nvkm_secboot_is_managed(sb, NVKM_SECBOOT_FALCON_FECS))
+			nvkm_secboot_reset(sb, NVKM_SECBOOT_FALCON_FECS);
+		else
+			gf100_gr_init_fw(gr, 0x409000, &gr->fuc409c,
+					 &gr->fuc409d);
+		if (nvkm_secboot_is_managed(sb, NVKM_SECBOOT_FALCON_GPCCS))
+			nvkm_secboot_reset(sb, NVKM_SECBOOT_FALCON_GPCCS);
+		else
+			gf100_gr_init_fw(gr, 0x41a000, &gr->fuc41ac,
+					 &gr->fuc41ad);
+
 		nvkm_mc_unk260(device->mc, 1);
 
 		/* start both of them running */
 		nvkm_wr32(device, 0x409840, 0xffffffff);
 		nvkm_wr32(device, 0x41a10c, 0x00000000);
 		nvkm_wr32(device, 0x40910c, 0x00000000);
-		nvkm_wr32(device, 0x41a100, 0x00000002);
-		nvkm_wr32(device, 0x409100, 0x00000002);
+
+		if (nvkm_secboot_is_managed(sb, NVKM_SECBOOT_FALCON_GPCCS))
+			nvkm_secboot_start(sb, NVKM_SECBOOT_FALCON_GPCCS);
+		else
+			nvkm_wr32(device, 0x41a100, 0x00000002);
+		if (nvkm_secboot_is_managed(sb, NVKM_SECBOOT_FALCON_FECS))
+			nvkm_secboot_start(sb, NVKM_SECBOOT_FALCON_FECS);
+		else
+			nvkm_wr32(device, 0x409100, 0x00000002);
 		if (nvkm_msec(device, 2000,
 			if (nvkm_rd32(device, 0x409800) & 0x00000001)
 				break;
@@ -1685,6 +1706,12 @@ gf100_gr_dtor_fw(struct gf100_gr_fuc *fuc)
 	fuc->data = NULL;
 }
 
+static void
+gf100_gr_dtor_init(struct gf100_gr_pack *pack)
+{
+	vfree(pack);
+}
+
 void *
 gf100_gr_dtor(struct nvkm_gr *base)
 {
@@ -1698,6 +1725,11 @@ gf100_gr_dtor(struct nvkm_gr *base)
 	gf100_gr_dtor_fw(&gr->fuc409d);
 	gf100_gr_dtor_fw(&gr->fuc41ac);
 	gf100_gr_dtor_fw(&gr->fuc41ad);
+
+	gf100_gr_dtor_init(gr->fuc_bundle);
+	gf100_gr_dtor_init(gr->fuc_method);
+	gf100_gr_dtor_init(gr->fuc_sw_ctx);
+	gf100_gr_dtor_init(gr->fuc_sw_nonctx);
 
 	nvkm_memory_del(&gr->unk4188b8);
 	nvkm_memory_del(&gr->unk4188b4);
@@ -1722,22 +1754,9 @@ gf100_gr_ctor_fw(struct gf100_gr *gr, const char *fwname,
 	struct nvkm_subdev *subdev = &gr->base.engine.subdev;
 	struct nvkm_device *device = subdev->device;
 	const struct firmware *fw;
-	char f[64];
-	char cname[16];
 	int ret;
-	int i;
 
-	/* Convert device name to lowercase */
-	strncpy(cname, device->chip->name, sizeof(cname));
-	cname[sizeof(cname) - 1] = '\0';
-	i = strlen(cname);
-	while (i) {
-		--i;
-		cname[i] = tolower(cname[i]);
-	}
-
-	snprintf(f, sizeof(f), "nvidia/%s/%s.bin", cname, fwname);
-	ret = request_firmware(&fw, f, device->dev);
+	ret = nvkm_firmware_get(device, fwname, &fw);
 	if (ret) {
 		nvkm_error(subdev, "failed to load %s\n", fwname);
 		return ret;
@@ -1745,7 +1764,7 @@ gf100_gr_ctor_fw(struct gf100_gr *gr, const char *fwname,
 
 	fuc->size = fw->size;
 	fuc->data = kmemdup(fw->data, fuc->size, GFP_KERNEL);
-	release_firmware(fw);
+	nvkm_firmware_put(fw);
 	return (fuc->data != NULL) ? 0 : -ENOMEM;
 }
 
@@ -1765,15 +1784,6 @@ gf100_gr_ctor(const struct gf100_gr_func *func, struct nvkm_device *device,
 	if (ret)
 		return ret;
 
-	if (gr->firmware) {
-		nvkm_info(&gr->base.engine.subdev, "using external firmware\n");
-		if (gf100_gr_ctor_fw(gr, "fecs_inst", &gr->fuc409c) ||
-		    gf100_gr_ctor_fw(gr, "fecs_data", &gr->fuc409d) ||
-		    gf100_gr_ctor_fw(gr, "gpccs_inst", &gr->fuc41ac) ||
-		    gf100_gr_ctor_fw(gr, "gpccs_data", &gr->fuc41ad))
-			return -ENODEV;
-	}
-
 	return 0;
 }
 
@@ -1782,10 +1792,25 @@ gf100_gr_new_(const struct gf100_gr_func *func, struct nvkm_device *device,
 	      int index, struct nvkm_gr **pgr)
 {
 	struct gf100_gr *gr;
+	int ret;
+
 	if (!(gr = kzalloc(sizeof(*gr), GFP_KERNEL)))
 		return -ENOMEM;
 	*pgr = &gr->base;
-	return gf100_gr_ctor(func, device, index, gr);
+
+	ret = gf100_gr_ctor(func, device, index, gr);
+	if (ret)
+		return ret;
+
+	if (gr->firmware) {
+		if (gf100_gr_ctor_fw(gr, "fecs_inst", &gr->fuc409c) ||
+		    gf100_gr_ctor_fw(gr, "fecs_data", &gr->fuc409d) ||
+		    gf100_gr_ctor_fw(gr, "gpccs_inst", &gr->fuc41ac) ||
+		    gf100_gr_ctor_fw(gr, "gpccs_data", &gr->fuc41ad))
+			return -ENODEV;
+	}
+
+	return 0;
 }
 
 int
@@ -1808,6 +1833,8 @@ gf100_gr_init(struct gf100_gr *gr)
 	nvkm_wr32(device, GPC_BCAST(0x08b8), nvkm_memory_addr(gr->unk4188b8) >> 8);
 
 	gf100_gr_mmio(gr, gr->func->mmio);
+
+	nvkm_mask(device, TPC_UNIT(0, 0, 0x05c), 0x00000001, 0x00000001);
 
 	memcpy(tpcnr, gr->tpc_nr, sizeof(gr->tpc_nr));
 	for (i = 0, gpc = -1; i < gr->tpc_total; i++) {

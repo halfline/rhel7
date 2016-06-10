@@ -1178,8 +1178,7 @@ static int register_vga_switcheroo(struct azx *chip)
 	 * is there any machine with two switchable HDMI audio controllers?
 	 */
 	err = vga_switcheroo_register_audio_client(chip->pci, &azx_vs_ops,
-						    VGA_SWITCHEROO_DIS,
-						    hda->probe_continued);
+						    VGA_SWITCHEROO_DIS);
 	if (err < 0)
 		return err;
 	hda->vga_switcheroo_registered = 1;

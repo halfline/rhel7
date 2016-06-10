@@ -28,11 +28,12 @@ static int shrinker2_shrink(struct shrinker *shrinker, struct shrink_control *sc
 	return count;
 }
 
-void register_shrinker2(struct shrinker2 *s2)
+int register_shrinker2(struct shrinker2 *s2)
 {
 	s2->compat.shrink = shrinker2_shrink;
 	s2->compat.seeks = s2->seeks;
 	register_shrinker(&s2->compat);
+	return 0;
 }
 EXPORT_SYMBOL(register_shrinker2);
 
