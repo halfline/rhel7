@@ -1,0 +1,2 @@
+#3-
+0x1ff8a837	fc_lport_bsg_request	drivers/scsi/libfc/libfc	EXPORT_SYMBOL
