@@ -989,12 +989,12 @@ ktime_t ktime_get_real(void)
 EXPORT_SYMBOL_GPL(ktime_get_real);
 
 /**
- * getrawmonotonic - Returns the raw monotonic time in a timespec
- * @ts:		pointer to the timespec to be set
+ * getrawmonotonic64 - Returns the raw monotonic time in a timespec
+ * @ts:		pointer to the timespec64 to be set
  *
  * Returns the raw monotonic time (completely un-modified by ntp)
  */
-void getrawmonotonic(struct timespec *ts)
+void getrawmonotonic64(struct timespec64 *ts)
 {
 	struct timekeeper *tk = &timekeeper;
 	struct timespec64 ts64;
@@ -1009,9 +1009,10 @@ void getrawmonotonic(struct timespec *ts)
 	} while (read_seqcount_retry(&timekeeper_seq, seq));
 
 	timespec64_add_ns(&ts64, nsecs);
-	*ts = timespec64_to_timespec(ts64);
+	*ts = ts64;
 }
-EXPORT_SYMBOL(getrawmonotonic);
+EXPORT_SYMBOL(getrawmonotonic64);
+
 
 /**
  * timekeeping_valid_for_hres - Check if timekeeping is suitable for hres
