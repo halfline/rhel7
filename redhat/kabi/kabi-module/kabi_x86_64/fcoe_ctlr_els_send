@@ -1,0 +1,2 @@
+#3-
+0xd4fd5917	fcoe_ctlr_els_send	drivers/scsi/fcoe/libfcoe	EXPORT_SYMBOL
