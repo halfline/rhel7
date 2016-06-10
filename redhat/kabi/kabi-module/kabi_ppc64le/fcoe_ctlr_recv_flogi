@@ -1,0 +1,2 @@
+#3-
+0xece67b7c	fcoe_ctlr_recv_flogi	drivers/scsi/fcoe/libfcoe	EXPORT_SYMBOL
