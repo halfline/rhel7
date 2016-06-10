@@ -1,0 +1,2 @@
+#3-
+0x96f10126	fcoe_ctlr_destroy	drivers/scsi/fcoe/libfcoe	EXPORT_SYMBOL
