@@ -1566,8 +1566,8 @@ static int do_setvfinfo(struct net_device *dev, struct nlattr **tb)
 		struct ifla_vf_trust *ivt = nla_data(tb[IFLA_VF_TRUST]);
 
 		err = -EOPNOTSUPP;
-		if (ops->ndo_set_vf_trust)
-			err = ops->ndo_set_vf_trust(dev, ivt->vf, ivt->setting);
+		if (get_ndo_ext(ops, ndo_set_vf_trust))
+			err = get_ndo_ext(ops, ndo_set_vf_trust)(dev, ivt->vf, ivt->setting);
 		if (err < 0)
 			return err;
 	}

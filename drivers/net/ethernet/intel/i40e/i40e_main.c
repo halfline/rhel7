@@ -9055,6 +9055,7 @@ static netdev_features_t i40e_features_check(struct sk_buff *skb,
 }
 
 static const struct net_device_ops i40e_netdev_ops = {
+	.ndo_size		= sizeof(struct net_device_ops),
 	.ndo_open		= i40e_open,
 	.ndo_stop		= i40e_close,
 	.ndo_start_xmit		= i40e_lan_xmit_frame,
@@ -9082,7 +9083,7 @@ static const struct net_device_ops i40e_netdev_ops = {
 	.ndo_get_vf_config	= i40e_ndo_get_vf_config,
 	.ndo_set_vf_link_state	= i40e_ndo_set_vf_link_state,
 	.ndo_set_vf_spoofchk	= i40e_ndo_set_vf_spoofchk,
-	.ndo_set_vf_trust	= i40e_ndo_set_vf_trust,
+	.extended.ndo_set_vf_trust	= i40e_ndo_set_vf_trust,
 #if IS_ENABLED(CONFIG_VXLAN)
 	.ndo_add_vxlan_port	= i40e_add_vxlan_port,
 	.ndo_del_vxlan_port	= i40e_del_vxlan_port,

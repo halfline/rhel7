@@ -828,6 +828,8 @@ struct tc_to_netdev {
  *	TX queue.
  */
 struct net_device_ops_extended {
+	int			(*ndo_set_vf_trust)(struct net_device *dev,
+						    int vf, bool setting);
 	void*			(*ndo_dfwd_add_station)(struct net_device *pdev,
 							struct net_device *dev);
 	void			(*ndo_dfwd_del_station)(struct net_device *pdev,
@@ -1283,8 +1285,7 @@ struct net_device_ops {
 						u32 handle,
 						__be16 protocol,
 						struct tc_to_netdev *tc))
-	RH_KABI_USE_P(11, int	(*ndo_set_vf_trust)(struct net_device *dev,
-						    int vf, bool setting))
+	RH_KABI_RESERVE_P(11)
 	RH_KABI_USE_P(12, int	(*ndo_fill_metadata_dst)(struct net_device *dev,
 						       struct sk_buff *skb))
 	RH_KABI_USE_P(13, void	(*ndo_add_geneve_port)(struct  net_device *dev,
