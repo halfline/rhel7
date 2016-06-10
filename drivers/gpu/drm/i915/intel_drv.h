@@ -270,6 +270,9 @@ struct intel_atomic_state {
 
 	struct intel_shared_dpll_config shared_dpll[I915_NUM_PLLS];
 	struct intel_wm_config wm_config;
+
+	/* Gen9+ only */
+	struct skl_ddb_allocation ddb;
 };
 
 struct intel_plane_state {
