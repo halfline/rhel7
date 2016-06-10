@@ -162,6 +162,7 @@ struct net {
 	 *		- >0  : enable pf
 	 */
 	RH_KABI_EXTEND(int sctp_pf_enable)
+	RH_KABI_EXTEND(struct list_head	nfct_timeout_list)
 };
 
 /*
