@@ -786,6 +786,13 @@ struct fw_ldst_cmd {
 			__be16 vctl;
 			__be16 rval;
 		} mdio;
+		struct fw_ldst_cim_rq {
+			u8 req_first64[8];
+			u8 req_second64[8];
+			u8 resp_first64[8];
+			u8 resp_second64[8];
+			__be32 r3[2];
+		} cim_rq;
 		union fw_ldst_mps {
 			struct fw_ldst_mps_rplc {
 				__be16 fid_idx;
