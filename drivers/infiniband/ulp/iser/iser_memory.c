@@ -425,7 +425,7 @@ iser_reg_sig_mr(struct iscsi_iser_task *iser_task,
 	if (ret)
 		goto err;
 
-	if (!pi_ctx->sig_mr_valid)
+	if (pi_ctx->sig_mr_valid)
 		iser_inv_rkey(iser_tx_next_wr(tx_desc), pi_ctx->sig_mr, cqe);
 
 	wr = sig_handover_wr(iser_tx_next_wr(tx_desc));
@@ -443,7 +443,7 @@ iser_reg_sig_mr(struct iscsi_iser_task *iser_task,
 	wr->access_flags = IB_ACCESS_LOCAL_WRITE |
 			   IB_ACCESS_REMOTE_READ |
 			   IB_ACCESS_REMOTE_WRITE;
-	pi_ctx->sig_mr_valid = 0;
+	pi_ctx->sig_mr_valid = 1;
 
 	sig_reg->sge.lkey = pi_ctx->sig_mr->lkey;
 	sig_reg->rkey = pi_ctx->sig_mr->rkey;
@@ -468,7 +468,7 @@ static int iser_fast_reg_mr(struct iscsi_iser_task *iser_task,
 	struct ib_reg_wr *wr;
 	int n;
 
-	if (!rsc->mr_valid)
+	if (rsc->mr_valid)
 		iser_inv_rkey(iser_tx_next_wr(tx_desc), mr, cqe);
 
 	n = ib_map_mr_sg(mr, mem->sg, mem->size, SIZE_4K);
@@ -489,7 +489,7 @@ static int iser_fast_reg_mr(struct iscsi_iser_task *iser_task,
 		     IB_ACCESS_REMOTE_WRITE |
 		     IB_ACCESS_REMOTE_READ;
 
-	rsc->mr_valid = 0;
+	rsc->mr_valid = 1;
 
 	reg->sge.lkey = mr->lkey;
 	reg->rkey = mr->rkey;
