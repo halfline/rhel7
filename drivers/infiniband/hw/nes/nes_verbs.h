@@ -189,4 +189,9 @@ struct nes_qp {
 	u8                    pau_pending;
 	u8                    pau_state;
 };
+
+struct ib_mr *nes_reg_phys_mr(struct ib_pd *ib_pd,
+		struct ib_phys_buf *buffer_list, int num_phys_buf, int acc,
+		u64 * iova_start);
+
 #endif			/* NES_VERBS_H */
