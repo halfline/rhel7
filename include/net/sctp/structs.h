@@ -223,7 +223,7 @@ struct sctp_sock {
 		frag_interleave:1,
 		_reserved1:1,
 		_reserved2:1,
-		pending_data_ready:1;
+		data_ready_signalled:1;
 
 	atomic_t pd_mode;
 	/* Receive to here while partial delivery is in effect. */

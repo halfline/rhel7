@@ -1761,10 +1761,9 @@ out:
 	} else if (local_cork)
 		error = sctp_outq_uncork(&asoc->outqueue, gfp);
 
-	if (sp->pending_data_ready) {
-		sk->sk_data_ready(sk, 0);
-		sp->pending_data_ready = 0;
-	}
+	if (sp->data_ready_signalled)
+		sp->data_ready_signalled = 0;
+
 	return error;
 nomem:
 	error = -ENOMEM;
