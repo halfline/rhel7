@@ -2215,6 +2215,11 @@ int t4_check_fw_version(struct adapter *adap)
 		exp_minor = T5FW_MIN_VERSION_MINOR;
 		exp_micro = T5FW_MIN_VERSION_MICRO;
 		break;
+	case CHELSIO_T6:
+		exp_major = T6FW_MIN_VERSION_MAJOR;
+		exp_minor = T6FW_MIN_VERSION_MINOR;
+		exp_micro = T6FW_MIN_VERSION_MICRO;
+		break;
 	default:
 		dev_err(adap->pdev_dev, "Unsupported chip type, %x\n",
 			adap->chip);
