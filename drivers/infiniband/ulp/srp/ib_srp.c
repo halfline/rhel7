@@ -130,6 +130,11 @@ module_param(ch_count, uint, 0444);
 MODULE_PARM_DESC(ch_count,
 		 "Number of RDMA channels to use for communication with an SRP target. Using more than one channel improves performance if the HCA supports multiple completion vectors. The default value is the minimum of four times the number of online CPU sockets and the number of completion vectors supported by the HCA.");
 
+/* set default to true */
+static bool srp_use_blk_mq = true;
+module_param_named(use_blk_mq, srp_use_blk_mq, bool, S_IRUGO | S_IWUSR);
+MODULE_PARM_DESC(use_blk_mq, "Use blk-mq for SRP");
+
 static void srp_add_one(struct ib_device *device);
 static void srp_remove_one(struct ib_device *device, void *client_data);
 static void srp_recv_completion(struct ib_cq *cq, void *ch_ptr);
@@ -2834,6 +2839,7 @@ static struct scsi_host_template srp_template = {
 	.this_id			= -1,
 	.cmd_per_lun			= SRP_DEFAULT_CMD_SQ_SIZE,
 	.use_clustering			= ENABLE_CLUSTERING,
+	.use_host_wide_tags		= 1,
 	.shost_attrs			= srp_host_attrs
 };
 
@@ -3232,6 +3238,8 @@ static ssize_t srp_create_target(struct device *dev,
 				      sizeof (struct srp_target_port));
 	if (!target_host)
 		return -ENOMEM;
+
+	target_host->use_blk_mq = srp_use_blk_mq;
 
 	target_host->transportt  = ib_srp_transport_template;
 	target_host->max_channel = 0;
