@@ -953,12 +953,12 @@ isert_disconnected_handler(struct rdma_cm_id *cma_id,
 		goto out;
 
 	mutex_lock(&isert_np->np_accept_mutex);
-        if (!list_empty(&isert_conn->accept_node)) {
-                list_del_init(&isert_conn->accept_node);
-                isert_put_conn(isert_conn);
-                queue_work(isert_release_wq, &isert_conn->release_work);
-        }
-        mutex_unlock(&isert_np->np_accept_mutex);
+	if (!list_empty(&isert_conn->accept_node)) {
+		list_del_init(&isert_conn->accept_node);
+		isert_put_conn(isert_conn);
+		queue_work(isert_release_wq, &isert_conn->release_work);
+	}
+	mutex_unlock(&isert_np->np_accept_mutex);
 
 out:
 	return 0;
