@@ -834,21 +834,21 @@ struct mlx5_ifc_cmd_hca_cap_bits {
 	u8         log_max_l2_table[0x5];
 	u8         log_uar_page_sz[0x10];
 
-	u8         reserved_68[0x1f];
-
 	u8	   reserved_64[0x20];
 	u8	   device_frequency_mhz[0x20];
 	u8	   device_frequency_khz[0x20];
 	u8         reserved_65[0xa0];
 
 	u8         reserved_66[0x1f];
+
+	u8         reserved_67[0x40];
+	u8         reserved_68[0x5f];
 	u8         cqe_zip[0x1];
 
 	u8         cqe_zip_timeout[0x10];
 	u8         cqe_zip_max_num[0x10];
 
 	u8         reserved_69[0x220];
-	u8         reserved_67[0x220];
 };
 
 enum mlx5_flow_destination_type {
