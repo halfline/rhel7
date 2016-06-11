@@ -929,6 +929,7 @@ static void srp_remove_target(struct srp_target_port *target)
 	srp_rport_get(target->rport);
 	srp_remove_host(target->scsi_host);
 	scsi_remove_host(target->scsi_host);
+	srp_stop_rport_timers(target->rport);
 	srp_disconnect_target(target);
 	srp_free_ch_ib(target, ch);
 	cancel_work_sync(&target->tl_err_work);
