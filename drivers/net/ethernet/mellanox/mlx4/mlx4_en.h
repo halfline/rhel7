@@ -383,6 +383,7 @@ struct mlx4_en_dev {
 	struct pci_dev		*pdev;
 	struct mutex		state_lock;
 	struct net_device       *pndev[MLX4_MAX_PORTS + 1];
+	struct net_device       *upper[MLX4_MAX_PORTS + 1];
 	u32                     port_cnt;
 	bool			device_up;
 	struct mlx4_en_profile  profile;
@@ -403,6 +404,7 @@ struct mlx4_en_dev {
 	unsigned long		overflow_period;
 	struct ptp_clock	*ptp_clock;
 	struct ptp_clock_info	ptp_clock_info;
+	struct notifier_block	nb;
 };
 
 
@@ -718,6 +720,9 @@ void mlx4_en_update_pfc_stats_bitmap(struct mlx4_dev *dev,
 				     struct mlx4_en_stats_bitmap *stats_bitmap,
 				     u8 rx_ppp, u8 rx_pause,
 				     u8 tx_ppp, u8 tx_pause);
+
+int mlx4_en_netdev_event(struct notifier_block *this,
+			 unsigned long event, void *ptr);
 
 /*
  * Functions for time stamping
