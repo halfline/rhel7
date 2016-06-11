@@ -207,6 +207,7 @@ new_conn:
 
 	atomic_set(&conn->c_state, RDS_CONN_DOWN);
 	conn->c_send_gen = 0;
+	conn->c_outgoing = (is_outgoing ? 1 : 0);
 	conn->c_reconnect_jiffies = 0;
 	INIT_DELAYED_WORK(&conn->c_send_w, rds_send_worker);
 	INIT_DELAYED_WORK(&conn->c_recv_w, rds_recv_worker);
@@ -328,7 +329,9 @@ void rds_conn_shutdown(struct rds_connection *conn)
 	rcu_read_lock();
 	if (!hlist_unhashed(&conn->c_hash_node)) {
 		rcu_read_unlock();
-		rds_queue_reconnect(conn);
+		if (conn->c_trans->t_type != RDS_TRANS_TCP ||
+		    conn->c_outgoing == 1)
+			rds_queue_reconnect(conn);
 	} else {
 		rcu_read_unlock();
 	}
