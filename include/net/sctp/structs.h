@@ -215,12 +215,14 @@ struct sctp_sock {
 	struct sctp_assocparams assocparams;
 	int user_frag;
 	__u32 autoclose;
-	__u8 nodelay;
-	__u8 disable_fragments;
-	__u8 v4mapped;
-	__u8 frag_interleave;
 	__u32 adaptation_ind;
 	__u32 pd_point;
+	__u16	nodelay:1,
+		disable_fragments:1,
+		v4mapped:1,
+		frag_interleave:1,
+		_reserved1:1,
+		_reserved2:1;
 
 	atomic_t pd_mode;
 	/* Receive to here while partial delivery is in effect. */
