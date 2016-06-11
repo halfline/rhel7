@@ -1771,11 +1771,34 @@ static noinline int handle_trace_pkt(struct adapter *adap,
 	return 0;
 }
 
+/**
+ * cxgb4_sgetim_to_hwtstamp - convert sge time stamp to hw time stamp
+ * @adap: the adapter
+ * @hwtstamps: time stamp structure to update
+ * @sgetstamp: 60bit iqe timestamp
+ *
+ * Every ingress queue entry has the 60-bit timestamp, convert that timestamp
+ * which is in Core Clock ticks into ktime_t and assign it
+ **/
+static void cxgb4_sgetim_to_hwtstamp(struct adapter *adap,
+				     struct skb_shared_hwtstamps *hwtstamps,
+				     u64 sgetstamp)
+{
+	u64 ns;
+	u64 tmp = (sgetstamp * 1000 * 1000 + adap->params.vpd.cclk / 2);
+
+	ns = div_u64(tmp, adap->params.vpd.cclk);
+
+	memset(hwtstamps, 0, sizeof(*hwtstamps));
+	hwtstamps->hwtstamp = ns_to_ktime(ns);
+}
+
 static void do_gro(struct sge_eth_rxq *rxq, const struct pkt_gl *gl,
 		   const struct cpl_rx_pkt *pkt)
 {
 	struct adapter *adapter = rxq->rspq.adap;
 	struct sge *s = &adapter->sge;
+	struct port_info *pi;
 	int ret;
 	struct sk_buff *skb;
 
@@ -1792,6 +1815,11 @@ static void do_gro(struct sge_eth_rxq *rxq, const struct pkt_gl *gl,
 	skb->truesize += skb->data_len;
 	skb->ip_summed = CHECKSUM_UNNECESSARY;
 	skb_record_rx_queue(skb, rxq->rspq.idx);
+	skb_mark_napi_id(skb, &rxq->rspq.napi);
+	pi = netdev_priv(skb->dev);
+	if (pi->rxtstamp)
+		cxgb4_sgetim_to_hwtstamp(adapter, skb_hwtstamps(skb),
+					 gl->sgetstamp);
 	if (rxq->rspq.netdev->features & NETIF_F_RXHASH)
 		skb_set_hash(skb, (__force u32)pkt->rsshdr.hash_val,
 			     PKT_HASH_TYPE_L3);
@@ -1827,6 +1855,7 @@ int t4_ethrx_handler(struct sge_rspq *q, const __be64 *rsp,
 	struct sge *s = &q->adap->sge;
 	int cpl_trace_pkt = is_t4(q->adap->params.chip) ?
 			    CPL_TRACE_PKT : CPL_TRACE_PKT_T5;
+	struct port_info *pi;
 
 	if (unlikely(*(u8 *)rsp == cpl_trace_pkt))
 		return handle_trace_pkt(q->adap, si);
@@ -1857,6 +1886,10 @@ int t4_ethrx_handler(struct sge_rspq *q, const __be64 *rsp,
 
 	rxq->stats.pkts++;
 
+	pi = netdev_priv(skb->dev);
+	if (pi->rxtstamp)
+		cxgb4_sgetim_to_hwtstamp(q->adap, skb_hwtstamps(skb),
+					 si->sgetstamp);
 	if (csum_ok && (pkt->l2info & htonl(RXF_UDP_F | RXF_TCP_F))) {
 		if (!pkt->ip_frag) {
 			skb->ip_summed = CHECKSUM_UNNECESSARY;
@@ -1998,6 +2031,8 @@ static int process_responses(struct sge_rspq *q, int budget)
 				unmap_rx_buf(q->adap, &rxq->fl);
 			}
 
+			si.sgetstamp = SGE_TIMESTAMP_G(
+					be64_to_cpu(rc->last_flit));
 			/*
 			 * Last buffer remains mapped so explicitly make it
 			 * coherent for CPU access.
