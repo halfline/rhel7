@@ -3264,10 +3264,6 @@ static ssize_t srp_create_target(struct device *dev,
 	if (ret)
 		goto out;
 
-	ret = scsi_init_shared_tag_map(target_host, target_host->can_queue); 
-	if (ret)
-		goto out;
-
 	target->req_ring_size = target->queue_size - SRP_TSK_MGMT_SQ_SIZE;
 
 	if (!srp_conn_unique(target->srp_host, target)) {

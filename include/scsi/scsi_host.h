@@ -492,6 +492,9 @@ struct scsi_host_template {
 	/* temporary flag to disable blk-mq I/O path */
 	RH_KABI_EXTEND(unsigned disable_blk_mq:1)
 
+	/* flag to enable the use of host-wide tags */
+	RH_KABI_EXTEND(unsigned use_host_wide_tags:1)
+
 	/*
 	 * Countdown for host blocking with no commands outstanding.
 	 */
