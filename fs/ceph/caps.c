@@ -2751,7 +2751,8 @@ static void handle_cap_grant(struct ceph_mds_client *mdsc,
 			     void *inline_data, int inline_len,
 			     struct ceph_buffer *xattr_buf,
 			     struct ceph_mds_session *session,
-			     struct ceph_cap *cap, int issued)
+			     struct ceph_cap *cap, int issued,
+			     u32 pool_ns_len)
 	__releases(ci->i_ceph_lock)
 	__releases(mdsc->snap_rwsem)
 {
@@ -2862,6 +2863,8 @@ static void handle_cap_grant(struct ceph_mds_client *mdsc,
 	if (newcaps & (CEPH_CAP_ANY_FILE_RD | CEPH_CAP_ANY_FILE_WR)) {
 		/* file layout may have changed */
 		ci->i_layout = grant->layout;
+		ci->i_pool_ns_len = pool_ns_len;
+
 		/* size/truncate_seq? */
 		queue_trunc = ceph_fill_file_size(inode, issued,
 					le32_to_cpu(grant->truncate_seq),
@@ -3396,6 +3399,7 @@ void ceph_handle_caps(struct ceph_mds_session *session,
 	u32  inline_len = 0;
 	void *snaptrace;
 	size_t snaptrace_len;
+	u32 pool_ns_len = 0;
 	void *p, *end;
 
 	dout("handle_caps from mds%d\n", mds);
@@ -3446,6 +3450,21 @@ void ceph_handle_caps(struct ceph_mds_session *session,
 			goto bad;
 		inline_data = p;
 		p += inline_len;
+	}
+
+	if (le16_to_cpu(msg->hdr.version) >= 8) {
+		u64 flush_tid;
+		u32 caller_uid, caller_gid;
+		u32 osd_epoch_barrier;
+		/* version >= 5 */
+		ceph_decode_32_safe(&p, end, osd_epoch_barrier, bad);
+		/* version >= 6 */
+		ceph_decode_64_safe(&p, end, flush_tid, bad);
+		/* version >= 7 */
+		ceph_decode_32_safe(&p, end, caller_uid, bad);
+		ceph_decode_32_safe(&p, end, caller_gid, bad);
+		/* version >= 8 */
+		ceph_decode_32_safe(&p, end, pool_ns_len, bad);
 	}
 
 	/* lookup ino */
@@ -3503,7 +3522,8 @@ void ceph_handle_caps(struct ceph_mds_session *session,
 				  &cap, &issued);
 		handle_cap_grant(mdsc, inode, h,
 				 inline_version, inline_data, inline_len,
-				 msg->middle, session, cap, issued);
+				 msg->middle, session, cap, issued,
+				 pool_ns_len);
 		if (realm)
 			ceph_put_snap_realm(mdsc, realm);
 		goto done_unlocked;
@@ -3527,7 +3547,8 @@ void ceph_handle_caps(struct ceph_mds_session *session,
 		issued |= __ceph_caps_dirty(ci);
 		handle_cap_grant(mdsc, inode, h,
 				 inline_version, inline_data, inline_len,
-				 msg->middle, session, cap, issued);
+				 msg->middle, session, cap, issued,
+				 pool_ns_len);
 		goto done_unlocked;
 
 	case CEPH_CAP_OP_FLUSH_ACK:
