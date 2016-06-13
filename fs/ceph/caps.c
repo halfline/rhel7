@@ -2850,6 +2850,7 @@ static void handle_cap_grant(struct ceph_mds_client *mdsc,
 				ceph_buffer_put(ci->i_xattrs.blob);
 			ci->i_xattrs.blob = ceph_buffer_get(xattr_buf);
 			ci->i_xattrs.version = version;
+			ceph_forget_all_cached_acls(inode);
 		}
 	}
 

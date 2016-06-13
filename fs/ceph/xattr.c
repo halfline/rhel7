@@ -14,12 +14,24 @@
 
 static int __remove_xattr(struct ceph_inode_info *ci,
 			  struct ceph_inode_xattr *xattr);
+/*
+ * List of handlers for synthetic system.* attributes. Other
+ * attributes are handled directly.
+ */
+const struct xattr_handler *ceph_xattr_handlers[] = {
+#ifdef CONFIG_CEPH_FS_POSIX_ACL
+	&ceph_xattr_acl_access_handler,
+	&ceph_xattr_acl_default_handler,
+#endif
+	NULL,
+};
 
 static bool ceph_is_valid_xattr(const char *name)
 {
 	return !strncmp(name, XATTR_CEPH_PREFIX, XATTR_CEPH_PREFIX_LEN) ||
 	       !strncmp(name, XATTR_SECURITY_PREFIX,
 			XATTR_SECURITY_PREFIX_LEN) ||
+	       !strncmp(name, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN) ||
 	       !strncmp(name, XATTR_TRUSTED_PREFIX, XATTR_TRUSTED_PREFIX_LEN) ||
 	       !strncmp(name, XATTR_USER_PREFIX, XATTR_USER_PREFIX_LEN);
 }
@@ -700,10 +712,9 @@ void __ceph_build_xattrs_blob(struct ceph_inode_info *ci)
 	}
 }
 
-ssize_t ceph_getxattr(struct dentry *dentry, const char *name, void *value,
+ssize_t __ceph_getxattr(struct inode *inode, const char *name, void *value,
 		      size_t size)
 {
-	struct inode *inode = dentry->d_inode;
 	struct ceph_inode_info *ci = ceph_inode(inode);
 	int err;
 	struct ceph_inode_xattr *xattr;
@@ -711,7 +722,6 @@ ssize_t ceph_getxattr(struct dentry *dentry, const char *name, void *value,
 
 	if (!ceph_is_valid_xattr(name))
 		return -ENODATA;
-
 
 	/* let's see if a virtual xattr was requested */
 	vxattr = ceph_match_vxattr(inode, name);
@@ -756,6 +766,15 @@ ssize_t ceph_getxattr(struct dentry *dentry, const char *name, void *value,
 out:
 	spin_unlock(&ci->i_ceph_lock);
 	return err;
+}
+
+ssize_t ceph_getxattr(struct dentry *dentry, const char *name, void *value,
+		      size_t size)
+{
+	if (!strncmp(name, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
+		return generic_getxattr(dentry, name, value, size);
+
+	return __ceph_getxattr(dentry->d_inode, name, value, size);
 }
 
 ssize_t ceph_listxattr(struct dentry *dentry, char *names, size_t size)
@@ -884,8 +903,8 @@ out:
 	return err;
 }
 
-int ceph_setxattr(struct dentry *dentry, const char *name,
-		  const void *value, size_t size, int flags)
+int __ceph_setxattr(struct dentry *dentry, const char *name,
+			const void *value, size_t size, int flags)
 {
 	struct inode *inode = dentry->d_inode;
 	struct ceph_vxattr *vxattr;
@@ -905,9 +924,6 @@ int ceph_setxattr(struct dentry *dentry, const char *name,
 
 	if (ceph_snap(inode) != CEPH_NOSNAP)
 		return -EROFS;
-
-	if (size == 0)
-		value = "";  /* empty EA, do not remove */
 
 	if (!ceph_is_valid_xattr(name))
 		return -EOPNOTSUPP;
@@ -1009,6 +1025,21 @@ out:
 	return err;
 }
 
+int ceph_setxattr(struct dentry *dentry, const char *name,
+		  const void *value, size_t size, int flags)
+{
+	if (ceph_snap(dentry->d_inode) != CEPH_NOSNAP)
+		return -EROFS;
+
+	if (!strncmp(name, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
+		return generic_setxattr(dentry, name, value, size, flags);
+
+	if (size == 0)
+		value = "";  /* empty EA, do not remove */
+
+	return __ceph_setxattr(dentry, name, value, size, flags);
+}
+
 static int ceph_send_removexattr(struct dentry *dentry, const char *name)
 {
 	struct ceph_fs_client *fsc = ceph_sb_to_client(dentry->d_sb);
@@ -1034,7 +1065,7 @@ static int ceph_send_removexattr(struct dentry *dentry, const char *name)
 	return err;
 }
 
-int ceph_removexattr(struct dentry *dentry, const char *name)
+int __ceph_removexattr(struct dentry *dentry, const char *name)
 {
 	struct inode *inode = dentry->d_inode;
 	struct ceph_vxattr *vxattr;
@@ -1046,9 +1077,6 @@ int ceph_removexattr(struct dentry *dentry, const char *name)
 	int required_blob_size;
 	int dirty;
 	bool lock_snap_rwsem = false;
-
-	if (ceph_snap(inode) != CEPH_NOSNAP)
-		return -EROFS;
 
 	if (!ceph_is_valid_xattr(name))
 		return -EOPNOTSUPP;
@@ -1127,3 +1155,13 @@ do_sync_unlocked:
 	return err;
 }
 
+int ceph_removexattr(struct dentry *dentry, const char *name)
+{
+	if (ceph_snap(dentry->d_inode) != CEPH_NOSNAP)
+		return -EROFS;
+
+	if (!strncmp(name, XATTR_SYSTEM_PREFIX, XATTR_SYSTEM_PREFIX_LEN))
+		return generic_removexattr(dentry, name);
+
+	return __ceph_removexattr(dentry, name);
+}
