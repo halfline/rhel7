@@ -705,7 +705,6 @@ static void ceph_aio_retry_work(struct work_struct *work)
 	ret = ceph_osdc_start_request(req->r_osdc, req, false);
 out:
 	if (ret < 0) {
-		BUG_ON(ret == -EOLDSNAPC);
 		req->r_result = ret;
 		ceph_aio_complete_req(req, NULL);
 	}
@@ -930,7 +929,6 @@ ceph_direct_read_write(struct kiocb *iocb, struct iov_iter *iter,
 				ret = ceph_osdc_start_request(req->r_osdc,
 							      req, false);
 			if (ret < 0) {
-				BUG_ON(ret == -EOLDSNAPC);
 				req->r_result = ret;
 				ceph_aio_complete_req(req, NULL);
 			}
