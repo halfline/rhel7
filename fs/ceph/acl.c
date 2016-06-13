@@ -166,11 +166,7 @@ static int ceph_set_acl(struct dentry *dentry, struct inode *inode,
 			goto out_free;
 	}
 
-	if (value)
-		ret = __ceph_setxattr(dentry, name, value, size, 0);
-	else
-		ret = __ceph_removexattr(dentry, name);
-
+	ret = __ceph_setxattr(dentry, name, value, size, 0);
 	if (ret) {
 		if (new_mode != old_mode) {
 			newattrs.ia_mode = old_mode;
