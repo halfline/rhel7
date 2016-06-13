@@ -34,6 +34,80 @@
  * need to wait for MDS acknowledgement.
  */
 
+/*
+ * Calculate the length sum of direct io vectors that can
+ * be combined into one page vector.
+ */
+static size_t dio_get_pagev_size(const struct iov_iter *it)
+{
+    const struct iovec *iov = it->iov;
+    const struct iovec *iovend = iov + it->nr_segs;
+    size_t size;
+
+    size = iov->iov_len - it->iov_offset;
+    /*
+     * An iov can be page vectored when both the current tail
+     * and the next base are page aligned.
+     */
+    while (PAGE_ALIGNED((iov->iov_base + iov->iov_len)) &&
+           (++iov < iovend && PAGE_ALIGNED((iov->iov_base)))) {
+        size += iov->iov_len;
+    }
+    dout("dio_get_pagevlen len = %zu\n", size);
+    return size;
+}
+
+/*
+ * Allocate a page vector based on (@it, @nbytes).
+ * The return value is the tuple describing a page vector,
+ * that is (@pages, @page_align, @num_pages).
+ */
+static struct page **
+dio_get_pages_alloc(const struct iov_iter *it, size_t nbytes,
+		    bool write, size_t *page_align, int *num_pages)
+{
+	struct iov_iter tmp_it = *it;
+	size_t align;
+	struct page **pages;
+	int ret = 0, idx, npages;
+
+	align = (unsigned long)(it->iov->iov_base + it->iov_offset) &
+		(PAGE_SIZE - 1);
+	npages = calc_pages_for(align, nbytes);
+	pages = kmalloc(sizeof(*pages) * npages, GFP_KERNEL);
+	if (!pages) {
+		pages = vmalloc(sizeof(*pages) * npages);
+		if (!pages)
+			return ERR_PTR(-ENOMEM);
+	}
+
+	for (idx = 0; idx < npages; ) {
+		void __user *data = tmp_it.iov->iov_base + tmp_it.iov_offset;
+		size_t off = (unsigned long)data & (PAGE_SIZE - 1);
+		size_t len = min_t(size_t, nbytes,
+				   tmp_it.iov->iov_len - tmp_it.iov_offset);
+		int n = (len + off + PAGE_SIZE - 1) >> PAGE_SHIFT;
+		ret = get_user_pages_fast((unsigned long)data, n, write,
+					   pages + idx);
+		if (ret < 0)
+			goto fail;
+
+		if (ret < n)
+			len = PAGE_SIZE * ret - off;
+		iov_iter_advance(&tmp_it, len);
+		nbytes -= len;
+		idx += ret;
+	}
+
+	BUG_ON(nbytes != 0);
+	*num_pages = npages;
+	*page_align = align;
+	dout("dio_get_pages_alloc: got %d pages align %zu\n", npages, align);
+	return pages;
+fail:
+	ceph_put_page_vector(pages, idx, false);
+	return ERR_PTR(ret);
+}
 
 /*
  * Prepare an open request.  Preallocate ceph_cap to avoid an
@@ -423,25 +497,25 @@ static ssize_t ceph_sync_read(struct kiocb *iocb, struct iov_iter *i,
 
 	if (file->f_flags & O_DIRECT) {
 		while (iov_iter_count(i)) {
-			void __user *data = i->iov[0].iov_base + i->iov_offset;
-			size_t len = i->iov[0].iov_len - i->iov_offset;
+			size_t start;
+			ssize_t n;
 
-			num_pages = calc_pages_for((unsigned long)data, len);
-			pages = ceph_get_direct_page_vector(data,
-							    num_pages, true);
+			n = dio_get_pagev_size(i);
+			pages = dio_get_pages_alloc(i, n, true,
+						    &start, &num_pages);
 			if (IS_ERR(pages))
 				return PTR_ERR(pages);
 
-			ret = striped_read(inode, off, len,
+			ret = striped_read(inode, off, n,
 					   pages, num_pages, checkeof,
-					   1, (unsigned long)data & ~PAGE_MASK);
+					   1, start);
 			ceph_put_page_vector(pages, num_pages, true);
 
 			if (ret <= 0)
 				break;
 			off += ret;
 			iov_iter_advance(i, ret);
-			if (ret < len)
+			if (ret < n)
 				break;
 		}
 	} else {
@@ -543,7 +617,6 @@ ceph_sync_direct_write(struct kiocb *iocb, const struct iovec *iov,
 	int written = 0;
 	int flags;
 	int check_caps = 0;
-	int page_align;
 	int ret;
 	struct timespec mtime = CURRENT_TIME;
 	loff_t pos = iocb->ki_pos;
@@ -572,10 +645,9 @@ ceph_sync_direct_write(struct kiocb *iocb, const struct iovec *iov,
 	iov_iter_init(&i, iov, nr_segs, count, 0);
 
 	while (iov_iter_count(&i) > 0) {
-		void __user *data = i.iov->iov_base + i.iov_offset;
-		u64 len = i.iov->iov_len - i.iov_offset;
-
-		page_align = (unsigned long)data & ~PAGE_MASK;
+		u64 len = dio_get_pagev_size(&i);
+		size_t start;
+		size_t n;
 
 		vino = ceph_vino(inode);
 		req = ceph_osdc_new_request(&fsc->client->osdc, &ci->i_layout,
@@ -592,11 +664,12 @@ ceph_sync_direct_write(struct kiocb *iocb, const struct iovec *iov,
 
 		osd_req_op_init(req, 1, CEPH_OSD_OP_STARTSYNC, 0);
 
-		num_pages = calc_pages_for(page_align, len);
-		pages = ceph_get_direct_page_vector(data, num_pages, false);
+		n = len;
+		pages = dio_get_pages_alloc(&i, n, false, &start, &num_pages);
 		if (IS_ERR(pages)) {
+			ceph_osdc_put_request(req);
 			ret = PTR_ERR(pages);
-			goto out;
+			break;
 		}
 
 		/*
@@ -604,8 +677,8 @@ ceph_sync_direct_write(struct kiocb *iocb, const struct iovec *iov,
 		 * may block.
 		 */
 		truncate_inode_pages_range(inode->i_mapping, pos,
-				   (pos+len) | (PAGE_CACHE_SIZE-1));
-		osd_req_op_extent_osd_data_pages(req, 0, pages, len, page_align,
+				   (pos+n) | (PAGE_CACHE_SIZE-1));
+		osd_req_op_extent_osd_data_pages(req, 0, pages, n, start,
 						false, false);
 
 		/* BUG_ON(vino.snap != CEPH_NOSNAP); */
@@ -617,22 +690,21 @@ ceph_sync_direct_write(struct kiocb *iocb, const struct iovec *iov,
 
 		ceph_put_page_vector(pages, num_pages, false);
 
-out:
 		ceph_osdc_put_request(req);
-		if (ret == 0) {
-			pos += len;
-			written += len;
-			iov_iter_advance(&i, (size_t)len);
-
-			if (pos > i_size_read(inode)) {
-				check_caps = ceph_inode_set_size(inode, pos);
-				if (check_caps)
-					ceph_check_caps(ceph_inode(inode),
-							CHECK_CAPS_AUTHONLY,
-							NULL);
-			}
-		} else
+		if (ret)
 			break;
+
+		pos += n;
+		written += n;
+		iov_iter_advance(&i, n);
+
+		if (pos > i_size_read(inode)) {
+			check_caps = ceph_inode_set_size(inode, pos);
+			if (check_caps)
+				ceph_check_caps(ceph_inode(inode),
+						CHECK_CAPS_AUTHONLY,
+						NULL);
+		}
 	}
 
 	if (ret != -EOLDSNAPC && written > 0) {
