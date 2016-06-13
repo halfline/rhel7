@@ -1358,7 +1358,7 @@ static ssize_t ceph_aio_write(struct kiocb *iocb, const struct iovec *iov,
 	}
 
 retry_snap:
-	if (ceph_osdmap_flag(osdc->osdmap, CEPH_OSDMAP_FULL)) {
+	if (ceph_osdmap_flag(osdc, CEPH_OSDMAP_FULL)) {
 		err = -ENOSPC;
 		goto out;
 	}
@@ -1446,7 +1446,7 @@ retry_snap:
 
 	if (written >= 0 &&
 	    ((file->f_flags & O_SYNC) || IS_SYNC(file->f_mapping->host) ||
-	     ceph_osdmap_flag(osdc->osdmap, CEPH_OSDMAP_NEARFULL))) {
+	     ceph_osdmap_flag(osdc, CEPH_OSDMAP_NEARFULL))) {
 		err = vfs_fsync_range(file, pos, pos + written - 1, 1);
 		if (err < 0)
 			written = err;
@@ -1678,8 +1678,8 @@ static long ceph_fallocate(struct file *file, int mode,
 		goto unlock;
 	}
 
-	if (ceph_osdmap_flag(osdc->osdmap, CEPH_OSDMAP_FULL) &&
-		!(mode & FALLOC_FL_PUNCH_HOLE)) {
+	if (ceph_osdmap_flag(osdc, CEPH_OSDMAP_FULL) &&
+	    !(mode & FALLOC_FL_PUNCH_HOLE)) {
 		ret = -ENOSPC;
 		goto unlock;
 	}
