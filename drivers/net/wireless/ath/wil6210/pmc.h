@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Qualcomm Atheros, Inc.
+ * Copyright (c) 2012-2015 Qualcomm Atheros, Inc.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -13,23 +13,15 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#include <linux/firmware.h>
-#include <linux/module.h>
-#include <linux/crc32.h>
-#include "wil6210.h"
-#include "fw.h"
 
-MODULE_FIRMWARE(WIL_FW_NAME);
-MODULE_FIRMWARE(WIL_FW2_NAME);
+#include <linux/types.h>
 
-static
-void wil_memset_toio_32(volatile void __iomem *dst, u32 val,
-			size_t count)
-{
-	volatile u32 __iomem *d = dst;
+#define PCM_DATA_INVALID_DW_VAL (0xB0BA0000)
 
-	for (count += 4; count > 4; count -= 4)
-		__raw_writel(val, d++);
-}
-
-#include "fw_inc.c"
+void wil_pmc_init(struct wil6210_priv *wil);
+void wil_pmc_alloc(struct wil6210_priv *wil,
+		   int num_descriptors, int descriptor_size);
+void wil_pmc_free(struct wil6210_priv *wil, int send_pmc_cmd);
+int wil_pmc_last_cmd_status(struct wil6210_priv *wil);
+ssize_t wil_pmc_read(struct file *, char __user *, size_t, loff_t *);
+loff_t wil_pmc_llseek(struct file *filp, loff_t off, int whence);
