@@ -526,6 +526,11 @@ int ceph_drop_inode(struct inode *inode)
 	return 1;
 }
 
+static inline blkcnt_t calc_inode_blocks(u64 size)
+{
+	return (size + (1<<9) - 1) >> 9;
+}
+
 /*
  * Helpers to fill in size, ctime, mtime, and atime.  We have to be
  * careful because either the client or MDS may have more up to date
@@ -548,7 +553,7 @@ int ceph_fill_file_size(struct inode *inode, int issued,
 			size = 0;
 		}
 		i_size_write(inode, size);
-		inode->i_blocks = (size + (1<<9) - 1) >> 9;
+		inode->i_blocks = calc_inode_blocks(size);
 		ci->i_reported_size = size;
 		if (truncate_seq != ci->i_truncate_seq) {
 			dout("truncate_seq %u -> %u\n",
@@ -805,9 +810,13 @@ static int fill_inode(struct inode *inode, struct page *locked_page,
 
 			spin_unlock(&ci->i_ceph_lock);
 
-			err = -EINVAL;
-			if (WARN_ON(symlen != i_size_read(inode)))
-				goto out;
+			if (symlen != i_size_read(inode)) {
+				pr_err("fill_inode %llx.%llx BAD symlink "
+					"size %lld\n", ceph_vinop(inode),
+					i_size_read(inode));
+				i_size_write(inode, symlen);
+				inode->i_blocks = calc_inode_blocks(symlen);
+			}
 
 			err = -ENOMEM;
 			sym = kstrndup(iinfo->symlink, symlen, GFP_NOFS);
@@ -1565,7 +1574,7 @@ int ceph_inode_set_size(struct inode *inode, loff_t size)
 	spin_lock(&ci->i_ceph_lock);
 	dout("set_size %p %llu -> %llu\n", inode, inode->i_size, size);
 	i_size_write(inode, size);
-	inode->i_blocks = (size + (1 << 9) - 1) >> 9;
+	inode->i_blocks = calc_inode_blocks(size);
 
 	/* tell the MDS if we are approaching max_size */
 	if ((size << 1) >= ci->i_max_size &&
@@ -1934,8 +1943,7 @@ int ceph_setattr(struct dentry *dentry, struct iattr *attr)
 		if ((issued & CEPH_CAP_FILE_EXCL) &&
 		    attr->ia_size > inode->i_size) {
 			i_size_write(inode, attr->ia_size);
-			inode->i_blocks =
-				(attr->ia_size + (1 << 9) - 1) >> 9;
+			inode->i_blocks = calc_inode_blocks(attr->ia_size);
 			inode->i_ctime = attr->ia_ctime;
 			ci->i_reported_size = attr->ia_size;
 			dirtied |= CEPH_CAP_FILE_EXCL;
