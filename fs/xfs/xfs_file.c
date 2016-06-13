@@ -434,7 +434,7 @@ xfs_file_splice_write_actor(
 	struct file		*out = sd->u.file;
 	ssize_t ret;
 
-	ret = file_remove_suid(out);
+	ret = file_remove_privs(out);
 	if (!ret) {
 		file_update_time(out);
 		ret = splice_from_pipe_feed(pipe, sd, pipe_to_file);
@@ -664,7 +664,7 @@ restart:
 	if (error)
 		return error;
 
-	/* For changing security info in file_remove_suid() we need i_mutex */
+	/* For changing security info in file_remove_privs() we need i_mutex */
 	if (*iolock == XFS_IOLOCK_SHARED && !IS_NOSEC(inode)) {
 		xfs_rw_iunlock(ip, *iolock);
 		*iolock = XFS_IOLOCK_EXCL;
@@ -733,7 +733,7 @@ restart:
 	 * people from modifying setuid and setgid binaries.
 	 */
 	if (!IS_NOSEC(inode))
-		return file_remove_suid(file);
+		return file_remove_privs(file);
 	return 0;
 }
 

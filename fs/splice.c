@@ -1044,7 +1044,7 @@ static ssize_t generic_file_splice_write_actor(struct pipe_inode_info *pipe,
 	ssize_t ret;
 
 	mutex_lock_nested(&inode->i_mutex, I_MUTEX_CHILD);
-	ret = file_remove_suid(out);
+	ret = file_remove_privs(out);
 	if (!ret) {
 		file_update_time(out);
 		ret = splice_from_pipe_feed(pipe, sd, pipe_to_file);
