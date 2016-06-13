@@ -93,15 +93,6 @@ enum {
 	CEPH_MOUNT_SHUTDOWN,
 };
 
-/*
- * subtract jiffies
- */
-static inline unsigned long time_sub(unsigned long a, unsigned long b)
-{
-	BUG_ON(time_after(b, a));
-	return (long)a - (long)b;
-}
-
 static inline unsigned long ceph_timeout_jiffies(unsigned long timeout)
 {
 	return timeout ?: MAX_SCHEDULE_TIMEOUT;
