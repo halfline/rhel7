@@ -6,6 +6,7 @@
 #include <linux/inet.h>
 #include <linux/kthread.h>
 #include <linux/net.h>
+#include <linux/nsproxy.h>
 #include <linux/slab.h>
 #include <linux/socket.h>
 #include <linux/string.h>
@@ -476,8 +477,8 @@ static int ceph_tcp_connect(struct ceph_connection *con)
 	int ret;
 
 	BUG_ON(con->sock);
-	ret = sock_create_kern(con->peer_addr.in_addr.ss_family, SOCK_STREAM,
-			       IPPROTO_TCP, &sock);
+	ret = __sock_create(read_pnet(&con->msgr->net), paddr->ss_family,
+			    SOCK_STREAM, IPPROTO_TCP, &sock, 1);
 	if (ret)
 		return ret;
 	sock->sk->sk_allocation = GFP_NOFS;
@@ -2946,10 +2947,17 @@ void ceph_messenger_init(struct ceph_messenger *msgr,
 	msgr->tcp_nodelay = tcp_nodelay;
 
 	atomic_set(&msgr->stopping, 0);
+	write_pnet(&msgr->net, get_net(current->nsproxy->net_ns));
 
 	dout("%s %p\n", __func__, msgr);
 }
 EXPORT_SYMBOL(ceph_messenger_init);
+
+void ceph_messenger_fini(struct ceph_messenger *msgr)
+{
+	put_net(read_pnet(&msgr->net));
+}
+EXPORT_SYMBOL(ceph_messenger_fini);
 
 static void clear_standby(struct ceph_connection *con)
 {
