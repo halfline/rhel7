@@ -762,7 +762,7 @@ ceph_direct_read_write(struct kiocb *iocb, struct iov_iter *iter,
 	int num_pages = 0;
 	int flags;
 	int ret;
-	struct timespec mtime = CURRENT_TIME;
+	struct timespec mtime = current_fs_time(inode->i_sb);
 	size_t count = iov_iter_count(iter);
 	loff_t pos = iocb->ki_pos;
 	bool write = snapc != NULL;
@@ -966,7 +966,7 @@ static ssize_t ceph_sync_write(struct kiocb *iocb, struct iov_iter *i,
 	int flags;
 	int check_caps = 0;
 	int ret;
-	struct timespec mtime = CURRENT_TIME;
+	struct timespec mtime = current_fs_time(inode->i_sb);
 	loff_t pos = iocb->ki_pos;
 	size_t count = iov_iter_count(i);
 
