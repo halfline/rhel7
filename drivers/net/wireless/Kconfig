@@ -268,7 +268,7 @@ source "drivers/net/wireless/marvell/Kconfig"
 source "drivers/net/wireless/orinoco/Kconfig"
 source "drivers/net/wireless/p54/Kconfig"
 source "drivers/net/wireless/ralink/Kconfig"
-source "drivers/net/wireless/rtlwifi/Kconfig"
+source "drivers/net/wireless/realtek/Kconfig"
 source "drivers/net/wireless/ti/Kconfig"
 source "drivers/net/wireless/zd1211rw/Kconfig"
 
