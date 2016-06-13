@@ -2,6 +2,7 @@
 # Makefile for the Linux Wireless network device drivers.
 #
 
+obj-$(CONFIG_WLAN_VENDOR_ATH) += ath/
 obj-$(CONFIG_WLAN_VENDOR_INTEL) += intel/
 
 obj-$(CONFIG_IPW2100) += ipw2x00/
@@ -46,8 +47,6 @@ obj-$(CONFIG_MWL8K)	+= mwl8k.o
 obj-$(CONFIG_RT2X00)	+= rt2x00/
 
 obj-$(CONFIG_P54_COMMON)	+= p54/
-
-obj-$(CONFIG_ATH_CARDS)		+= ath/
 
 obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
 
