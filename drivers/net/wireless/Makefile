@@ -3,6 +3,7 @@
 #
 
 obj-$(CONFIG_WLAN_VENDOR_ATH) += ath/
+obj-$(CONFIG_WLAN_VENDOR_BROADCOM) += broadcom/
 obj-$(CONFIG_WLAN_VENDOR_INTEL) += intel/
 obj-$(CONFIG_WLAN_VENDOR_RALINK) += ralink/
 
@@ -52,6 +53,3 @@ obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
 obj-$(CONFIG_WL_TI)	+= ti/
 
 obj-$(CONFIG_MWIFIEX)	+= mwifiex/
-
-obj-$(CONFIG_BRCMFMAC)	+= brcm80211/
-obj-$(CONFIG_BRCMSMAC)	+= brcm80211/
