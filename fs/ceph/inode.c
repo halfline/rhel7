@@ -386,9 +386,10 @@ struct inode *ceph_alloc_inode(struct super_block *sb)
 	ci->i_inline_version = 0;
 	ci->i_time_warp_seq = 0;
 	ci->i_ceph_flags = 0;
-	ci->i_ordered_count = 0;
-	atomic_set(&ci->i_release_count, 1);
-	atomic_set(&ci->i_complete_count, 0);
+	atomic64_set(&ci->i_ordered_count, 1);
+	atomic64_set(&ci->i_release_count, 1);
+	atomic64_set(&ci->i_complete_seq[0], 0);
+	atomic64_set(&ci->i_complete_seq[1], 0);
 	ci->i_symlink = NULL;
 
 	memset(&ci->i_dir_layout, 0, sizeof(ci->i_dir_layout));
@@ -850,9 +851,10 @@ static int fill_inode(struct inode *inode, struct page *locked_page,
 			    (issued & CEPH_CAP_FILE_EXCL) == 0 &&
 			    !__ceph_dir_is_complete(ci)) {
 				dout(" marking %p complete (empty)\n", inode);
+				i_size_write(inode, 0);
 				__ceph_dir_set_complete(ci,
-					atomic_read(&ci->i_release_count),
-					ci->i_ordered_count);
+					atomic64_read(&ci->i_release_count),
+					atomic64_read(&ci->i_ordered_count));
 			}
 
 			wake = true;
@@ -1205,6 +1207,10 @@ retry_lookup:
 			dout("fill_trace doing d_move %p -> %p\n",
 			     req->r_old_dentry, dn);
 
+			/* d_move screws up sibling dentries' offsets */
+			ceph_dir_clear_ordered(dir);
+			ceph_dir_clear_ordered(olddir);
+
 			d_move(req->r_old_dentry, dn);
 			dout(" src %p '%.*s' dst %p '%.*s'\n",
 			     req->r_old_dentry,
@@ -1215,10 +1221,6 @@ retry_lookup:
 			/* ensure target dentry is invalidated, despite
 			   rehashing bug in vfs_rename_dir */
 			ceph_invalidate_dentry_lease(dn);
-
-			/* d_move screws up sibling dentries' offsets */
-			ceph_dir_clear_ordered(dir);
-			ceph_dir_clear_ordered(olddir);
 
 			dout("dn %p gets new offset %lld\n", req->r_old_dentry,
 			     ceph_dentry(req->r_old_dentry)->offset);
@@ -1291,6 +1293,49 @@ done:
 	return err;
 }
 
+void ceph_readdir_cache_release(struct ceph_readdir_cache_control *ctl)
+{
+	if (ctl->page) {
+		kunmap(ctl->page);
+		page_cache_release(ctl->page);
+		ctl->page = NULL;
+	}
+}
+
+static int fill_readdir_cache(struct inode *dir, struct dentry *dn,
+			      struct ceph_readdir_cache_control *ctl,
+			      struct ceph_mds_request *req)
+{
+	struct ceph_inode_info *ci = ceph_inode(dir);
+	unsigned nsize = PAGE_CACHE_SIZE / sizeof(struct dentry*);
+	unsigned idx = ctl->index % nsize;
+	pgoff_t pgoff = ctl->index / nsize;
+
+	if (!ctl->page || pgoff != page_index(ctl->page)) {
+		ceph_readdir_cache_release(ctl);
+		ctl->page  = grab_cache_page(&dir->i_data, pgoff);
+		if (!ctl->page) {
+			ctl->index = -1;
+			return -ENOMEM;
+		}
+		/* reading/filling the cache are serialized by
+		 * i_mutex, no need to use page lock */
+		unlock_page(ctl->page);
+		ctl->dentries = kmap(ctl->page);
+	}
+
+	if (req->r_dir_release_cnt == atomic64_read(&ci->i_release_count) &&
+	    req->r_dir_ordered_cnt == atomic64_read(&ci->i_ordered_count)) {
+		dout("readdir cache dn %p idx %d\n", dn, ctl->index);
+		ctl->dentries[idx] = dn;
+		ctl->index++;
+	} else {
+		dout("disable readdir cache\n");
+		ctl->index = -1;
+	}
+	return 0;
+}
+
 /*
  * Prepopulate our cache with readdir results, leases, etc.
  */
@@ -1339,8 +1384,11 @@ int ceph_readdir_prepopulate(struct ceph_mds_request *req,
 	struct inode *snapdir = NULL;
 	struct ceph_mds_request_head *rhead = req->r_request->front.iov_base;
 	struct ceph_dentry_info *di;
-	u64 r_readdir_offset = req->r_readdir_offset;
 	u32 frag = le32_to_cpu(rhead->args.readdir.frag);
+	struct ceph_readdir_cache_control cache_ctl = {};
+
+	if (req->r_aborted)
+		return readdir_prepopulate_inodes_only(req, session);
 
 	if (rinfo->dir_dir &&
 	    le32_to_cpu(rinfo->dir_dir->frag) != frag) {
@@ -1348,13 +1396,10 @@ int ceph_readdir_prepopulate(struct ceph_mds_request *req,
 		     frag, le32_to_cpu(rinfo->dir_dir->frag));
 		frag = le32_to_cpu(rinfo->dir_dir->frag);
 		if (ceph_frag_is_leftmost(frag))
-			r_readdir_offset = 2;
+			req->r_readdir_offset = 2;
 		else
-			r_readdir_offset = 0;
+			req->r_readdir_offset = 0;
 	}
-
-	if (req->r_aborted)
-		return readdir_prepopulate_inodes_only(req, session);
 
 	if (le32_to_cpu(rinfo->head->op) == CEPH_MDS_OP_LSSNAP) {
 		snapdir = ceph_get_snapdir(parent->d_inode);
@@ -1367,6 +1412,17 @@ int ceph_readdir_prepopulate(struct ceph_mds_request *req,
 		if (rinfo->dir_dir)
 			ceph_fill_dirfrag(parent->d_inode, rinfo->dir_dir);
 	}
+
+	if (ceph_frag_is_leftmost(frag) && req->r_readdir_offset == 2) {
+		/* note dir version at start of readdir so we can tell
+		 * if any dentries get dropped */
+		struct ceph_inode_info *ci = ceph_inode(parent->d_inode);
+		req->r_dir_release_cnt = atomic64_read(&ci->i_release_count);
+		req->r_dir_ordered_cnt = atomic64_read(&ci->i_ordered_count);
+		req->r_readdir_cache_idx = 0;
+	}
+
+	cache_ctl.index = req->r_readdir_cache_idx;
 
 	/* FIXME: release caps/leases if error occurs */
 	for (i = 0; i < rinfo->dir_nr; i++) {
@@ -1407,13 +1463,6 @@ retry_lookup:
 			d_delete(dn);
 			dput(dn);
 			goto retry_lookup;
-		} else {
-			/* reorder parent's d_subdirs */
-			spin_lock(&parent->d_lock);
-			spin_lock_nested(&dn->d_lock, DENTRY_D_LOCK_NESTED);
-			list_move(&dn->d_u.d_child, &parent->d_subdirs);
-			spin_unlock(&dn->d_lock);
-			spin_unlock(&parent->d_lock);
 		}
 
 		/* inode */
@@ -1430,13 +1479,15 @@ retry_lookup:
 			}
 		}
 
-		if (fill_inode(in, NULL, &rinfo->dir_in[i], NULL, session,
-			       req->r_request_started, -1,
-			       &req->r_caps_reservation) < 0) {
+		ret = fill_inode(in, NULL, &rinfo->dir_in[i], NULL, session,
+				 req->r_request_started, -1,
+				 &req->r_caps_reservation);
+		if (ret < 0) {
 			pr_err("fill_inode badness on %p\n", in);
 			if (!dn->d_inode)
 				iput(in);
 			d_drop(dn);
+			err = ret;
 			goto next_item;
 		}
 
@@ -1452,19 +1503,28 @@ retry_lookup:
 		}
 
 		di = dn->d_fsdata;
-		di->offset = ceph_make_fpos(frag, i + r_readdir_offset);
+		di->offset = ceph_make_fpos(frag, i + req->r_readdir_offset);
 
 		update_dentry_lease(dn, rinfo->dir_dlease[i],
 				    req->r_session,
 				    req->r_request_started);
+
+		if (err == 0 && cache_ctl.index >= 0) {
+			ret = fill_readdir_cache(parent->d_inode, dn,
+						 &cache_ctl, req);
+			if (ret < 0)
+				err = ret;
+		}
 next_item:
 		if (dn)
 			dput(dn);
 	}
-	if (err == 0)
-		req->r_did_prepopulate = true;
-
 out:
+	if (err == 0) {
+		req->r_did_prepopulate = true;
+		req->r_readdir_cache_idx = cache_ctl.index;
+	}
+	ceph_readdir_cache_release(&cache_ctl);
 	if (snapdir) {
 		iput(snapdir);
 		dput(parent);
