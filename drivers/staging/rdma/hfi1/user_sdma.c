@@ -711,7 +711,6 @@ int hfi1_user_sdma_process_request(struct file *fp, struct iovec *iovec,
 				msecs_to_jiffies(
 					SDMA_IOWAIT_TIMEOUT));
 		}
-
 	}
 	*count += idx;
 	return 0;
@@ -1192,7 +1191,6 @@ static int set_txreq_header(struct user_sdma_request *req,
 		if (ret)
 			return ret;
 		goto done;
-
 	}
 
 	hdr->bth[2] = cpu_to_be32(
