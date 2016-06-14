@@ -53,7 +53,6 @@
 #include "mad.h"
 #include "trace.h"
 
-
 /*
  * Start of per-port congestion control structures and support code
  */
@@ -254,7 +253,6 @@ HFI1_SC2VL_ATTR(29);
 HFI1_SC2VL_ATTR(30);
 HFI1_SC2VL_ATTR(31);
 
-
 static struct attribute *sc2vl_default_attributes[] = {
 	&hfi1_sc2vl_attr_0.attr,
 	&hfi1_sc2vl_attr_1.attr,
@@ -359,7 +357,6 @@ HFI1_SL2SC_ATTR(28);
 HFI1_SL2SC_ATTR(29);
 HFI1_SL2SC_ATTR(30);
 HFI1_SL2SC_ATTR(31);
-
 
 static struct attribute *sl2sc_default_attributes[] = {
 	&hfi1_sl2sc_attr_0.attr,
@@ -493,7 +490,6 @@ static struct kobj_type hfi1_vl2mtu_ktype = {
 	.default_attrs = vl2mtu_default_attributes
 };
 
-
 /* end of per-port file structures and support code */
 
 /*
@@ -524,13 +520,6 @@ static ssize_t show_hfi(struct device *device, struct device_attribute *attr,
 	return ret;
 }
 
-static ssize_t show_version(struct device *device,
-			    struct device_attribute *attr, char *buf)
-{
-	/* The string printed here is already newline-terminated. */
-	return scnprintf(buf, PAGE_SIZE, "%s", (char *)ib_hfi1_version);
-}
-
 static ssize_t show_boardversion(struct device *device,
 				 struct device_attribute *attr, char *buf)
 {
@@ -541,18 +530,6 @@ static ssize_t show_boardversion(struct device *device,
 	/* The string printed here is already newline-terminated. */
 	return scnprintf(buf, PAGE_SIZE, "%s", dd->boardversion);
 }
-
-
-static ssize_t show_localbus_info(struct device *device,
-				  struct device_attribute *attr, char *buf)
-{
-	struct hfi1_ibdev *dev =
-		container_of(device, struct hfi1_ibdev, ibdev.dev);
-	struct hfi1_devdata *dd = dd_from_dev(dev);
-
-	return scnprintf(buf, PAGE_SIZE, "%s\n", dd->lbus_info);
-}
-
 
 static ssize_t show_nctxts(struct device *device,
 			   struct device_attribute *attr, char *buf)
@@ -657,25 +634,21 @@ static ssize_t show_tempsense(struct device *device,
 /* start of per-unit file structures and support code */
 static DEVICE_ATTR(hw_rev, S_IRUGO, show_rev, NULL);
 static DEVICE_ATTR(board_id, S_IRUGO, show_hfi, NULL);
-static DEVICE_ATTR(version, S_IRUGO, show_version, NULL);
 static DEVICE_ATTR(nctxts, S_IRUGO, show_nctxts, NULL);
 static DEVICE_ATTR(nfreectxts, S_IRUGO, show_nfreectxts, NULL);
 static DEVICE_ATTR(serial, S_IRUGO, show_serial, NULL);
 static DEVICE_ATTR(boardversion, S_IRUGO, show_boardversion, NULL);
 static DEVICE_ATTR(tempsense, S_IRUGO, show_tempsense, NULL);
-static DEVICE_ATTR(localbus_info, S_IRUGO, show_localbus_info, NULL);
 static DEVICE_ATTR(chip_reset, S_IWUSR, NULL, store_chip_reset);
 
 static struct device_attribute *hfi1_attributes[] = {
 	&dev_attr_hw_rev,
 	&dev_attr_board_id,
-	&dev_attr_version,
 	&dev_attr_nctxts,
 	&dev_attr_nfreectxts,
 	&dev_attr_serial,
 	&dev_attr_boardversion,
 	&dev_attr_tempsense,
-	&dev_attr_localbus_info,
 	&dev_attr_chip_reset,
 };
 
@@ -723,7 +696,6 @@ int hfi1_create_port_files(struct ib_device *ibdev, u8 port_num,
 		goto bail_sl2sc;
 	}
 	kobject_uevent(&ppd->vl2mtu_kobj, KOBJ_ADD);
-
 
 	ret = kobject_init_and_add(&ppd->pport_cc_kobj, &port_cc_ktype,
 				   kobj, "CCMgtA");
