@@ -256,7 +256,8 @@ int inet_sk_diag_fill(struct sock *sk, struct inet_connection_sock *icsk,
 	}
 
 out:
-	return nlmsg_end(skb, nlh);
+	nlmsg_end(skb, nlh);
+	return 0;
 
 errout:
 	nlmsg_cancel(skb, nlh);
@@ -308,7 +309,8 @@ static int inet_twsk_diag_fill(struct inet_timewait_sock *tw,
 	r->idiag_uid	      = 0;
 	r->idiag_inode	      = 0;
 
-	return nlmsg_end(skb, nlh);
+	nlmsg_end(skb, nlh);
+	return 0;
 }
 
 static int sk_diag_fill(struct sock *sk, struct sk_buff *skb,
@@ -753,7 +755,8 @@ static int inet_diag_fill_req(struct sk_buff *skb, struct sock *sk,
 	r->idiag_uid = from_kuid_munged(user_ns, sock_i_uid(sk));
 	r->idiag_inode = 0;
 
-	return nlmsg_end(skb, nlh);
+	nlmsg_end(skb, nlh);
+	return 0;
 }
 
 static int inet_diag_dump_reqs(struct sk_buff *skb, struct sock *sk,
