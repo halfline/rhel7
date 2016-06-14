@@ -370,7 +370,8 @@ dereg_mr_exit0:
 
 /*----------------------------------------------------------------------*/
 
-struct ib_mw *ehca_alloc_mw(struct ib_pd *pd, enum ib_mw_type type)
+struct ib_mw *ehca_alloc_mw(struct ib_pd *pd, enum ib_mw_type type,
+			    struct ib_udata *udata)
 {
 	struct ib_mw *ib_mw;
 	u64 h_ret;
