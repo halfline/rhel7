@@ -1716,9 +1716,6 @@ static int dn_cache_getroute(struct sk_buff *in_skb, struct nlmsghdr *nlh)
 		rt->rt_flags |= RTCF_NOTIFY;
 
 	err = dn_rt_fill_info(skb, NETLINK_CB(in_skb).portid, nlh->nlmsg_seq, RTM_NEWROUTE, 0, 0);
-
-	if (err == 0)
-		goto out_free;
 	if (err < 0) {
 		err = -EMSGSIZE;
 		goto out_free;
@@ -1769,7 +1766,7 @@ int dn_cache_dump(struct sk_buff *skb, struct netlink_callback *cb)
 			skb_dst_set(skb, dst_clone(&rt->dst));
 			if (dn_rt_fill_info(skb, NETLINK_CB(cb->skb).portid,
 					cb->nlh->nlmsg_seq, RTM_NEWROUTE,
-					1, NLM_F_MULTI) <= 0) {
+					1, NLM_F_MULTI) < 0) {
 				skb_dst_drop(skb);
 				rcu_read_unlock_bh();
 				goto done;
