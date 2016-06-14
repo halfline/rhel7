@@ -31,6 +31,7 @@
 #include <drm/drm_panel.h>
 #include <drm/drm_mipi_dsi.h>
 #include <linux/slab.h>
+#include <linux/gpio/consumer.h>
 #include "i915_drv.h"
 #include "intel_drv.h"
 #include "intel_dsi.h"
@@ -1201,7 +1202,7 @@ void intel_dsi_init(struct drm_device *dev)
 	 */
 	if (dev_priv->vbt.dsi.config->pwm_blc == PPS_BLC_PMIC) {
 		intel_dsi->gpio_panel =
-			gpiod_get(dev->dev, "panel", GPIOD_OUT_HIGH);
+			gpiod_get(dev->dev, "panel");
 
 		if (IS_ERR(intel_dsi->gpio_panel)) {
 			DRM_ERROR("Failed to own gpio for panel control\n");

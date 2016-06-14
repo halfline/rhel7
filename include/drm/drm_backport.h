@@ -184,25 +184,6 @@ static inline void __iomem *acpi_os_ioremap(u64 phys, u32 size)
 #endif
 
 /*
- * Stub gpiod for i915
- */
-struct gpio_desc;
-/* bogus enum to avoid subtle problems if someone somehow manages to backport
- * the real gpiod:
- */
-enum gpiod_flags {
-	GPIOD_OUT_HIGH,
-};
-static inline struct gpio_desc *__must_check
-gpiod_get(struct device *dev, const char *con_id, enum gpiod_flags flags)
-{
-	return ERR_PTR(-ENOENT);
-}
-
-static inline void gpiod_put(struct gpio_desc *desc) {}
-static inline void gpiod_set_value_cansleep(struct gpio_desc *desc, int value) {}
-
-/*
  * avoiding/emulating 87521e16a7abbf3fa337f56cb4d1e18247f15e8a upstream:
  */
 

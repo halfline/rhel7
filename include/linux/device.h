@@ -757,10 +757,6 @@ struct device {
 	struct dev_pm_info	power;
 	struct dev_pm_domain	*pm_domain;
 
-#ifdef CONFIG_PINCTRL
-	struct dev_pin_info	*pins;
-#endif
-
 #ifdef CONFIG_NUMA
 	int		numa_node;	/* NUMA node this device is close to */
 #endif
@@ -814,6 +810,9 @@ struct device {
  */
 struct device_rh {
 	RH_KABI_EXTEND(struct dev_pm_info_rh power)
+#ifdef CONFIG_PINCTRL
+	RH_KABI_EXTEND(struct dev_pin_info *pins)
+#endif
 };
 
 static inline struct device *kobj_to_dev(struct kobject *kobj)
