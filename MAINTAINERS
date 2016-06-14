@@ -3820,6 +3820,13 @@ F:	drivers/block/cciss*
 F:	include/linux/cciss_ioctl.h
 F:	include/uapi/linux/cciss_ioctl.h
 
+HFI1 DRIVER
+M:	Mike Marciniszyn <mike.marciniszyn@intel.com>
+M:	Dennis Dalessandro <dennis.dalessandro@intel.com>
+L:	linux-rdma@vger.kernel.org
+S:	Supported
+F:	drivers/infiniband/hw/hfi1
+
 HFS FILESYSTEM
 L:	linux-fsdevel@vger.kernel.org
 S:	Orphan
