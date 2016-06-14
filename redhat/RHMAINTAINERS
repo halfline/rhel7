@@ -746,6 +746,13 @@ SUSPEND/RESUME
 M:	Lenny Szubowicz <lszubowi@redhat.com>
 S:	Maintained
 
+SWITCHDEV
+M:	Ivan Vecera <ivecera@redhat.com>
+S:	Maintained
+F:	Documentation/networking/switchdev.txt
+F:	include/net/switchdev.h
+F:	net/switchdev/
+
 X86 ARCHITECTURE
 M:	Prarit Bhargava <prarit@redhat.com>
 S:	Maintained
