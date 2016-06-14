@@ -259,9 +259,8 @@ static void mlx5e_update_stats_work(struct work_struct *work)
 	mutex_lock(&priv->state_lock);
 	if (test_bit(MLX5E_STATE_OPENED, &priv->state)) {
 		mlx5e_update_stats(priv);
-		schedule_delayed_work(dwork,
-				      msecs_to_jiffies(
-					      MLX5E_UPDATE_STATS_INTERVAL));
+		queue_delayed_work(priv->wq, dwork,
+				   msecs_to_jiffies(MLX5E_UPDATE_STATS_INTERVAL));
 	}
 	mutex_unlock(&priv->state_lock);
 }
@@ -277,7 +276,7 @@ static void mlx5e_async_event(struct mlx5_core_dev *mdev, void *vpriv,
 	switch (event) {
 	case MLX5_DEV_EVENT_PORT_UP:
 	case MLX5_DEV_EVENT_PORT_DOWN:
-		schedule_work(&priv->update_carrier_work);
+		queue_work(priv->wq, &priv->update_carrier_work);
 		break;
 
 	default:
@@ -1502,7 +1501,7 @@ int mlx5e_open_locked(struct net_device *netdev)
 	mlx5e_update_carrier(priv);
 	mlx5e_timestamp_init(priv);
 
-	schedule_delayed_work(&priv->update_stats_work, 0);
+	queue_delayed_work(priv->wq, &priv->update_stats_work, 0);
 
 	return 0;
 
@@ -1940,7 +1939,7 @@ static void mlx5e_set_rx_mode(struct net_device *dev)
 {
 	struct mlx5e_priv *priv = netdev_priv(dev);
 
-	schedule_work(&priv->set_rx_mode_work);
+	queue_work(priv->wq, &priv->set_rx_mode_work);
 }
 
 static int mlx5e_set_mac(struct net_device *netdev, void *addr)
@@ -1955,7 +1954,7 @@ static int mlx5e_set_mac(struct net_device *netdev, void *addr)
 	ether_addr_copy(netdev->dev_addr, saddr->sa_data);
 	netif_addr_unlock_bh(netdev);
 
-	schedule_work(&priv->set_rx_mode_work);
+	queue_work(priv->wq, &priv->set_rx_mode_work);
 
 	return 0;
 }
@@ -2463,10 +2462,14 @@ static void *mlx5e_create_netdev(struct mlx5_core_dev *mdev)
 
 	priv = netdev_priv(netdev);
 
+	priv->wq = create_singlethread_workqueue("mlx5e");
+	if (!priv->wq)
+		goto err_free_netdev;
+
 	err = mlx5_alloc_map_uar(mdev, &priv->cq_uar, false);
 	if (err) {
 		mlx5_core_err(mdev, "alloc_map uar failed, %d\n", err);
-		goto err_free_netdev;
+		goto err_destroy_wq;
 	}
 
 	err = mlx5_core_alloc_pd(mdev, &priv->pdn);
@@ -2541,7 +2544,7 @@ static void *mlx5e_create_netdev(struct mlx5_core_dev *mdev)
 		vxlan_get_rx_port(netdev);
 
 	mlx5e_enable_async_events(priv);
-	schedule_work(&priv->set_rx_mode_work);
+	queue_work(priv->wq, &priv->set_rx_mode_work);
 
 	return priv;
 
@@ -2575,6 +2578,9 @@ err_dealloc_pd:
 err_unmap_free_uar:
 	mlx5_unmap_free_uar(mdev, &priv->cq_uar);
 
+err_destroy_wq:
+	destroy_workqueue(priv->wq);
+
 err_free_netdev:
 	free_netdev(netdev);
 
@@ -2588,9 +2594,9 @@ static void mlx5e_destroy_netdev(struct mlx5_core_dev *mdev, void *vpriv)
 
 	set_bit(MLX5E_STATE_DESTROYING, &priv->state);
 
-	schedule_work(&priv->set_rx_mode_work);
+	queue_work(priv->wq, &priv->set_rx_mode_work);
 	mlx5e_disable_async_events(priv);
-	flush_scheduled_work();
+	flush_workqueue(priv->wq);
 	if (test_bit(MLX5_INTERFACE_STATE_SHUTDOWN, &mdev->intf_state)) {
 		netif_device_detach(netdev);
 		mutex_lock(&priv->state_lock);
@@ -2612,6 +2618,8 @@ static void mlx5e_destroy_netdev(struct mlx5_core_dev *mdev, void *vpriv)
 	mlx5_core_dealloc_transport_domain(priv->mdev, priv->tdn);
 	mlx5_core_dealloc_pd(priv->mdev, priv->pdn);
 	mlx5_unmap_free_uar(priv->mdev, &priv->cq_uar);
+	cancel_delayed_work_sync(&priv->update_stats_work);
+	destroy_workqueue(priv->wq);
 
 	if (!test_bit(MLX5_INTERFACE_STATE_SHUTDOWN, &mdev->intf_state))
 		free_netdev(netdev);
