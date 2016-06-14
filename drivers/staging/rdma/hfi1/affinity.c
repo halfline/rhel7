@@ -87,7 +87,7 @@ int init_real_cpu_mask(struct hfi1_devdata *dd)
 	 * Remove HT cores from the real cpu mask.  Do this in two steps below.
 	 */
 	possible = cpumask_weight(&info->real_cpu_mask);
-	ht = cpumask_weight(topology_sibling_cpumask(
+	ht = cpumask_weight(cpu_sibling_mask(
 					cpumask_first(&info->real_cpu_mask)));
 	/*
 	 * Step 1.  Skip over the first N HT siblings and use them as the
