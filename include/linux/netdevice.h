@@ -1577,6 +1577,8 @@ struct net_device {
 	unsigned int		promiscuity;
 	unsigned int		allmulti;
 
+	/* Stats to monitor carrier on<->off transitions */
+	RH_KABI_FILL_HOLE(atomic_t	carrier_changes)
 
 	/* Protocol specific pointers */
 
