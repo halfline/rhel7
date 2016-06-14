@@ -457,7 +457,6 @@ struct pdt_entry {
 	u8 function_number:8;
 } __attribute__((__packed__));
 
-#define GENMASK(h, l)           (((U32_C(1) << ((h) - (l) + 1)) - 1) << (l))
 static inline unsigned long rmi_gen_mask(unsigned irq_base, unsigned irq_count)
 {
 	return GENMASK(irq_count + irq_base - 1, irq_base);
