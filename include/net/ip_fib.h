@@ -237,7 +237,7 @@ static inline int fib_lookup(struct net *net, const struct flowi4 *flp,
 
 	tb = fib_get_table(net, RT_TABLE_LOCAL);
 	if (tb)
-		err = fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF)
+		err = fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF);
 
 	if (!err)
 		goto out;
