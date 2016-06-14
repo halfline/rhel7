@@ -551,6 +551,13 @@ static const struct pci_device_id beiscsi_pci_id_table[] = {
 };
 MODULE_DEVICE_TABLE(pci, beiscsi_pci_id_table);
 
+static const struct pci_device_id beiscsi_pci_id_deprecated[] = {
+	{ PCI_DEVICE(BE_VENDOR_ID, BE_DEVICE_ID1) },
+	{ PCI_DEVICE(BE_VENDOR_ID, OC_DEVICE_ID1) },
+	{ PCI_DEVICE(BE_VENDOR_ID, OC_DEVICE_ID2) },
+	{ 0 }
+};
+
 
 static struct scsi_host_template beiscsi_sht = {
 	.module = THIS_MODULE,
@@ -5651,6 +5658,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
 	phba->fw_timeout = false;
 	phba->mac_addr_set = false;
 
+	pci_hw_vendor_status(beiscsi_pci_id_deprecated, pcidev);
 
 	switch (pcidev->device) {
 	case BE_DEVICE_ID1:
