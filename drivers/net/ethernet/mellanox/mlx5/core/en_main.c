@@ -2130,6 +2130,14 @@ static int set_feature_vlan_filter(struct net_device *netdev, bool enable)
 	return 0;
 }
 
+static int set_feature_rx_all(struct net_device *netdev, bool enable)
+{
+	struct mlx5e_priv *priv = netdev_priv(netdev);
+	struct mlx5_core_dev *mdev = priv->mdev;
+
+	return mlx5_set_port_fcs(mdev, !enable);
+}
+
 static int mlx5e_handle_feature(struct net_device *netdev,
 				netdev_features_t wanted_features,
 				netdev_features_t feature,
@@ -2163,6 +2171,8 @@ static int mlx5e_set_features(struct net_device *netdev,
 	err |= mlx5e_handle_feature(netdev, features,
 				    NETIF_F_HW_VLAN_CTAG_FILTER,
 				    set_feature_vlan_filter);
+	err |= mlx5e_handle_feature(netdev, features, NETIF_F_RXALL,
+				    set_feature_rx_all);
 
 	return err ? -EINVAL : 0;
 }
@@ -2562,6 +2572,8 @@ static void mlx5e_build_netdev(struct net_device *netdev)
 {
 	struct mlx5e_priv *priv = netdev_priv(netdev);
 	struct mlx5_core_dev *mdev = priv->mdev;
+	bool fcs_supported;
+	bool fcs_enabled;
 
 	SET_NETDEV_DEV(netdev, &mdev->pdev->dev);
 
@@ -2605,9 +2617,17 @@ static void mlx5e_build_netdev(struct net_device *netdev)
 		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL;
 	}
 
+	mlx5_query_port_fcs(mdev, &fcs_supported, &fcs_enabled);
+
+	if (fcs_supported)
+		netdev->hw_features |= NETIF_F_RXALL;
+
 	netdev->features          = netdev->hw_features;
 	if (!priv->params.lro_en)
 		netdev->features  &= ~NETIF_F_LRO;
+
+	if (fcs_enabled)
+		netdev->features  &= ~NETIF_F_RXALL;
 
 	netdev->features         |= NETIF_F_HIGHDMA;
 
