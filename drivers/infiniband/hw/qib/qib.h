@@ -1138,7 +1138,9 @@ extern u32 qib_cpulist_count;
 extern unsigned long *qib_cpulist;
 
 extern unsigned qib_wc_pat;
+extern u16 qpt_mask;
 extern unsigned qib_cc_table_size;
+
 int qib_init(struct qib_devdata *, int);
 int init_chip_wc_pat(struct qib_devdata *dd, u32);
 int qib_enable_wc(struct qib_devdata *dd);
