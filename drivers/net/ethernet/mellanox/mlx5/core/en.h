@@ -502,6 +502,11 @@ struct mlx5e_vlan_db {
 	bool          filter_disabled;
 };
 
+struct mlx5e_vxlan_db {
+	spinlock_t			lock; /* protect vxlan table */
+	struct radix_tree_root		tree;
+};
+
 struct mlx5e_flow_table {
 	int num_groups;
 	struct mlx5_flow_table		*t;
@@ -536,6 +541,7 @@ struct mlx5e_priv {
 	struct mlx5e_flow_tables   fts;
 	struct mlx5e_eth_addr_db   eth_addr;
 	struct mlx5e_vlan_db       vlan;
+	struct mlx5e_vxlan_db      vxlan;
 
 	struct mlx5e_params        params;
 	spinlock_t                 async_events_spinlock; /* sync hw events */
