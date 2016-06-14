@@ -1080,11 +1080,14 @@ static int ovl_fill_super(struct super_block *sb, void *data, int silent)
 			if (err < 0)
 				goto out_put_workdir;
 
-			if (!err) {
-				pr_err("overlayfs: upper fs needs to support d_type.\n");
-				err = -EINVAL;
-				goto out_put_workdir;
-			}
+			/*
+			 * Warn instead of error to avoid breaking previously
+			 * working configurations over upgrade. If d_type
+			 * is not supported, whiteouts will become visible
+			 * to user space.
+			 */
+			if (!err)
+				pr_warn("overlayfs: upper fs needs to support d_type. This is an invalid configuration.\n");
 		}
 	}
 
