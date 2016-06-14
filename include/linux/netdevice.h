@@ -2274,6 +2274,7 @@ struct netdev_notifier_changeupper_info {
 	struct net_device *upper_dev; /* new upper dev */
 	bool master; /* is upper dev master */
 	bool linking; /* is the nofication for link or unlink */
+	void *upper_info; /* upper dev info */
 };
 
 static inline void netdev_notifier_info_init(struct netdev_notifier_info *info,
@@ -3742,7 +3743,7 @@ int netdev_master_upper_dev_link(struct net_device *dev,
 				 struct net_device *upper_dev);
 int netdev_master_upper_dev_link_rh(struct net_device *dev,
 				    struct net_device *upper_dev,
-				    void *upper_priv);
+				    void *upper_priv, void *upper_info);
 #define netdev_master_upper_dev_link netdev_master_upper_dev_link_rh
 void netdev_upper_dev_unlink(struct net_device *dev,
 			     struct net_device *upper_dev);
