@@ -845,6 +845,9 @@ struct net_device_ops_extended {
 						      u32 maxrate);
 	void			(*ndo_set_rx_headroom)(struct net_device *dev,
 						       int needed_headroom);
+	int			(*ndo_set_vf_guid)(struct net_device *dev,
+						   int vf, u64 guid,
+						   int guid_type);
 };
 
 /*
