@@ -893,6 +893,7 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
 struct module;
 
 void mark_hardware_unsupported(const char *msg);
+void mark_hardware_deprecated(const char *msg);
 void mark_tech_preview(const char *msg, struct module *mod);
 
 #else
