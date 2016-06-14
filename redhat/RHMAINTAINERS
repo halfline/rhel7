@@ -468,6 +468,11 @@ M:	Prarit Bhargava <prarit@redhat.com>
 S:	Maintained
 F:	arch/x86/kernel/cpu/mcheck/
 
+MELLANOX ETHERNET SWITCH DRIVERS
+M:      Ivan Vecera <ivecera@redhat.com>
+S:      Maintained
+F:      drivers/net/ethernet/mellanox/mlxsw/
+
 MEMORY MANAGEMENT
 M:	Larry Woodman <lwoodman@redhat.com>
 S:	Maintained
