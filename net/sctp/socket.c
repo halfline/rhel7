@@ -1955,15 +1955,13 @@ static int sctp_sendmsg(struct kiocb *iocb, struct sock *sk,
 	 * breaks.
 	 */
 	err = sctp_primitive_SEND(net, asoc, datamsg);
+	sctp_datamsg_put(datamsg);
 	/* Did the lower layer accept the chunk? */
-	if (err) {
-		sctp_datamsg_free(datamsg);
+	if (err)
 		goto out_free;
-	}
 
 	pr_debug("%s: we sent primitively\n", __func__);
 
-	sctp_datamsg_put(datamsg);
 	err = msg_len;
 
 	if (unlikely(wait_connect)) {
