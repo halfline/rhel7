@@ -182,7 +182,7 @@ static void sctp_seq_dump_remote_addrs(struct seq_file *seq, struct sctp_associa
 	rcu_read_unlock();
 }
 
-static void * sctp_eps_seq_start(struct seq_file *seq, loff_t *pos)
+static void *sctp_eps_seq_start(struct seq_file *seq, loff_t *pos)
 {
 	if (*pos >= sctp_ep_hashsize)
 		return NULL;
@@ -201,7 +201,7 @@ static void sctp_eps_seq_stop(struct seq_file *seq, void *v)
 }
 
 
-static void * sctp_eps_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+static void *sctp_eps_seq_next(struct seq_file *seq, void *v, loff_t *pos)
 {
 	if (++*pos >= sctp_ep_hashsize)
 		return NULL;

@@ -90,7 +90,7 @@ static int sctp_writeable(struct sock *sk);
 static void sctp_wfree(struct sk_buff *skb);
 static int sctp_wait_for_sndbuf(struct sctp_association *, long *timeo_p,
 				size_t msg_len);
-static int sctp_wait_for_packet(struct sock * sk, int *err, long *timeo_p);
+static int sctp_wait_for_packet(struct sock *sk, int *err, long *timeo_p);
 static int sctp_wait_for_connect(struct sctp_association *, long *timeo_p);
 static int sctp_wait_for_accept(struct sock *sk, long timeo);
 static void sctp_wait_for_close(struct sock *sk, long timeo);
@@ -960,7 +960,7 @@ int sctp_asconf_mgmt(struct sctp_sock *sp, struct sctp_sockaddr_entry *addrw)
  *
  * Returns 0 if ok, <0 errno code on error.
  */
-static int sctp_setsockopt_bindx(struct sock* sk,
+static int sctp_setsockopt_bindx(struct sock *sk,
 				 struct sockaddr __user *addrs,
 				 int addrs_size, int op)
 {
@@ -1047,7 +1047,7 @@ out:
  * Common routine for handling connect() and sctp_connectx().
  * Connect will come in with just a single address.
  */
-static int __sctp_connect(struct sock* sk,
+static int __sctp_connect(struct sock *sk,
 			  struct sockaddr *kaddrs,
 			  int addrs_size,
 			  sctp_assoc_t *assoc_id)
@@ -1306,7 +1306,7 @@ out_free:
  *
  * Returns >=0 if ok, <0 errno code on error.
  */
-static int __sctp_setsockopt_connectx(struct sock* sk,
+static int __sctp_setsockopt_connectx(struct sock *sk,
 				      struct sockaddr __user *addrs,
 				      int addrs_size,
 				      sctp_assoc_t *assoc_id)
@@ -1344,7 +1344,7 @@ static int __sctp_setsockopt_connectx(struct sock* sk,
  * This is an older interface.  It's kept for backward compatibility
  * to the option that doesn't provide association id.
  */
-static int sctp_setsockopt_connectx_old(struct sock* sk,
+static int sctp_setsockopt_connectx_old(struct sock *sk,
 					struct sockaddr __user *addrs,
 					int addrs_size)
 {
@@ -1357,7 +1357,7 @@ static int sctp_setsockopt_connectx_old(struct sock* sk,
  * indication to the call.  Error is always negative and association id is
  * always positive.
  */
-static int sctp_setsockopt_connectx(struct sock* sk,
+static int sctp_setsockopt_connectx(struct sock *sk,
 				    struct sockaddr __user *addrs,
 				    int addrs_size)
 {
@@ -1388,7 +1388,7 @@ struct compat_sctp_getaddrs_old {
 };
 #endif
 
-static int sctp_getsockopt_connectx3(struct sock* sk, int len,
+static int sctp_getsockopt_connectx3(struct sock *sk, int len,
 				     char __user *optval,
 				     int __user *optlen)
 {
@@ -5743,7 +5743,7 @@ static int sctp_getsockopt_local_auth_chunks(struct sock *sk, int len,
 		return -EINVAL;
 
 	if (asoc)
-		ch = (struct sctp_chunks_param*)asoc->c.auth_chunks;
+		ch = (struct sctp_chunks_param *)asoc->c.auth_chunks;
 	else
 		ch = ep->auth_chunk_list;
 
@@ -6690,7 +6690,7 @@ static int sctp_msghdr_parse(const struct msghdr *msg, sctp_cmsgs_t *cmsgs)
  * Note: This function is the same function as in core/datagram.c
  * with a few modifications to make lksctp work.
  */
-static int sctp_wait_for_packet(struct sock * sk, int *err, long *timeo_p)
+static int sctp_wait_for_packet(struct sock *sk, int *err, long *timeo_p)
 {
 	int error;
 	DEFINE_WAIT(wait);
