@@ -1069,9 +1069,6 @@ struct sctp_outq {
 
 	/* Corked? */
 	char cork;
-
-	/* Is this structure empty?  */
-	char empty;
 };
 
 void sctp_outq_init(struct sctp_association *, struct sctp_outq *);

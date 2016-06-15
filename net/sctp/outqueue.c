@@ -214,8 +214,6 @@ void sctp_outq_init(struct sctp_association *asoc, struct sctp_outq *q)
 	INIT_LIST_HEAD(&q->retransmit);
 	INIT_LIST_HEAD(&q->sacked);
 	INIT_LIST_HEAD(&q->abandoned);
-
-	q->empty = 1;
 }
 
 /* Free the outqueue structure and any related pending chunks.
@@ -338,7 +336,6 @@ int sctp_outq_tail(struct sctp_outq *q, struct sctp_chunk *chunk, gfp_t gfp)
 				SCTP_INC_STATS(net, SCTP_MIB_OUTUNORDERCHUNKS);
 			else
 				SCTP_INC_STATS(net, SCTP_MIB_OUTORDERCHUNKS);
-			q->empty = 0;
 			break;
 		}
 	} else {
@@ -660,7 +657,6 @@ redo:
 			if (chunk->fast_retransmit == SCTP_NEED_FRTX)
 				chunk->fast_retransmit = SCTP_DONT_FRTX;
 
-			q->empty = 0;
 			q->asoc->stats.rtxchunks++;
 			break;
 		}
@@ -1076,8 +1072,6 @@ static int sctp_outq_flush(struct sctp_outq *q, int rtx_timeout, gfp_t gfp)
 			sctp_transport_reset_t3_rtx(transport);
 			transport->last_time_sent = jiffies;
 
-			q->empty = 0;
-
 			/* Only let one DATA chunk get bundled with a
 			 * COOKIE-ECHO chunk.
 			 */
@@ -1287,29 +1281,17 @@ int sctp_outq_sack(struct sctp_outq *q, struct sctp_chunk *chunk)
 		 "advertised peer ack point:0x%x\n", __func__, asoc, ctsn,
 		 asoc->adv_peer_ack_point);
 
-	/* See if all chunks are acked.
-	 * Make sure the empty queue handler will get run later.
-	 */
-	q->empty = (list_empty(&q->out_chunk_list) &&
-		    list_empty(&q->retransmit));
-	if (!q->empty)
-		goto finish;
-
-	list_for_each_entry(transport, transport_list, transports) {
-		q->empty = q->empty && list_empty(&transport->transmitted);
-		if (!q->empty)
-			goto finish;
-	}
-
-	pr_debug("%s: sack queue is empty\n", __func__);
-finish:
-	return q->empty;
+	return sctp_outq_is_empty(q);
 }
 
-/* Is the outqueue empty?  */
+/* Is the outqueue empty?
+ * The queue is empty when we have not pending data, no in-flight data
+ * and nothing pending retransmissions.
+ */
 int sctp_outq_is_empty(const struct sctp_outq *q)
 {
-	return q->empty;
+	return q->out_qlen == 0 && q->outstanding_bytes == 0 &&
+	       list_empty(&q->retransmit);
 }
 
 /********************************************************************
