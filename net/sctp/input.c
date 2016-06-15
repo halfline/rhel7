@@ -975,11 +975,11 @@ out:
 }
 
 /* Look up an association. protected by RCU read lock */
-SCTP_STATIC
+static
 struct sctp_association *sctp_lookup_association(struct net *net,
 						 const union sctp_addr *laddr,
 						 const union sctp_addr *paddr,
-					    struct sctp_transport **transportp)
+						 struct sctp_transport **transportp)
 {
 	struct sctp_association *asoc;
 

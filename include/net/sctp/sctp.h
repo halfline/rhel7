@@ -99,14 +99,6 @@
 #define SCTP_PROTOSW_FLAG INET_PROTOSW_PERMANENT
 #endif
 
-
-/* Certain internal static functions need to be exported when
- * compiled into the test frame.
- */
-#ifndef SCTP_STATIC
-#define SCTP_STATIC static
-#endif
-
 /* Round an int up to the next multiple of 4.  */
 #define WORD_ROUND(s) (((s)+3)&~3)
 /* Truncate to the previous multiple of 4.  */
