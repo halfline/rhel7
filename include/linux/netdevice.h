@@ -1380,6 +1380,7 @@ struct net_device_ops {
  * @IFF_RXFH_CONFIGURED: device has had Rx Flow indirection table configured
  * @IFF_PHONY_HEADROOM: the headroom value is controlled by an external
  *	entity (i.e. the master device for bridged veth)
+ * @IFF_MACSEC: device is a MACsec device
  */
 enum netdev_priv_flags {
 	IFF_802_1Q_VLAN			= 1<<0,
@@ -1408,6 +1409,7 @@ enum netdev_priv_flags {
 	IFF_RXFH_CONFIGURED		= 1<<25,
 	IFF_NO_QUEUE			= 1<<26,
 	IFF_PHONY_HEADROOM		= 1<<27,
+	IFF_MACSEC			= 1<<28,
 };
 
 #define IFF_802_1Q_VLAN			IFF_802_1Q_VLAN
@@ -1435,6 +1437,7 @@ enum netdev_priv_flags {
 #define IFF_XMIT_DST_RELEASE_PERM	IFF_XMIT_DST_RELEASE_PERM
 #define IFF_NO_QUEUE			IFF_NO_QUEUE
 #define IFF_RXFH_CONFIGURED		IFF_RXFH_CONFIGURED
+#define IFF_MACSEC			IFF_MACSEC
 
 /*
  *	The DEVICE structure.
@@ -3901,6 +3904,11 @@ static inline void skb_gso_error_unwind(struct sk_buff *skb, __be16 protocol,
 static inline bool netif_is_macvlan(struct net_device *dev)
 {
 	return dev->priv_flags & IFF_MACVLAN;
+}
+
+static inline bool netif_is_macsec(const struct net_device *dev)
+{
+	return dev->priv_flags & IFF_MACSEC;
 }
 
 static inline bool netif_is_macvlan_port(struct net_device *dev)
