@@ -588,8 +588,6 @@ for (pos = chunk->subh.fwdtsn_hdr->skip;\
      (void *)pos <= (void *)chunk->subh.fwdtsn_hdr->skip + end - sizeof(struct sctp_fwdtsn_skip);\
      pos++)
 
-/* Make a new instance of type.  */
-#define t_new(type, flags)	kzalloc(sizeof(type), flags)
 
 /* External references. */
 
