@@ -2294,8 +2294,6 @@ static int dump_secy(struct macsec_secy *secy, struct net_device *dev,
 	if (!hdr)
 		return -EMSGSIZE;
 
-	rtnl_lock();
-
 	if (nla_put_u32(skb, MACSEC_ATTR_IFINDEX, dev->ifindex))
 		goto nla_put_failure;
 
@@ -2455,14 +2453,11 @@ static int dump_secy(struct macsec_secy *secy, struct net_device *dev,
 
 	nla_nest_end(skb, rxsc_list);
 
-	rtnl_unlock();
-
 	genlmsg_end(skb, hdr);
 
 	return 0;
 
 nla_put_failure:
-	rtnl_unlock();
 	genlmsg_cancel(skb, hdr);
 	return -EMSGSIZE;
 }
@@ -2476,6 +2471,7 @@ static int macsec_dump_txsc(struct sk_buff *skb, struct netlink_callback *cb)
 	dev_idx = cb->args[0];
 
 	d = 0;
+	rtnl_lock();
 	for_each_netdev(net, dev) {
 		struct macsec_secy *secy;
 
@@ -2493,6 +2489,7 @@ next:
 	}
 
 done:
+	rtnl_unlock();
 	cb->args[0] = d;
 	return skb->len;
 }
