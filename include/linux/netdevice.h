@@ -1377,6 +1377,7 @@ struct net_device_ops {
  *	change when it's running
  * @IFF_MACVLAN: Macvlan device
  * @IFF_NO_QUEUE: device can run without qdisc attached
+ * @IFF_OPENVSWITCH: device is a Open vSwitch master
  * @IFF_RXFH_CONFIGURED: device has had Rx Flow indirection table configured
  * @IFF_PHONY_HEADROOM: the headroom value is controlled by an external
  *	entity (i.e. the master device for bridged veth)
@@ -1406,6 +1407,7 @@ enum netdev_priv_flags {
 	IFF_LIVE_ADDR_CHANGE		= 1<<20,
 	IFF_MACVLAN			= 1<<21,
 	IFF_XMIT_DST_RELEASE_PERM	= 1<<22,
+	IFF_OPENVSWITCH			= 1<<23,
 	IFF_RXFH_CONFIGURED		= 1<<25,
 	IFF_NO_QUEUE			= 1<<26,
 	IFF_PHONY_HEADROOM		= 1<<27,
@@ -1436,6 +1438,7 @@ enum netdev_priv_flags {
 #define IFF_MACVLAN			IFF_MACVLAN
 #define IFF_XMIT_DST_RELEASE_PERM	IFF_XMIT_DST_RELEASE_PERM
 #define IFF_NO_QUEUE			IFF_NO_QUEUE
+#define IFF_OPENVSWITCH			IFF_OPENVSWITCH
 #define IFF_RXFH_CONFIGURED		IFF_RXFH_CONFIGURED
 #define IFF_MACSEC			IFF_MACSEC
 
@@ -3934,6 +3937,11 @@ static inline bool netif_is_bridge_port(const struct net_device *dev)
 static inline bool netif_supports_nofcs(struct net_device *dev)
 {
 	return dev->priv_flags & IFF_SUPP_NOFCS;
+}
+
+static inline bool netif_is_ovs_master(const struct net_device *dev)
+{
+	return dev->priv_flags & IFF_OPENVSWITCH;
 }
 
 static inline bool netif_is_rxfh_configured(const struct net_device *dev)
