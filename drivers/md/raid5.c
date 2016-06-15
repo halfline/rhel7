@@ -670,8 +670,13 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
 				    *(conf->hash_locks + hash));
 		sh = __find_stripe(conf, sector, conf->generation - previous);
 		if (!sh) {
-			if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state))
+			if (!test_bit(R5_INACTIVE_BLOCKED, &conf->cache_state)) {
 				sh = get_free_stripe(conf, hash);
+				if (!sh && llist_empty(&conf->released_stripes) &&
+				    !test_bit(R5_DID_ALLOC, &conf->cache_state))
+					set_bit(R5_ALLOC_MORE,
+						&conf->cache_state);
+			}
 			if (noblock && sh == NULL)
 				break;
 			if (!sh) {
@@ -5868,6 +5873,8 @@ static void raid5d(struct md_thread *thread)
 		int batch_size, released;
 
 		released = release_stripe_list(conf, conf->temp_inactive_list);
+		if (released)
+			clear_bit(R5_DID_ALLOC, &conf->cache_state);
 
 		if (
 		    !list_empty(&conf->bitmap_list)) {
@@ -5906,6 +5913,13 @@ static void raid5d(struct md_thread *thread)
 	pr_debug("%d stripes handled\n", handled);
 
 	spin_unlock_irq(&conf->device_lock);
+	if (test_and_clear_bit(R5_ALLOC_MORE, &conf->cache_state)) {
+		grow_one_stripe(conf, __GFP_NOWARN);
+		/* Set flag even if allocation failed.  This helps
+		 * slow down allocation requests when mem is short
+		 */
+		set_bit(R5_DID_ALLOC, &conf->cache_state);
+	}
 
 	r5l_flush_stripe_to_raid(conf->log);
 
@@ -5923,7 +5937,7 @@ raid5_show_stripe_cache_size(struct mddev *mddev, char *page)
 	spin_lock(&mddev->lock);
 	conf = mddev->private;
 	if (conf)
-		ret = sprintf(page, "%d\n", conf->max_nr_stripes);
+		ret = sprintf(page, "%d\n", conf->min_nr_stripes);
 	spin_unlock(&mddev->lock);
 	return ret;
 }
@@ -5937,9 +5951,11 @@ raid5_set_cache_size(struct mddev *mddev, int size)
 	if (size <= 16 || size > 32768)
 		return -EINVAL;
 
+	conf->min_nr_stripes = size;
 	while (size < conf->max_nr_stripes &&
 	       drop_one_stripe(conf))
 		;
+
 
 	err = md_allow_write(mddev);
 	if (err)
@@ -6056,7 +6072,7 @@ raid5_store_preread_threshold(struct mddev *mddev, const char *page, size_t len)
 	conf = mddev->private;
 	if (!conf)
 		err = -ENODEV;
-	else if (new > conf->max_nr_stripes)
+	else if (new > conf->min_nr_stripes)
 		err = -EINVAL;
 	else
 		conf->bypass_threshold = new;
@@ -6342,6 +6358,8 @@ static void free_conf(struct r5conf *conf)
 {
 	if (conf->log)
 		r5l_exit_log(conf->log);
+	if (conf->shrinker.seeks)
+		unregister_shrinker(&conf->shrinker);
 
 	free_thread_groups(conf);
 	shrink_stripes(conf);
@@ -6416,6 +6434,38 @@ static int raid5_alloc_percpu(struct r5conf *conf)
 			conf->prev_chunk_sectors);
 	}
 	return err;
+}
+
+static unsigned long raid5_cache_scan(struct shrinker *shrink,
+				      struct shrink_control *sc)
+{
+	struct r5conf *conf = container_of(shrink, struct r5conf, shrinker);
+	int ret = 0;
+	while (ret < sc->nr_to_scan) {
+		if (drop_one_stripe(conf) == 0)
+			return ~0UL; /* SHRINK_STOP */
+		ret++;
+	}
+	return ret;
+}
+
+static unsigned long raid5_cache_count(struct shrinker *shrink,
+				       struct shrink_control *sc)
+{
+	struct r5conf *conf = container_of(shrink, struct r5conf, shrinker);
+
+	if (conf->max_nr_stripes < conf->min_nr_stripes)
+		/* unlikely, but not impossible */
+		return 0;
+	return conf->max_nr_stripes - conf->min_nr_stripes;
+}
+
+static int raid5_cache_shrink(struct shrinker *shrink, struct shrink_control *sc)
+{
+	if (sc->nr_to_scan)
+		(void) raid5_cache_scan(shrink, sc);
+
+	return raid5_cache_count(shrink, sc);
 }
 
 static struct r5conf *setup_conf(struct mddev *mddev)
@@ -6573,10 +6623,11 @@ static struct r5conf *setup_conf(struct mddev *mddev)
 		conf->prev_algo = conf->algorithm;
 	}
 
-	memory = NR_STRIPES * (sizeof(struct stripe_head) +
+	conf->min_nr_stripes = NR_STRIPES;
+	memory = conf->min_nr_stripes * (sizeof(struct stripe_head) +
 		 max_disks * ((sizeof(struct bio) + PAGE_SIZE))) / 1024;
 	atomic_set(&conf->empty_inactive_list_nr, NR_STRIPE_HASH_LOCKS);
-	if (grow_stripes(conf, NR_STRIPES)) {
+	if (grow_stripes(conf, conf->min_nr_stripes)) {
 		printk(KERN_ERR
 		       "md/raid:%s: couldn't allocate %dkB for buffers\n",
 		       mdname(mddev), memory);
@@ -6584,6 +6635,15 @@ static struct r5conf *setup_conf(struct mddev *mddev)
 	} else
 		printk(KERN_INFO "md/raid:%s: allocated %dkB\n",
 		       mdname(mddev), memory);
+	/*
+	 * Losing a stripe head costs more than the time to refill it,
+	 * it reduces the queue depth and so can hurt throughput.
+	 * So set it rather large, scaled by number of devices.
+	 */
+	conf->shrinker.seeks = DEFAULT_SEEKS * conf->raid_disks * 4;
+	conf->shrinker.shrink = raid5_cache_shrink;
+	conf->shrinker.batch = 128;
+	register_shrinker(&conf->shrinker);
 
 	sprintf(pers_name, "raid%d", mddev->new_level);
 	conf->thread = md_register_thread(raid5d, mddev, pers_name);
@@ -7283,9 +7343,9 @@ static int check_stripe_cache(struct mddev *mddev)
 	 */
 	struct r5conf *conf = mddev->private;
 	if (((mddev->chunk_sectors << 9) / STRIPE_SIZE) * 4
-	    > conf->max_nr_stripes ||
+	    > conf->min_nr_stripes ||
 	    ((mddev->new_chunk_sectors << 9) / STRIPE_SIZE) * 4
-	    > conf->max_nr_stripes) {
+	    > conf->min_nr_stripes) {
 		printk(KERN_WARNING "md/raid:%s: reshape: not enough stripes.  Needed %lu\n",
 		       mdname(mddev),
 		       ((max(mddev->chunk_sectors, mddev->new_chunk_sectors) << 9)
