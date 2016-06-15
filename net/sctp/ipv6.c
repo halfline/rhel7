@@ -218,9 +218,8 @@ static int sctp_v6_xmit(struct sk_buff *skb, struct sctp_transport *transport)
 	struct flowi6 *fl6 = &transport->fl.u.ip6;
 	int res;
 
-	SCTP_DEBUG_PRINTK("%s: skb:%p, len:%d, src:%pI6 dst:%pI6\n",
-			  __func__, skb, skb->len,
-			  &fl6->saddr, &fl6->daddr);
+	pr_debug("%s: skb:%p, len:%d, src:%pI6 dst:%pI6\n", __func__, skb,
+		 skb->len, &fl6->saddr, &fl6->daddr);
 
 	IP6_ECN_flow_xmit(sk, fl6->flowlabel);
 
@@ -262,7 +261,7 @@ static void sctp_v6_get_dst(struct sctp_transport *t, union sctp_addr *saddr,
 	if (ipv6_addr_type(&daddr->v6.sin6_addr) & IPV6_ADDR_LINKLOCAL)
 		fl6->flowi6_oif = daddr->v6.sin6_scope_id;
 
-	SCTP_DEBUG_PRINTK("%s: DST=%pI6 ", __func__, &fl6->daddr);
+	pr_debug("%s: dst=%pI6 ", __func__, &fl6->daddr);
 
 	if (asoc)
 		fl6->fl6_sport = htons(asoc->base.bind_addr.port);
@@ -270,7 +269,8 @@ static void sctp_v6_get_dst(struct sctp_transport *t, union sctp_addr *saddr,
 	if (saddr) {
 		fl6->saddr = saddr->v6.sin6_addr;
 		fl6->fl6_sport = saddr->v6.sin6_port;
-		SCTP_DEBUG_PRINTK("SRC=%pI6 - ", &fl6->saddr);
+
+		pr_debug("src=%pI6 - ", &fl6->saddr);
 	}
 
 	rcu_read_lock();
@@ -339,15 +339,17 @@ static void sctp_v6_get_dst(struct sctp_transport *t, union sctp_addr *saddr,
 out:
 	if (!IS_ERR_OR_NULL(dst)) {
 		struct rt6_info *rt;
+
 		rt = (struct rt6_info *)dst;
 		t->dst = dst;
 		t->dst_cookie = rt6_get_cookie(rt);
-		SCTP_DEBUG_PRINTK("rt6_dst:%pI6/%d rt6_src:%pI6\n",
+		pr_debug("rt6_dst:%pI6/%d rt6_src:%pI6\n",
 			 &rt->rt6i_dst.addr, rt->rt6i_dst.plen,
 			 &fl6->saddr);
 	} else {
 		t->dst = NULL;
-		SCTP_DEBUG_PRINTK("NO ROUTE\n");
+
+		pr_debug("no route\n");
 	}
 }
 
@@ -370,7 +372,7 @@ static void sctp_v6_get_saddr(struct sctp_sock *sk,
 	struct flowi6 *fl6 = &fl->u.ip6;
 	union sctp_addr *saddr = &t->saddr;
 
-	SCTP_DEBUG_PRINTK("%s: asoc:%p dst:%p\n", __func__, t->asoc, t->dst);
+	pr_debug("%s: asoc:%p dst:%p\n", __func__, t->asoc, t->dst);
 
 	if (t->dst) {
 		saddr->v6.sin6_family = AF_INET6;

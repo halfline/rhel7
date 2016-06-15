@@ -94,8 +94,7 @@ struct sctp_packet *sctp_packet_config(struct sctp_packet *packet,
 	struct sctp_transport *tp = packet->transport;
 	struct sctp_association *asoc = tp->asoc;
 
-	SCTP_DEBUG_PRINTK("%s: packet:%p vtag:0x%x\n", __func__,
-			  packet, vtag);
+	pr_debug("%s: packet:%p vtag:0x%x\n", __func__, packet, vtag);
 
 	packet->vtag = vtag;
 
@@ -143,8 +142,7 @@ struct sctp_packet *sctp_packet_init(struct sctp_packet *packet,
 	struct sctp_association *asoc = transport->asoc;
 	size_t overhead;
 
-	SCTP_DEBUG_PRINTK("%s: packet:%p transport:%p\n", __func__,
-			  packet, transport);
+	pr_debug("%s: packet:%p transport:%p\n", __func__, packet, transport);
 
 	packet->transport = transport;
 	packet->source_port = sport;
@@ -169,7 +167,7 @@ void sctp_packet_free(struct sctp_packet *packet)
 {
 	struct sctp_chunk *chunk, *tmp;
 
-	SCTP_DEBUG_PRINTK("%s: packet:%p\n", __func__, packet);
+	pr_debug("%s: packet:%p\n", __func__, packet);
 
 	list_for_each_entry_safe(chunk, tmp, &packet->chunk_list, list) {
 		list_del_init(&chunk->list);
@@ -358,8 +356,7 @@ sctp_xmit_t sctp_packet_append_chunk(struct sctp_packet *packet,
 {
 	sctp_xmit_t retval = SCTP_XMIT_OK;
 
-	SCTP_DEBUG_PRINTK("%s: packet:%p chunk:%p\n", __func__, packet,
-			  chunk);
+	pr_debug("%s: packet:%p chunk:%p\n", __func__, packet, chunk);
 
 	/* Data chunks are special.  Before seeing what else we can
 	 * bundle into this packet, check to see if we are allowed to
@@ -428,7 +425,7 @@ int sctp_packet_transmit(struct sctp_packet *packet, gfp_t gfp)
 	struct dst_entry *dst;
 	unsigned char *auth = NULL;	/* pointer to auth in skb data */
 
-	SCTP_DEBUG_PRINTK("%s: packet:%p\n", __func__, packet);
+	pr_debug("%s: packet:%p\n", __func__, packet);
 
 	/* Do NOT generate a chunkless packet. */
 	if (list_empty(&packet->chunk_list))
