@@ -212,9 +212,6 @@ extern struct kmem_cache *sctp_bucket_cachep __read_mostly;
  */
 
 /* spin lock wrappers. */
-#define sctp_spin_lock_irqsave(lock, flags) spin_lock_irqsave(lock, flags)
-#define sctp_spin_unlock_irqrestore(lock, flags)  \
-       spin_unlock_irqrestore(lock, flags)
 #define sctp_local_bh_disable() local_bh_disable()
 #define sctp_local_bh_enable()  local_bh_enable()
 #define sctp_spin_lock(lock)    spin_lock(lock)
