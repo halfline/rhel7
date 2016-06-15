@@ -191,8 +191,7 @@ int sctp_rcv(struct sk_buff *skb)
 	 * If a frame arrives on an interface and the receiving socket is
 	 * bound to another interface, via SO_BINDTODEVICE, treat it as OOTB
 	 */
-	if (sk->sk_bound_dev_if && (sk->sk_bound_dev_if != af->skb_iif(skb)))
-	{
+	if (sk->sk_bound_dev_if && (sk->sk_bound_dev_if != af->skb_iif(skb))) {
 		if (asoc) {
 			sctp_association_put(asoc);
 			asoc = NULL;
@@ -622,8 +621,7 @@ void sctp_v4_err(struct sk_buff *skb, __u32 info)
 			sctp_icmp_frag_needed(sk, asoc, transport,
 					      WORD_TRUNC(info));
 			goto out_unlock;
-		}
-		else {
+		} else {
 			if (ICMP_PROT_UNREACH == code) {
 				sctp_icmp_proto_unreachable(sk, asoc,
 							    transport);
