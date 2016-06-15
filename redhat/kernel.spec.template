@@ -1537,6 +1537,25 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Jun 14 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-435.el7]
+- [net] openvswitch: internal_set_rx_headroom() can be static (Jakub Sitnicki) [1322337]
+- [net] veth: implement ndo_set_rx_headroom (Jakub Sitnicki) [1322337]
+- [net] tun: implement ndo_set_rx_headroom (Jakub Sitnicki) [1322337]
+- [net] openvswitch: propagate per dp max headroom to all vports (Jakub Sitnicki) [1322337]
+- [net] bridge: notify enslaved devices of headroom changes (Jakub Sitnicki) [1322337]
+- [net] netdev: introduce ndo_set_rx_headroom (Jakub Sitnicki) [1322337]
+- [net] bridge: inherit slave devices needed_headroom (Jakub Sitnicki) [1322337]
+- [net] ndo: consolidate reserved fields (Jiri Benc) [1339642]
+- [net] move ndo_set_vf_trust to net_device_ops_extended (Jiri Benc) [1339642]
+- [net] move ndo_dfwd_add/del_station to net_device_ops_extended (Jiri Benc) [1339642]
+- [net] move ndo_set_tx_maxrate to net_device_ops_extended (Jiri Benc) [1339642]
+- [net] fix wrong merge of ndo_set_vf_rate documentation (Jiri Benc) [1339642]
+- [net] introduce net_device_ops_extended (Jiri Benc) [1339642]
+- [net] vlan: pull on __vlan_insert_tag error path and fix csum correction (Aaron Conole) [1328847]
+- [net] use skb_postpush_rcsum instead of own implementations (Aaron Conole) [1328847]
+- [net] add skb_postpush_rcsum and fix dev_forward_skb occasions (Aaron Conole) [1328847]
+- [net] sctp: add support for RPS and RFS (Marcelo Leitner) [981353]
+
 * Tue Jun 14 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-434.el7]
 - [netdrv] sfc: report supported link speeds on SFP connections (Jarod Wilson) [1166525]
 - [netdrv] be2net: Don't leak iomapped memory on removal (Ivan Vecera) [1315715]
