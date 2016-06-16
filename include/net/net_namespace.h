@@ -156,6 +156,12 @@ struct net {
 	RH_KABI_EXTEND(struct sock *ipv4_mc_autojoin_sk)
 	RH_KABI_EXTEND(struct sock *ipv6_mc_autojoin_sk)
 	RH_KABI_EXTEND(struct netns_ieee802154_lowpan ieee802154_lowpan)
+	/*
+	 * Disable Potentially-Failed feature, the feature is enabled by default
+	 * pf_enable    -  0  : disable pf
+	 *		- >0  : enable pf
+	 */
+	RH_KABI_EXTEND(int sctp_pf_enable)
 };
 
 /*
