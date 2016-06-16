@@ -125,7 +125,7 @@ static bool ignore_func(struct objtool_file *file, struct symbol *func)
 static bool dead_end_function(struct objtool_file *file, struct symbol *func)
 {
 	int i;
-	struct instruction *insn, *func_insn;
+	struct instruction *insn;
 	bool empty = true;
 
 	/*
@@ -154,11 +154,10 @@ static bool dead_end_function(struct objtool_file *file, struct symbol *func)
 	if (!func->sec)
 		return false;
 
-	func_insn = find_instruction(file, func->sec, func->offset);
-	if (!func_insn)
+	insn = find_instruction(file, func->sec, func->offset);
+	if (!insn)
 		return false;
 
-	insn = func_insn;
 	list_for_each_entry_from(insn, &file->insns, list) {
 		if (insn->sec != func->sec ||
 		    insn->offset >= func->offset + func->len)
@@ -168,21 +167,6 @@ static bool dead_end_function(struct objtool_file *file, struct symbol *func)
 
 		if (insn->type == INSN_RETURN)
 			return false;
-	}
-
-	if (empty)
-		return false;
-
-	/*
-	 * A function can have a sibling call instead of a return.  In that
-	 * case, the function's dead-end status depends on whether the target
-	 * of the sibling call returns.
-	 */
-	insn = func_insn;
-	list_for_each_entry_from(insn, &file->insns, list) {
-		if (insn->sec != func->sec ||
-		    insn->offset >= func->offset + func->len)
-			break;
 
 		if (insn->type == INSN_JUMP_UNCONDITIONAL) {
 			struct instruction *dest = insn->jump_dest;
@@ -210,7 +194,7 @@ static bool dead_end_function(struct objtool_file *file, struct symbol *func)
 			return false;
 	}
 
-	return true;
+	return !empty;
 }
 
 /*
