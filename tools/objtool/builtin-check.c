@@ -121,14 +121,8 @@ static bool ignore_func(struct objtool_file *file, struct symbol *func)
  *
  * For local functions, we have to detect them manually by simply looking for
  * the lack of a return instruction.
- *
- * Returns:
- *  -1: error
- *   0: no dead end
- *   1: dead end
  */
-static int __dead_end_function(struct objtool_file *file, struct symbol *func,
-			       int recursion)
+static bool dead_end_function(struct objtool_file *file, struct symbol *func)
 {
 	int i;
 	struct instruction *insn, *func_insn;
@@ -150,19 +144,19 @@ static int __dead_end_function(struct objtool_file *file, struct symbol *func,
 	};
 
 	if (func->bind == STB_WEAK)
-		return 0;
+		return false;
 
 	if (func->bind == STB_GLOBAL)
 		for (i = 0; i < ARRAY_SIZE(global_noreturns); i++)
 			if (!strcmp(func->name, global_noreturns[i]))
-				return 1;
+				return true;
 
 	if (!func->sec)
-		return 0;
+		return false;
 
 	func_insn = find_instruction(file, func->sec, func->offset);
 	if (!func_insn)
-		return 0;
+		return false;
 
 	insn = func_insn;
 	list_for_each_entry_from(insn, &file->insns, list) {
@@ -173,11 +167,11 @@ static int __dead_end_function(struct objtool_file *file, struct symbol *func,
 		empty = false;
 
 		if (insn->type == INSN_RETURN)
-			return 0;
+			return false;
 	}
 
 	if (empty)
-		return 0;
+		return false;
 
 	/*
 	 * A function can have a sibling call instead of a return.  In that
@@ -196,7 +190,7 @@ static int __dead_end_function(struct objtool_file *file, struct symbol *func,
 
 			if (!dest)
 				/* sibling call to another file */
-				return 0;
+				return false;
 
 			if (dest->sec != func->sec ||
 			    dest->offset < func->offset ||
@@ -207,28 +201,16 @@ static int __dead_end_function(struct objtool_file *file, struct symbol *func,
 				if (!dest_func)
 					continue;
 
-				if (recursion == 5) {
-					WARN_FUNC("infinite recursion (objtool bug!)",
-						  dest->sec, dest->offset);
-					return -1;
-				}
-
-				return __dead_end_function(file, dest_func,
-							   recursion + 1);
+				return dead_end_function(file, dest_func);
 			}
 		}
 
 		if (insn->type == INSN_JUMP_DYNAMIC)
 			/* sibling call */
-			return 0;
+			return false;
 	}
 
-	return 1;
-}
-
-static int dead_end_function(struct objtool_file *file, struct symbol *func)
-{
-	return __dead_end_function(file, func, 0);
+	return true;
 }
 
 /*
@@ -827,11 +809,8 @@ static int validate_branch(struct objtool_file *file,
 				break;
 			}
 
-			ret = dead_end_function(file, insn->call_dest);
-			if (ret == 1)
+			if (dead_end_function(file, insn->call_dest))
 				return warnings;
-			if (ret == -1)
-				warnings++;
 
 			/* fallthrough */
 		case INSN_CALL_DYNAMIC:
