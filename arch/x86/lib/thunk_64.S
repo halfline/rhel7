@@ -8,15 +8,12 @@
 #include <linux/linkage.h>
 #include <asm/dwarf2.h>
 #include <asm/calling.h>
-#include <asm/frame.h>
 
 	/* rdi:	arg1 ... normal C conventions. rax is saved/restored. */
 	.macro THUNK name, func, put_ret_addr_in_rdi=0
 	.globl \name
-	.type \name, @function
 \name:
 	CFI_STARTPROC
-	FRAME_BEGIN
 
 	/* this one pushes 9 elems, the next one would be %rIP */
 	pushq_cfi %rdi
@@ -80,7 +77,6 @@ restore:
 	CFI_RESTORE rsi
 	popq_cfi %rdi
 	CFI_RESTORE rdi
-	FRAME_END
 	ret
 	CFI_ENDPROC
 #endif
