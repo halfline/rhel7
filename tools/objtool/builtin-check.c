@@ -729,11 +729,6 @@ static bool has_valid_stack_frame(struct instruction *insn)
 	       (insn->state & STATE_FP_SETUP);
 }
 
-static unsigned int frame_state(unsigned long state)
-{
-	return (state & (STATE_FP_SAVED | STATE_FP_SETUP));
-}
-
 /*
  * Follow the branch starting at the given instruction, and recursively follow
  * any other branches (jumps).  Meanwhile, track the frame pointer state at
@@ -761,7 +756,7 @@ static int validate_branch(struct objtool_file *file,
 
 	while (1) {
 		if (insn->visited) {
-			if (frame_state(insn->state) != frame_state(state)) {
+			if (insn->state != state) {
 				WARN_FUNC("frame pointer state mismatch",
 					  sec, insn->offset);
 				warnings++;
