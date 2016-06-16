@@ -9,7 +9,6 @@
  */
 #include <linux/linkage.h>
 #include <asm/dwarf2.h>
-#include <asm/frame.h>
 
 /*
  * Calling convention :
@@ -84,19 +83,17 @@ FUNC(sk_load_byte_msh_positive_offset)
 
 /* rsi contains offset and can be scratched */
 #define bpf_slow_path_common(LEN)		\
-	lea	-12(%rbp),%rdx;			\
-	FRAME_BEGIN;				\
 	push	%rdi;    /* save skb */		\
 	push	%r9;				\
 	push	SKBDATA;			\
 /* rsi already has offset */			\
 	mov	$LEN,%ecx;	/* len */	\
+	lea	-12(%rbp),%rdx;			\
 	call	skb_copy_bits;			\
 	test    %eax,%eax;			\
 	pop	SKBDATA;			\
 	pop	%r9;				\
-	pop	%rdi;				\
-	FRAME_END
+	pop	%rdi
 
 
 bpf_slow_path_word:
@@ -131,7 +128,6 @@ bpf_slow_path_byte_msh:
 	ret
 
 #define sk_negative_common(SIZE)				\
-	FRAME_BEGIN;						\
 	push	%rdi;	/* save skb */				\
 	push	%r9;						\
 	push	SKBDATA;					\
@@ -142,7 +138,6 @@ bpf_slow_path_byte_msh:
 	pop	SKBDATA;					\
 	pop	%r9;						\
 	pop	%rdi;						\
-	FRAME_END;						\
 	jz	bpf_error
 
 
