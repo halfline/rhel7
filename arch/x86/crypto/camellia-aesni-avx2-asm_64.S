@@ -11,7 +11,6 @@
  */
 
 #include <linux/linkage.h>
-#include <asm/frame.h>
 
 #define CAMELLIA_TABLE_BYTE_LEN 272
 
@@ -749,7 +748,6 @@ __camellia_enc_blk32:
 	 *	%ymm0..%ymm15: 32 encrypted blocks, order swapped:
 	 *       7, 8, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8
 	 */
-	FRAME_BEGIN
 
 	leaq 8 * 32(%rax), %rcx;
 
@@ -804,7 +802,6 @@ __camellia_enc_blk32:
 		    %ymm8, %ymm9, %ymm10, %ymm11, %ymm12, %ymm13, %ymm14,
 		    %ymm15, (key_table)(CTX, %r8, 8), (%rax), 1 * 32(%rax));
 
-	FRAME_END
 	ret;
 
 .align 8
@@ -837,7 +834,6 @@ __camellia_dec_blk32:
 	 *	%ymm0..%ymm15: 16 plaintext blocks, order swapped:
 	 *       7, 8, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8
 	 */
-	FRAME_BEGIN
 
 	leaq 8 * 32(%rax), %rcx;
 
@@ -891,7 +887,6 @@ __camellia_dec_blk32:
 		    %ymm8, %ymm9, %ymm10, %ymm11, %ymm12, %ymm13, %ymm14,
 		    %ymm15, (key_table)(CTX), (%rax), 1 * 32(%rax));
 
-	FRAME_END
 	ret;
 
 .align 8
@@ -917,7 +912,6 @@ ENTRY(camellia_ecb_enc_32way)
 	 *	%rsi: dst (32 blocks)
 	 *	%rdx: src (32 blocks)
 	 */
-	FRAME_BEGIN
 
 	vzeroupper;
 
@@ -936,7 +930,6 @@ ENTRY(camellia_ecb_enc_32way)
 
 	vzeroupper;
 
-	FRAME_END
 	ret;
 ENDPROC(camellia_ecb_enc_32way)
 
@@ -946,7 +939,6 @@ ENTRY(camellia_ecb_dec_32way)
 	 *	%rsi: dst (32 blocks)
 	 *	%rdx: src (32 blocks)
 	 */
-	FRAME_BEGIN
 
 	vzeroupper;
 
@@ -970,7 +962,6 @@ ENTRY(camellia_ecb_dec_32way)
 
 	vzeroupper;
 
-	FRAME_END
 	ret;
 ENDPROC(camellia_ecb_dec_32way)
 
@@ -980,7 +971,6 @@ ENTRY(camellia_cbc_dec_32way)
 	 *	%rsi: dst (32 blocks)
 	 *	%rdx: src (32 blocks)
 	 */
-	FRAME_BEGIN
 
 	vzeroupper;
 
@@ -1038,7 +1028,6 @@ ENTRY(camellia_cbc_dec_32way)
 
 	vzeroupper;
 
-	FRAME_END
 	ret;
 ENDPROC(camellia_cbc_dec_32way)
 
@@ -1063,7 +1052,6 @@ ENTRY(camellia_ctr_32way)
 	 *	%rdx: src (32 blocks)
 	 *	%rcx: iv (little endian, 128bit)
 	 */
-	FRAME_BEGIN
 
 	vzeroupper;
 
@@ -1178,7 +1166,6 @@ ENTRY(camellia_ctr_32way)
 
 	vzeroupper;
 
-	FRAME_END
 	ret;
 ENDPROC(camellia_ctr_32way)
 
@@ -1211,7 +1198,6 @@ camellia_xts_crypt_32way:
 	 *	%r8: index for input whitening key
 	 *	%r9: pointer to  __camellia_enc_blk32 or __camellia_dec_blk32
 	 */
-	FRAME_BEGIN
 
 	vzeroupper;
 
@@ -1345,7 +1331,6 @@ camellia_xts_crypt_32way:
 
 	vzeroupper;
 
-	FRAME_END
 	ret;
 ENDPROC(camellia_xts_crypt_32way)
 

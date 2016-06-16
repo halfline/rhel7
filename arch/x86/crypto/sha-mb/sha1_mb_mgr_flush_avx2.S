@@ -52,7 +52,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <linux/linkage.h>
-#include <asm/frame.h>
 #include "sha1_mb_mgr_datastruct.S"
 
 
@@ -104,7 +103,6 @@ offset = \_offset
 # JOB* sha1_mb_mgr_flush_avx2(MB_MGR *state)
 # arg 1 : rcx : state
 ENTRY(sha1_mb_mgr_flush_avx2)
-	FRAME_BEGIN
 	push	%rbx
 
 	# If bit (32+3) is set, then all lanes are empty
@@ -214,7 +212,6 @@ len_is_0:
 
 return:
 	pop	%rbx
-	FRAME_END
 	ret
 
 return_null:
