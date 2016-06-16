@@ -1540,7 +1540,7 @@ static void sctp_close(struct sock *sk, long timeout)
 	 * held and that should be grabbed before socket lock.
 	 */
 	spin_lock_bh(&net->sctp.addr_wq_lock);
-	sctp_bh_lock_sock(sk);
+	bh_lock_sock(sk);
 
 	/* Hold the sock, since sk_common_release() will put sock_put()
 	 * and we have just a little more cleanup.
@@ -1548,7 +1548,7 @@ static void sctp_close(struct sock *sk, long timeout)
 	sock_hold(sk);
 	sk_common_release(sk);
 
-	sctp_bh_unlock_sock(sk);
+	bh_unlock_sock(sk);
 	spin_unlock_bh(&net->sctp.addr_wq_lock);
 
 	sock_put(sk);
