@@ -2,14 +2,6 @@
 # Makefile for x86 specific library files.
 #
 
-OBJECT_FILES_NON_STANDARD_clear_page_64.o	+= y
-OBJECT_FILES_NON_STANDARD_copy_page_64.o	+= y
-OBJECT_FILES_NON_STANDARD_copy_user_64.o	+= y
-OBJECT_FILES_NON_STANDARD_memcpy_64.o		+= y
-OBJECT_FILES_NON_STANDARD_memmove_64.o		+= y
-OBJECT_FILES_NON_STANDARD_memset_64.o		+= y
-OBJECT_FILES_NON_STANDARD_rwlock.o		+= y
-
 inat_tables_script = $(srctree)/arch/x86/tools/gen-insn-attr-x86.awk
 inat_tables_maps = $(srctree)/arch/x86/lib/x86-opcode-map.txt
 quiet_cmd_inat_tables = GEN     $@
