@@ -94,12 +94,25 @@ DWORD_tmp	= %r9d
 
 lane_data       = %r10
 
+# STACK_SPACE needs to be an odd multiple of 8
+STACK_SPACE     = 8*8 + 16*10 + 8
+
 # JOB* submit_mb_mgr_submit_avx2(MB_MGR *state, job_sha1 *job)
 # arg 1 : rcx : state
 # arg 2 : rdx : job
 ENTRY(sha1_mb_mgr_submit_avx2)
-	push	%rbx
-	push	%rbp
+
+	mov	%rsp, %r10
+	sub     $STACK_SPACE, %rsp
+	and	$~31, %rsp
+
+	mov     %rbx, (%rsp)
+	mov	%r10, 8*2(%rsp)	#save old rsp
+	mov     %rbp, 8*3(%rsp)
+	mov	%r12, 8*4(%rsp)
+	mov	%r13, 8*5(%rsp)
+	mov	%r14, 8*6(%rsp)
+	mov	%r15, 8*7(%rsp)
 
 	mov     _unused_lanes(state), unused_lanes
 	mov	unused_lanes, lane
@@ -190,8 +203,16 @@ len_is_0:
 	movl    DWORD_tmp, _result_digest+1*16(job_rax)
 
 return:
-	pop	%rbp
-	pop	%rbx
+
+	mov     (%rsp), %rbx
+	mov	8*2(%rsp), %r10	#save old rsp
+	mov     8*3(%rsp), %rbp
+	mov	8*4(%rsp), %r12
+	mov	8*5(%rsp), %r13
+	mov	8*6(%rsp), %r14
+	mov	8*7(%rsp), %r15
+	mov     %r10, %rsp
+
 	ret
 
 return_null:
