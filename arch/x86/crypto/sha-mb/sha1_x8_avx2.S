@@ -296,11 +296,7 @@ W14  = TMP_
 #
 ENTRY(sha1_x8_avx2)
 
-	# save callee-saved clobbered registers to comply with C function ABI
-	push	%r12
-	push	%r13
-	push	%r14
-	push	%r15
+	push	RSP_SAVE
 
 	#save rsp
 	mov	%rsp, RSP_SAVE
@@ -450,12 +446,7 @@ lloop:
 	## Postamble
 
 	mov     RSP_SAVE, %rsp
-
-	# restore callee-saved clobbered registers
-	pop	%r15
-	pop	%r14
-	pop	%r13
-	pop	%r12
+	pop	RSP_SAVE
 
 	ret
 ENDPROC(sha1_x8_avx2)
