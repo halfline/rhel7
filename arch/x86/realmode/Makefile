@@ -6,7 +6,6 @@
 # for more details.
 #
 #
-OBJECT_FILES_NON_STANDARD	:= y
 
 subdir- := rm
 
