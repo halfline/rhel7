@@ -505,6 +505,9 @@ static int geneve_gro_complete(struct sock *sk, struct sk_buff *skb,
 		err = ptype->callbacks.gro_complete(skb, nhoff + gh_len);
 
 	rcu_read_unlock();
+
+	skb_set_inner_mac_header(skb, nhoff + gh_len);
+
 	return err;
 }
 
