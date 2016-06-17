@@ -584,7 +584,7 @@ static int ipip6_rcv(struct sk_buff *skb)
 		skb->mac_header = skb->network_header;
 		skb_reset_network_header(skb);
 		IPCB(skb)->flags = 0;
-		skb->protocol = htons(ETH_P_IPV6);
+		skb->dev = tunnel->dev;
 
 		if (tunnel->dev->priv_flags & IFF_ISATAP) {
 			if (!isatap_chksrc(skb, iph, tunnel)) {
@@ -601,7 +601,9 @@ static int ipip6_rcv(struct sk_buff *skb)
 			}
 		}
 
-		__skb_tunnel_rx(skb, tunnel->dev, tunnel->net);
+		if (iptunnel_pull_header(skb, 0, htons(ETH_P_IPV6),
+		    !net_eq(tunnel->net, dev_net(tunnel->dev))))
+			goto out;
 
 		err = IP_ECN_decapsulate(iph, skb);
 		if (unlikely(err)) {
