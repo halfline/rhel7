@@ -2800,6 +2800,7 @@ int ndo_dflt_fdb_dump(struct sk_buff *skb,
 	nlmsg_populate_fdb(skb, cb, dev, &idx, &dev->mc);
 out:
 	netif_addr_unlock_bh(dev);
+	cb->args[1] = err;
 	return idx;
 }
 EXPORT_SYMBOL(ndo_dflt_fdb_dump);
@@ -2811,6 +2812,7 @@ static int rtnl_fdb_dump(struct sk_buff *skb, struct netlink_callback *cb)
 	struct net_device *dev;
 
 	rcu_read_lock();
+	cb->args[1] = 0;
 	for_each_netdev_rcu(net, dev) {
 		if (dev->priv_flags & IFF_BRIDGE_PORT) {
 			struct net_device *br_dev;
@@ -2821,11 +2823,15 @@ static int rtnl_fdb_dump(struct sk_buff *skb, struct netlink_callback *cb)
 			if (ops->ndo_fdb_dump)
 				idx = ops->ndo_fdb_dump(skb, cb, dev, idx);
 		}
+		if (cb->args[1] == -EMSGSIZE)
+			break;
 
 		if (dev->netdev_ops->ndo_fdb_dump)
 			idx = dev->netdev_ops->ndo_fdb_dump(skb, cb, dev, idx);
 		else
 			idx = ndo_dflt_fdb_dump(skb, cb, dev, idx);
+		if (cb->args[1] == -EMSGSIZE)
+			break;
 	}
 	rcu_read_unlock();
 
