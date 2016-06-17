@@ -158,9 +158,12 @@ static inline __sum16 udp_v4_check(int len, __be32 saddr,
 void udp_set_csum(bool nocheck, struct sk_buff *skb,
 		  __be32 saddr, __be32 daddr, int len);
 
+typedef struct sock *(*udp_lookup_t)(struct sk_buff *skb, __be16 sport,
+				     __be16 dport);
+
 struct sk_buff **udp_gro_receive(struct sk_buff **head, struct sk_buff *skb,
-				 struct udphdr *uh);
-int udp_gro_complete(struct sk_buff *skb, int nhoff);
+				 struct udphdr *uh, udp_lookup_t lookup);
+int udp_gro_complete(struct sk_buff *skb, int nhoff, udp_lookup_t lookup);
 
 static inline struct udphdr *udp_gro_udphdr(struct sk_buff *skb)
 {
