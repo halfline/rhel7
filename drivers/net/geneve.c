@@ -495,8 +495,6 @@ static int geneve_gro_complete(struct sock *sk, struct sk_buff *skb,
 	int gh_len;
 	int err = -ENOSYS;
 
-	udp_tunnel_gro_complete(skb, nhoff);
-
 	gh = (struct genevehdr *)(skb->data + nhoff);
 	gh_len = geneve_hlen(gh);
 	type = gh->proto_type;
