@@ -2173,6 +2173,7 @@ struct pcpu_sw_netstats {
 #define NETDEV_PRECHANGEMTU	0x0017 /* notify before mtu change happened */
 #define NETDEV_CHANGEINFODATA	0x0018
 #define NETDEV_BONDING_INFO	0x0019
+#define NETDEV_OFFLOAD_PUSH_VXLAN	0x001C
 
 /* (Un)registration functions for the notifiers that takes
  * 'struct net_device *' as parameter
