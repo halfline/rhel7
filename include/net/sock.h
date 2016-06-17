@@ -1584,7 +1584,11 @@ extern struct sk_buff		*sock_rmalloc(struct sock *sk,
 extern void			sock_wfree(struct sk_buff *skb);
 extern void			sock_rfree(struct sk_buff *skb);
 extern void			sock_efree(struct sk_buff *skb);
-extern void			sock_edemux(struct sk_buff *skb);
+#ifdef CONFIG_INET
+void sock_edemux(struct sk_buff *skb);
+#else
+#define sock_edemux(skb) sock_efree(skb)
+#endif
 
 extern int			sock_setsockopt(struct socket *sock, int level,
 						int op, char __user *optval,
