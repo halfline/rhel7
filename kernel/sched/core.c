@@ -1436,11 +1436,11 @@ ttwu_stat(struct task_struct *p, int cpu, int wake_flags)
 
 	if (cpu == this_cpu) {
 		schedstat_inc(rq, ttwu_local);
-		schedstat_inc(p, se.statistics.nr_wakeups_local);
+		schedstat_inc(p, se.statistics->nr_wakeups_local);
 	} else {
 		struct sched_domain *sd;
 
-		schedstat_inc(p, se.statistics.nr_wakeups_remote);
+		schedstat_inc(p, se.statistics->nr_wakeups_remote);
 		rcu_read_lock();
 		for_each_domain(this_cpu, sd) {
 			if (cpumask_test_cpu(cpu, sched_domain_span(sd))) {
@@ -1452,15 +1452,15 @@ ttwu_stat(struct task_struct *p, int cpu, int wake_flags)
 	}
 
 	if (wake_flags & WF_MIGRATED)
-		schedstat_inc(p, se.statistics.nr_wakeups_migrate);
+		schedstat_inc(p, se.statistics->nr_wakeups_migrate);
 
 #endif /* CONFIG_SMP */
 
 	schedstat_inc(rq, ttwu_count);
-	schedstat_inc(p, se.statistics.nr_wakeups);
+	schedstat_inc(p, se.statistics->nr_wakeups);
 
 	if (wake_flags & WF_SYNC)
-		schedstat_inc(p, se.statistics.nr_wakeups_sync);
+		schedstat_inc(p, se.statistics->nr_wakeups_sync);
 
 #endif /* CONFIG_SCHEDSTATS */
 }
@@ -1798,7 +1798,8 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
 
 #ifdef CONFIG_SCHEDSTATS
 	/* Even if schedstat is disabled, there should not be garbage */
-	memset(&p->se.statistics, 0, sizeof(p->se.statistics));
+	p->se.statistics = &p->statistics;
+	memset(p->se.statistics, 0, sizeof(*p->se.statistics));
 #endif
 
 	RB_CLEAR_NODE(&p->dl.rb_node);
@@ -8265,9 +8266,9 @@ void normalize_rt_tasks(void)
 
 		p->se.exec_start		= 0;
 #ifdef CONFIG_SCHEDSTATS
-		p->se.statistics.wait_start	= 0;
-		p->se.statistics.sleep_start	= 0;
-		p->se.statistics.block_start	= 0;
+		p->se.statistics->wait_start	= 0;
+		p->se.statistics->sleep_start	= 0;
+		p->se.statistics->block_start	= 0;
 #endif
 
 		if (!dl_task(p) && !rt_task(p)) {

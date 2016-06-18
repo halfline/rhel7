@@ -667,7 +667,16 @@ struct rq {
 	struct hrtimer hrtick_timer;
 #endif
 
-#ifdef CONFIG_SCHEDSTATS
+#ifdef CONFIG_SMP
+	struct llist_head wake_list;
+#endif
+
+	struct sched_avg avg;
+
+	RH_KABI_EXTEND(struct dl_rq dl)
+
+#ifndef __GENKSYMS__
+	/* CONFIG_SCHEDSTATS */
 	/* latency stats */
 	struct sched_info rq_sched_info;
 	unsigned long long rq_cpu_time;
@@ -683,15 +692,7 @@ struct rq {
 	/* try_to_wake_up() stats */
 	unsigned int ttwu_count;
 	unsigned int ttwu_local;
-#endif
-
-#ifdef CONFIG_SMP
-	struct llist_head wake_list;
-#endif
-
-	struct sched_avg avg;
-
-	RH_KABI_EXTEND(struct dl_rq dl)
+#endif /* __GENKSYMS__ */
 };
 
 static inline int cpu_of(struct rq *rq)

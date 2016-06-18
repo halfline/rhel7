@@ -938,7 +938,26 @@ struct sched_domain {
 	u64 max_newidle_lb_cost;
 	unsigned long next_decay_max_lb_cost;
 
-#ifdef CONFIG_SCHEDSTATS
+#ifdef CONFIG_SCHED_DEBUG
+	char *name;
+#endif
+	union {
+		void *private;		/* used during construction */
+		struct rcu_head rcu;	/* used during destruction */
+	};
+
+	unsigned int span_weight;
+	/*
+	 * Span of all CPUs in this domain.
+	 *
+	 * NOTE: this field is variable length. (Allocated dynamically
+	 * by attaching extra space to the end of the structure,
+	 * depending on how many CPUs the kernel has booted up with)
+	 */
+	unsigned long span[0];
+
+#ifndef __GENKSYMS__
+	/* CONFIG_SCHEDSTATS */
 	/* load_balance() stats */
 	unsigned int lb_count[CPU_MAX_IDLE_TYPES];
 	unsigned int lb_failed[CPU_MAX_IDLE_TYPES];
@@ -968,24 +987,7 @@ struct sched_domain {
 	unsigned int ttwu_wake_remote;
 	unsigned int ttwu_move_affine;
 	unsigned int ttwu_move_balance;
-#endif
-#ifdef CONFIG_SCHED_DEBUG
-	char *name;
-#endif
-	union {
-		void *private;		/* used during construction */
-		struct rcu_head rcu;	/* used during destruction */
-	};
-
-	unsigned int span_weight;
-	/*
-	 * Span of all CPUs in this domain.
-	 *
-	 * NOTE: this field is variable length. (Allocated dynamically
-	 * by attaching extra space to the end of the structure,
-	 * depending on how many CPUs the kernel has booted up with)
-	 */
-	unsigned long span[0];
+#endif /* __GENKSYMS__ */
 };
 
 static inline struct cpumask *sched_domain_span(struct sched_domain *sd)
@@ -1132,10 +1134,6 @@ struct sched_entity {
 
 	u64			nr_migrations;
 
-#ifdef CONFIG_SCHEDSTATS
-	struct sched_statistics statistics;
-#endif
-
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	struct sched_entity	*parent;
 	/* rq on which this entity is (to be) queued: */
@@ -1154,8 +1152,9 @@ struct sched_entity {
 	struct sched_avg	avg;
 #endif
 
+	RH_KABI_USE(1, struct sched_statistics *statistics)
+
 	/* reserved for Red Hat */
-	RH_KABI_RESERVE(1)
 	RH_KABI_RESERVE(2)
 	RH_KABI_RESERVE(3)
 	RH_KABI_RESERVE(4)
@@ -1730,6 +1729,7 @@ struct task_struct {
 	#ifdef CONFIG_SMP
 		struct rb_node pushable_dl_tasks;
 	#endif
+	struct sched_statistics statistics;
 #endif /* __GENKSYMS__ */
 };
 

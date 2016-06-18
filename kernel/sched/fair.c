@@ -702,8 +702,8 @@ static void update_curr(struct cfs_rq *cfs_rq)
 
 	curr->exec_start = now;
 
-	schedstat_set(curr->statistics.exec_max,
-		      max(delta_exec, curr->statistics.exec_max));
+	schedstat_set(curr->statistics->exec_max,
+		      max(delta_exec, curr->statistics->exec_max));
 
 	curr->sum_exec_runtime += delta_exec;
 	schedstat_add(cfs_rq, exec_clock, delta_exec);
@@ -731,22 +731,22 @@ static void update_curr_fair(struct rq *rq)
 static inline void
 update_stats_wait_start(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
-	schedstat_set(se->statistics.wait_start, rq_clock(rq_of(cfs_rq)));
+	schedstat_set(se->statistics->wait_start, rq_clock(rq_of(cfs_rq)));
 }
 
 static void
 update_stats_wait_end(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
-	schedstat_set(se->statistics.wait_max, max(se->statistics.wait_max,
-			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start));
-	schedstat_set(se->statistics.wait_count, se->statistics.wait_count + 1);
-	schedstat_set(se->statistics.wait_sum, se->statistics.wait_sum +
-			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start);
+	schedstat_set(se->statistics->wait_max, max(se->statistics->wait_max,
+			rq_clock(rq_of(cfs_rq)) - se->statistics->wait_start));
+	schedstat_set(se->statistics->wait_count, se->statistics->wait_count + 1);
+	schedstat_set(se->statistics->wait_sum, se->statistics->wait_sum +
+			rq_clock(rq_of(cfs_rq)) - se->statistics->wait_start);
 	if (entity_is_task(se)) {
 		trace_sched_stat_wait(task_of(se),
-			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start);
+			rq_clock(rq_of(cfs_rq)) - se->statistics->wait_start);
 	}
-	schedstat_set(se->statistics.wait_start, 0);
+	schedstat_set(se->statistics->wait_start, 0);
 }
 
 /*
@@ -778,9 +778,9 @@ update_stats_dequeue(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 			struct task_struct *tsk = task_of(se);
 
 			if (tsk->state & TASK_INTERRUPTIBLE)
-				se->statistics.sleep_start = rq_clock(rq_of(cfs_rq));
+				se->statistics->sleep_start = rq_clock(rq_of(cfs_rq));
 			if (tsk->state & TASK_UNINTERRUPTIBLE)
-				se->statistics.block_start = rq_clock(rq_of(cfs_rq));
+				se->statistics->block_start = rq_clock(rq_of(cfs_rq));
 		}
 	}
 
@@ -2668,39 +2668,39 @@ static void enqueue_sleeper(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	if (entity_is_task(se))
 		tsk = task_of(se);
 
-	if (se->statistics.sleep_start) {
-		u64 delta = rq_clock(rq_of(cfs_rq)) - se->statistics.sleep_start;
+	if (se->statistics->sleep_start) {
+		u64 delta = rq_clock(rq_of(cfs_rq)) - se->statistics->sleep_start;
 
 		if ((s64)delta < 0)
 			delta = 0;
 
-		if (unlikely(delta > se->statistics.sleep_max))
-			se->statistics.sleep_max = delta;
+		if (unlikely(delta > se->statistics->sleep_max))
+			se->statistics->sleep_max = delta;
 
-		se->statistics.sleep_start = 0;
-		se->statistics.sum_sleep_runtime += delta;
+		se->statistics->sleep_start = 0;
+		se->statistics->sum_sleep_runtime += delta;
 
 		if (tsk) {
 			account_scheduler_latency(tsk, delta >> 10, 1);
 			trace_sched_stat_sleep(tsk, delta);
 		}
 	}
-	if (se->statistics.block_start) {
-		u64 delta = rq_clock(rq_of(cfs_rq)) - se->statistics.block_start;
+	if (se->statistics->block_start) {
+		u64 delta = rq_clock(rq_of(cfs_rq)) - se->statistics->block_start;
 
 		if ((s64)delta < 0)
 			delta = 0;
 
-		if (unlikely(delta > se->statistics.block_max))
-			se->statistics.block_max = delta;
+		if (unlikely(delta > se->statistics->block_max))
+			se->statistics->block_max = delta;
 
-		se->statistics.block_start = 0;
-		se->statistics.sum_sleep_runtime += delta;
+		se->statistics->block_start = 0;
+		se->statistics->sum_sleep_runtime += delta;
 
 		if (tsk) {
 			if (tsk->in_iowait) {
-				se->statistics.iowait_sum += delta;
-				se->statistics.iowait_count++;
+				se->statistics->iowait_sum += delta;
+				se->statistics->iowait_count++;
 				trace_sched_stat_iowait(tsk, delta);
 			}
 
@@ -2973,7 +2973,7 @@ set_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	 * when there are only lesser-weight tasks around):
 	 */
 	if (schedstat_enabled() && rq_of(cfs_rq)->load.weight >= 2*se->load.weight) {
-		se->statistics.slice_max = max(se->statistics.slice_max,
+		se->statistics->slice_max = max(se->statistics->slice_max,
 			se->sum_exec_runtime - se->prev_sum_exec_runtime);
 	}
 #endif
@@ -4311,7 +4311,7 @@ static int wake_affine(struct sched_domain *sd, struct task_struct *p, int sync)
 	if (sync && balanced)
 		return 1;
 
-	schedstat_inc(p, se.statistics.nr_wakeups_affine_attempts);
+	schedstat_inc(p, se.statistics->nr_wakeups_affine_attempts);
 	tl_per_task = cpu_avg_load_per_task(this_cpu);
 
 	if (balanced ||
@@ -4323,7 +4323,7 @@ static int wake_affine(struct sched_domain *sd, struct task_struct *p, int sync)
 		 * there is no bad imbalance.
 		 */
 		schedstat_inc(sd, ttwu_move_affine);
-		schedstat_inc(p, se.statistics.nr_wakeups_affine);
+		schedstat_inc(p, se.statistics->nr_wakeups_affine);
 
 		return 1;
 	}
@@ -5121,7 +5121,7 @@ int can_migrate_task(struct task_struct *p, struct lb_env *env)
 	if (!cpumask_test_cpu(env->dst_cpu, tsk_cpus_allowed(p))) {
 		int cpu;
 
-		schedstat_inc(p, se.statistics.nr_failed_migrations_affine);
+		schedstat_inc(p, se.statistics->nr_failed_migrations_affine);
 
 		env->flags |= LBF_SOME_PINNED;
 
@@ -5152,7 +5152,7 @@ int can_migrate_task(struct task_struct *p, struct lb_env *env)
 	env->flags &= ~LBF_ALL_PINNED;
 
 	if (task_running(env->src_rq, p)) {
-		schedstat_inc(p, se.statistics.nr_failed_migrations_running);
+		schedstat_inc(p, se.statistics->nr_failed_migrations_running);
 		return 0;
 	}
 
@@ -5170,7 +5170,7 @@ int can_migrate_task(struct task_struct *p, struct lb_env *env)
 #ifdef CONFIG_SCHEDSTATS
 		if (tsk_cache_hot) {
 			schedstat_inc(env->sd, lb_hot_gained[env->idle]);
-			schedstat_inc(p, se.statistics.nr_forced_migrations);
+			schedstat_inc(p, se.statistics->nr_forced_migrations);
 		}
 #endif
 		return 1;
@@ -5181,13 +5181,13 @@ int can_migrate_task(struct task_struct *p, struct lb_env *env)
 
 		if (tsk_cache_hot) {
 			schedstat_inc(env->sd, lb_hot_gained[env->idle]);
-			schedstat_inc(p, se.statistics.nr_forced_migrations);
+			schedstat_inc(p, se.statistics->nr_forced_migrations);
 		}
 
 		return 1;
 	}
 
-	schedstat_inc(p, se.statistics.nr_failed_migrations_hot);
+	schedstat_inc(p, se.statistics->nr_failed_migrations_hot);
 	return 0;
 }
 
