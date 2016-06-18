@@ -727,11 +727,38 @@ static void update_curr_fair(struct rq *rq)
 	update_curr(cfs_rq_of(&rq->curr->se));
 }
 
+#ifdef CONFIG_SCHEDSTATS
 static inline void
 update_stats_wait_start(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
 	schedstat_set(se->statistics.wait_start, rq_clock(rq_of(cfs_rq)));
 }
+
+static void
+update_stats_wait_end(struct cfs_rq *cfs_rq, struct sched_entity *se)
+{
+	schedstat_set(se->statistics.wait_max, max(se->statistics.wait_max,
+			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start));
+	schedstat_set(se->statistics.wait_count, se->statistics.wait_count + 1);
+	schedstat_set(se->statistics.wait_sum, se->statistics.wait_sum +
+			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start);
+	if (entity_is_task(se)) {
+		trace_sched_stat_wait(task_of(se),
+			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start);
+	}
+	schedstat_set(se->statistics.wait_start, 0);
+}
+#else
+static inline void
+update_stats_wait_start(struct cfs_rq *cfs_rq, struct sched_entity *se)
+{
+}
+
+static inline void
+update_stats_wait_end(struct cfs_rq *cfs_rq, struct sched_entity *se)
+{
+}
+#endif
 
 /*
  * Task is being enqueued - update stats:
@@ -744,23 +771,6 @@ static void update_stats_enqueue(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	 */
 	if (se != cfs_rq->curr)
 		update_stats_wait_start(cfs_rq, se);
-}
-
-static void
-update_stats_wait_end(struct cfs_rq *cfs_rq, struct sched_entity *se)
-{
-	schedstat_set(se->statistics.wait_max, max(se->statistics.wait_max,
-			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start));
-	schedstat_set(se->statistics.wait_count, se->statistics.wait_count + 1);
-	schedstat_set(se->statistics.wait_sum, se->statistics.wait_sum +
-			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start);
-#ifdef CONFIG_SCHEDSTATS
-	if (entity_is_task(se)) {
-		trace_sched_stat_wait(task_of(se),
-			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start);
-	}
-#endif
-	schedstat_set(se->statistics.wait_start, 0);
 }
 
 static inline void
