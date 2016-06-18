@@ -967,6 +967,8 @@ extern struct static_key sched_feat_keys[__SCHED_FEAT_NR];
 #define sched_feat(x) (sysctl_sched_features & (1UL << __SCHED_FEAT_##x))
 #endif /* SCHED_DEBUG && HAVE_JUMP_LABEL */
 
+extern struct static_key sched_schedstats;
+
 #ifdef CONFIG_NUMA_BALANCING
 #define sched_feat_numa(x) sched_feat(x)
 #ifdef CONFIG_SCHED_DEBUG
