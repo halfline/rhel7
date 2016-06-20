@@ -115,9 +115,8 @@ double discover_bclk(unsigned int family, unsigned int model);
 #define RAPL_DRAM_POWER_INFO	(1 << 5)
 					/* 0x61c MSR_DRAM_POWER_INFO */
 
-#define RAPL_CORES		(1 << 6)
+#define RAPL_CORES_POWER_LIMIT	(1 << 6)
 					/* 0x638 MSR_PP0_POWER_LIMIT */
-					/* 0x639 MSR_PP0_ENERGY_STATUS */
 #define RAPL_CORE_POLICY	(1 << 7)
 					/* 0x63a MSR_PP0_POLICY */
 
@@ -125,6 +124,10 @@ double discover_bclk(unsigned int family, unsigned int model);
 					/* 0x640 MSR_PP1_POWER_LIMIT */
 					/* 0x641 MSR_PP1_ENERGY_STATUS */
 					/* 0x642 MSR_PP1_POLICY */
+
+#define RAPL_CORES_ENERGY_STATUS	(1 << 9)
+					/* 0x639 MSR_PP0_ENERGY_STATUS */
+#define RAPL_CORES (RAPL_CORES_ENERGY_STATUS | RAPL_CORES_POWER_LIMIT)
 #define	TJMAX_DEFAULT	100
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -356,7 +359,7 @@ void print_header(void)
 	if (do_rapl && !rapl_joules) {
 		if (do_rapl & RAPL_PKG)
 			outp += sprintf(outp, " PkgWatt");
-		if (do_rapl & RAPL_CORES)
+		if (do_rapl & RAPL_CORES_ENERGY_STATUS)
 			outp += sprintf(outp, " CorWatt");
 		if (do_rapl & RAPL_GFX)
 			outp += sprintf(outp, " GFXWatt");
@@ -369,7 +372,7 @@ void print_header(void)
 	} else if (do_rapl && rapl_joules) {
 		if (do_rapl & RAPL_PKG)
 			outp += sprintf(outp, "   Pkg_J");
-		if (do_rapl & RAPL_CORES)
+		if (do_rapl & RAPL_CORES_ENERGY_STATUS)
 			outp += sprintf(outp, "   Cor_J");
 		if (do_rapl & RAPL_GFX)
 			outp += sprintf(outp, "   GFX_J");
@@ -602,7 +605,7 @@ int format_counters(struct thread_data *t, struct core_data *c,
 	if (do_rapl && !rapl_joules) {
 		if (do_rapl & RAPL_PKG)
 			outp += sprintf(outp, fmt8, p->energy_pkg * rapl_energy_units / interval_float);
-		if (do_rapl & RAPL_CORES)
+		if (do_rapl & RAPL_CORES_ENERGY_STATUS)
 			outp += sprintf(outp, fmt8, p->energy_cores * rapl_energy_units / interval_float);
 		if (do_rapl & RAPL_GFX)
 			outp += sprintf(outp, fmt8, p->energy_gfx * rapl_energy_units / interval_float);
@@ -1087,7 +1090,7 @@ int get_counters(struct thread_data *t, struct core_data *c, struct pkg_data *p)
 			return -13;
 		p->energy_pkg = msr & 0xFFFFFFFF;
 	}
-	if (do_rapl & RAPL_CORES) {
+	if (do_rapl & RAPL_CORES_ENERGY_STATUS) {
 		if (get_msr(cpu, MSR_PP0_ENERGY_STATUS, &msr))
 			return -14;
 		p->energy_cores = msr & 0xFFFFFFFF;
@@ -2224,7 +2227,7 @@ void rapl_probe(unsigned int family, unsigned int model)
 		break;
 	case 0x37:	/* BYT */
 	case 0x4D:	/* AVN */
-		do_rapl = RAPL_PKG | RAPL_CORES ;
+		do_rapl = RAPL_PKG | RAPL_CORES;
 		break;
 	default:
 		return;
@@ -2439,9 +2442,8 @@ int print_rapl(struct thread_data *t, struct core_data *c, struct pkg_data *p)
 			fprintf(stderr, "cpu%d: MSR_PP0_POLICY: %lld\n", cpu, msr & 0xF);
 		}
 	}
-	if (do_rapl & RAPL_CORES) {
+	if (do_rapl & RAPL_CORES_POWER_LIMIT) {
 		if (debug) {
-
 			if (get_msr(cpu, MSR_PP0_POWER_LIMIT, &msr))
 				return -9;
 			fprintf(stderr, "cpu%d: MSR_PP0_POWER_LIMIT: 0x%08llx (%slocked)\n",
