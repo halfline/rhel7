@@ -2780,10 +2780,13 @@ void process_cpuid()
 				case 0x5E:	/* SKL */
 				case 0x8E:	/* KBL */
 				case 0x9E:	/* KBL */
-					crystal_hz = 24000000;	/* 24 MHz */
+					crystal_hz = 24000000;	/* 24.0 MHz */
 					break;
 				case 0x55:	/* SKX */
 					crystal_hz = 25000000;	/* 25.0 MHz */
+					break;
+				case 0x5C:	/* BXT */
+					crystal_hz = 19200000;	/* 19.2 MHz */
 					break;
 				default:
 					crystal_hz = 0;
