@@ -236,7 +236,7 @@ int __init qede_init(void)
 	/* Must register notifier before pci ops, since we might miss
 	 * interface rename after pci probe and netdev registeration.
 	 */
-	ret = register_netdevice_notifier(&qede_netdev_notifier);
+	ret = register_netdevice_notifier_rh(&qede_netdev_notifier);
 	if (ret) {
 		pr_notice("Failed to register netdevice_notifier\n");
 		qed_put_eth_ops();
@@ -246,7 +246,7 @@ int __init qede_init(void)
 	ret = pci_register_driver(&qede_pci_driver);
 	if (ret) {
 		pr_notice("Failed to register driver\n");
-		unregister_netdevice_notifier(&qede_netdev_notifier);
+		unregister_netdevice_notifier_rh(&qede_netdev_notifier);
 		qed_put_eth_ops();
 		return -EINVAL;
 	}
@@ -258,7 +258,7 @@ static void __exit qede_cleanup(void)
 {
 	pr_notice("qede_cleanup called\n");
 
-	unregister_netdevice_notifier(&qede_netdev_notifier);
+	unregister_netdevice_notifier_rh(&qede_netdev_notifier);
 	pci_unregister_driver(&qede_pci_driver);
 	qed_put_eth_ops();
 }
