@@ -4442,9 +4442,9 @@ laundromat_main(struct work_struct *laundry)
 	queue_delayed_work(laundry_wq, &nn->laundromat_work, t*HZ);
 }
 
-static inline __be32 nfs4_check_fh(struct svc_fh *fhp, struct nfs4_ol_stateid *stp)
+static inline __be32 nfs4_check_fh(struct svc_fh *fhp, struct nfs4_stid *stp)
 {
-	if (!fh_match(&fhp->fh_handle, &stp->st_stid.sc_file->fi_fhandle))
+	if (!fh_match(&fhp->fh_handle, &stp->sc_file->fi_fhandle))
 		return nfserr_bad_stateid;
 	return nfs_ok;
 }
@@ -4647,9 +4647,6 @@ nfs4_check_olstateid(struct svc_fh *fhp, struct nfs4_ol_stateid *ols, int flags)
 {
 	__be32 status;
 
-	status = nfs4_check_fh(fhp, ols);
-	if (status)
-		return status;
 	status = nfsd4_check_openowner_confirmed(ols);
 	if (status)
 		return status;
@@ -4736,6 +4733,9 @@ nfs4_preprocess_stateid_op(struct svc_rqst *rqstp,
 		status = nfserr_bad_stateid;
 		break;
 	}
+	if (status)
+		goto out;
+	status = nfs4_check_fh(fhp, s);
 
 done:
 	if (!status && filpp)
@@ -4844,7 +4844,7 @@ static __be32 nfs4_seqid_op_checks(struct nfsd4_compound_state *cstate, stateid_
 	status = check_stateid_generation(stateid, &stp->st_stid.sc_stateid, nfsd4_has_session(cstate));
 	if (status)
 		return status;
-	return nfs4_check_fh(current_fh, stp);
+	return nfs4_check_fh(current_fh, &stp->st_stid);
 }
 
 /* 
