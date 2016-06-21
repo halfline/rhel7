@@ -615,6 +615,7 @@ nfsd4_cb_layout_prepare(struct nfsd4_callback *cb)
 
 	mutex_lock(&ls->ls_mutex);
 	nfs4_inc_and_copy_stateid(&ls->ls_recall_sid, &ls->ls_stid);
+	mutex_unlock(&ls->ls_mutex);
 }
 
 static int
@@ -658,7 +659,6 @@ nfsd4_cb_layout_release(struct nfsd4_callback *cb)
 
 	trace_layout_recall_release(&ls->ls_stid.sc_stateid);
 
-	mutex_unlock(&ls->ls_mutex);
 	nfsd4_return_all_layouts(ls, &reaplist);
 	nfsd4_free_layouts(&reaplist);
 	nfs4_put_stid(&ls->ls_stid);
