@@ -158,4 +158,10 @@ static inline bool nfsd_eof_on_read(long requested, long read,
 	return (offset + read >= size);
 }
 
+static inline int nfsd_create_is_exclusive(int createmode)
+{
+	return createmode == NFS3_CREATE_EXCLUSIVE
+	       || createmode == NFS4_CREATE_EXCLUSIVE4_1;
+}
+
 #endif /* LINUX_NFSD_VFS_H */
