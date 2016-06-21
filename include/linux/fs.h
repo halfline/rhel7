@@ -2070,6 +2070,18 @@ static inline struct inode *vfs_select_inode(struct dentry *dentry,
 	return inode;
 }
 
+/**
+ * d_real_inode - Return the real inode
+ * @dentry: The dentry to query
+ *
+ * If dentry is on an union/overlay, then return the underlying, real inode.
+ * Otherwise return d_inode().
+ */
+static inline struct inode *d_real_inode(struct dentry *dentry)
+{
+	return vfs_select_inode(dentry, 0);
+}
+
 /*
  * the fs address space operations contain a new invalidatepage_rang () op
  * which supports a length parameter
