@@ -1269,6 +1269,7 @@ int pinctrl_pm_select_default_state(struct device *dev)
 		dev_err(dev, "failed to activate default pinctrl state\n");
 	return ret;
 }
+EXPORT_SYMBOL_GPL(pinctrl_pm_select_default_state);
 
 /**
  * pinctrl_pm_select_sleep_state() - select sleep pinctrl state for PM
@@ -1288,6 +1289,7 @@ int pinctrl_pm_select_sleep_state(struct device *dev)
 		dev_err(dev, "failed to activate pinctrl sleep state\n");
 	return ret;
 }
+EXPORT_SYMBOL_GPL(pinctrl_pm_select_sleep_state);
 
 /**
  * pinctrl_pm_select_idle_state() - select idle pinctrl state for PM
@@ -1307,7 +1309,7 @@ int pinctrl_pm_select_idle_state(struct device *dev)
 		dev_err(dev, "failed to activate pinctrl idle state\n");
 	return ret;
 }
-
+EXPORT_SYMBOL_GPL(pinctrl_pm_select_idle_state);
 #endif
 
 #ifdef CONFIG_DEBUG_FS
