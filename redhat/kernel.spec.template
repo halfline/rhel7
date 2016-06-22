@@ -1537,6 +1537,22 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Jun 22 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-449.el7]
+- [of] handle NULL node in next_child iterators (Torez Smith) [1348510]
+- [of] Create unlocked version of for_each_child_of_node() (Torez Smith) [1348510]
+- [scsi] vpd pages are mandatory for SPC-2 (Ewan Milne) [1347292]
+- [drm] revert "virtio: make find_vqs() checkpatch.pl-friendly" (Rob Clark) [1295900]
+- [drm] fix virtio backport (Rob Clark) [1295900]
+- [mm] hugetlb: use EOPNOTSUPP in hugetlb sysctl handlers (Jan Stancek) [1346873]
+- [vfio] pci: Allow VPD short read (Auger Eric) [1341417]
+- [kernel] rh_taint: introduce mark_hardware_deprecated() (Maurizio Lombardi) [1344392]
+- [gpu] drm/prime: fix error path deadlock fail (Rob Clark) [1335461]
+- [idle] intel: add denverton (Steve Best) [1273777]
+- [x86] Work around MPX erratum SKD046 (Rui Wang) [1340625]
+- [cpufreq] intel_pstate: Enable HWP by default (David Arcari) [1258085]
+- [security] keys: potential uninitialized variable (David Howells) [1341352] {CVE-2016-4470}
+- [lib] keys: Fix ASN.1 indefinite length object parsing (David Howells) [1308815] {CVE-2016-0758}
+
 * Tue Jun 21 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-448.el7]
 - [fs] overlayfs: Warn instead of error if upper filesystem does not support d_type (Vivek Goyal) [1344057]
 - [fs] gfs2: don't set rgrp gl_object until it's inserted into rgrp tree (Robert S Peterson) [1344363]
