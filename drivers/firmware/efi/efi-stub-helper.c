@@ -33,6 +33,9 @@ static void efi_printk(efi_system_table_t *sys_table_arg, char *str)
 	}
 }
 
+#define pr_efi(sys_table, msg)     efi_printk(sys_table, "EFI stub: "msg)
+#define pr_efi_err(sys_table, msg) efi_printk(sys_table, "EFI stub: ERROR: "msg)
+
 
 static efi_status_t efi_get_memory_map(efi_system_table_t *sys_table_arg,
 				       efi_memory_desc_t **map,
@@ -286,7 +289,7 @@ static efi_status_t handle_ramdisks(efi_system_table_t *sys_table_arg,
 				nr_initrds * sizeof(*initrds),
 				(void **)&initrds);
 	if (status != EFI_SUCCESS) {
-		efi_printk(sys_table_arg, "Failed to alloc mem for initrds\n");
+		pr_efi_err(sys_table_arg, "Failed to alloc mem for initrds\n");
 		goto fail;
 	}
 
@@ -350,13 +353,13 @@ static efi_status_t handle_ramdisks(efi_system_table_t *sys_table_arg,
 		status = efi_high_alloc(sys_table_arg, initrd_total, 0x1000,
 				    &initrd_addr, hdr->initrd_addr_max);
 		if (status != EFI_SUCCESS) {
-			efi_printk(sys_table_arg, "Failed to alloc highmem for initrds\n");
+			pr_efi_err(sys_table_arg, "Failed to alloc highmem for initrds\n");
 			goto close_handles;
 		}
 
 		/* We've run out of free low memory. */
 		if (initrd_addr > hdr->initrd_addr_max) {
-			efi_printk(sys_table_arg, "We've run out of free low memory\n");
+			pr_efi_err(sys_table_arg, "We've run out of free low memory\n");
 			status = EFI_INVALID_PARAMETER;
 			goto free_initrd_total;
 		}
@@ -377,7 +380,7 @@ static efi_status_t handle_ramdisks(efi_system_table_t *sys_table_arg,
 						       &chunksize,
 						       (void *)addr);
 				if (status != EFI_SUCCESS) {
-					efi_printk(sys_table_arg, "Failed to read initrd\n");
+					pr_efi_err(sys_table_arg, "Failed to read initrd\n");
 					goto free_initrd_total;
 				}
 				addr += chunksize;
@@ -433,7 +436,7 @@ static efi_status_t relocate_kernel(struct setup_header *hdr)
 		status = efi_low_alloc(sys_table, hdr->init_size,
 				   hdr->kernel_alignment, &start);
 		if (status != EFI_SUCCESS)
-			efi_printk(sys_table, "Failed to alloc mem for kernel\n");
+			pr_efi_err(sys_table, "Failed to alloc mem for kernel\n");
 	}
 
 	if (status == EFI_SUCCESS)
