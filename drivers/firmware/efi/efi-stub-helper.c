@@ -373,7 +373,7 @@ static efi_status_t handle_ramdisks(efi_system_table_t *sys_table_arg,
 				else
 					chunksize = size;
 
-				status = efi_file_read(fh, initrds[j].handle,
+				status = efi_file_read(initrds[j].handle,
 						       &chunksize,
 						       (void *)addr);
 				if (status != EFI_SUCCESS) {
@@ -384,7 +384,7 @@ static efi_status_t handle_ramdisks(efi_system_table_t *sys_table_arg,
 				size -= chunksize;
 			}
 
-			efi_file_close(fh, initrds[j].handle);
+			efi_file_close(initrds[j].handle);
 		}
 
 	}
@@ -401,7 +401,7 @@ free_initrd_total:
 
 close_handles:
 	for (k = j; k < i; k++)
-		efi_file_close(fh, initrds[k].handle);
+		efi_file_close(initrds[k].handle);
 free_initrds:
 	efi_call_early(free_pool, initrds);
 fail:
