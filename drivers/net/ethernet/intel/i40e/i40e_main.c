@@ -8780,7 +8780,6 @@ static void i40e_del_vxlan_port(struct net_device *netdev,
  * @sa_family: Socket Family that GENEVE is notifying us about
  * @port: New UDP port number that GENEVE started listening to
  **/
-#if 0
 static void i40e_add_geneve_port(struct net_device *netdev,
 				 sa_family_t sa_family, __be16 port)
 {
@@ -8855,7 +8854,6 @@ static void i40e_del_geneve_port(struct net_device *netdev,
 			    ntohs(port));
 	}
 }
-#endif /* if 0 */
 #endif
 
 static int i40e_get_phys_port_id(struct net_device *netdev,
@@ -9090,7 +9088,7 @@ static const struct net_device_ops i40e_netdev_ops = {
 	.ndo_add_vxlan_port	= i40e_add_vxlan_port,
 	.ndo_del_vxlan_port	= i40e_del_vxlan_port,
 #endif
-#if 0 /*#if IS_ENABLED(CONFIG_GENEVE) */
+#if IS_ENABLED(CONFIG_GENEVE)
 	.ndo_add_geneve_port	= i40e_add_geneve_port,
 	.ndo_del_geneve_port	= i40e_del_geneve_port,
 #endif
