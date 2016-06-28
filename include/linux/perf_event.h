@@ -572,9 +572,6 @@ struct perf_event_context {
 	int				nr_cgroups;	 /* cgroup evts */
 	RH_KABI_DEPRECATE(int, nr_branch_stack)
 	struct rcu_head			rcu_head;
-
-	RH_KABI_EXTEND(struct delayed_work	orphans_remove)
-	RH_KABI_EXTEND(bool			orphans_remove_sched)
 	RH_KABI_EXTEND(struct list_head		active_ctx_list)
 	RH_KABI_EXTEND(void			*task_ctx_data) /* pmu specific data */
 };
