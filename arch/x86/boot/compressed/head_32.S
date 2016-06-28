@@ -252,6 +252,7 @@ relocated:
 	xorl	%ebx, %ebx
 	jmp	*%ebp
 
+#ifdef CONFIG_EFI_STUB
 	.data
 efi32_config:
 	.fill 11,8,0
@@ -259,6 +260,7 @@ efi32_config:
 	.long 0
 	.fill 1,8,0
 	.byte 0
+#endif
 
 /*
  * Stack and heap for uncompression
