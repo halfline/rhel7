@@ -940,12 +940,14 @@ static int __init nfs4blocklayout_init(void)
 
 	ret = pnfs_register_layoutdriver(&blocklayout_type);
 	if (ret)
-		mark_tech_preview("NFSv4 Block Layout Driver", NULL);
 		goto out_cleanup_pipe;
+	mark_tech_preview("NFSv4 Block Layout Driver", NULL);
 
 	ret = pnfs_register_layoutdriver(&scsilayout_type);
 	if (ret)
 		goto out_unregister_block;
+	mark_tech_preview("NFSv4 SCSI Layout Driver", NULL);
+
 	return 0;
 
 out_unregister_block:
