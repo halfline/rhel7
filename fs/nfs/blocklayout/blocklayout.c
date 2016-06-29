@@ -758,7 +758,7 @@ bl_set_layoutdriver(struct nfs_server *server, const struct nfs_fh *fh)
 
 static bool
 is_aligned_req(struct nfs_pageio_descriptor *pgio,
-		struct nfs_page *req, unsigned int alignment)
+		struct nfs_page *req, unsigned int alignment, bool is_write)
 {
 	/*
 	 * Always accept buffered writes, higher layers take care of the
@@ -773,7 +773,8 @@ is_aligned_req(struct nfs_pageio_descriptor *pgio,
 	if (IS_ALIGNED(req->wb_bytes, alignment))
 		return true;
 
-	if (req_offset(req) + req->wb_bytes == i_size_read(pgio->pg_inode)) {
+	if (is_write &&
+	    (req_offset(req) + req->wb_bytes == i_size_read(pgio->pg_inode))) {
 		/*
 		 * If the write goes up to the inode size, just write
 		 * the full page.  Data past the inode size is
@@ -790,7 +791,7 @@ is_aligned_req(struct nfs_pageio_descriptor *pgio,
 static void
 bl_pg_init_read(struct nfs_pageio_descriptor *pgio, struct nfs_page *req)
 {
-	if (!is_aligned_req(pgio, req, SECTOR_SIZE)) {
+	if (!is_aligned_req(pgio, req, SECTOR_SIZE, false)) {
 		nfs_pageio_reset_read_mds(pgio);
 		return;
 	}
@@ -806,7 +807,7 @@ static size_t
 bl_pg_test_read(struct nfs_pageio_descriptor *pgio, struct nfs_page *prev,
 		struct nfs_page *req)
 {
-	if (!is_aligned_req(pgio, req, SECTOR_SIZE))
+	if (!is_aligned_req(pgio, req, SECTOR_SIZE, false))
 		return 0;
 	return pnfs_generic_pg_test(pgio, prev, req);
 }
@@ -839,7 +840,7 @@ bl_pg_init_write(struct nfs_pageio_descriptor *pgio, struct nfs_page *req)
 {
 	u64 wb_size;
 
-	if (!is_aligned_req(pgio, req, PAGE_SIZE)) {
+	if (!is_aligned_req(pgio, req, PAGE_SIZE, true)) {
 		nfs_pageio_reset_write_mds(pgio);
 		return;
 	}
@@ -861,7 +862,7 @@ static size_t
 bl_pg_test_write(struct nfs_pageio_descriptor *pgio, struct nfs_page *prev,
 		 struct nfs_page *req)
 {
-	if (!is_aligned_req(pgio, req, PAGE_SIZE))
+	if (!is_aligned_req(pgio, req, PAGE_SIZE, true))
 		return 0;
 	return pnfs_generic_pg_test(pgio, prev, req);
 }
