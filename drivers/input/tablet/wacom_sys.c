@@ -394,6 +394,18 @@ static int wacom_parse_hid(struct usb_interface *intf,
 							i += 12;
 							break;
 
+						case WACOM_27QHDT:
+							if (!features->x_max) {
+								features->x_max =
+									get_unaligned_le16(&report[i - 4]);
+								features->x_phy =
+									get_unaligned_le16(&report[i - 7]);
+								features->unit = report[i - 13];
+								features->unitExpo = report[i - 11];
+							}
+							i += 9;
+							break;
+
 						default:
 							features->x_max =
 								get_unaligned_le16(&report[i + 3]);
@@ -444,6 +456,16 @@ static int wacom_parse_hid(struct usb_interface *intf,
 							features->y_max =
 								get_unaligned_le16(&report[i + 6]);
 							i += 12;
+							break;
+
+						case WACOM_27QHDT:
+							if (!features->y_max) {
+								features->y_max =
+									get_unaligned_le16(&report[i - 2]);
+								features->y_phy =
+									get_unaligned_le16(&report[i - 5]);
+							}
+							i += 2;
 							break;
 
 						default:
