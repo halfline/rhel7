@@ -704,3 +704,17 @@ static inline u32 nfs_fhandle_hash(const struct nfs_fh *fh)
 	return 0;
 }
 #endif
+
+static inline bool nfs_error_is_fatal(int err)
+{
+	switch (err) {
+	case -ERESTARTSYS:
+	case -EIO:
+	case -ENOSPC:
+	case -EROFS:
+	case -E2BIG:
+		return true;
+	default:
+		return false;
+	}
+}
