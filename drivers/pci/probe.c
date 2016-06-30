@@ -568,6 +568,7 @@ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
 	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
 	if (!bridge)
 		return NULL;
+	device_rh_alloc(&bridge->dev);
 
 	INIT_LIST_HEAD(&bridge->windows);
 	bridge->bus = b;

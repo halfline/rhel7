@@ -1039,6 +1039,16 @@ int device_private_init(struct device *dev)
 	return 0;
 }
 
+/** device_rh_alloc -- allocate a device_rh
+ * @dev: device to attach device_rh to.
+ */
+void device_rh_alloc(struct device *dev)
+{
+	dev->device_rh = kzalloc(sizeof(struct device_rh),
+				 GFP_KERNEL | __GFP_NOFAIL);
+}
+EXPORT_SYMBOL_GPL(device_rh_alloc);
+
 /**
  * device_add - add device to device hierarchy.
  * @dev: device.
@@ -1072,9 +1082,17 @@ int device_add(struct device *dev)
 	if (!dev)
 		goto done;
 
-	/* allocate the Red Hat only struct */
-	dev->device_rh = kzalloc(sizeof(struct device_rh),
-				 GFP_KERNEL | __GFP_NOFAIL);
+	/* In general, this is where we allocate the Red Hat only struct.
+	 * A known exception is the acpi_bus_scan() which requires elements
+	 * from the device_rh struct during initialization.  This test will
+	 * allow code to allocate & use the device_rh struct prior to calling
+	 * device_add().
+	 *
+	 * Regardless of when allocated, the device_rh will be free'd at the
+	 * end of device_del().
+	 */
+	if (!dev->device_rh)
+		device_rh_alloc(dev);
 
 	if (!dev->p) {
 		error = device_private_init(dev);

@@ -817,6 +817,8 @@ struct device_rh {
 	RH_KABI_EXTEND(struct dev_pin_info *pins)
 #endif
 };
+/* allocator for device_rh */
+extern void device_rh_alloc(struct device *dev);
 
 static inline struct device *kobj_to_dev(struct kobject *kobj)
 {

@@ -209,6 +209,7 @@ struct platform_device *platform_device_alloc(const char *name, int id)
 		device_initialize(&pa->pdev.dev);
 		pa->pdev.dev.release = platform_device_release;
 		arch_setup_pdev_archdata(&pa->pdev);
+		device_rh_alloc(&pa->pdev.dev);
 	}
 
 	return pa ? &pa->pdev : NULL;
