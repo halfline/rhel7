@@ -105,6 +105,8 @@ int acpi_bind_one(struct device *dev, struct acpi_device *adev);
 int acpi_unbind_one(struct device *dev);
 bool acpi_device_is_present(struct acpi_device *adev);
 bool acpi_device_is_battery(acpi_handle handle);
+bool acpi_device_is_first_physical_node(struct acpi_device *adev,
+					const struct device *dev);
 
 /* --------------------------------------------------------------------------
                                   Power Resource
