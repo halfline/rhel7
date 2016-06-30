@@ -12,6 +12,7 @@
 
 #include <linux/device.h>
 #include <linux/err.h>
+#include <linux/fwnode.h>
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/slab.h>
@@ -2306,3 +2307,58 @@ define_dev_printk_level(dev_notice, KERN_NOTICE);
 define_dev_printk_level(_dev_info, KERN_INFO);
 
 #endif
+
+static inline bool fwnode_is_primary(struct fwnode_handle *fwnode)
+{
+	return fwnode && !IS_ERR(fwnode->secondary);
+}
+
+/**
+ * set_primary_fwnode - Change the primary firmware node of a given device.
+ * @dev: Device to handle.
+ * @fwnode: New primary firmware node of the device.
+ *
+ * Set the device's firmware node pointer to @fwnode, but if a secondary
+ * firmware node of the device is present, preserve it.
+ */
+void set_primary_fwnode(struct device *dev, struct fwnode_handle *fwnode)
+{
+	if (!dev->device_rh) {
+		dev_dbg(dev, "set_primary_fwnode: allocated device_rh\n");
+		device_rh_alloc(dev);
+	}
+
+	if (fwnode) {
+		struct fwnode_handle *fn = rh_dev_fwnode(dev);
+
+		if (fwnode_is_primary(fn))
+			fn = fn->secondary;
+
+		fwnode->secondary = fn;
+		rh_dev_fwnode(dev) = fwnode;
+	} else {
+		rh_dev_fwnode(dev) = fwnode_is_primary(rh_dev_fwnode(dev)) ?
+			rh_dev_fwnode(dev)->secondary : NULL;
+	}
+}
+EXPORT_SYMBOL_GPL(set_primary_fwnode);
+
+/**
+ * set_secondary_fwnode - Change the secondary firmware node of a given device.
+ * @dev: Device to handle.
+ * @fwnode: New secondary firmware node of the device.
+ *
+ * If a primary firmware node of the device is present, set its secondary
+ * pointer to @fwnode.  Otherwise, set the device's firmware node pointer to
+ * @fwnode.
+ */
+void set_secondary_fwnode(struct device *dev, struct fwnode_handle *fwnode)
+{
+	if (fwnode)
+		fwnode->secondary = ERR_PTR(-ENODEV);
+
+	if (fwnode_is_primary(rh_dev_fwnode(dev)))
+		rh_dev_fwnode(dev)->secondary = fwnode;
+	else
+		rh_dev_fwnode(dev) = fwnode;
+}
