@@ -152,12 +152,13 @@ static int create_pnp_modalias(struct acpi_device *acpi_dev, char *modalias,
 	struct acpi_hardware_id *id;
 
 	/*
-	 * Since we skip PRP0001 from the modalias below, 0 should be returned
-	 * if PRP0001 is the only ACPI/PNP ID in the device's list.
+	 * Since we skip ACPI_DT_NAMESPACE_HID from the modalias below, 0 should
+	 * be returned if ACPI_DT_NAMESPACE_HID is the only ACPI/PNP ID in the
+	 * device's list.
 	 */
 	count = 0;
 	list_for_each_entry(id, &acpi_dev->pnp.ids, list)
-		if (strcmp(id->id, "PRP0001"))
+		if (strcmp(id->id, ACPI_DT_NAMESPACE_HID))
 			count++;
 
 	if (!count)
@@ -170,7 +171,7 @@ static int create_pnp_modalias(struct acpi_device *acpi_dev, char *modalias,
 	size -= len;
 
 	list_for_each_entry(id, &acpi_dev->pnp.ids, list) {
-		if (!strcmp(id->id, "PRP0001"))
+		if (!strcmp(id->id, ACPI_DT_NAMESPACE_HID))
 			continue;
 
 		count = snprintf(&modalias[len], size, "%s:", id->id);
@@ -194,7 +195,8 @@ static int create_pnp_modalias(struct acpi_device *acpi_dev, char *modalias,
  * @size: Size of the buffer.
  *
  * Expose DT compatible modalias as of:NnameTCcompatible.  This function should
- * only be called for devices having PRP0001 in their list of ACPI/PNP IDs.
+ * only be called for devices having ACPI_DT_NAMESPACE_HID in their list of
+ * ACPI/PNP IDs.
  */
 static int create_of_modalias(struct acpi_device *acpi_dev, char *modalias,
 			      int size)
@@ -1020,7 +1022,7 @@ int acpi_match_device_ids(struct acpi_device *device,
 }
 EXPORT_SYMBOL(acpi_match_device_ids);
 
-/* Performs match against special "PRP0001" shoehorn ACPI ID */
+/* Performs match against special ACPI_DT_NAMESPACE_HID shoehorn ACPI ID */
 static bool acpi_of_driver_match_device(struct device *dev,
 					const struct device_driver *drv)
 {
