@@ -35,6 +35,7 @@
 #include <linux/err.h>
 #include <linux/interrupt.h>
 #include <linux/platform_device.h>
+#include <linux/of.h>
 #include <linux/pm.h>
 #include <linux/pm_runtime.h>
 #include <linux/io.h>
@@ -117,6 +118,15 @@ static int dw_i2c_probe(struct platform_device *pdev)
 	r = i2c_dw_eval_lock_support(dev);
 	if (r)
 		return r;
+
+	if (pdev->dev.of_node) {
+		u32 ht = 0;
+		u32 ic_clk = dev->get_clk_rate_khz(dev);
+
+		of_property_read_u32(pdev->dev.of_node,
+					"i2c-sda-hold-time-ns", &ht);
+		dev->sda_hold_time = ((u64)ic_clk * ht + 500000) / 1000000;
+	}
 
 	dev->functionality =
 		I2C_FUNC_I2C |

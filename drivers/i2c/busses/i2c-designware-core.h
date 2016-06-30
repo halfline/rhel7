@@ -101,6 +101,7 @@ struct dw_i2c_dev {
 	unsigned int		tx_fifo_depth;
 	unsigned int		rx_fifo_depth;
 	int			rx_outstanding;
+	u32			sda_hold_time;
 	u16			ss_hcnt;
 	u16			ss_lcnt;
 	u16			fs_hcnt;
