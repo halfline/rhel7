@@ -560,7 +560,7 @@ static int gfs2_create_inode(struct inode *dir, struct dentry *dentry,
 	struct gfs2_sbd *sdp = GFS2_SB(&dip->i_inode);
 	struct gfs2_glock *io_gl;
 	struct dentry *d;
-	int error, free_vfs_inode = 0;
+	int error, free_vfs_inode = 1;
 	u32 aflags = 0;
 	int arq;
 
@@ -695,6 +695,10 @@ static int gfs2_create_inode(struct inode *dir, struct dentry *dentry,
 	gfs2_set_iop(inode);
 	insert_inode_hash(inode);
 
+	free_vfs_inode = 0; /* After this point, the inode is no longer
+			       considered free. Any failures need to undo
+			       the gfs2 structures. */
+
 	error = gfs2_acl_create(dip, inode);
 	if (error)
 		goto fail_gunlock3;
@@ -718,18 +722,14 @@ static int gfs2_create_inode(struct inode *dir, struct dentry *dentry,
 	return error;
 
 fail_gunlock3:
-	gfs2_glock_dq_uninit(ghs + 1);
-	if (ip->i_gl)
-		gfs2_glock_put(ip->i_gl);
-	goto fail_gunlock;
-
+	gfs2_glock_dq_uninit(&ip->i_iopen_gh);
+	gfs2_glock_put(io_gl);
 fail_gunlock2:
 	gfs2_glock_dq_uninit(ghs + 1);
 fail_free_inode:
 	if (ip->i_gl)
 		gfs2_glock_put(ip->i_gl);
 	gfs2_rsqa_delete(ip, NULL);
-	free_vfs_inode = 1;
 fail_gunlock:
 	gfs2_glock_dq_uninit(ghs);
 	if (inode && !IS_ERR(inode)) {
