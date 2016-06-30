@@ -40,6 +40,7 @@ struct class;
 struct subsys_private;
 struct bus_type;
 struct device_node;
+struct fwnode_handle;
 struct iommu_ops;
 struct iommu_group;
 
@@ -665,8 +666,7 @@ struct device_dma_parameters {
 	unsigned long segment_boundary_mask;
 };
 
-struct acpi_device;
-
+/* RHEL7: Do not use this struct.  It is only here for KABI purposes. */
 struct acpi_dev_node {
 #ifdef CONFIG_ACPI
 	RH_KABI_REPLACE(void	*handle,
@@ -717,7 +717,7 @@ struct acpi_dev_node {
  * @dma_mem:	Internal for coherent mem override.
  * @archdata:	For arch-specific additions.
  * @of_node:	Associated device tree node.
- * @acpi_node:	Associated ACPI device node.
+ * @fwnode:	Associated device node supplied by platform firmware.
  * @devt:	For creating the sysfs "dev".
  * @id:		device instance
  * @devres_lock: Spinlock to protect the resource of the device.
@@ -784,7 +784,12 @@ struct device {
 	struct dev_archdata	archdata;
 
 	struct device_node	*of_node; /* associated device tree node */
-	struct acpi_dev_node	acpi_node; /* associated ACPI device node */
+	/*
+	 * RHEL7: This appears safe to do.  struct acpi_dev_node was
+	 * previously safely modified with a KABI workaround so deprecating
+	 * it should also not be a problem.
+	 */
+	RH_KABI_DEPRECATE(struct acpi_dev_node, acpi_node)
 
 	dev_t			devt;	/* dev_t, creates the sysfs "dev" */
 	u32			id;	/* device instance */
@@ -816,6 +821,7 @@ struct device_rh {
 #ifdef CONFIG_PINCTRL
 	RH_KABI_EXTEND(struct dev_pin_info *pins)
 #endif
+	RH_KABI_EXTEND(struct fwnode_handle *fwnode)
 };
 /* allocator for device_rh */
 extern void device_rh_alloc(struct device *dev);
