@@ -131,7 +131,12 @@ bool acpi_device_is_first_physical_node(struct acpi_device *adev,
 	return ret;
 }
 
-/*
+/**
+ * create_pnp_modalias - Create hid/cid(s) string for modalias and uevent
+ * @acpi_dev: ACPI device object.
+ * @modalias: Buffer to print into.
+ * @size: Size of the buffer.
+ *
  * Creates hid/cid(s) string needed for modalias and uevent
  * e.g. on a device with hid:IBM0001 and cid:ACPI0001 you get:
  * char *modalias: "acpi:IBM0001:ACPI0001"
@@ -139,66 +144,97 @@ bool acpi_device_is_first_physical_node(struct acpi_device *adev,
  *         -EINVAL: output error
  *         -ENOMEM: output is truncated
 */
-static int create_modalias(struct acpi_device *acpi_dev, char *modalias,
-			   int size)
+static int create_pnp_modalias(struct acpi_device *acpi_dev, char *modalias,
+			       int size)
 {
 	int len;
 	int count;
 	struct acpi_hardware_id *id;
 
-	if (list_empty(&acpi_dev->pnp.ids))
+	/*
+	 * Since we skip PRP0001 from the modalias below, 0 should be returned
+	 * if PRP0001 is the only ACPI/PNP ID in the device's list.
+	 */
+	count = 0;
+	list_for_each_entry(id, &acpi_dev->pnp.ids, list)
+		if (strcmp(id->id, "PRP0001"))
+			count++;
+
+	if (!count)
 		return 0;
 
-	/*
-	 * If the device has PRP0001 we expose DT compatible modalias
-	 * instead in form of of:NnameTCcompatible.
-	 */
-	if (acpi_dev->data.of_compatible) {
-		struct acpi_buffer buf = { ACPI_ALLOCATE_BUFFER };
-		const union acpi_object *of_compatible, *obj;
-		int i, nval;
-		char *c;
+	len = snprintf(modalias, size, "acpi:");
+	if (len <= 0)
+		return len;
 
-		acpi_get_name(acpi_dev->handle, ACPI_SINGLE_NAME, &buf);
-		/* DT strings are all in lower case */
-		for (c = buf.pointer; *c != '\0'; c++)
-			*c = tolower(*c);
+	size -= len;
 
-		len = snprintf(modalias, size, "of:N%sT", (char *)buf.pointer);
-		ACPI_FREE(buf.pointer);
+	list_for_each_entry(id, &acpi_dev->pnp.ids, list) {
+		if (!strcmp(id->id, "PRP0001"))
+			continue;
 
-		of_compatible = acpi_dev->data.of_compatible;
-		if (of_compatible->type == ACPI_TYPE_PACKAGE) {
-			nval = of_compatible->package.count;
-			obj = of_compatible->package.elements;
-		} else { /* Must be ACPI_TYPE_STRING. */
-			nval = 1;
-			obj = of_compatible;
-		}
-		for (i = 0; i < nval; i++, obj++) {
-			count = snprintf(&modalias[len], size, "C%s",
-					 obj->string.pointer);
-			if (count < 0)
-				return -EINVAL;
-			if (count >= size)
-				return -ENOMEM;
+		count = snprintf(&modalias[len], size, "%s:", id->id);
+		if (count < 0)
+			return -EINVAL;
 
-			len += count;
-			size -= count;
-		}
-	} else {
-		len = snprintf(modalias, size, "acpi:");
-		size -= len;
+		if (count >= size)
+			return -ENOMEM;
 
-		list_for_each_entry(id, &acpi_dev->pnp.ids, list) {
-			count = snprintf(&modalias[len], size, "%s:", id->id);
-			if (count < 0)
-				return -EINVAL;
-			if (count >= size)
-				return -ENOMEM;
-			len += count;
-			size -= count;
-		}
+		len += count;
+		size -= count;
+	}
+	modalias[len] = '\0';
+	return len;
+}
+
+/**
+ * create_of_modalias - Creates DT compatible string for modalias and uevent
+ * @acpi_dev: ACPI device object.
+ * @modalias: Buffer to print into.
+ * @size: Size of the buffer.
+ *
+ * Expose DT compatible modalias as of:NnameTCcompatible.  This function should
+ * only be called for devices having PRP0001 in their list of ACPI/PNP IDs.
+ */
+static int create_of_modalias(struct acpi_device *acpi_dev, char *modalias,
+			      int size)
+{
+	struct acpi_buffer buf = { ACPI_ALLOCATE_BUFFER };
+	const union acpi_object *of_compatible, *obj;
+	int len, count;
+	int i, nval;
+	char *c;
+
+	acpi_get_name(acpi_dev->handle, ACPI_SINGLE_NAME, &buf);
+	/* DT strings are all in lower case */
+	for (c = buf.pointer; *c != '\0'; c++)
+		*c = tolower(*c);
+
+	len = snprintf(modalias, size, "of:N%sT", (char *)buf.pointer);
+	ACPI_FREE(buf.pointer);
+
+	if (len <= 0)
+		return len;
+
+	of_compatible = acpi_dev->data.of_compatible;
+	if (of_compatible->type == ACPI_TYPE_PACKAGE) {
+		nval = of_compatible->package.count;
+		obj = of_compatible->package.elements;
+	} else { /* Must be ACPI_TYPE_STRING. */
+		nval = 1;
+		obj = of_compatible;
+	}
+	for (i = 0; i < nval; i++, obj++) {
+		count = snprintf(&modalias[len], size, "C%s",
+				 obj->string.pointer);
+		if (count < 0)
+			return -EINVAL;
+
+		if (count >= size)
+			return -ENOMEM;
+
+		len += count;
+		size -= count;
 	}
 
 	modalias[len] = '\0';
@@ -240,16 +276,100 @@ static struct acpi_device *acpi_companion_match(const struct device *dev)
 	return acpi_device_is_first_physical_node(adev, dev) ? adev : NULL;
 }
 
-static ssize_t
-acpi_device_modalias_show(struct device *dev, struct device_attribute *attr, char *buf) {
-	struct acpi_device *acpi_dev = to_acpi_device(dev);
+static int __acpi_device_uevent_modalias(struct acpi_device *adev,
+					 struct kobj_uevent_env *env)
+{
 	int len;
 
-	len = create_modalias(acpi_dev, buf, 1024);
-	if (len <= 0)
+	if (!adev)
+		return -ENODEV;
+
+	if (list_empty(&adev->pnp.ids))
+		return 0;
+
+	if (add_uevent_var(env, "MODALIAS="))
+		return -ENOMEM;
+
+	len = create_pnp_modalias(adev, &env->buf[env->buflen - 1],
+				  sizeof(env->buf) - env->buflen);
+	if (len < 0)
 		return len;
-	buf[len++] = '\n';
+
+	env->buflen += len;
+	if (!adev->data.of_compatible)
+		return 0;
+
+	if (len > 0 && add_uevent_var(env, "MODALIAS="))
+		return -ENOMEM;
+
+	len = create_of_modalias(adev, &env->buf[env->buflen - 1],
+				 sizeof(env->buf) - env->buflen);
+	if (len < 0)
+		return len;
+
+	env->buflen += len;
+
+	return 0;
+}
+
+/*
+ * Creates uevent modalias field for ACPI enumerated devices.
+ * Because the other buses does not support ACPI HIDs & CIDs.
+ * e.g. for a device with hid:IBM0001 and cid:ACPI0001 you get:
+ * "acpi:IBM0001:ACPI0001"
+ */
+int acpi_device_uevent_modalias(struct device *dev, struct kobj_uevent_env *env)
+{
+	return __acpi_device_uevent_modalias(acpi_companion_match(dev), env);
+}
+EXPORT_SYMBOL_GPL(acpi_device_uevent_modalias);
+
+static int __acpi_device_modalias(struct acpi_device *adev, char *buf, int size)
+{
+	int len, count;
+
+	if (!adev)
+		return -ENODEV;
+
+	if (list_empty(&adev->pnp.ids))
+		return 0;
+
+	len = create_pnp_modalias(adev, buf, size - 1);
+	if (len < 0) {
+		return len;
+	} else if (len > 0) {
+		buf[len++] = '\n';
+		size -= len;
+	}
+	if (!adev->data.of_compatible)
+		return len;
+
+	count = create_of_modalias(adev, buf + len, size - 1);
+	if (count < 0) {
+		return count;
+	} else if (count > 0) {
+		len += count;
+		buf[len++] = '\n';
+	}
+
 	return len;
+}
+
+/*
+ * Creates modalias sysfs attribute for ACPI enumerated devices.
+ * Because the other buses does not support ACPI HIDs & CIDs.
+ * e.g. for a device with hid:IBM0001 and cid:ACPI0001 you get:
+ * "acpi:IBM0001:ACPI0001"
+ */
+int acpi_device_modalias(struct device *dev, char *buf, int size)
+{
+	return __acpi_device_modalias(acpi_companion_match(dev), buf, size);
+}
+EXPORT_SYMBOL_GPL(acpi_device_modalias);
+
+static ssize_t
+acpi_device_modalias_show(struct device *dev, struct device_attribute *attr, char *buf) {
+	return __acpi_device_modalias(to_acpi_device(dev), buf, 1024);
 }
 static DEVICE_ATTR(modalias, 0444, acpi_device_modalias_show, NULL);
 
@@ -982,20 +1102,7 @@ static int acpi_bus_match(struct device *dev, struct device_driver *drv)
 
 static int acpi_device_uevent(struct device *dev, struct kobj_uevent_env *env)
 {
-	struct acpi_device *acpi_dev = to_acpi_device(dev);
-	int len;
-
-	if (list_empty(&acpi_dev->pnp.ids))
-		return 0;
-
-	if (add_uevent_var(env, "MODALIAS="))
-		return -ENOMEM;
-	len = create_modalias(acpi_dev, &env->buf[env->buflen - 1],
-			      sizeof(env->buf) - env->buflen);
-	if (len <= 0)
-		return len;
-	env->buflen += len;
-	return 0;
+	return __acpi_device_uevent_modalias(to_acpi_device(dev), env);
 }
 
 static void acpi_device_notify(acpi_handle handle, u32 event, void *data)
