@@ -604,6 +604,18 @@ bool device_dma_is_coherent(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(device_dma_is_coherent);
 
+bool device_dma_supported(struct device *dev)
+{
+	return false;
+}
+EXPORT_SYMBOL_GPL(device_dma_supported);
+
+enum dev_dma_attr device_get_dma_attr(struct device *dev)
+{
+	return DEV_DMA_NOT_SUPPORTED;
+}
+EXPORT_SYMBOL_GPL(device_get_dma_attr);
+
 /**
  * device_get_phy_mode - Get phy mode for given device
  * @dev:	Pointer to the given device
