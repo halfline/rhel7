@@ -519,3 +519,10 @@ unsigned int device_get_child_node_count(struct device *dev)
 	return count;
 }
 EXPORT_SYMBOL_GPL(device_get_child_node_count);
+
+bool device_dma_is_coherent(struct device *dev)
+{
+	/* RHEL7 does not have ACPI _CCA support yet */
+	return false;
+}
+EXPORT_SYMBOL_GPL(device_dma_is_coherent);
