@@ -65,6 +65,11 @@ static inline acpi_handle acpi_device_handle(struct acpi_device *adev)
 	acpi_fwnode_handle(adev) : NULL)
 #define ACPI_HANDLE(dev)		acpi_device_handle(ACPI_COMPANION(dev))
 
+static inline bool has_acpi_companion(struct device *dev)
+{
+	return is_acpi_node(rh_dev_fwnode(dev));
+}
+
 static inline void acpi_preset_companion(struct device *dev,
 					 struct acpi_device *parent, u64 addr)
 {
@@ -492,6 +497,11 @@ static inline struct fwnode_handle *acpi_fwnode_handle(struct acpi_device *adev)
 static inline const char *acpi_dev_name(struct acpi_device *adev)
 {
 	return NULL;
+}
+
+static inline bool has_acpi_companion(struct device *dev)
+{
+	return false;
 }
 
 static inline void acpi_early_init(void) { }
