@@ -652,6 +652,9 @@ int fwnode_property_match_string(struct fwnode_handle *fwnode,
 	if (nval < 0)
 		return nval;
 
+	if (nval == 0)
+		return -ENODATA;
+
 	values = kcalloc(nval, sizeof(*values), GFP_KERNEL);
 	if (!values)
 		return -ENOMEM;
@@ -717,6 +720,9 @@ static int pset_copy_entry(struct property_entry *dst,
 		return -ENOMEM;
 
 	if (src->is_array) {
+		if (!src->length)
+			return -ENODATA;
+
 		if (src->is_string) {
 			nval = src->length / sizeof(const char *);
 			dst->pointer.str = kcalloc(nval, sizeof(const char *),
