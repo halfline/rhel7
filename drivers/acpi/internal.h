@@ -99,6 +99,8 @@ int acpi_device_add(struct acpi_device *device,
 		    void (*release)(struct device *));
 void acpi_init_device_object(struct acpi_device *device, acpi_handle handle,
 			     int type, unsigned long long sta);
+int acpi_device_setup_files(struct acpi_device *dev);
+void acpi_device_remove_files(struct acpi_device *dev);
 void acpi_device_add_finalize(struct acpi_device *device);
 void acpi_free_pnp_ids(struct acpi_device_pnp *pnp);
 int acpi_bind_one(struct device *dev, struct acpi_device *adev);
@@ -107,6 +109,13 @@ bool acpi_device_is_present(struct acpi_device *adev);
 bool acpi_device_is_battery(acpi_handle handle);
 bool acpi_device_is_first_physical_node(struct acpi_device *adev,
 					const struct device *dev);
+
+/* --------------------------------------------------------------------------
+                     Device Matching and Notification
+   -------------------------------------------------------------------------- */
+struct acpi_device *acpi_companion_match(const struct device *dev);
+int __acpi_device_uevent_modalias(struct acpi_device *adev,
+				  struct kobj_uevent_env *env);
 
 /* --------------------------------------------------------------------------
                                   Power Resource
