@@ -1678,7 +1678,7 @@ struct inode *gfs2_dir_search(struct inode *dir, const struct qstr *name,
 		brelse(bh);
 		if (fail_on_exist)
 			return ERR_PTR(-EEXIST);
-		return gfs2_inode_lookup(dir->i_sb, dtype, addr, formal_ino, 0);
+		return gfs2_inode_lookup(dir->i_sb, dtype, addr, formal_ino);
 	}
 	return ERR_PTR(-ENOENT);
 }
