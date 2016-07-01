@@ -60,14 +60,14 @@ static inline acpi_handle acpi_device_handle(struct acpi_device *adev)
 	return adev ? adev->handle : NULL;
 }
 
-#define ACPI_COMPANION(dev)		to_acpi_device_node(rh_dev_fwnode(dev))
+#define ACPI_COMPANION(dev)	to_acpi_device_node(get_rh_dev_fwnode(dev))
 #define ACPI_COMPANION_SET(dev, adev)	set_primary_fwnode(dev, (adev) ? \
 	acpi_fwnode_handle(adev) : NULL)
 #define ACPI_HANDLE(dev)		acpi_device_handle(ACPI_COMPANION(dev))
 
 static inline bool has_acpi_companion(struct device *dev)
 {
-	return is_acpi_node(rh_dev_fwnode(dev));
+	return is_acpi_node(get_rh_dev_fwnode(dev));
 }
 
 static inline void acpi_preset_companion(struct device *dev,

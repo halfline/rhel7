@@ -455,7 +455,7 @@ struct platform_device *platform_device_register_full(
 		goto err_alloc;
 
 	pdev->dev.parent = pdevinfo->parent;
-	rh_dev_fwnode(&pdev->dev) = pdevinfo->fwnode;
+	set_rh_dev_fwnode(&pdev->dev, pdevinfo->fwnode);
 
 	if (pdevinfo->dma_mask) {
 		/*

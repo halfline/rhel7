@@ -156,7 +156,7 @@ struct acpi_device *acpi_companion_match(const struct device *dev)
 {
 	struct acpi_device *adev;
 
-	adev = ACPI_COMPANION(dev);
+	adev = ACPI_COMPANION((struct device *)dev);
 	if (!adev)
 		return NULL;
 

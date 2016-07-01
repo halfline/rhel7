@@ -2329,7 +2329,7 @@ void set_primary_fwnode(struct device *dev, struct fwnode_handle *fwnode)
 	}
 
 	if (fwnode) {
-		struct fwnode_handle *fn = rh_dev_fwnode(dev);
+		struct fwnode_handle *fn = get_rh_dev_fwnode(dev);
 
 		if (fwnode_is_primary(fn))
 			fn = fn->secondary;
@@ -2338,10 +2338,13 @@ void set_primary_fwnode(struct device *dev, struct fwnode_handle *fwnode)
 			WARN_ON(fwnode->secondary);
 			fwnode->secondary = fn;
 		}
-		rh_dev_fwnode(dev) = fwnode;
+		set_rh_dev_fwnode(dev, fwnode);
 	} else {
-		rh_dev_fwnode(dev) = fwnode_is_primary(rh_dev_fwnode(dev)) ?
-			rh_dev_fwnode(dev)->secondary : NULL;
+		if (fwnode_is_primary(get_rh_dev_fwnode(dev)))
+			set_rh_dev_fwnode(dev,
+					  get_rh_dev_fwnode(dev)->secondary);
+		else
+			set_rh_dev_fwnode(dev, NULL);
 	}
 }
 EXPORT_SYMBOL_GPL(set_primary_fwnode);
@@ -2360,8 +2363,8 @@ void set_secondary_fwnode(struct device *dev, struct fwnode_handle *fwnode)
 	if (fwnode)
 		fwnode->secondary = ERR_PTR(-ENODEV);
 
-	if (fwnode_is_primary(rh_dev_fwnode(dev)))
-		rh_dev_fwnode(dev)->secondary = fwnode;
+	if (fwnode_is_primary(get_rh_dev_fwnode(dev)))
+		get_rh_dev_fwnode(dev)->secondary = fwnode;
 	else
-		rh_dev_fwnode(dev) = fwnode;
+		set_rh_dev_fwnode(dev, fwnode);
 }
