@@ -20,6 +20,7 @@
  */
 #include <linux/init.h>
 #include <linux/module.h>
+#include <linux/hugetlb.h>
 #include <linux/mm.h>
 #include <linux/vmalloc.h>
 #include <linux/swap.h>
@@ -117,6 +118,37 @@ static int harvest_clear_refs_pte_range(pmd_t *pmd, unsigned long addr,
 	return 0;
 }
 
+static void mm_track_one_hugepage(struct vm_area_struct *vma, pte_t *pte)
+{
+	struct hstate *h = hstate_vma(vma);
+	unsigned long addr, end;
+
+	addr = pte_pfn(*pte) << PAGE_SHIFT;
+	end = addr + huge_page_size(h);
+
+	while (addr < end) {
+		do_mm_track_phys((void *)addr);
+		addr += PAGE_SIZE;
+	}
+}
+
+static void mm_track_hugepage(struct vm_area_struct *vma)
+{
+	struct hstate *h = hstate_vma(vma);
+	unsigned long hmask = huge_page_mask(h);
+	unsigned long addr, next, boundary;
+	pte_t *pte;
+
+	addr = vma->vm_start;
+	do {
+		boundary = (addr & hmask) + huge_page_size(h);
+		next = boundary < vma->vm_end ? boundary : vma->vm_end;
+		pte = huge_pte_offset(vma->vm_mm, addr & hmask);
+		if (pte)
+			mm_track_one_hugepage(vma, pte);
+	} while (addr = next, addr != vma->vm_end);
+}
+
 int  __attribute__ ((__unused__)) harvest_user(void)
 {
 	struct task_struct *p;
@@ -146,6 +178,10 @@ int  __attribute__ ((__unused__)) harvest_user(void)
 
 			for (vma = mm->mmap; vma; vma = vma->vm_next) {
 				cp.vma = vma;
+				if (is_vm_hugetlb_page(vma)) {
+					mm_track_hugepage(vma);
+					continue;
+				}
 				if (vma->vm_flags & VM_PFNMAP)
 					continue;
 				walk_page_range(vma->vm_start, vma->vm_end,
