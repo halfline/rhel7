@@ -842,6 +842,9 @@ EXPORT_SYMBOL(napi_consume_skb);
 
 static void __copy_skb_header(struct sk_buff *new, const struct sk_buff *old)
 {
+	int previous_head_frag = new->head_frag;
+	int previous_xmit_more = new->xmit_more;
+
 	new->tstamp		= old->tstamp;
 	/* We do not copy old->sk */
 	new->dev		= old->dev;
@@ -903,10 +906,10 @@ static void __copy_skb_header(struct sk_buff *new, const struct sk_buff *old)
 
 	/* RHEL: the following fields are placed between headers_start and
 	 * headers_end on RHEL skb layout, but must not be copied; reset them
-	 * here allow us to use a single memcpy().
+	 * to their previous value to allow us using a single memcpy().
 	 */
-	new->head_frag = 0;
-	new->xmit_more = 0;
+	new->head_frag = previous_head_frag;
+	new->xmit_more = previous_xmit_more;
 }
 
 /*
