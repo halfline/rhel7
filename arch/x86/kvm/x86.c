@@ -3862,6 +3862,9 @@ static int kvm_vm_ioctl_enable_cap(struct kvm *kvm,
 		break;
 	case KVM_CAP_SPLIT_IRQCHIP: {
 		mutex_lock(&kvm->lock);
+		r = -EINVAL;
+		if (cap->args[0] > MAX_NR_RESERVED_IOAPIC_PINS)
+			goto split_irqchip_unlock;
 		r = -EEXIST;
 		if (irqchip_in_kernel(kvm))
 			goto split_irqchip_unlock;
@@ -3873,6 +3876,7 @@ static int kvm_vm_ioctl_enable_cap(struct kvm *kvm,
 		/* Pairs with irqchip_in_kernel. */
 		smp_wmb();
 		kvm->arch.irqchip_split = true;
+		kvm->arch.nr_reserved_ioapic_pins = cap->args[0];
 		r = 0;
 split_irqchip_unlock:
 		mutex_unlock(&kvm->lock);
@@ -6481,7 +6485,10 @@ static void vcpu_scan_ioapic(struct kvm_vcpu *vcpu)
 	memset(vcpu->arch.eoi_exit_bitmap, 0, 256 / 8);
 
 	kvm_x86_ops->sync_pir_to_irr(vcpu);
-	kvm_ioapic_scan_entry(vcpu, vcpu->arch.eoi_exit_bitmap);
+	if (irqchip_split(vcpu->kvm))
+		kvm_scan_ioapic_routes(vcpu, vcpu->arch.eoi_exit_bitmap);
+	else
+		kvm_ioapic_scan_entry(vcpu, vcpu->arch.eoi_exit_bitmap);
 	kvm_x86_ops->load_eoi_exitmap(vcpu);
 }
 

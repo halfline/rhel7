@@ -221,6 +221,8 @@ int kvm_set_irq_routing(struct kvm *kvm,
 	kvm_irq_routing_update(kvm);
 	mutex_unlock(&kvm->irq_lock);
 
+	kvm_arch_irq_routing_update(kvm);
+
 	synchronize_srcu_expedited(&kvm->irq_srcu);
 
 	new = old;
