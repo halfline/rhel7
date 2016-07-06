@@ -461,22 +461,23 @@ static int powernv_cpufreq_cpu_init(struct cpufreq_policy *policy)
 	for (i = 0; i < threads_per_core; i++)
 		cpumask_set_cpu(base + i, policy->cpus);
 
-	if (!policy->driver_data) {
-		int ret;
+	return cpufreq_table_validate_and_show(policy, powernv_freqs);
+}
 
+static void powernv_cpufreq_cpu_ready(struct cpufreq_policy *policy)
+{
+	int ret;
+	struct sysfs_dirent *kn;
+
+	kn = sysfs_get_dirent(policy->kobj.sd, NULL, throttle_attr_grp.name);
+	if (!kn) {
 		ret = sysfs_create_group(&policy->kobj, &throttle_attr_grp);
-		if (ret) {
+		if (ret)
 			pr_info("Failed to create throttle stats directory for cpu %d\n",
 				policy->cpu);
-			return ret;
-		}
-		/*
-		 * policy->driver_data is used as a flag for one-time
-		 * creation of throttle sysfs files.
-		 */
-		policy->driver_data = policy;
+	} else {
+		sysfs_put(kn);
 	}
-	return cpufreq_table_validate_and_show(policy, powernv_freqs);
 }
 
 static int powernv_cpufreq_reboot_notifier(struct notifier_block *nb,
@@ -612,6 +613,7 @@ static struct cpufreq_driver powernv_cpufreq_driver = {
 	.name		= "powernv-cpufreq",
 	.flags		= CPUFREQ_CONST_LOOPS,
 	.init		= powernv_cpufreq_cpu_init,
+	.ready		= powernv_cpufreq_cpu_ready,
 	.verify		= cpufreq_generic_frequency_table_verify,
 	.target_index	= powernv_cpufreq_target_index,
 	.get		= powernv_cpufreq_get,
