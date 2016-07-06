@@ -4780,6 +4780,8 @@ static int emulator_read_write(struct x86_emulate_ctxt *ctxt,
 		if (rc != X86EMUL_CONTINUE)
 			return rc;
 		addr += now;
+		if (ctxt->mode != X86EMUL_MODE_PROT64)
+			addr = (u32)addr;
 		val += now;
 		bytes -= now;
 	}
