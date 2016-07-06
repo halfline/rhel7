@@ -142,6 +142,7 @@ static inline bool is_error_page(struct page *page)
 #define KVM_REQ_GLOBAL_CLOCK_UPDATE 22
 #define KVM_REQ_APIC_PAGE_RELOAD  25
 #define KVM_REQ_SMI               26
+#define KVM_REQ_IOAPIC_EOI_EXIT   28
 
 #define KVM_USERSPACE_IRQ_SOURCE_ID		0
 #define KVM_IRQFD_RESAMPLE_IRQ_SOURCE_ID	1
@@ -1143,4 +1144,3 @@ int kvm_arch_update_irqfd_routing(struct kvm *kvm, unsigned int host_irq,
 #endif /* CONFIG_HAVE_KVM_IRQ_BYPASS */
 
 #endif
-
