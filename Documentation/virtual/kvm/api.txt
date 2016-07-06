@@ -3085,3 +3085,37 @@ userspace from doing that.
 If the hcall number specified is not one that has an in-kernel
 implementation, the KVM_ENABLE_CAP ioctl will fail with an EINVAL
 error.
+
+7.5 KVM_CAP_SPLIT_IRQCHIP
+
+Architectures: x86
+Parameters: None
+Returns: 0 on success, -1 on error
+
+Create a local apic for each processor in the kernel. This can be used
+instead of KVM_CREATE_IRQCHIP if the userspace VMM wishes to emulate the
+IOAPIC and PIC (and also the PIT, even though this has to be enabled
+separately).
+
+This supersedes KVM_CREATE_IRQCHIP, creating only local APICs, but no in kernel
+IOAPIC or PIC. This also enables in kernel routing of interrupt requests.
+
+Fails if VCPU has already been created, or if the irqchip is already in the
+kernel (i.e. KVM_CREATE_IRQCHIP has already been called).
+
+
+8. Other capabilities.
+----------------------
+
+This section lists capabilities that give information about other
+features of the KVM implementation.
+
+8.1 KVM_CAP_PPC_HWRNG
+
+Architectures: ppc
+
+This capability, if KVM_CHECK_EXTENSION indicates that it is
+available, means that that the kernel has an implementation of the
+H_RANDOM hypercall backed by a hardware random-number generator.
+If present, the kernel H_RANDOM handler can be enabled for guest use
+with the KVM_CAP_PPC_ENABLE_HCALL capability.

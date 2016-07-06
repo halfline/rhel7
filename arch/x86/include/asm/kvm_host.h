@@ -666,6 +666,8 @@ struct kvm_arch {
 
 	u64 disabled_quirks;
 
+	bool irqchip_split;
+
 	bool disabled_lapic_found;
 };
 
