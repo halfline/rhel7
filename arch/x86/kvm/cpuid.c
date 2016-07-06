@@ -47,11 +47,18 @@ static u32 xstate_required_size(u64 xstate_bv, bool compacted)
 	return ret;
 }
 
+bool kvm_mpx_supported(void)
+{
+	return ((host_xcr0 & (XSTATE_BNDREGS | XSTATE_BNDCSR))
+		 && kvm_x86_ops->mpx_supported());
+}
+EXPORT_SYMBOL_GPL(kvm_mpx_supported);
+
 u64 kvm_supported_xcr0(void)
 {
 	u64 xcr0 = KVM_SUPPORTED_XCR0 & host_xcr0;
 
-	if (!kvm_x86_ops->mpx_supported())
+	if (!kvm_mpx_supported())
 		xcr0 &= ~(XSTATE_BNDREGS | XSTATE_BNDCSR);
 
 	return xcr0;
@@ -98,7 +105,7 @@ int kvm_update_cpuid(struct kvm_vcpu *vcpu)
 	if (best && (best->eax & (F(XSAVES) | F(XSAVEC))))
 		best->ebx = xstate_required_size(vcpu->arch.xcr0, true);
 
-	vcpu->arch.eager_fpu = use_eager_fpu() || guest_cpuid_has_mpx(vcpu);
+	vcpu->arch.eager_fpu = use_eager_fpu();
 	if (vcpu->arch.eager_fpu)
 		kvm_x86_ops->fpu_activate(vcpu);
 
@@ -298,7 +305,7 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
 #endif
 	unsigned f_rdtscp = kvm_x86_ops->rdtscp_supported() ? F(RDTSCP) : 0;
 	unsigned f_invpcid = kvm_x86_ops->invpcid_supported() ? F(INVPCID) : 0;
-	unsigned f_mpx = kvm_x86_ops->mpx_supported() ? F(MPX) : 0;
+	unsigned f_mpx = kvm_mpx_supported() ? F(MPX) : 0;
 
 	/* cpuid 1.edx */
 	const u32 kvm_supported_word0_x86_features =
