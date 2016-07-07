@@ -14,6 +14,7 @@
 #define __PMEM_H__
 
 #include <linux/io.h>
+#include <linux/uio.h>
 
 #ifdef CONFIG_ARCH_HAS_PMEM_API
 #include <asm/pmem.h>
@@ -33,12 +34,17 @@ static inline void arch_memcpy_to_pmem(void __pmem *dst, const void *src,
 {
 	BUG();
 }
+
+static inline void arch_clear_pmem(void __pmem *addr, size_t size)
+{
+	BUG();
+}
 #endif
 
 /*
  * Architectures that define ARCH_HAS_PMEM_API must provide
- * implementations for arch_memcpy_to_pmem(), arch_wmb_pmem(), and
- * arch_has_wmb_pmem().
+ * implementations for arch_memcpy_to_pmem(), arch_wmb_pmem(),
+ * arch_copy_from_iter_pmem(), arch_clear_pmem() and arch_has_wmb_pmem().
  */
 
 static inline void memcpy_from_pmem(void *dst, void __pmem const *src, size_t size)
@@ -76,6 +82,14 @@ static inline void default_memcpy_to_pmem(void __pmem *dst, const void *src,
 		size_t size)
 {
 	memcpy((void __force *) dst, src, size);
+}
+
+static inline void default_clear_pmem(void __pmem *addr, size_t size)
+{
+	if (size == PAGE_SIZE && ((unsigned long)addr & ~PAGE_MASK) == 0)
+		clear_page((void __force *)addr);
+	else
+		memset((void __force *)addr, 0, size);
 }
 
 /**
@@ -133,5 +147,21 @@ static inline void wmb_pmem(void)
 {
 	if (arch_has_pmem_api())
 		arch_wmb_pmem();
+}
+
+/**
+ * clear_pmem - zero a PMEM memory range
+ * @addr:	virtual start address
+ * @size:	number of bytes to zero
+ *
+ * Write zeros into the memory range starting at 'addr' for 'size' bytes.
+ * This function requires explicit ordering with a wmb_pmem() call.
+ */
+static inline void clear_pmem(void __pmem *addr, size_t size)
+{
+	if (arch_has_pmem_api())
+		arch_clear_pmem(addr, size);
+	else
+		default_clear_pmem(addr, size);
 }
 #endif /* __PMEM_H__ */
