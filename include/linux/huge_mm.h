@@ -158,6 +158,13 @@ static inline bool is_trans_huge_page_release(struct page *page)
 	return (unsigned long) page & 1;
 }
 
+extern struct page *huge_zero_page;
+
+static inline bool is_huge_zero_page(struct page *page)
+{
+	return ACCESS_ONCE(huge_zero_page) == page;
+}
+
 static inline bool is_huge_zero_page_release(struct page *page)
 {
 	return (unsigned long) page == ~0UL;
@@ -217,6 +224,16 @@ static inline int trans_huge_mmu_gather_count(struct page *page)
  * PageTransHuge()) in release_pages().
  */
 extern void free_trans_huge_page_list(struct list_head *list);
+
+static inline bool is_huge_zero_pmd(pmd_t pmd)
+{
+	return is_huge_zero_page(pmd_page(pmd));
+}
+
+struct page *get_huge_zero_page(void);
+bool set_huge_zero_page(pgtable_t pgtable, struct mm_struct *mm,
+		struct vm_area_struct *vma, unsigned long haddr,
+		pmd_t *pmd, struct page *zero_page);
 
 #else /* CONFIG_TRANSPARENT_HUGEPAGE */
 #define HPAGE_PMD_SHIFT ({ BUILD_BUG(); 0; })
@@ -284,6 +301,12 @@ static inline struct page *trans_huge_page_release_decode(struct page *page)
 
 extern void dec_trans_huge_mmu_gather_count(struct page *page);
 extern bool is_huge_zero_page_release(struct page *page);
+
+static inline bool is_huge_zero_page(struct page *page)
+{
+	return false;
+}
+
 #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
 
 #endif /* _LINUX_HUGE_MM_H */
