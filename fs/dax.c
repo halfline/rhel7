@@ -318,15 +318,12 @@ static int copy_user_bh(struct page *to, struct buffer_head *bh,
 static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
 			struct vm_area_struct *vma, struct vm_fault *vmf)
 {
-	struct address_space *mapping = inode->i_mapping;
 	sector_t sector = bh->b_blocknr << (inode->i_blkbits - 9);
 	unsigned long vaddr = (unsigned long)vmf->virtual_address;
 	void __pmem *addr;
 	unsigned long pfn;
 	pgoff_t size;
 	int error;
-
-	mutex_lock(&mapping->i_mmap_mutex);
 
 	/*
 	 * Check truncate didn't happen while we were allocating a block.
@@ -357,8 +354,6 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
 	error = vm_insert_mixed(vma, vaddr, pfn);
 
  out:
-	mutex_unlock(&mapping->i_mmap_mutex);
-
 	return error;
 }
 
@@ -420,15 +415,17 @@ int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
 			 * from a read fault and we've raced with a truncate
 			 */
 			error = -EIO;
-			goto unlock_page;
+			goto unlock;
 		}
+	} else {
+		mutex_lock(&mapping->i_mmap_mutex);
 	}
 
 	error = get_block(inode, block, &bh, 0);
 	if (!error && (bh.b_size < PAGE_SIZE))
 		error = -EIO;		/* fs corruption? */
 	if (error)
-		goto unlock_page;
+		goto unlock;
 
 	if (!buffer_mapped(&bh) && !buffer_unwritten(&bh) && !vmf->cow_page) {
 		if (vmf->flags & FAULT_FLAG_WRITE) {
@@ -439,8 +436,9 @@ int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
 			if (!error && (bh.b_size < PAGE_SIZE))
 				error = -EIO;
 			if (error)
-				goto unlock_page;
+				goto unlock;
 		} else {
+			mutex_lock(&mapping->i_mmap_mutex);
 			return dax_load_hole(mapping, page, vmf);
 		}
 	}
@@ -452,17 +450,15 @@ int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
 		else
 			clear_user_highpage(new_page, vaddr);
 		if (error)
-			goto unlock_page;
+			goto unlock;
 		vmf->page = page;
 		if (!page) {
-			mutex_lock(&mapping->i_mmap_mutex);
 			/* Check we didn't race with truncate */
 			size = (i_size_read(inode) + PAGE_SIZE - 1) >>
 								PAGE_SHIFT;
 			if (vmf->pgoff >= size) {
-				mutex_unlock(&mapping->i_mmap_mutex);
 				error = -EIO;
-				goto out;
+				goto unlock;
 			}
 		}
 		return VM_FAULT_LOCKED;
@@ -498,6 +494,8 @@ int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
 			WARN_ON_ONCE(!(vmf->flags & FAULT_FLAG_WRITE));
 	}
 
+	if (!page)
+		mutex_unlock(&mapping->i_mmap_mutex);
  out:
 	if (error == -ENOMEM)
 		return VM_FAULT_OOM | major;
@@ -506,11 +504,14 @@ int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
 		return VM_FAULT_SIGBUS | major;
 	return VM_FAULT_NOPAGE | major;
 
- unlock_page:
+ unlock:
 	if (page) {
 		unlock_page(page);
 		page_cache_release(page);
+	} else {
+		mutex_unlock(&mapping->i_mmap_mutex);
 	}
+
 	goto out;
 }
 EXPORT_SYMBOL(__dax_fault);
@@ -588,10 +589,10 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
 	block = (sector_t)pgoff << (PAGE_SHIFT - blkbits);
 
 	bh.b_size = PMD_SIZE;
+	mutex_lock(&mapping->i_mmap_mutex);
 	length = get_block(inode, block, &bh, write);
 	if (length)
 		return VM_FAULT_SIGBUS;
-	mutex_lock(&mapping->i_mmap_mutex);
 
 	/*
 	 * If the filesystem isn't willing to tell us the length of a hole,
@@ -655,10 +656,10 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
 	}
 
  out:
-	mutex_unlock(&mapping->i_mmap_mutex);
-
 	if (buffer_unwritten(&bh))
 		complete_unwritten(&bh, !(result & VM_FAULT_ERROR));
+
+	mutex_unlock(&mapping->i_mmap_mutex);
 
 	return result;
 
