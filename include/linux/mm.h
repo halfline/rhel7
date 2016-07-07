@@ -145,6 +145,7 @@ extern unsigned int kobjsize(const void *objp);
  * vm_flags2 in vm_area_struct, see mm_types.h.
  */
 #define VM_PFN_MKWRITE	0x00000001	/* vm_operations_struct includes pfn_mkwrite */
+#define VM_PMD_FAULT	0x00000002	/* vm_operations_struct includes pmd_fault */
 
 #if defined(CONFIG_X86)
 # define VM_PAT		VM_ARCH_1	/* PAT reserves whole VMA at once (x86) */
@@ -285,6 +286,9 @@ struct vm_operations_struct {
 
 	/* same as page_mkwrite when using VM_PFNMAP|VM_MIXEDMAP */
 	RH_KABI_EXTEND(int (*pfn_mkwrite)(struct vm_area_struct *vma, struct vm_fault *vmf))
+	RH_KABI_EXTEND(int (*pmd_fault)(struct vm_area_struct *,
+			unsigned long address, pmd_t *, unsigned int flags))
+
 };
 
 struct mmu_gather;
