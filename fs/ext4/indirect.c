@@ -23,6 +23,7 @@
 #include <linux/aio.h>
 #include "ext4_jbd2.h"
 #include "truncate.h"
+#include <linux/dax.h>
 
 #include <trace/events/ext4.h>
 
