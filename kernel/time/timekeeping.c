@@ -1154,7 +1154,7 @@ static void __timekeeping_inject_sleeptime(struct timekeeper *tk,
 					   struct timespec64 *delta)
 {
 	if (!timespec64_valid_strict(delta)) {
-		printk(KERN_WARNING "__timekeeping_inject_sleeptime: Invalid "
+		printk_deferred(KERN_WARNING "__timekeeping_inject_sleeptime: Invalid "
 					"sleep delta value!\n");
 		return;
 	}
@@ -1496,7 +1496,7 @@ static void timekeeping_adjust(struct timekeeper *tk, s64 offset)
 
 	if (unlikely(tk->tkr_mono.clock->maxadj &&
 		(tk->tkr_mono.mult > tk->tkr_mono.clock->mult + tk->tkr_mono.clock->maxadj))) {
-		printk_once(KERN_WARNING
+		printk_deferred_once(KERN_WARNING
 			"Adjusting %s more than 11%% (%ld vs %ld)\n",
 			tk->tkr_mono.clock->name, (long)tk->tkr_mono.mult,
 			(long)tk->tkr_mono.clock->mult + tk->tkr_mono.clock->maxadj);
