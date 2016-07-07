@@ -23,6 +23,7 @@
 #include <linux/memcontrol.h>
 #include <linux/mm.h>
 #include <linux/mutex.h>
+#include <linux/pmem.h>
 #include <linux/sched.h>
 #include <linux/uio.h>
 #include <linux/socket.h>
@@ -47,10 +48,7 @@ int dax_clear_blocks(struct inode *inode, sector_t block, long size)
 			unsigned pgsz = PAGE_SIZE - offset_in_page(addr);
 			if (pgsz > count)
 				pgsz = count;
-			if (pgsz < PAGE_SIZE)
-				memset(addr, 0, pgsz);
-			else
-				clear_page(addr);
+			clear_pmem((void __pmem *)addr, pgsz);
 			addr += pgsz;
 			size -= pgsz;
 			count -= pgsz;
@@ -60,6 +58,7 @@ int dax_clear_blocks(struct inode *inode, sector_t block, long size)
 		}
 	} while (size);
 
+	wmb_pmem();
 	return 0;
 }
 EXPORT_SYMBOL_GPL(dax_clear_blocks);
@@ -71,15 +70,16 @@ static long dax_get_addr(struct buffer_head *bh, void **addr, unsigned blkbits)
 	return bdev_direct_access(bh->b_bdev, sector, addr, &pfn, bh->b_size);
 }
 
+/* the clear_pmem() calls are ordered by a wmb_pmem() in the caller */
 static void dax_new_buf(void *addr, unsigned size, unsigned first, loff_t pos,
 			loff_t end)
 {
 	loff_t final = end - pos + first; /* The final byte of the buffer */
 
 	if (first > 0)
-		memset(addr, 0, first);
+		clear_pmem((void __pmem *)addr, first);
 	if (final < size)
-		memset(addr + final, 0, size - final);
+		clear_pmem((void __pmem *)addr + final, size - final);
 }
 
 static bool buffer_written(struct buffer_head *bh)
@@ -128,12 +128,14 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 	loff_t bh_max = start;
 	void *addr;
 	bool hole = false;
+	bool need_wmb = false;
 
 	if (rw != WRITE)
 		end = min(end, i_size_read(inode));
 
 	while (pos < end) {
-		unsigned len, fail = 0;
+		unsigned fail = 0;
+		size_t len;
 		if (pos == max) {
 			unsigned blkbits = inode->i_blkbits;
 			long page = pos >> PAGE_SHIFT;
@@ -166,9 +168,11 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 				retval = dax_get_addr(bh, &addr, blkbits);
 				if (retval < 0)
 					break;
-				if (buffer_unwritten(bh) || buffer_new(bh))
+				if (buffer_unwritten(bh) || buffer_new(bh)) {
 					dax_new_buf(addr, retval, first, pos,
 									end);
+					need_wmb = true;
+				}
 				addr += first;
 				size = retval - first;
 			}
@@ -183,6 +187,7 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 		if (rw == WRITE) {
 			if (memcpy_fromiovecend_nocache(addr, iov, pos - start, max - pos))
 				fail = 1;
+			need_wmb = true;
 		} else if (!hole) {
 			if (memcpy_toiovecend(iov, addr, pos - start, max - pos))
 				fail = 1;
@@ -199,6 +204,9 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 		pos += len;
 		addr += len;
 	}
+
+	if (need_wmb)
+		wmb_pmem();
 
 	return (pos == start) ? retval : pos - start;
 }
@@ -336,8 +344,10 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
 		goto out;
 	}
 
-	if (buffer_unwritten(bh) || buffer_new(bh))
-		clear_page(addr);
+	if (buffer_unwritten(bh) || buffer_new(bh)) {
+		clear_pmem((void __pmem *)addr, PAGE_SIZE);
+		wmb_pmem();
+	}
 
 	error = vm_insert_mixed(vma, vaddr, pfn);
 
@@ -585,7 +595,8 @@ int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
 		err = dax_get_addr(&bh, &addr, inode->i_blkbits);
 		if (err < 0)
 			return err;
-		memset(addr + offset, 0, length);
+		clear_pmem((void __pmem *)addr + offset, length);
+		wmb_pmem();
 	}
 
 	return 0;
