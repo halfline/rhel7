@@ -271,7 +271,7 @@ extern void dump_stack(void) __cold;
 								\
 	if (!__print_once) {					\
 		__print_once = true;				\
-		printk_sched(fmt, ##__VA_ARGS__);		\
+		printk_deferred(fmt, ##__VA_ARGS__);		\
 	}							\
 })
 #else
