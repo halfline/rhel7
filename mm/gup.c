@@ -6,8 +6,34 @@
 #include <linux/writeback.h>
 #include <linux/mmu_notifier.h>
 #include <linux/swapops.h>
+#include <asm/tlbflush.h>
 
 #include "internal.h"
+
+static int follow_pfn_pte(struct vm_area_struct *vma, unsigned long address,
+		pte_t *pte, unsigned int flags)
+{
+	/* No page to get reference */
+	if (flags & FOLL_GET)
+		return -EFAULT;
+
+	if (flags & FOLL_TOUCH) {
+		pte_t entry = *pte;
+
+		if (flags & FOLL_WRITE)
+			entry = pte_mkdirty(entry);
+		entry = pte_mkyoung(entry);
+
+		if (!pte_same(*pte, entry)) {
+			set_pte_at(vma->vm_mm, address, pte, entry);
+			update_mmu_cache(vma, address, pte);
+		}
+	}
+
+	/* Proper page table entry exists, but no corresponding struct page */
+	return -EEXIST;
+}
+
 
 /**
  * follow_page_mask - look up a page descriptor from a user-virtual address
@@ -137,10 +163,21 @@ split_fallthrough:
 
 	page = vm_normal_page(vma, address, pte);
 	if (unlikely(!page)) {
-		if ((flags & FOLL_DUMP) ||
-		    !is_zero_pfn(pte_pfn(pte)))
-			goto bad_page;
-		page = pte_page(pte);
+		if (flags & FOLL_DUMP) {
+			/* Avoid special (like zero) pages in core dumps */
+			page = ERR_PTR(-EFAULT);
+			goto unlock;
+		}
+
+		if (is_zero_pfn(pte_pfn(pte))) {
+			page = pte_page(pte);
+		} else {
+			int ret;
+
+			ret = follow_pfn_pte(vma, address, ptep, flags);
+			page = ERR_PTR(ret);
+			goto unlock;
+		}
 	}
 
 	if (flags & FOLL_GET)
@@ -182,10 +219,6 @@ unlock:
 	pte_unmap_unlock(ptep, ptl);
 out:
 	return page;
-
-bad_page:
-	pte_unmap_unlock(ptep, ptl);
-	return ERR_PTR(-EFAULT);
 
 no_page:
 	pte_unmap_unlock(ptep, ptl);
@@ -448,8 +481,15 @@ long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 
 				cond_resched();
 			}
-			if (IS_ERR(page))
+			if (PTR_ERR(page) == -EEXIST) {
+				/*
+				 * Proper page table entry exists, but
+				 * no corresponding struct page.
+				 */
+				goto next_page;
+			} else if (IS_ERR(page)) {
 				return i ? i : PTR_ERR(page);
+			}
 			if (pages) {
 				pages[i] = page;
 
