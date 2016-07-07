@@ -1477,61 +1477,52 @@ out:
 int zap_huge_pmd(struct mmu_gather *tlb, struct vm_area_struct *vma,
 		 pmd_t *pmd, unsigned long addr)
 {
+	pmd_t orig_pmd;
 	spinlock_t *ptl;
-	int ret = 0;
 
-	if (__pmd_trans_huge_lock(pmd, vma, &ptl) == 1) {
-		pgtable_t pgtable;
-		pmd_t orig_pmd;
-		/*
-		 * For architectures like ppc64 we look at deposited pgtable
-		 * when calling pmdp_get_and_clear. So do the
-		 * pgtable_trans_huge_withdraw after finishing pmdp related
-		 * operations.
-		 */
-		orig_pmd = pmdp_get_and_clear(tlb->mm, addr, pmd);
-		tlb_remove_pmd_tlb_entry(tlb, pmd, addr);
-		if (vma_is_dax(vma)) {
-			if (is_huge_zero_pmd(orig_pmd)) {
-				pgtable = NULL;
-			} else {
-				spin_unlock(ptl);
-				return 1;
-			}
-		} else {
-			pgtable = pgtable_trans_huge_withdraw(tlb->mm, pmd);
-		}
-		if (is_huge_zero_pmd(orig_pmd)) {
-			atomic_long_dec(&tlb->mm->nr_ptes);
-			spin_unlock(ptl);
+	if (__pmd_trans_huge_lock(pmd, vma, &ptl) != 1)
+		return 0;
+	/*
+	 * For architectures like ppc64 we look at deposited pgtable
+	 * when calling pmdp_huge_get_and_clear. So do the
+	 * pgtable_trans_huge_withdraw after finishing pmdp related
+	 * operations.
+	 */
+	orig_pmd = pmdp_get_and_clear(tlb->mm, addr, pmd);
+	tlb_remove_pmd_tlb_entry(tlb, pmd, addr);
+	if (vma_is_dax(vma)) {
+		spin_unlock(ptl);
+		if (is_huge_zero_pmd(orig_pmd))
 			tlb_remove_page(tlb, huge_zero_page_release_encode());
-		} else {
-			struct page *page = pmd_page(orig_pmd);
-			page_remove_rmap(page);
-			VM_BUG_ON_PAGE(page_mapcount(page) < 0, page);
-			add_mm_counter(tlb->mm, MM_ANONPAGES, -HPAGE_PMD_NR);
-			VM_BUG_ON_PAGE(!PageHead(page), page);
-			atomic_long_dec(&tlb->mm->nr_ptes);
-			/*
-			 * page_remove_rmap() already decreased the
-			 * page_mapcount(), so tail pages can be
-			 * freed after we release the pmd lock. Increase the
-			 * mmu_gather_count to prevent the tail pages to be
-			 * freed, even if the THP page get splitted.
-			 * __split_huge_page_refcount() will then see that
-			 * we're in the middle of a mmu gather and it'll add
-			 * the compound mmu_gather_count to every tail
-			 * page page_count().
-			 */
-			inc_trans_huge_mmu_gather_count(page);
-			spin_unlock(ptl);
-			tlb_remove_page(tlb, trans_huge_page_release_encode(page));
-		}
-		if (pgtable)
-			pte_free(tlb->mm, pgtable);
-		ret = 1;
+	} else if (is_huge_zero_pmd(orig_pmd)) {
+		pte_free(tlb->mm, pgtable_trans_huge_withdraw(tlb->mm, pmd));
+		atomic_long_dec(&tlb->mm->nr_ptes);
+		spin_unlock(ptl);
+		put_huge_zero_page();
+	} else {
+		struct page *page = pmd_page(orig_pmd);
+		page_remove_rmap(page);
+		VM_BUG_ON_PAGE(page_mapcount(page) < 0, page);
+		add_mm_counter(tlb->mm, MM_ANONPAGES, -HPAGE_PMD_NR);
+		VM_BUG_ON_PAGE(!PageHead(page), page);
+		pte_free(tlb->mm, pgtable_trans_huge_withdraw(tlb->mm, pmd));
+		atomic_long_dec(&tlb->mm->nr_ptes);
+		/*
+		 * page_remove_rmap() already decreased the
+		 * page_mapcount(), so tail pages can be
+		 * freed after we release the pmd lock. Increase the
+		 * mmu_gather_count to prevent the tail pages to be
+		 * freed, even if the THP page get splitted.
+		 * __split_huge_page_refcount() will then see that
+		 * we're in the middle of a mmu gather and it'll add
+		 * the compound mmu_gather_count to every tail
+		 * page page_count().
+		 */
+		inc_trans_huge_mmu_gather_count(page);
+		spin_unlock(ptl);
+		tlb_remove_page(tlb, trans_huge_page_release_encode(page));
 	}
-	return ret;
+	return 1;
 }
 
 int mincore_huge_pmd(struct vm_area_struct *vma, pmd_t *pmd,
