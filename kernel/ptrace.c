@@ -311,7 +311,7 @@ static int ptrace_attach(struct task_struct *task, long request,
 	if (retval)
 		goto unlock_creds;
 
-	write_lock_irq(&tasklist_lock);
+	tasklist_write_lock_irq();
 	retval = -EPERM;
 	if (unlikely(task->exit_state))
 		goto unlock_tasklist;
@@ -388,7 +388,7 @@ static int ptrace_traceme(void)
 {
 	int ret = -EPERM;
 
-	write_lock_irq(&tasklist_lock);
+	tasklist_write_lock_irq();
 	/* Are we already being traced? */
 	if (!current->ptrace) {
 		ret = security_ptrace_traceme(current->parent);
@@ -471,7 +471,7 @@ static int ptrace_detach(struct task_struct *child, unsigned int data)
 	ptrace_disable(child);
 	clear_tsk_thread_flag(child, TIF_SYSCALL_TRACE);
 
-	write_lock_irq(&tasklist_lock);
+	tasklist_write_lock_irq();
 	/*
 	 * This child can be already killed. Make sure de_thread() or
 	 * our sub-thread doing do_wait() didn't do release_task() yet.
@@ -520,7 +520,7 @@ void exit_ptrace(struct task_struct *tracer)
 		release_task(p);
 	}
 
-	write_lock_irq(&tasklist_lock);
+	tasklist_write_lock_irq();
 }
 
 int ptrace_readdata(struct task_struct *tsk, unsigned long src, char __user *dst, int len)

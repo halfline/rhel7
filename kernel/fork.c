@@ -85,7 +85,7 @@
 #include <trace/events/task.h>
 
 /*
- * Protected counters by write_lock_irq(&tasklist_lock)
+ * Protected counters by tasklist_write_lock_irq()
  */
 unsigned long total_forks;	/* Handle normal Linux uptimes. */
 int nr_threads;			/* The idle threads do not count.. */
@@ -1480,7 +1480,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	 * Make it visible to the rest of the system, but dont wake it up yet.
 	 * Need tasklist lock for parent etc handling!
 	 */
-	write_lock_irq(&tasklist_lock);
+	tasklist_write_lock_irq();
 
 	/* CLONE_PARENT re-uses the old parent */
 	if (clone_flags & (CLONE_PARENT|CLONE_THREAD)) {

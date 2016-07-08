@@ -182,7 +182,7 @@ repeat:
 
 	proc_flush_task(p);
 
-	write_lock_irq(&tasklist_lock);
+	tasklist_write_lock_irq();
 	ptrace_release_task(p);
 	__exit_signal(p);
 
@@ -537,7 +537,7 @@ static struct task_struct *find_new_reaper(struct task_struct *father)
 		}
 
 		zap_pid_ns_processes(pid_ns);
-		write_lock_irq(&tasklist_lock);
+		tasklist_write_lock_irq();
 	} else if (father->signal->has_child_subreaper) {
 		struct task_struct *reaper;
 
@@ -610,7 +610,7 @@ static void forget_original_parent(struct task_struct *father)
 	struct task_struct *p, *n, *reaper;
 	LIST_HEAD(dead_children);
 
-	write_lock_irq(&tasklist_lock);
+	tasklist_write_lock_irq();
 	/*
 	 * Note that exit_ptrace() and find_new_reaper() might
 	 * drop tasklist_lock and reacquire it.
@@ -660,7 +660,7 @@ static void exit_notify(struct task_struct *tsk, int group_dead)
 	 */
 	forget_original_parent(tsk);
 
-	write_lock_irq(&tasklist_lock);
+	tasklist_write_lock_irq();
 	if (group_dead)
 		kill_orphaned_pgrp(tsk->group_leader, NULL);
 
@@ -1167,7 +1167,7 @@ static int wait_task_zombie(struct wait_opts *wo, struct task_struct *p)
 		retval = pid;
 
 	if (traced) {
-		write_lock_irq(&tasklist_lock);
+		tasklist_write_lock_irq();
 		/* We dropped tasklist, ptracer could die and untrace */
 		ptrace_unlink(p);
 		/*
