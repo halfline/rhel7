@@ -379,11 +379,7 @@ struct cfs_rq {
 	 * This allows for the description of both thread and group usage (in
 	 * the FAIR_GROUP_SCHED case).
 	 */
-#ifdef __GENKSYMS__
 	u64 runnable_load_avg, blocked_load_avg;
-#else
-	u64 rh_reserved_runnable_load_avg, rh_reserved_blocked_load_avg;
-#endif
 	atomic64_t decay_counter, removed_load;
 	u64 last_decay;
 #endif /* CONFIG_FAIR_GROUP_SCHED */
@@ -427,10 +423,6 @@ struct cfs_rq {
 	int throttled, throttle_count;
 	struct list_head throttled_list;
 #endif /* CONFIG_CFS_BANDWIDTH */
-#ifdef CONFIG_SMP
-	RH_KABI_EXTEND(unsigned long runnable_load_avg)
-	RH_KABI_EXTEND(unsigned long blocked_load_avg)
-#endif
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 };
 
