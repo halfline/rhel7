@@ -201,7 +201,7 @@ SYSCALL_DEFINE3(setpriority, int, which, int, who, int, niceval)
 		niceval = 19;
 
 	rcu_read_lock();
-	read_lock(&tasklist_lock);
+	tasklist_read_lock();
 	switch (which) {
 		case PRIO_PROCESS:
 			if (who)
@@ -263,7 +263,7 @@ SYSCALL_DEFINE2(getpriority, int, which, int, who)
 		return -EINVAL;
 
 	rcu_read_lock();
-	read_lock(&tasklist_lock);
+	tasklist_read_lock();
 	switch (which) {
 		case PRIO_PROCESS:
 			if (who)
@@ -1624,7 +1624,7 @@ int do_prlimit(struct task_struct *tsk, unsigned int resource,
 	}
 
 	/* protect tsk->signal and tsk->sighand from disappearing */
-	read_lock(&tasklist_lock);
+	tasklist_read_lock();
 	if (!tsk->sighand) {
 		retval = -ESRCH;
 		goto out;

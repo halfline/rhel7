@@ -390,7 +390,7 @@ retry:
 		return;
 	}
 
-	read_lock(&tasklist_lock);
+	tasklist_read_lock();
 	/*
 	 * Search in the children
 	 */
@@ -1543,7 +1543,7 @@ repeat:
 		goto notask;
 
 	set_current_state(TASK_INTERRUPTIBLE);
-	read_lock(&tasklist_lock);
+	tasklist_read_lock();
 	tsk = current;
 	do {
 		retval = do_wait_thread(wo, tsk);

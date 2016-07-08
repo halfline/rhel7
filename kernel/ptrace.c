@@ -180,7 +180,7 @@ static int ptrace_check_attach(struct task_struct *child, bool ignore_state)
 	 * we are sure that this is our traced child and that can only
 	 * be changed by us so it's not changing right after this.
 	 */
-	read_lock(&tasklist_lock);
+	tasklist_read_lock();
 	if (child->ptrace && child->parent == current) {
 		WARN_ON(child->state == __TASK_TRACED);
 		/*

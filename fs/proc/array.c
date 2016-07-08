@@ -601,7 +601,7 @@ get_children_pid(struct inode *inode, struct pid *pid_prev, loff_t pos)
 	struct task_struct *start, *task;
 	struct pid *pid = NULL;
 
-	read_lock(&tasklist_lock);
+	tasklist_read_lock();
 
 	start = pid_task(proc_pid(inode), PIDTYPE_PID);
 	if (!start)
