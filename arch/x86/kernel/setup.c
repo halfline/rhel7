@@ -890,6 +890,7 @@ static void rh_check_supported(void)
 	if ((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) &&
 	    ((boot_cpu_data.x86 == 6))) {
 		switch (boot_cpu_data.x86_model) {
+		case 142: /* Kabylake-U/Y */
 		case 95: /* Denverton */
 		case 94: /* Skylake-S */
 		case 87: /* Knights Landing */
