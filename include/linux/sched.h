@@ -276,6 +276,9 @@ extern char ___assert_task_state[1 - 2*!!(
 extern rwlock_t tasklist_lock;
 extern spinlock_t mmlist_lock;
 
+extern void tasklist_write_lock_irq(void);
+extern void tasklist_read_lock(void);
+
 struct task_struct;
 
 #ifdef CONFIG_PROVE_RCU

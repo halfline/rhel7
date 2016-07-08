@@ -94,7 +94,35 @@ int max_threads;		/* tunable limit on nr_threads */
 
 DEFINE_PER_CPU(unsigned long, process_counts) = 0;
 
+/* Place it into the same section/cacheline with tasklist_lock */
+__attribute__((__section__(".data..cacheline_aligned")))
+static atomic_t tasklist_waiters = ATOMIC_INIT(0);
 __cacheline_aligned DEFINE_RWLOCK(tasklist_lock);  /* outer */
+
+void tasklist_write_lock_irq(void)
+{
+	local_irq_disable();
+	if (write_trylock(&tasklist_lock))
+		return;
+
+	atomic_inc(&tasklist_waiters);
+	write_lock(&tasklist_lock);
+	atomic_dec(&tasklist_waiters);
+}
+
+void tasklist_read_lock(void)
+{
+	if (WARN_ON_ONCE(in_interrupt()))
+		goto no_wait;
+#ifdef CONFIG_LOCKDEP
+	if (WARN_ON_ONCE(lockdep_is_held(&tasklist_lock)))
+		goto no_wait;
+#endif
+	while (atomic_read(&tasklist_waiters))
+		cpu_relax();
+no_wait:
+	read_lock(&tasklist_lock);
+}
 
 #ifdef CONFIG_PROVE_RCU
 int lockdep_tasklist_lock_is_held(void)
