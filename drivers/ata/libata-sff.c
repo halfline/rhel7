@@ -2518,6 +2518,7 @@ static int ata_pci_init_one(struct pci_dev *pdev,
 	const struct ata_port_info *pi;
 	struct ata_host *host = NULL;
 	int rc;
+	int i;
 
 	DPRINTK("ENTER\n");
 
@@ -2546,6 +2547,12 @@ static int ata_pci_init_one(struct pci_dev *pdev,
 		goto out;
 	host->private_data = host_priv;
 	host->flags |= hflags;
+
+	/* host is allocated in *_prepare_host() above */
+	for (i = 0; i < host->n_ports; i++) {
+		struct ata_port *ap = host->ports[i];
+		device_rh_alloc(&ap->tdev);
+	}
 
 #ifdef CONFIG_ATA_BMDMA
 	if (bmdma) {
