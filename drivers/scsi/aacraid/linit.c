@@ -534,10 +534,11 @@ static int aac_slave_configure(struct scsi_device *sdev)
 		else if (depth < 2)
 			depth = 2;
 		scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, depth);
-	} else
+	} else {
 		scsi_adjust_queue_depth(sdev, 0, 1);
 
 		sdev->tagged_supported = 1;
+	}
 
 	return 0;
 }
