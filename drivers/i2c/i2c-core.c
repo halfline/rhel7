@@ -666,6 +666,7 @@ i2c_new_device(struct i2c_adapter *adap, struct i2c_board_info const *info)
 	client->dev.bus = &i2c_bus_type;
 	client->dev.type = &i2c_client_type;
 	client->dev.of_node = info->of_node;
+	device_rh_alloc(&client->dev);
 	set_rh_dev_fwnode(&client->dev, info->fwnode);
 
 	/* For 10-bit clients, add an arbitrary offset to avoid collisions */
