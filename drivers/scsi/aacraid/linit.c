@@ -458,6 +458,20 @@ static int aac_biosparm(struct scsi_device *sdev, struct block_device *bdev,
 	return 0;
 }
 
+static int aac_slave_alloc(struct scsi_device *sdev)
+{
+	sdev->tagged_supported = 1;
+	scsi_activate_tcq(sdev, sdev->host->can_queue);
+
+	return 0;
+}
+
+static void aac_slave_destroy(struct scsi_device *sdev)
+{
+	scsi_deactivate_tcq(sdev, 1);
+}
+
+
 /**
  *	aac_slave_configure		-	compute queue depths
  *	@sdev:	SCSI device we are considering
@@ -521,6 +535,8 @@ static int aac_slave_configure(struct scsi_device *sdev)
 		scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, depth);
 	} else
 		scsi_adjust_queue_depth(sdev, 0, 1);
+
+		sdev->tagged_supported = 1;
 
 	return 0;
 }
@@ -1123,6 +1139,8 @@ static struct scsi_host_template aac_driver_template = {
 	.queuecommand			= aac_queuecommand,
 	.bios_param			= aac_biosparm,
 	.shost_attrs			= aac_attrs,
+	.slave_alloc			= aac_slave_alloc,
+	.slave_destroy			= aac_slave_destroy,
 	.slave_configure		= aac_slave_configure,
 	.change_queue_depth		= aac_change_queue_depth,
 	.sdev_attrs			= aac_dev_attrs,
@@ -1364,6 +1382,10 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
 	shost->max_lun = AAC_MAX_LUN;
 
 	pci_set_drvdata(pdev, shost);
+
+	error = scsi_init_shared_tag_map(shost, shost->can_queue);
+	if (error)
+		goto out_deinit;
 
 	error = scsi_add_host(shost, &pdev->dev);
 	if (error)
