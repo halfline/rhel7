@@ -1263,8 +1263,7 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
 	blk_queue_rq_timeout(sdevice->request_queue, (storvsc_timeout * HZ));
 
 	/* Ensure there are no gaps in presented sgls */
- 
-        queue_flag_set_unlocked(QUEUE_FLAG_SG_GAPS, sdevice->request_queue);
+	blk_queue_virt_boundary(sdevice->request_queue, PAGE_SIZE - 1);
 
 	sdevice->no_write_same = 1;
 

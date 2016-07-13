@@ -603,6 +603,10 @@ int blk_register_queue(struct gendisk *disk)
 			blk_mq_finish_init(q);
 	}
 
+	/* Convert QUEUE_FLAG_SG_GAPS to use queue limits */
+	if (test_bit(QUEUE_FLAG_SG_GAPS, &q->queue_flags))
+		blk_queue_virt_boundary(q, PAGE_SIZE - 1);
+
 	ret = blk_trace_init_sysfs(dev);
 	if (ret)
 		return ret;

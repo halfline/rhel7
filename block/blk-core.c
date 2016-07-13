@@ -590,9 +590,19 @@ struct request_queue *blk_alloc_queue(gfp_t gfp_mask)
 }
 EXPORT_SYMBOL(blk_alloc_queue);
 
+static void queue_limits_init_aux(struct request_queue *q, struct queue_limits_aux *limits_aux)
+{
+	if (!limits_aux)
+	    return;
+
+	memset(limits_aux, 0, sizeof(*limits_aux));
+	q->limits.limits_aux = limits_aux;
+}
+
 struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
 {
 	struct request_queue *q;
+	struct queue_limits_aux *limits_aux = NULL;
 	int err;
 
 	q = kmem_cache_alloc_node(blk_requestq_cachep,
@@ -610,6 +620,10 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
 	q->backing_dev_info.capabilities = BDI_CAP_MAP_COPY;
 	q->backing_dev_info.name = "block";
 	q->node = node_id;
+
+	/* Initialize auxillary shadow structure used to extend struct queue_limits */
+	limits_aux = (struct queue_limits_aux *)&q[1];
+	queue_limits_init_aux(q, limits_aux);
 
 	err = bdi_init(&q->backing_dev_info);
 	if (err)
@@ -3355,7 +3369,8 @@ int __init blk_dev_init(void)
 			sizeof(struct request), 0, SLAB_PANIC, NULL);
 
 	blk_requestq_cachep = kmem_cache_create("blkdev_queue",
-			sizeof(struct request_queue), 0, SLAB_PANIC, NULL);
+						sizeof(struct request_queue) + sizeof(struct queue_limits_aux), 
+						0, SLAB_PANIC, NULL);
 
 	return 0;
 }

@@ -297,6 +297,10 @@ struct blk_queue_tag {
 #define BLK_SCSI_MAX_CMDS	(256)
 #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
 
+struct queue_limits_aux {
+	unsigned long virt_boundary_mask;
+};
+
 struct queue_limits {
 	unsigned long		bounce_pfn;
 	unsigned long		seg_boundary_mask;
@@ -330,7 +334,7 @@ struct queue_limits {
 	unsigned int		xcopy_reserved;
 	RH_KABI_USE(1, unsigned int chunk_sectors)
 	RH_KABI_USE(2, unsigned int max_dev_sectors)
-	RH_KABI_RESERVE(3)
+	RH_KABI_USE(3, struct queue_limits_aux *limits_aux)
 };
 
 struct request_queue {
@@ -1074,6 +1078,7 @@ extern int blk_queue_dma_drain(struct request_queue *q,
 			       void *buf, unsigned int size);
 extern void blk_queue_lld_busy(struct request_queue *q, lld_busy_fn *fn);
 extern void blk_queue_segment_boundary(struct request_queue *, unsigned long);
+extern void blk_queue_virt_boundary(struct request_queue *, unsigned long);
 extern void blk_queue_prep_rq(struct request_queue *, prep_rq_fn *pfn);
 extern void blk_queue_unprep_rq(struct request_queue *, unprep_rq_fn *ufn);
 extern void blk_queue_merge_bvec(struct request_queue *, merge_bvec_fn *);
@@ -1246,6 +1251,14 @@ static inline unsigned long queue_bounce_pfn(struct request_queue *q)
 static inline unsigned long queue_segment_boundary(struct request_queue *q)
 {
 	return q->limits.seg_boundary_mask;
+}
+
+static inline unsigned long queue_virt_boundary(struct request_queue *q)
+{
+	if (q->limits.limits_aux)
+		return q->limits.limits_aux->virt_boundary_mask;
+
+	return 0;
 }
 
 static inline unsigned int queue_max_sectors(struct request_queue *q)
@@ -1446,6 +1459,19 @@ unsigned char *read_dev_sector(struct block_device *, sector_t, Sector *);
 static inline void put_dev_sector(Sector p)
 {
 	page_cache_release(p.v);
+}
+
+/*
+ * Check if adding a bio_vec after bprv with offset would create a gap in
+ * the SG list. Most drivers don't care about this, but some do.
+ */
+static inline bool bvec_gap_to_prev(struct request_queue *q,
+				struct bio_vec *bprv, unsigned int offset)
+{
+	if (!queue_virt_boundary(q))
+		return false;
+	return offset ||
+		((bprv->bv_offset + bprv->bv_len) & queue_virt_boundary(q));
 }
 
 struct work_struct;

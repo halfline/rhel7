@@ -3277,6 +3277,7 @@ struct dm_table *dm_swap_table(struct mapped_device *md, struct dm_table *table)
 {
 	struct dm_table *live_map = NULL, *map = ERR_PTR(-EINVAL);
 	struct queue_limits limits;
+	struct queue_limits_aux limits_aux;
 	int r;
 
 	mutex_lock(&md->suspend_lock);
@@ -3284,6 +3285,12 @@ struct dm_table *dm_swap_table(struct mapped_device *md, struct dm_table *table)
 	/* device must be suspended */
 	if (!dm_suspended_md(md))
 		goto out;
+
+	/*
+	 * Initialize limits aux pointer to stack queue_limits_aux
+	 * members.
+	 */
+	limits.limits_aux = &limits_aux;
 
 	/*
 	 * If the new table has no data devices, retain the existing limits.
