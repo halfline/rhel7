@@ -286,6 +286,7 @@ static const struct vm_operations_struct ext4_dax_vm_ops = {
 	.pmd_fault	= ext4_dax_pmd_fault,
 	.page_mkwrite	= ext4_dax_mkwrite,
 	.pfn_mkwrite	= dax_pfn_mkwrite,
+	.remap_pages	= generic_file_remap_pages,
 };
 #else
 #define ext4_dax_vm_ops	ext4_file_vm_ops
