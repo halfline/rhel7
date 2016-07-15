@@ -101,9 +101,9 @@ static bool buffer_size_valid(struct buffer_head *bh)
 	return bh->b_state != 0;
 }
 
-static int zero_toiovecend(const struct iovec *iov, int offset, int len)
+static int zero_toiovecend_partial(const struct iovec *iov, int offset, int len)
 {
-	int zero;
+	int zero, orig_len = len;
 	for (; len > 0; ++iov) {
 		/* Skip over the finished iovecs */
 		if (unlikely(offset >= iov->iov_len)) {
@@ -112,12 +112,12 @@ static int zero_toiovecend(const struct iovec *iov, int offset, int len)
 		}
 		zero = min_t(unsigned int, iov->iov_len - offset, len);
 		if (clear_user(iov->iov_base + offset, zero))
-			return -EFAULT;
+			return orig_len - len;
 		offset = 0;
 		len -= zero;
 	}
 
-	return 0;
+	return orig_len - len;
 }
 
 static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
@@ -136,7 +136,6 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 		end = min(end, i_size_read(inode));
 
 	while (pos < end) {
-		unsigned fail = 0;
 		size_t len;
 		if (pos == max) {
 			unsigned blkbits = inode->i_blkbits;
@@ -181,26 +180,17 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 			max = min(pos + size, end);
 		}
 
-		len = max - pos;
+		if (rw == WRITE)
+			len = memcpy_fromiovecend_partial_nocache(
+				(void __force *)addr, iov, pos - start,
+				max - pos);
+		else if (!hole)
+			len = memcpy_toiovecend_partial(iov,
+				(void __force *)addr, pos - start, max - pos);
+		else
+			len = zero_toiovecend_partial(iov, pos - start, max - pos);
 
-		if (!len)
-			break;
-
-		if (rw == WRITE) {
-			if (memcpy_fromiovecend_nocache((void __force *)addr,
-						iov, pos - start, max - pos))
-				fail = 1;
-			need_wmb = true;
-		} else if (!hole) {
-			if (memcpy_toiovecend(iov, (void __force *)addr,
-					      pos - start, max - pos))
-				fail = 1;
-		} else {
-			if (zero_toiovecend(iov, pos - start, max - pos))
-				fail = 1;
-		}
-
-		if (fail) {
+		if (!len) {
 			retval = -EFAULT;
 			break;
 		}

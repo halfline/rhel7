@@ -100,6 +100,27 @@ int memcpy_toiovecend(const struct iovec *iov, unsigned char *kdata,
 }
 EXPORT_SYMBOL(memcpy_toiovecend);
 
+int memcpy_toiovecend_partial(const struct iovec *iov, unsigned char *kdata,
+			      int offset, int len)
+{
+	int copy, orig_len = len;
+	for (; len > 0; ++iov) {
+		/* Skip over the finished iovecs */
+		if (unlikely(offset >= iov->iov_len)) {
+			offset -= iov->iov_len;
+			continue;
+		}
+		copy = min_t(unsigned int, iov->iov_len - offset, len);
+		if (copy_to_user(iov->iov_base + offset, kdata, copy))
+			return orig_len - len;
+		offset = 0;
+		kdata += copy;
+		len -= copy;
+	}
+
+	return orig_len - len;
+}
+
 /*
  *	Copy iovec from kernel. Returns -EFAULT on error.
  */
@@ -129,9 +150,11 @@ int memcpy_fromiovecend(unsigned char *kdata, const struct iovec *iov,
 }
 EXPORT_SYMBOL(memcpy_fromiovecend);
 
-int memcpy_fromiovecend_nocache(unsigned char *kdata, const struct iovec *iov,
-				int offset, int len)
+int memcpy_fromiovecend_partial_nocache(unsigned char *kdata,
+				const struct iovec *iov, int offset, int len)
 {
+	int orig_len = len;
+
 	/* Skip over the finished iovecs */
 	while (offset >= iov->iov_len) {
 		offset -= iov->iov_len;
@@ -144,15 +167,15 @@ int memcpy_fromiovecend_nocache(unsigned char *kdata, const struct iovec *iov,
 
 		offset = 0;
 		if (__copy_from_user_nocache(kdata, base, copy))
-			return -EFAULT;
+			return orig_len - len;
 		len -= copy;
 		kdata += copy;
 		iov++;
 	}
 
-	return 0;
+	return orig_len - len;
 }
-EXPORT_SYMBOL(memcpy_fromiovecend_nocache);
+EXPORT_SYMBOL(memcpy_fromiovecend_partial_nocache);
 
 /*
  *	And now for the all-in-one: copy and checksum from a user iovec
