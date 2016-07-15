@@ -542,7 +542,7 @@ struct cpl_pass_establish {
 
 #define T6_IP_HDR_LEN_S    14
 #define T6_IP_HDR_LEN_V(x) ((x) << T6_IP_HDR_LEN_S)
-#define T6_IP_HDR_LEN_G(x) (((x) >> T6_IP_HDR_LEN_S) & M_IP_HDR_LEN)
+#define T6_IP_HDR_LEN_G(x) (((x) >> T6_IP_HDR_LEN_S) & IP_HDR_LEN_M)
 
 #define T6_ETH_HDR_LEN_S    24
 #define T6_ETH_HDR_LEN_M    0xFF

@@ -742,7 +742,7 @@ static int send_connect(struct c4iw_ep *ep)
 			isn += 4;
 
 		opt2 |= T5_OPT_2_VALID_F;
-		opt2 |= V_CONG_CNTRL(CONG_ALG_TAHOE);
+		opt2 |= CONG_CNTRL_V(CONG_ALG_TAHOE);
 		opt2 |= T5_ISS_F;
 	}
 
@@ -1346,8 +1346,8 @@ static int update_rx_credits(struct c4iw_ep *ep, u32 credits)
 	OPCODE_TID(req) = cpu_to_be32(MK_OPCODE_TID(CPL_RX_DATA_ACK,
 						    ep->hwtid));
 	req->credit_dack = cpu_to_be32(credits | RX_FORCE_ACK_F |
-				       F_RX_DACK_CHANGE |
-				       V_RX_DACK_MODE(dack_mode));
+				       RX_DACK_CHANGE_F |
+				       RX_DACK_MODE_V(dack_mode));
 	set_wr_txq(skb, CPL_PRIORITY_ACK, ep->ctrlq_idx);
 	c4iw_ofld_send(&ep->com.dev->rdev, skb);
 	return credits;
@@ -2315,8 +2315,8 @@ static void accept_cr(struct c4iw_ep *ep, struct sk_buff *skb,
 		u32 hlen = ntohl(req->hdr_len);
 
 		if (CHELSIO_CHIP_VERSION(adapter_type) <= CHELSIO_T5)
-			tcph = (const void *)(req + 1) + G_ETH_HDR_LEN(hlen) +
-				G_IP_HDR_LEN(hlen);
+			tcph = (const void *)(req + 1) + ETH_HDR_LEN_G(hlen) +
+				IP_HDR_LEN_G(hlen);
 		else
 			tcph = (const void *)(req + 1) +
 				T6_ETH_HDR_LEN_G(hlen) + T6_IP_HDR_LEN_G(hlen);
@@ -2326,7 +2326,7 @@ static void accept_cr(struct c4iw_ep *ep, struct sk_buff *skb,
 	if (CHELSIO_CHIP_VERSION(adapter_type) > CHELSIO_T4) {
 		u32 isn = (prandom_u32() & ~7UL) - 1;
 		opt2 |= T5_OPT_2_VALID_F;
-		opt2 |= V_CONG_CNTRL(CONG_ALG_TAHOE);
+		opt2 |= CONG_CNTRL_V(CONG_ALG_TAHOE);
 		opt2 |= T5_ISS_F;
 		rpl5 = (void *)rpl;
 		memset(&rpl5->iss, 0, roundup(sizeof(*rpl5)-sizeof(*rpl), 16));
@@ -2359,10 +2359,10 @@ static void get_4tuple(struct cpl_pass_accept_req *req, enum chip_type type,
 		       __be16 *local_port, __be16 *peer_port)
 {
 	int eth_len = (CHELSIO_CHIP_VERSION(type) <= CHELSIO_T5) ?
-		      G_ETH_HDR_LEN(be32_to_cpu(req->hdr_len)) :
+		      ETH_HDR_LEN_G(be32_to_cpu(req->hdr_len)) :
 		      T6_ETH_HDR_LEN_G(be32_to_cpu(req->hdr_len));
 	int ip_len = (CHELSIO_CHIP_VERSION(type) <= CHELSIO_T5) ?
-		     G_IP_HDR_LEN(be32_to_cpu(req->hdr_len)) :
+		     IP_HDR_LEN_G(be32_to_cpu(req->hdr_len)) :
 		     T6_IP_HDR_LEN_G(be32_to_cpu(req->hdr_len));
 	struct iphdr *ip = (struct iphdr *)((u8 *)(req + 1) + eth_len);
 	struct ipv6hdr *ip6 = (struct ipv6hdr *)((u8 *)(req + 1) + eth_len);
@@ -3690,22 +3690,22 @@ static void build_cpl_pass_accept_req(struct sk_buff *skb, int stid , u8 tos)
 
 	req = (struct cpl_pass_accept_req *)__skb_push(skb, sizeof(*req));
 	memset(req, 0, sizeof(*req));
-	req->l2info = cpu_to_be16(V_SYN_INTF(intf) |
-			 V_SYN_MAC_IDX(RX_MACIDX_G(
+	req->l2info = cpu_to_be16(SYN_INTF_V(intf) |
+			 SYN_MAC_IDX_V(RX_MACIDX_G(
 			 be32_to_cpu(l2info))) |
-			 F_SYN_XACT_MATCH);
+			 SYN_XACT_MATCH_F);
 	type = dev->rdev.lldi.adapter_type;
 	tcp_hdr_len = RX_TCPHDR_LEN_G(be16_to_cpu(hdr_len));
 	ip_hdr_len = RX_IPHDR_LEN_G(be16_to_cpu(hdr_len));
 	req->hdr_len =
-		cpu_to_be32(V_SYN_RX_CHAN(RX_CHAN_G(be32_to_cpu(l2info))));
+		cpu_to_be32(SYN_RX_CHAN_V(RX_CHAN_G(htonl(l2info))));
 	if (CHELSIO_CHIP_VERSION(type) <= CHELSIO_T5) {
 		eth_hdr_len = is_t4(type) ?
 				RX_ETHHDR_LEN_G(be32_to_cpu(l2info)) :
 				RX_T5_ETHHDR_LEN_G(be32_to_cpu(l2info));
-		req->hdr_len |= cpu_to_be32(T6_TCP_HDR_LEN_V(tcp_hdr_len) |
-					    T6_IP_HDR_LEN_V(ip_hdr_len) |
-					    T6_ETH_HDR_LEN_V(eth_hdr_len));
+		req->hdr_len |= cpu_to_be32(TCP_HDR_LEN_V(tcp_hdr_len) |
+					    IP_HDR_LEN_V(ip_hdr_len) |
+					    ETH_HDR_LEN_V(eth_hdr_len));
 	} else { /* T6 and later */
 		eth_hdr_len = RX_T6_ETHHDR_LEN_G(be32_to_cpu(l2info));
 		req->hdr_len |= cpu_to_be32(T6_TCP_HDR_LEN_V(tcp_hdr_len) |
