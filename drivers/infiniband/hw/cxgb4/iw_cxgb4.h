@@ -754,6 +754,7 @@ enum c4iw_ep_flags {
 	TIMEOUT                 = 4,
 	QP_REFERENCED           = 5,
 	RELEASE_MAPINFO		= 6,
+	STOP_MPA_TIMER          = 7,
 };
 
 enum c4iw_ep_history {
