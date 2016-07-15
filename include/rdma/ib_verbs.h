@@ -1878,6 +1878,8 @@ struct ib_device {
 						   struct ifla_vf_stats *stats);
 	int			   (*set_vf_guid)(struct ib_device *device, int vf, u8 port, u64 guid,
 						  int type);
+	void			   (*drain_rq)(struct ib_qp *qp);
+	void			   (*drain_sq)(struct ib_qp *qp);
 
 	struct ib_dma_mapping_ops   *dma_ops;
 
@@ -3135,4 +3137,7 @@ int ib_sg_to_pages(struct ib_mr *mr,
 		   int sg_nents,
 		   int (*set_page)(struct ib_mr *, u64));
 
+void ib_drain_rq(struct ib_qp *qp);
+void ib_drain_sq(struct ib_qp *qp);
+void ib_drain_qp(struct ib_qp *qp);
 #endif /* IB_VERBS_H */
