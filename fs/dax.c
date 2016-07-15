@@ -177,7 +177,12 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 				addr += first;
 				size = retval - first;
 			}
-			max = min(pos + size, end);
+			/*
+			 * pos + size is one past the last offset for IO,
+			 * so pos + size can overflow loff_t at extreme offsets.
+			 * Cast to u64 to catch this and get the true minimum.
+			 */
+			max = min_t(u64, pos + size, end);
 		}
 
 		if (rw == WRITE)
