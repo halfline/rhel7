@@ -1,4 +1,5 @@
-OBJECT_FILES_NON_STANDARD_efi_thunk_$(BITS).o := y
+OBJECT_FILES_NON_STANDARD_efi_thunk_$(BITS).o	:= y
+OBJECT_FILES_NON_STANDARD_efi_stub_64.o		:= y
 
 obj-$(CONFIG_EFI) 		+= efi.o efi_$(BITS).o efi_stub_$(BITS).o
 obj-$(CONFIG_ACPI_BGRT) += efi-bgrt.o
