@@ -49,6 +49,7 @@
 #include <linux/kdebug.h>
 #include <linux/kallsyms.h>
 #include <linux/ftrace.h>
+#include <linux/frame.h>
 
 #include <asm/cacheflush.h>
 #include <asm/desc.h>
@@ -659,6 +660,8 @@ static void __used __kprobes kretprobe_trampoline_holder(void)
 #endif
 			"	ret\n");
 }
+STACK_FRAME_NON_STANDARD(kretprobe_trampoline_holder);
+STACK_FRAME_NON_STANDARD(kretprobe_trampoline);
 
 /*
  * Called from kretprobe_trampoline
