@@ -948,6 +948,12 @@ BuildKernel() {
     fi
     cp -a include $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/include
 
+    # copy objtool for kernel-devel (needed for building external modules)
+    if grep -q CONFIG_STACK_VALIDATION=y .config; then
+      mkdir -p $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/tools/objtool
+      cp -a tools/objtool/objtool $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/tools/objtool
+    fi
+
     # Make sure the Makefile and version.h have a matching timestamp so that
     # external modules can be built
     touch -r $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/Makefile $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/include/generated/uapi/linux/version.h
