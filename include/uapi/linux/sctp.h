@@ -110,6 +110,7 @@ typedef __s32 sctp_assoc_t;
 #define SCTP_SOCKOPT_CONNECTX	110		/* CONNECTX requests. */
 #define SCTP_SOCKOPT_CONNECTX3	111	/* CONNECTX requests (updated) */
 #define SCTP_GET_ASSOC_STATS	112	/* Read only */
+#define SCTP_PR_SUPPORTED	113
 
 /*
  * 5.2.1 SCTP Initiation Structure (SCTP_INIT)
