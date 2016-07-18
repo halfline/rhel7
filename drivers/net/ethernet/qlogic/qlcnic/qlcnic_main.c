@@ -434,16 +434,17 @@ static int qlcnic_fdb_add(struct ndmsg *ndm, struct nlattr *tb[],
 }
 
 static int qlcnic_fdb_dump(struct sk_buff *skb, struct netlink_callback *ncb,
-			struct net_device *netdev, int idx)
+			struct net_device *netdev,
+			struct net_device *filter_dev, int idx)
 {
 	struct qlcnic_adapter *adapter = netdev_priv(netdev);
 
 	if (!adapter->fdb_mac_learn)
-		return ndo_dflt_fdb_dump(skb, ncb, netdev, idx);
+		return ndo_dflt_fdb_dump(skb, ncb, netdev, filter_dev, idx);
 
 	if ((adapter->flags & QLCNIC_ESWITCH_ENABLED) ||
 	    qlcnic_sriov_check(adapter))
-		idx = ndo_dflt_fdb_dump(skb, ncb, netdev, idx);
+		idx = ndo_dflt_fdb_dump(skb, ncb, netdev, filter_dev, idx);
 
 	return idx;
 }
@@ -522,6 +523,7 @@ static netdev_features_t qlcnic_features_check(struct sk_buff *skb,
 #endif
 
 static const struct net_device_ops qlcnic_netdev_ops = {
+	.ndo_size	   = sizeof(struct net_device_ops),
 	.ndo_open	   = qlcnic_open,
 	.ndo_stop	   = qlcnic_close,
 	.ndo_start_xmit    = qlcnic_xmit_frame,
@@ -537,7 +539,7 @@ static const struct net_device_ops qlcnic_netdev_ops = {
 	.ndo_vlan_rx_kill_vid	= qlcnic_vlan_rx_del,
 	.ndo_fdb_add		= qlcnic_fdb_add,
 	.ndo_fdb_del		= qlcnic_fdb_del,
-	.ndo_fdb_dump		= qlcnic_fdb_dump,
+	.extended.ndo_fdb_dump	= qlcnic_fdb_dump,
 	.ndo_get_phys_port_id	= qlcnic_get_phys_port_id,
 #ifdef CONFIG_QLCNIC_VXLAN
 	.ndo_add_vxlan_port	= qlcnic_add_vxlan_port,

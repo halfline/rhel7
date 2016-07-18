@@ -783,6 +783,7 @@ static const struct ethtool_ops macvlan_ethtool_ops = {
 };
 
 static const struct net_device_ops macvlan_netdev_ops = {
+	.ndo_size		= sizeof(struct net_device_ops),
 	.ndo_init		= macvlan_init,
 	.ndo_uninit		= macvlan_uninit,
 	.ndo_open		= macvlan_open,
@@ -799,7 +800,7 @@ static const struct net_device_ops macvlan_netdev_ops = {
 	.ndo_vlan_rx_kill_vid	= macvlan_vlan_rx_kill_vid,
 	.ndo_fdb_add		= macvlan_fdb_add,
 	.ndo_fdb_del		= macvlan_fdb_del,
-	.ndo_fdb_dump		= ndo_dflt_fdb_dump,
+	.extended.ndo_fdb_dump	= ndo_dflt_fdb_dump,
 	.ndo_get_iflink		= macvlan_dev_get_iflink,
 };
 

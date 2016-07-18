@@ -834,6 +834,11 @@ struct tc_to_netdev {
  *	appropriate rx headroom value allows avoiding skb head copy on
  *	forward. Setting a negative value reset the rx headroom to the
  *	default value.
+ * int (*ndo_fdb_dump)(struct sk_buff *skb, struct netlink_callback *cb,
+ *		       struct net_device *dev, struct net_device *filter_dev,
+ *		       int idx)
+ *	Used to add FDB entries to dump requests. Implementers should add
+ *	entries to skb and update idx with the number of entries.
  */
 struct net_device_ops_extended {
 	int			(*ndo_set_vf_trust)(struct net_device *dev,
@@ -850,6 +855,11 @@ struct net_device_ops_extended {
 	int			(*ndo_set_vf_guid)(struct net_device *dev,
 						   int vf, u64 guid,
 						   int guid_type);
+	int			(*ndo_fdb_dump)(struct sk_buff *skb,
+						struct netlink_callback *cb,
+						struct net_device *dev,
+						struct net_device *filter_dev,
+						int idx);
 };
 
 /*
@@ -1048,11 +1058,6 @@ struct net_device_ops_extended {
  *		      struct net_device *dev,
  *		      const unsigned char *addr, u16 vid)
  *	Deletes the FDB entry from dev coresponding to addr.
- * int (*ndo_fdb_dump)(struct sk_buff *skb, struct netlink_callback *cb,
- *		       struct net_device *dev, int idx)
- *	Used to add FDB entries to dump requests. Implementers should add
- *	entries to skb and update idx with the number of entries.
- *
  * int (*ndo_bridge_setlink)(struct net_device *dev, struct nlmsghdr *nlh,
  *			     u16 flags)
  * int (*ndo_bridge_getlink)(struct sk_buff *skb, u32 pid, u32 seq,
@@ -1243,7 +1248,8 @@ struct net_device_ops {
 					       struct net_device *dev,
 					       const unsigned char *addr,
 					       u16 vid))
-	int			(*ndo_fdb_dump)(struct sk_buff *skb,
+	RH_KABI_RENAME(int	(*ndo_fdb_dump),
+		       int	(*ndo_fdb_dump_rh72))(struct sk_buff *skb,
 						struct netlink_callback *cb,
 						struct net_device *dev,
 						int idx);

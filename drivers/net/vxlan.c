@@ -912,7 +912,8 @@ out:
 
 /* Dump forwarding table */
 static int vxlan_fdb_dump(struct sk_buff *skb, struct netlink_callback *cb,
-			  struct net_device *dev, int idx)
+			  struct net_device *dev,
+			  struct net_device *filter_dev, int idx)
 {
 	struct vxlan_dev *vxlan = netdev_priv(dev);
 	unsigned int h;
@@ -2494,6 +2495,7 @@ static int vxlan_fill_metadata_dst(struct net_device *dev, struct sk_buff *skb)
 }
 
 static const struct net_device_ops vxlan_netdev_ether_ops = {
+	.ndo_size		= sizeof(struct net_device_ops),
 	.ndo_init		= vxlan_init,
 	.ndo_uninit		= vxlan_uninit,
 	.ndo_open		= vxlan_open,
@@ -2506,7 +2508,7 @@ static const struct net_device_ops vxlan_netdev_ether_ops = {
 	.ndo_set_mac_address	= eth_mac_addr,
 	.ndo_fdb_add		= vxlan_fdb_add,
 	.ndo_fdb_del		= vxlan_fdb_delete,
-	.ndo_fdb_dump		= vxlan_fdb_dump,
+	.extended.ndo_fdb_dump	= vxlan_fdb_dump,
 	.ndo_fill_metadata_dst	= vxlan_fill_metadata_dst,
 };
 

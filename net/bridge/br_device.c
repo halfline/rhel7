@@ -311,6 +311,7 @@ static const struct ethtool_ops br_ethtool_ops = {
 };
 
 static const struct net_device_ops br_netdev_ops = {
+	.ndo_size		 = sizeof(struct net_device_ops),
 	.ndo_open		 = br_dev_open,
 	.ndo_stop		 = br_dev_stop,
 	.ndo_init		 = br_dev_init,
@@ -331,7 +332,7 @@ static const struct net_device_ops br_netdev_ops = {
 	.ndo_fix_features        = br_fix_features,
 	.ndo_fdb_add		 = br_fdb_add,
 	.ndo_fdb_del		 = br_fdb_delete,
-	.ndo_fdb_dump		 = br_fdb_dump,
+	.extended.ndo_fdb_dump	 = br_fdb_dump,
 	.ndo_bridge_getlink	 = br_getlink,
 	.ndo_bridge_setlink	 = br_setlink,
 	.ndo_bridge_dellink	 = br_dellink,

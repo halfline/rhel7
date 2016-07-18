@@ -2793,6 +2793,7 @@ skip:
 int ndo_dflt_fdb_dump(struct sk_buff *skb,
 		      struct netlink_callback *cb,
 		      struct net_device *dev,
+		      struct net_device *filter_dev,
 		      int idx)
 {
 	int err;
@@ -2824,16 +2825,27 @@ static int rtnl_fdb_dump(struct sk_buff *skb, struct netlink_callback *cb)
 
 			br_dev = netdev_master_upper_dev_get(dev);
 			ops = br_dev->netdev_ops;
-			if (ops->ndo_fdb_dump)
-				idx = ops->ndo_fdb_dump(skb, cb, dev, idx);
+			if (get_ndo_ext(ops, ndo_fdb_dump))
+				idx = get_ndo_ext(ops, ndo_fdb_dump)(skb, cb,
+								     dev, NULL,
+								     idx);
+			else if (ops->ndo_fdb_dump_rh72)
+				idx = ops->ndo_fdb_dump_rh72(skb, cb, dev, idx);
 		}
 		if (cb->args[1] == -EMSGSIZE)
 			break;
 
-		if (dev->netdev_ops->ndo_fdb_dump)
-			idx = dev->netdev_ops->ndo_fdb_dump(skb, cb, dev, idx);
+		if (get_ndo_ext(dev->netdev_ops, ndo_fdb_dump))
+			idx = get_ndo_ext(dev->netdev_ops, ndo_fdb_dump)(skb,
+									 cb,
+									 dev,
+									 NULL,
+									 idx);
+		else if (dev->netdev_ops->ndo_fdb_dump_rh72)
+			idx = dev->netdev_ops->ndo_fdb_dump_rh72(skb, cb, dev,
+								 idx);
 		else
-			idx = ndo_dflt_fdb_dump(skb, cb, dev, idx);
+			idx = ndo_dflt_fdb_dump(skb, cb, dev, NULL, idx);
 		if (cb->args[1] == -EMSGSIZE)
 			break;
 	}
