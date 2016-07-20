@@ -546,6 +546,10 @@ struct mlx5_ib_resources {
 	struct mutex	mutex;
 };
 
+struct mlx5_ib_port {
+	u16 q_cnt_id;
+};
+
 struct mlx5_roce {
 	/* Protect mlx5_ib_get_netdev from invoking dev_hold() with a NULL
 	 * netdev pointer
@@ -580,7 +584,12 @@ struct mlx5_ib_dev {
 	 */
 	struct srcu_struct      mr_srcu;
 #endif
-	struct mlx5_ib_flow_db	flow_db;
+	struct mlx5_ib_flow_db  flow_db;
+	/* protect resources needed as part of reset flow */
+	spinlock_t		reset_flow_resource_lock;
+	struct list_head	qp_list;
+	/* Array with num_ports elements */
+	struct mlx5_ib_port	*port;
 };
 
 static inline struct mlx5_ib_cq *to_mibcq(struct mlx5_core_cq *mcq)
