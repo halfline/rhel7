@@ -249,6 +249,12 @@ M:	Aristeu Rozanski <aris@redhat.com>
 S:	Maintained
 F:	drivers/edac/
 
+ETHERNET BRIDGE
+M:	Ivan Vecera <cera@redhat.com>
+S:	Maintained
+F:	net/bridge/
+F:	include/linux/if_bridge.h
+
 FCOE STACK (Software libfc/fcoe)
 M:     Neil Horman <nhorman@redhat.com>
 S:     Maintained
