@@ -1300,9 +1300,10 @@ out_exit:
  *          do not forget to update the assembly call site !
  */
 void flush_hash_page(unsigned long vpn, real_pte_t pte, int psize, int ssize,
-		     int local)
+		     unsigned long flags)
 {
 	unsigned long hash, index, shift, hidx, slot;
+	int local = flags & HPTE_LOCAL_UPDATE;
 
 	DBG_LOW("flush_hash_page(vpn=%016lx)\n", vpn);
 	pte_iterate_hashed_subpages(pte, psize, vpn, index, shift) {
