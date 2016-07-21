@@ -1544,6 +1544,40 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Jul 21 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-475.el7]
+- [net] vlan: use a valid default mtu value for vlan over macsec (Paolo Abeni) [1355938]
+- [net] tcp: enable per-socket rate limiting of all 'challenge acks' (Florian Westphal) [1355605] {CVE-2016-5696}
+- [net] tcp: uninline tcp_oow_rate_limited() (Florian Westphal) [1355605] {CVE-2016-5696}
+- [net] tcp: make challenge acks less predictable (Florian Westphal) [1355605] {CVE-2016-5696}
+- [net] sctp: recvmsg should be able to run even if sock is in closing state (Xin Long) [1251529]
+- [net] sctp: implement prsctp PRIO policy (Xin Long) [965453]
+- [net] sctp: implement prsctp RTX policy (Xin Long) [965453]
+- [net] sctp: implement prsctp TTL policy (Xin Long) [965453]
+- [net] sctp: add SCTP_PR_ASSOC_STATUS on sctp sockopt (Xin Long) [965453]
+- [net] sctp: add SCTP_DEFAULT_PRINFO into sctp sockopt (Xin Long) [965453]
+- [net] sctp: add SCTP_PR_SUPPORTED on sctp sockopt (Xin Long) [965453]
+- [net] sctp: fix checkpatch errors with indent (Xin Long) [965453]
+- [net] sctp: remove the duplicate initialize (Xin Long) [965453]
+- [net] sctp: fix panic when sending auth chunks (Marcelo Leitner) [1352767]
+- [net] sctp: do not clear chunk->ecn_ce_done flag (Marcelo Leitner) [1354384]
+- [net] sctp: allow GSO frags to access the chunk too (Marcelo Leitner) [1354384]
+- [net] sctp: allow others to use sctp_input_cb (Marcelo Leitner) [1354384]
+- [net] sctp: reorder sctp_ulpevent and shrink msg_flags (Marcelo Leitner) [1354384]
+- [net] include/net/ip_fib: add missing semi-colon (Ivan Vecera) [1268334]
+- [net] remove incorrect assignment to skb->sender_cpu (Ivan Vecera) [1268334]
+- [net] netlink: Fix bugs in nlmsg_end() conversions (Ivan Vecera) [1268334]
+- [net] netlink: make nlmsg_end() and genlmsg_end() void (Ivan Vecera) [1268334]
+- [kernel] bitops: Fix shift overflow in GENMASK macros (Ivan Vecera) [1268334]
+- [net] rtnl: do_setlink(): notify when a netdev is modified (Ivan Vecera) [1268334]
+- [net] rtnl: do_setlink(): last arg is now a set of flags (Ivan Vecera) [1268334]
+- [net] rtnl: do_setlink(): set modified when IFLA_LINKMODE is updated (Ivan Vecera) [1268334]
+- [net] rtnl: do_setlink(): set modified when IFLA_TXQLEN is updated (Ivan Vecera) [1268334]
+- [net] bridge: fdb dumping takes a filter device (Ivan Vecera) [1268334]
+- [net] sysfs: expose number of carrier on/off changes (Ivan Vecera) [1268334]
+- [net] ipv6: fix checkpatch errors with assignment in if condition (Ivan Vecera) [1268334]
+- [net] fix build break when DEBUG is enabled (Ivan Vecera) [1268334]
+- [net] bonding: Fix potential bad memory access during bonding events (Ivan Vecera) [1268334]
+
 * Thu Jul 21 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-474.el7]
 - [scsi] megaraid_sas: Do not fire MR_DCMD_PD_LIST_QUERY to controllers which do not support it (Tomas Henzl) [1353946]
 - [scsi] hpsa: correct skipping masked peripherals (Joseph Szczypek) [1328271]
