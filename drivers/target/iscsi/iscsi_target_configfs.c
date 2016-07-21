@@ -204,9 +204,94 @@ out:
 
 TF_NP_BASE_ATTR(lio_target, iser, S_IRUGO | S_IWUSR);
 
+static ssize_t lio_target_np_show_cxgbit(struct se_tpg_np *se_tpg_np,
+					 char *page)
+{
+	struct iscsi_tpg_np *tpg_np = container_of(se_tpg_np,
+				struct iscsi_tpg_np, se_tpg_np);
+	struct iscsi_tpg_np *tpg_np_cxgbit;
+	ssize_t rb;
+
+	tpg_np_cxgbit = iscsit_tpg_locate_child_np(tpg_np,
+						   ISCSI_CXGBIT);
+	if (tpg_np_cxgbit)
+		rb = sprintf(page, "1\n");
+	else
+		rb = sprintf(page, "0\n");
+
+	return rb;
+}
+
+static ssize_t lio_target_np_store_cxgbit(struct se_tpg_np *se_tpg_np,
+					  const char *page, size_t count)
+{
+	struct iscsi_np *np;
+	struct iscsi_portal_group *tpg;
+	struct iscsi_tpg_np *tpg_np = container_of(se_tpg_np,
+				struct iscsi_tpg_np, se_tpg_np);
+	struct iscsi_tpg_np *tpg_np_cxgbit = NULL;
+	u32 op;
+	int rc = 0;
+
+	rc = kstrtou32(page, 0, &op);
+	if (rc)
+		return rc;
+
+	if ((op != 1) && (op != 0)) {
+		pr_err("Illegal value for tpg_enable: %u\n", op);
+		return -EINVAL;
+	}
+
+	np = tpg_np->tpg_np;
+	if (!np) {
+		pr_err("Unable to locate struct iscsi_np from"
+		       " struct iscsi_tpg_np\n");
+		return -EINVAL;
+	}
+
+	tpg = tpg_np->tpg;
+	if (iscsit_get_tpg(tpg) < 0)
+		return -EINVAL;
+
+	if (op) {
+		rc = request_module("cxgbit");
+		if (rc != 0) {
+			pr_warn("Unable to request_module for cxgbit\n");
+			rc = 0;
+		}
+
+		tpg_np_cxgbit = iscsit_tpg_add_network_portal(tpg,
+				&np->np_sockaddr, tpg_np, ISCSI_CXGBIT);
+
+		if (IS_ERR(tpg_np_cxgbit)) {
+			rc = PTR_ERR(tpg_np_cxgbit);
+			goto out;
+		}
+	} else {
+		tpg_np_cxgbit = iscsit_tpg_locate_child_np(tpg_np,
+				ISCSI_CXGBIT);
+
+		if (tpg_np_cxgbit) {
+			rc = iscsit_tpg_del_network_portal(tpg,
+							   tpg_np_cxgbit);
+			if (rc < 0)
+				goto out;
+		}
+	}
+
+	iscsit_put_tpg(tpg);
+	return count;
+out:
+	iscsit_put_tpg(tpg);
+	return rc;
+}
+
+TF_NP_BASE_ATTR(lio_target, cxgbit, S_IRUGO | S_IWUSR);
+
 static struct configfs_attribute *lio_target_portal_attrs[] = {
 	&lio_target_np_sctp.attr,
 	&lio_target_np_iser.attr,
+	&lio_target_np_cxgbit.attr,
 	NULL,
 };
 
