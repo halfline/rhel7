@@ -568,7 +568,6 @@ enum fw_flowc_mnem {
 	FW_FLOWC_MNEM_DCBPRIO,
 	FW_FLOWC_MNEM_SND_SCALE,
 	FW_FLOWC_MNEM_RCV_SCALE,
-	FW_FLOWC_MNEM_SCHEDCLASS = 11,
 };
 
 struct fw_flowc_mnemval {
