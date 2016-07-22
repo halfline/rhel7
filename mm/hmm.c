@@ -23,6 +23,8 @@
 #include <linux/slab.h>
 #include <linux/hmm.h>
 
+static bool _hmm_enabled = false;
+
 static int hmm_gpt_invalidate_range(struct gpt_walk *walk,
 				    unsigned long addr,
 				    unsigned long end,
@@ -148,6 +150,9 @@ struct hmm *hmm_register_mirror(struct mm_struct *mm,
 				struct hmm_mirror *mirror)
 {
 	struct hmm *hmm;
+
+	if (!_hmm_enabled)
+		return NULL;
 
 	spin_lock(&mm->page_table_lock);
 again:
@@ -388,3 +393,21 @@ int hmm_walk(struct vm_area_struct *vma,
 	return 0;
 }
 EXPORT_SYMBOL(hmm_walk);
+
+static int __init setup_hmm(char *str)
+{
+	int ret = 0;
+
+	if (!str)
+		goto out;
+	if (!strcmp(str, "enable")) {
+		_hmm_enabled = true;
+		ret = 1;
+	}
+
+out:
+	if (!ret)
+		printk(KERN_WARNING "experimental_hmm= cannot parse, ignored\n");
+	return ret;
+}
+__setup("experimental_hmm=", setup_hmm);
