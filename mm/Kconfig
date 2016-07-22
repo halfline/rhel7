@@ -271,6 +271,10 @@ config MIGRATION
 config ARCH_ENABLE_HUGEPAGE_MIGRATION
 	boolean
 
+config HMM
+	bool
+	select GENERIC_PAGE_TABLE
+
 config PHYS_ADDR_T_64BIT
 	def_bool 64BIT || ARCH_PHYS_ADDR_T_64BIT
 

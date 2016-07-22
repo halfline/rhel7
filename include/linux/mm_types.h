@@ -24,6 +24,7 @@
 #define AT_VECTOR_SIZE (2*(AT_VECTOR_SIZE_ARCH + AT_VECTOR_SIZE_BASE + 1))
 
 struct address_space;
+struct hmm;
 
 #define USE_SPLIT_PTE_PTLOCKS	(NR_CPUS >= CONFIG_SPLIT_PTLOCK_CPUS)
 #define USE_SPLIT_PMD_PTLOCKS	(USE_SPLIT_PTE_PTLOCKS && \
@@ -522,7 +523,14 @@ struct mm_struct {
 #endif
 	/* This would be in rss_stat[MM_SHMEMPAGES] if not for kABI */
 	RH_KABI_USE(4, atomic_long_t mm_shmempages)
+
+#if IS_ENABLED(CONFIG_HMM)
+	/* HMM need to track few things per mm */
+	RH_KABI_USE(5, struct hmm *hmm)
+#else
 	RH_KABI_RESERVE(5)
+#endif
+
 	RH_KABI_RESERVE(6)
 	RH_KABI_RESERVE(7)
 	RH_KABI_RESERVE(8)
