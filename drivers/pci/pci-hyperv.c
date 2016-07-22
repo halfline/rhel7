@@ -886,6 +886,8 @@ void hv_teardown_msi_irqs(struct pci_dev *pdev)
 			     sysdata);
 
 	hpdev = get_pcichild_wslot(hbus, devfn_to_wslot(pdev->devfn));
+	if (!hpdev)
+		goto msi_teardown;
 
 	list_for_each_entry(msidesc, &pdev->msi_list, list) {
 		memset(&ctxt, 0, sizeof(ctxt));
@@ -902,6 +904,8 @@ void hv_teardown_msi_irqs(struct pci_dev *pdev)
 	}
 
 	put_pcichild(hpdev, hv_pcidev_ref_by_slot);
+
+msi_teardown:
 	hv_msi.teardown_msi_irqs(pdev);
 }
 
