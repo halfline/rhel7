@@ -33,21 +33,44 @@
 
 #if IS_ENABLED(CONFIG_HMM)
 
+#include <linux/mm.h>
+#include <linux/gpt.h>
+#include <linux/sched.h>
+#include <linux/wait.h>
+#include <linux/kref.h>
+#include <linux/list.h>
 #include <linux/spinlock.h>
 #include <linux/mm_types.h>
 #include <linux/highmem.h>
-#include <linux/kref.h>
-#include <linux/list.h>
-#include <linux/gpt.h>
+#include <linux/mmu_notifier.h>
+
+struct hmm_mirror;
+
+
+/* enum hmm_update - type of update
+ * @HMM_UPDATE_INVALIDATE: invalidate range (no indication as to why)
+ */
+enum hmm_update {
+	HMM_UPDATE_INVALIDATE,
+};
+
 
 struct hmm {
 	struct mm_struct	*mm;
+	struct gpt		*gpt;
 	struct list_head	migrates;
+	struct list_head	mirrors;
 	struct kref		kref;
 	spinlock_t		lock;
+	struct mmu_notifier	mmu_notifier;
+	wait_queue_head_t	wait_queue;
+	atomic_t		sequence;
+	atomic_t		notifier_count;
 };
 
 struct hmm *hmm_register(struct mm_struct *mm);
+struct hmm *hmm_register_mirror(struct mm_struct *mm,
+				struct hmm_mirror *mirror);
 void hmm_put(struct hmm *hmm);
 
 
@@ -86,6 +109,30 @@ int hmm_walk(struct vm_area_struct *vma,
 	     unsigned long start,
 	     unsigned long end,
 	     void *private);
+
+
+static inline bool hmm_get_cookie(struct hmm *hmm, int *cookie)
+{
+	BUG_ON(!cookie);
+
+	*cookie = atomic_read(&hmm->sequence);
+	smp_rmb();
+	if (atomic_read(&hmm->notifier_count))
+		return false;
+	return true;
+}
+
+static inline bool hmm_check_cookie(struct hmm *hmm, int cookie)
+{
+	if (cookie != atomic_read(&hmm->sequence))
+		return false;
+	return true;
+}
+
+static inline void hmm_wait_cookie(struct hmm *hmm)
+{
+	wait_event(hmm->wait_queue, !atomic_read(&hmm->notifier_count));
+}
 
 #endif /* IS_ENABLED(CONFIG_HMM) */
 #endif /* _LINUX_HMM_H */

@@ -50,6 +50,7 @@ obj-$(CONFIG_MEMORY_HOTPLUG) += memory_hotplug.o
 obj-$(CONFIG_MIGRATION) += migrate.o
 obj-$(CONFIG_HMM) += hmm.o
 obj-$(CONFIG_HMM_MIGRATE) += hmm_migrate.o
+obj-$(CONFIG_HMM_MIRROR) += hmm_mirror.o
 obj-$(CONFIG_QUICKLIST) += quicklist.o
 obj-$(CONFIG_TRANSPARENT_HUGEPAGE) += huge_memory.o
 obj-$(CONFIG_PAGE_COUNTER) += page_counter.o

@@ -288,6 +288,15 @@ config HMM_MIGRATE
 
 	  If unsure, say N to disable HMM.
 
+config HMM_MIRROR
+	bool "Mirror with heterogeneous memory management (HMM)"
+	depends on MMU
+	default n
+	help
+	  Allow to mirror a process address space onto a device (such as GPU).
+
+	  If unsure, say N to disable HMM.
+
 config PHYS_ADDR_T_64BIT
 	def_bool 64BIT || ARCH_PHYS_ADDR_T_64BIT
 
