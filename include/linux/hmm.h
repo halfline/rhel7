@@ -34,8 +34,11 @@
 #if IS_ENABLED(CONFIG_HMM)
 
 #include <linux/spinlock.h>
+#include <linux/mm_types.h>
+#include <linux/highmem.h>
 #include <linux/kref.h>
 #include <linux/list.h>
+#include <linux/gpt.h>
 
 struct hmm {
 	struct mm_struct	*mm;
@@ -44,6 +47,43 @@ struct hmm {
 
 struct hmm *hmm_register(struct mm_struct *mm);
 void hmm_put(struct hmm *hmm);
+
+
+typedef int (*hmm_walk_hole_t)(struct vm_area_struct *vma,
+			      struct gpt_walk *walk,
+			      unsigned long addr,
+			      unsigned long end,
+			      void *private);
+
+typedef int (*hmm_walk_pte_t)(struct vm_area_struct *vma,
+			      struct gpt_walk *walk,
+			      unsigned long addr,
+			      unsigned long end,
+			      spinlock_t *ptl,
+			      spinlock_t *gtl,
+			      pte_t *ptep,
+			      gte_t *gtep,
+			      void *private);
+
+typedef int (*hmm_walk_huge_t)(struct vm_area_struct *vma,
+			       struct gpt_walk *walk,
+			       unsigned long addr,
+			       unsigned long end,
+			       spinlock_t *ptl,
+			       spinlock_t *gtl,
+			       struct page *page,
+			       pte_t *ptep,
+			       gte_t *gtep,
+			       void *private);
+
+int hmm_walk(struct vm_area_struct *vma,
+	     hmm_walk_hole_t walk_hole,
+	     hmm_walk_huge_t walk_huge,
+	     hmm_walk_pte_t walk_pte,
+	     struct gpt_walk *walk,
+	     unsigned long start,
+	     unsigned long end,
+	     void *private);
 
 #endif /* IS_ENABLED(CONFIG_HMM) */
 #endif /* _LINUX_HMM_H */
