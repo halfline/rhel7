@@ -961,8 +961,16 @@ static int unmerge_and_remove_all_rmap_items(void)
 			up_read(&mm->mmap_sem);
 			mmdrop(mm);
 		} else {
-			spin_unlock(&ksm_mmlist_lock);
 			up_read(&mm->mmap_sem);
+			/*
+			 * up_read(&mm->mmap_sem) first because after
+			 * spin_unlock(&ksm_mmlist_lock) run, the "mm"
+			 * may already have been freed under us by
+			 * __ksm_exit() because the "mm_slot" is still
+			 * hashed and ksm_scan.mm_slot doesn't point
+			 * to it anymore.
+			 */
+			spin_unlock(&ksm_mmlist_lock);
 		}
 	}
 
@@ -2169,8 +2177,15 @@ next_mm:
 		up_read(&mm->mmap_sem);
 		mmdrop(mm);
 	} else {
-		spin_unlock(&ksm_mmlist_lock);
 		up_read(&mm->mmap_sem);
+		/*
+		 * up_read(&mm->mmap_sem) first because after
+		 * spin_unlock(&ksm_mmlist_lock) run, the "mm" may
+		 * already have been freed under us by __ksm_exit()
+		 * because the "mm_slot" is still hashed and
+		 * ksm_scan.mm_slot doesn't point to it anymore.
+		 */
+		spin_unlock(&ksm_mmlist_lock);
 	}
 
 	/* Repeat until we've completed scanning the whole list */
