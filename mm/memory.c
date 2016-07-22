@@ -871,7 +871,12 @@ copy_one_pte(struct mm_struct *dst_mm, struct mm_struct *src_mm,
 						pte = pte_swp_mksoft_dirty(pte);
 					set_pte_at(src_mm, addr, src_pte, pte);
 				}
-			}
+			} else
+				/*
+				 * This can not happen because HMM migration holds
+				 * mmap_sem in read mode.
+				 */
+				VM_BUG_ON(is_hmm_entry(entry));
 		}
 		goto out_set_pte;
 	}

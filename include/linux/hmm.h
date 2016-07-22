@@ -42,7 +42,9 @@
 
 struct hmm {
 	struct mm_struct	*mm;
+	struct list_head	migrates;
 	struct kref		kref;
+	spinlock_t		lock;
 };
 
 struct hmm *hmm_register(struct mm_struct *mm);

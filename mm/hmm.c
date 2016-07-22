@@ -25,6 +25,8 @@ static int hmm_init(struct hmm *hmm, struct mm_struct *mm)
 {
 	hmm->mm = mm;
 	kref_init(&hmm->kref);
+	spin_lock_init(&hmm->lock);
+	INIT_LIST_HEAD(&hmm->migrates);
 	return 0;
 }
 
