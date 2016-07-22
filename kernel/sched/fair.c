@@ -7481,6 +7481,8 @@ void free_fair_sched_group(struct task_group *tg)
 	for_each_possible_cpu(i) {
 		if (tg->cfs_rq)
 			kfree(tg->cfs_rq[i]);
+		if (tg->se && tg->se[i])
+			kfree(tg->se[i]->statistics);
 		if (tg->se)
 			kfree(tg->se[i]);
 	}
@@ -7517,12 +7519,19 @@ int alloc_fair_sched_group(struct task_group *tg, struct task_group *parent)
 		if (!se)
 			goto err_free_rq;
 
+		se->statistics = kzalloc_node(sizeof(struct sched_statistics),
+					      GFP_KERNEL, cpu_to_node(i));
+		if (!se->statistics)
+			goto err_free_se;
+
 		init_cfs_rq(cfs_rq);
 		init_tg_cfs_entry(tg, cfs_rq, se, i, parent->se[i]);
 	}
 
 	return 1;
 
+err_free_se:
+	kfree(se);
 err_free_rq:
 	kfree(cfs_rq);
 err:
