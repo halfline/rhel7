@@ -1544,6 +1544,20 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Sat Jul 23 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-478.el7]
+- [netdrv] i40e: Don't notify client(s) for DCB changes on all VSIs (Stefan Assmann) [1276184]
+- [netdrv] virtio_net: add gro capability (Jason Wang) [1251908]
+- [powerpc] mm: don't do tlbie for updatepp request with NO HPTE fault (Gustavo Duarte) [1287289]
+- [infiniband] ib/mlx5: Fix port counter ID association to QP offset (Don Dutile) [1258655]
+- [infiniband] ib/mlx5: Add per port counters (Don Dutile) [1258655]
+- [infiniband] ib/mlx5: Add port protocol stats (Don Dutile) [1258655]
+- [infiniband] ib core sysfs: Add port_xmit_wait_counter V2 (Don Dutile) [1258655 1356294]
+- [infiniband] ib/core: Initialize sysfs attributes before sysfs create group (Don Dutile) [1258655]
+- [infiniband] ib/core: fix error unwind in sysfs hw counters code (Don Dutile) [1258655]
+- [infiniband] ib/core: Fix array length allocation (Don Dutile) [1258655]
+- [infiniband] ib/core: fix null pointer deref and mem leak in error handling (Don Dutile) [1258655]
+- [infiniband] ib/core: Make device counter infrastructure dynamic (Don Dutile) [1258655]
+
 * Fri Jul 22 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-477.el7]
 - [infiniband] ib/srpt: Simplify srpt_handle_tsk_mgmt() (Honggang Li) [1309411 1342604]
 - [infiniband] ib/srp: Fix srp_map_sg_dma() (Honggang Li) [1309411 1342604]
