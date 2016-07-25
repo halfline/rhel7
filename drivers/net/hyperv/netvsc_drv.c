@@ -1505,6 +1505,10 @@ static int netvsc_netdev_event(struct notifier_block *this,
 	 */
 	struct net_device *event_dev = ptr;
 
+	/* Avoid Vlan dev with same MAC registering as VF */
+	if (event_dev->priv_flags & IFF_802_1Q_VLAN)
+		return NOTIFY_DONE;
+
 	switch (event) {
 	case NETDEV_REGISTER:
 		return netvsc_register_vf(event_dev);
