@@ -1048,7 +1048,7 @@ void device_rh_alloc(struct device *dev)
 	dev->device_rh = kzalloc(sizeof(struct device_rh),
 				 GFP_KERNEL | __GFP_NOFAIL);
 }
-EXPORT_SYMBOL_GPL(device_rh_alloc);
+EXPORT_SYMBOL(device_rh_alloc);
 
 /**
  * device_add - add device to device hierarchy.
