@@ -1608,6 +1608,7 @@ static struct inode *gfs2_alloc_inode(struct super_block *sb)
 		ip->i_rgd = NULL;
 		memset(&ip->i_res, 0, sizeof(ip->i_res));
 		RB_CLEAR_NODE(&ip->i_res.rs_node);
+		ip->i_rahead = 0;
 	}
 	return &ip->i_inode;
 }
