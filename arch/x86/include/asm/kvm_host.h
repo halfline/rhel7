@@ -675,6 +675,8 @@ struct kvm_arch {
 	u8 nr_reserved_ioapic_pins;
 
 	bool disabled_lapic_found;
+
+	bool x2apic_format;
 };
 
 struct kvm_vm_stat {
@@ -1234,6 +1236,6 @@ bool kvm_vcpu_is_bsp(struct kvm_vcpu *vcpu);
 bool kvm_intr_is_single_vcpu(struct kvm *kvm, struct kvm_lapic_irq *irq,
 			     struct kvm_vcpu **dest_vcpu);
 
-void kvm_set_msi_irq(struct kvm_kernel_irq_routing_entry *e,
+void kvm_set_msi_irq(struct kvm *kvm, struct kvm_kernel_irq_routing_entry *e,
 		     struct kvm_lapic_irq *irq);
 #endif /* _ASM_X86_KVM_HOST_H */
