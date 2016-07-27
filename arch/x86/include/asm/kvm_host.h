@@ -677,6 +677,7 @@ struct kvm_arch {
 	bool disabled_lapic_found;
 
 	bool x2apic_format;
+	bool x2apic_broadcast_quirk_disabled;
 };
 
 struct kvm_vm_stat {
