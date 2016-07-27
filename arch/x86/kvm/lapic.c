@@ -130,7 +130,13 @@ static inline int apic_enabled(struct kvm_lapic *apic)
 
 static inline u32 kvm_apic_id(struct kvm_lapic *apic)
 {
-	return (kvm_apic_get_reg(apic, APIC_ID) >> 24) & 0xff;
+	/* To avoid a race between apic_base and following APIC_ID update when
+	 * switching to x2apic_mode, the x2apic mode returns initial x2apic id.
+	 */
+	if (apic_x2apic_mode(apic))
+		return apic->vcpu->vcpu_id;
+
+	return kvm_apic_get_reg(apic, APIC_ID) >> 24;
 }
 
 static inline bool kvm_apic_map_get_logical_dest(struct kvm_apic_map *map,
@@ -245,7 +251,7 @@ static inline void apic_set_spiv(struct kvm_lapic *apic, u32 val)
 	}
 }
 
-static inline void kvm_apic_set_id(struct kvm_lapic *apic, u8 id)
+static inline void kvm_apic_set_xapic_id(struct kvm_lapic *apic, u8 id)
 {
 	apic_set_reg(apic, APIC_ID, id << 24);
 	recalculate_apic_map(apic->vcpu->kvm);
@@ -257,11 +263,11 @@ static inline void kvm_apic_set_ldr(struct kvm_lapic *apic, u32 id)
 	recalculate_apic_map(apic->vcpu->kvm);
 }
 
-static inline void kvm_apic_set_x2apic_id(struct kvm_lapic *apic, u8 id)
+static inline void kvm_apic_set_x2apic_id(struct kvm_lapic *apic, u32 id)
 {
 	u32 ldr = ((id >> 4) << 16) | (1 << (id & 0xf));
 
-	apic_set_reg(apic, APIC_ID, id << 24);
+	apic_set_reg(apic, APIC_ID, id);
 	apic_set_reg(apic, APIC_LDR, ldr);
 	recalculate_apic_map(apic->vcpu->kvm);
 }
@@ -1125,12 +1131,6 @@ static u32 __apic_read(struct kvm_lapic *apic, unsigned int offset)
 		return 0;
 
 	switch (offset) {
-	case APIC_ID:
-		if (apic_x2apic_mode(apic))
-			val = kvm_apic_id(apic);
-		else
-			val = kvm_apic_id(apic) << 24;
-		break;
 	case APIC_ARBPRI:
 		apic_debug("Access APIC ARBPRI register which is for P6\n");
 		break;
@@ -1409,7 +1409,7 @@ static int apic_reg_write(struct kvm_lapic *apic, u32 reg, u32 val)
 	switch (reg) {
 	case APIC_ID:		/* Local APIC ID */
 		if (!apic_x2apic_mode(apic))
-			kvm_apic_set_id(apic, val >> 24);
+			kvm_apic_set_xapic_id(apic, val >> 24);
 		else
 			ret = 1;
 		break;
@@ -1712,7 +1712,7 @@ void kvm_lapic_reset(struct kvm_vcpu *vcpu, bool init_event)
 	hrtimer_cancel(&apic->lapic_timer.timer);
 
 	if (!init_event)
-		kvm_apic_set_id(apic, vcpu->vcpu_id);
+		kvm_apic_set_xapic_id(apic, vcpu->vcpu_id);
 	kvm_apic_set_version(apic->vcpu);
 
 	for (i = 0; i < APIC_LVT_NUM; i++)
@@ -1930,17 +1930,43 @@ int kvm_get_apic_interrupt(struct kvm_vcpu *vcpu)
 	return vector;
 }
 
-void kvm_apic_post_state_restore(struct kvm_vcpu *vcpu,
-		struct kvm_lapic_state *s)
+static int kvm_apic_state_fixup(struct kvm_vcpu *vcpu,
+		struct kvm_lapic_state *s, bool set)
+{
+	if (apic_x2apic_mode(vcpu->arch.apic)) {
+		u32 *id = (u32 *)(s->regs + APIC_ID);
+
+		if (set)
+			*id >>= 24;
+		else
+			*id <<= 24;
+	}
+
+	return 0;
+}
+
+int kvm_apic_get_state(struct kvm_vcpu *vcpu, struct kvm_lapic_state *s)
+{
+	memcpy(s->regs, vcpu->arch.apic->regs, sizeof(*s));
+	return kvm_apic_state_fixup(vcpu, s, false);
+}
+
+int kvm_apic_set_state(struct kvm_vcpu *vcpu, struct kvm_lapic_state *s)
 {
 	struct kvm_lapic *apic = vcpu->arch.apic;
+	int r;
+
 
 	kvm_lapic_set_base(vcpu, vcpu->arch.apic_base);
 	/* set SPIV separately to get count of SW disabled APICs right */
 	apic_set_spiv(apic, *((u32 *)(s->regs + APIC_SPIV)));
+
+	r = kvm_apic_state_fixup(vcpu, s, true);
+	if (r)
+		return r;
 	memcpy(vcpu->arch.apic->regs, s->regs, sizeof *s);
-	/* call kvm_apic_set_id() to put apic into apic_map */
-	kvm_apic_set_id(apic, kvm_apic_id(apic));
+
+	recalculate_apic_map(vcpu->kvm);
 	kvm_apic_set_version(vcpu);
 
 	apic_update_ppr(apic);
@@ -1964,6 +1990,8 @@ void kvm_apic_post_state_restore(struct kvm_vcpu *vcpu,
 		kvm_rtc_eoi_tracking_restore_one(vcpu);
 
 	vcpu->arch.apic_arb_prio = 0;
+
+	return 0;
 }
 
 void __kvm_migrate_apic_timer(struct kvm_vcpu *vcpu)
