@@ -29,11 +29,11 @@ module_param_named(check_copy_up, ovl_check_copy_up, uint,
 MODULE_PARM_DESC(ovl_check_copy_up,
 		 "Warn on copy-up when causing process also has a R/O fd open");
 
-static int ovl_check_fd(const void *data, struct file *f, unsigned fd)
+static int ovl_check_fd(const void *data, struct file *f, unsigned int fd)
 {
 	const struct dentry *dentry = data;
 
-	if (f->f_path.dentry == dentry)
+	if (f->f_inode == d_inode(dentry))
 		pr_warn_ratelimited("overlayfs: Warning: Copying up %pD, but open R/O on fd %u which will cease to be coherent [pid=%d %s]\n",
 				    f, fd, current->pid, current->comm);
 	return 0;
