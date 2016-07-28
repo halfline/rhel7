@@ -63,8 +63,7 @@ int __read_mostly sysctl_hardlockup_all_cpu_backtrace;
 #define sysctl_softlockup_all_cpu_backtrace 0
 #define sysctl_hardlockup_all_cpu_backtrace 0
 #endif
-static struct cpumask watchdog_cpumask __read_mostly;
-unsigned long *watchdog_cpumask_bits = cpumask_bits(&watchdog_cpumask);
+struct cpumask watchdog_cpumask __read_mostly;
 
 /* Helper for online, unparked cpus. */
 #define for_each_watchdog_cpu(cpu) \

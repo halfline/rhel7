@@ -883,7 +883,7 @@ static struct ctl_table kern_table[] = {
 #endif
 	{
 		.procname	= "watchdog_cpumask",
-		.data		= &watchdog_cpumask_bits,
+		.data		= cpumask_bits(&watchdog_cpumask),
 		.maxlen		= NR_CPUS,
 		.mode		= 0644,
 		.proc_handler	= proc_watchdog_cpumask,
