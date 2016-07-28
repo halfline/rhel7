@@ -1499,11 +1499,7 @@ static struct  hv_driver netvsc_drv = {
 static int netvsc_netdev_event(struct notifier_block *this,
 			       unsigned long event, void *ptr)
 {
-	/*
-	 * RHEL-only: netdev_notifier_info_to_dev() is currently missing
-	 * as we don't have 351638e7de backported.
-	 */
-	struct net_device *event_dev = ptr;
+	struct net_device *event_dev = netdev_notifier_info_to_dev(ptr);
 
 	/* Avoid Vlan, Bonding dev with same MAC registering as VF */
 	if (event_dev->priv_flags & (IFF_802_1Q_VLAN | IFF_BONDING))
@@ -1529,7 +1525,7 @@ static struct notifier_block netvsc_netdev_notifier = {
 
 static void __exit netvsc_drv_exit(void)
 {
-	unregister_netdevice_notifier(&netvsc_netdev_notifier);
+	unregister_netdevice_notifier_rh(&netvsc_netdev_notifier);
 	vmbus_driver_unregister(&netvsc_drv);
 }
 
@@ -1547,7 +1543,7 @@ static int __init netvsc_drv_init(void)
 	if (ret)
 		return ret;
 
-	register_netdevice_notifier(&netvsc_netdev_notifier);
+	register_netdevice_notifier_rh(&netvsc_netdev_notifier);
 	return 0;
 }
 
