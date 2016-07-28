@@ -349,6 +349,7 @@ static int nfs4_do_handle_exception(struct nfs_server *server,
 {
 	struct nfs_client *clp = server->nfs_client;
 	struct nfs4_state *state = exception->state;
+	const nfs4_stateid *stateid = exception->stateid;
 	struct inode *inode = exception->inode;
 	int ret = errorcode;
 
@@ -362,9 +363,18 @@ static int nfs4_do_handle_exception(struct nfs_server *server,
 		case -NFS4ERR_DELEG_REVOKED:
 		case -NFS4ERR_ADMIN_REVOKED:
 		case -NFS4ERR_BAD_STATEID:
-			if (inode && nfs_async_inode_return_delegation(inode,
-						NULL) == 0)
-				goto wait_on_recovery;
+			if (inode) {
+				int err;
+
+				err = nfs_async_inode_return_delegation(inode,
+						stateid);
+				if (err == 0)
+					goto wait_on_recovery;
+				if (stateid != NULL && stateid->type == NFS4_DELEGATION_STATEID_TYPE) {
+					exception->retry = 1;
+					break;
+				}
+			}
 			if (state == NULL)
 				break;
 			ret = nfs4_schedule_stateid_recovery(server, state);
@@ -2646,28 +2656,17 @@ static struct nfs4_state *nfs4_do_open(struct inode *dir,
 	return res;
 }
 
-static int _nfs4_do_setattr(struct inode *inode, struct rpc_cred *cred,
-			    struct nfs_fattr *fattr, struct iattr *sattr,
-			    struct nfs4_state *state, struct nfs4_label *ilabel,
-			    struct nfs4_label *olabel)
+static int _nfs4_do_setattr(struct inode *inode,
+			    struct nfs_setattrargs *arg,
+			    struct nfs_setattrres *res,
+			    struct rpc_cred *cred,
+			    struct nfs4_state *state)
 {
 	struct nfs_server *server = NFS_SERVER(inode);
-        struct nfs_setattrargs  arg = {
-                .fh             = NFS_FH(inode),
-                .iap            = sattr,
-		.server		= server,
-		.bitmask = server->attr_bitmask,
-		.label		= ilabel,
-        };
-        struct nfs_setattrres  res = {
-		.fattr		= fattr,
-		.label		= olabel,
-		.server		= server,
-        };
         struct rpc_message msg = {
 		.rpc_proc	= &nfs4_procedures[NFSPROC4_CLNT_SETATTR],
-		.rpc_argp	= &arg,
-		.rpc_resp	= &res,
+		.rpc_argp	= arg,
+		.rpc_resp	= res,
 		.rpc_cred	= cred,
         };
 	struct rpc_cred *delegation_cred = NULL;
@@ -2676,17 +2675,13 @@ static int _nfs4_do_setattr(struct inode *inode, struct rpc_cred *cred,
 	bool truncate;
 	int status;
 
-	arg.bitmask = nfs4_bitmask(server, ilabel);
-	if (ilabel)
-		arg.bitmask = nfs4_bitmask(server, olabel);
-
-	nfs_fattr_init(fattr);
+	nfs_fattr_init(res->fattr);
 
 	/* Servers should only apply open mode checks for file size changes */
-	truncate = (sattr->ia_valid & ATTR_SIZE) ? true : false;
+	truncate = (arg->iap->ia_valid & ATTR_SIZE) ? true : false;
 	fmode = truncate ? FMODE_WRITE : FMODE_READ;
 
-	if (nfs4_copy_delegation_stateid(inode, fmode, &arg.stateid, &delegation_cred)) {
+	if (nfs4_copy_delegation_stateid(inode, fmode, &arg->stateid, &delegation_cred)) {
 		/* Use that stateid */
 	} else if (truncate && state != NULL) {
 		struct nfs_lockowner lockowner = {
@@ -2696,19 +2691,19 @@ static int _nfs4_do_setattr(struct inode *inode, struct rpc_cred *cred,
 		if (!nfs4_valid_open_stateid(state))
 			return -EBADF;
 		if (nfs4_select_rw_stateid(state, FMODE_WRITE, &lockowner,
-				&arg.stateid, &delegation_cred) == -EIO)
+				&arg->stateid, &delegation_cred) == -EIO)
 			return -EBADF;
 	} else
-		nfs4_stateid_copy(&arg.stateid, &zero_stateid);
+		nfs4_stateid_copy(&arg->stateid, &zero_stateid);
 	if (delegation_cred)
 		msg.rpc_cred = delegation_cred;
 
-	status = nfs4_call_sync(server->client, server, &msg, &arg.seq_args, &res.seq_res, 1);
+	status = nfs4_call_sync(server->client, server, &msg, &arg->seq_args, &res->seq_res, 1);
 
 	put_rpccred(delegation_cred);
 	if (status == 0 && state != NULL)
 		renew_lease(server, timestamp);
-	trace_nfs4_setattr(inode, &arg.stateid, status);
+	trace_nfs4_setattr(inode, &arg->stateid, status);
 	return status;
 }
 
@@ -2718,13 +2713,31 @@ static int nfs4_do_setattr(struct inode *inode, struct rpc_cred *cred,
 			   struct nfs4_label *olabel)
 {
 	struct nfs_server *server = NFS_SERVER(inode);
+	struct nfs_setattrargs	arg = {
+		.fh		= NFS_FH(inode),
+		.iap		= sattr,
+		.server		= server,
+		.bitmask = server->attr_bitmask,
+		.label		= ilabel,
+	};
+	struct nfs_setattrres	res = {
+		.fattr		= fattr,
+		.label		= olabel,
+		.server		= server,
+	};
 	struct nfs4_exception exception = {
 		.state = state,
 		.inode = inode,
+		.stateid = &arg.stateid,
 	};
 	int err;
+
+	arg.bitmask = nfs4_bitmask(server, ilabel);
+	if (ilabel)
+		arg.bitmask = nfs4_bitmask(server, olabel);
+
 	do {
-		err = _nfs4_do_setattr(inode, cred, fattr, sattr, state, ilabel, olabel);
+		err = _nfs4_do_setattr(inode, &arg, &res, cred, state);
 		switch (err) {
 		case -NFS4ERR_OPENMODE:
 			if (!(sattr->ia_valid & ATTR_SIZE)) {
