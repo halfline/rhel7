@@ -74,6 +74,9 @@ static inline void get_page_foll(struct page *page)
 		VM_BUG_ON_PAGE(atomic_read(&page->_count) <= 0, page);
 		atomic_inc(&page->_count);
 	}
+
+	if (unlikely(is_zone_device_page(page)))
+		get_zone_device_page(page);
 }
 
 extern unsigned long highest_memmap_pfn;

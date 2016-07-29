@@ -1,6 +1,7 @@
 #include <linux/mm.h>
 #include <linux/hugetlb.h>
 #include <linux/swap.h>
+#include <linux/memremap.h>
 #include <linux/pagemap.h>
 #include <linux/rmap.h>
 #include <linux/writeback.h>
@@ -52,6 +53,7 @@ struct page *follow_page_mask(struct vm_area_struct *vma,
 			      unsigned long address, unsigned int flags,
 			      unsigned int *page_mask)
 {
+	struct dev_pagemap *pgmap = NULL;
 	pgd_t *pgd;
 	pud_t *pud;
 	pmd_t *pmd;
@@ -170,7 +172,17 @@ split_fallthrough:
 		goto unlock;
 
 	page = vm_normal_page(vma, address, pte);
-	if (unlikely(!page)) {
+	if (!page && pte_devmap(pte) && (flags & FOLL_GET)) {
+		/*
+		 * Only return device mapping pages in the FOLL_GET case since
+		 * they are only valid while holding the pgmap reference.
+		 */
+		pgmap = get_dev_pagemap(pte_pfn(pte), NULL);
+		if (pgmap)
+			page = pte_page(pte);
+		else
+			goto no_page;
+	} else if (unlikely(!page)) {
 		if (flags & FOLL_DUMP) {
 			/* Avoid special (like zero) pages in core dumps */
 			page = ERR_PTR(-EFAULT);
@@ -188,8 +200,15 @@ split_fallthrough:
 		}
 	}
 
-	if (flags & FOLL_GET)
+	if (flags & FOLL_GET) {
 		get_page_foll(page);
+
+		/* drop the pgmap reference now that we hold the page */
+		if (pgmap) {
+			put_dev_pagemap(pgmap);
+			pgmap = NULL;
+		}
+	}
 	if (flags & FOLL_TOUCH) {
 		if ((flags & FOLL_WRITE) &&
 		    !pte_dirty(pte) && !PageDirty(page))

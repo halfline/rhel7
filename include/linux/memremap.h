@@ -108,7 +108,9 @@ static inline struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
 
 static inline void put_dev_pagemap(struct dev_pagemap *pgmap)
 {
-	if (pgmap)
+	if (pgmap) {
+		WARN_ON(percpu_ref_is_zero(pgmap->ref));
 		percpu_ref_put(pgmap->ref);
+	}
 }
 #endif /* _LINUX_MEMREMAP_H_ */
