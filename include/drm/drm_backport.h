@@ -205,11 +205,6 @@ static inline enum acpi_backlight_type acpi_video_get_backlight_type(void)
 	return acpi_backlight_undef;
 }
 
-/*
- * avoiding/emulating 01c8f1c44b83a0825b573e7c723b033cece37b86 upstream:
- */
-#define __pfn_to_pfn_t(pfn, flags) (pfn)
-
 static inline bool apple_gmux_present(void) { return false; }
 
 int __init drm_backport_init(void);

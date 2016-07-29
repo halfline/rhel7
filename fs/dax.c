@@ -393,7 +393,7 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
 	}
 	dax_unmap_atomic(bdev, &dax);
 
-	error = vm_insert_mixed(vma, vaddr, pfn_t_to_pfn(dax.pfn));
+	error = vm_insert_mixed(vma, vaddr, dax.pfn);
 
  out:
 	mutex_unlock(&mapping->i_mmap_mutex);
