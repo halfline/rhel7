@@ -2037,14 +2037,21 @@ generic_file_aio_read(struct kiocb *iocb, const struct iovec *iov,
 			 * we've already read everything we wanted to, or if
 			 * there was a short read because we hit EOF, go ahead
 			 * and return.  Otherwise fallthrough to buffered io for
-			 * the rest of the read.  Buffered reads will not work for
-			 * DAX files, so don't bother trying.
+			 * the rest of the read.
 			 */
-			if (retval < 0 || !count || *ppos >= size ||
-			    IS_DAX(inode)) {
+			if (retval < 0 || !count || *ppos >= size) {
 				file_accessed(filp);
 				goto out;
 			}
+		}
+
+		/*
+		 *  Buffered reads will not work for DAX files, so don't
+		 *  bother trying.
+		 */
+		if (IS_DAX(inode)) {
+			file_accessed(filp);
+			goto out;
 		}
 	}
 
