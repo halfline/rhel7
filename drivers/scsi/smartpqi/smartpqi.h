@@ -1130,4 +1130,5 @@ static inline void writeq(u64 value, volatile void __iomem *addr)
 }
 #endif
 
+#define TYPE_ZBC            0x14
 #endif /* _SMARTPQI_H */

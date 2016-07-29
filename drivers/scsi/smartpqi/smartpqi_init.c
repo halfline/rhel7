@@ -27,6 +27,7 @@
 #include <linux/cciss_ioctl.h>
 #include <scsi/scsi_host.h>
 #include <scsi/scsi_cmnd.h>
+#include <scsi/scsi_tcq.h>
 #include <scsi/scsi_device.h>
 #include <scsi/scsi_eh.h>
 #include <scsi/scsi_transport_sas.h>
@@ -542,7 +543,7 @@ static int pqi_write_current_time_to_host_wellness(
 
 	do_gettimeofday(&time);
 	local_time = time.tv_sec - (sys_tz.tz_minuteswest * 60);
-	rtc_time64_to_tm(local_time, &tm);
+	rtc_time_to_tm(local_time, &tm);
 	year = tm.tm_year + 1900;
 
 	buffer->time[0] = bin2bcd(tm.tm_hour);
@@ -991,6 +992,18 @@ no_buffer:
 	device->volume_offline = volume_offline;
 }
 
+static void sanitize_inquiry_string(unsigned char *s, int len)
+{
+	bool terminated = false;
+
+	for (; len > 0; (--len, ++s)) {
+		if (*s == 0)
+			terminated = true;
+		if (terminated || *s < 0x20 || *s > 0x7e)
+			*s = ' ';
+	}
+}
+
 static int pqi_get_device_info(struct pqi_ctrl_info *ctrl_info,
 	struct pqi_scsi_dev *device)
 {
@@ -1006,8 +1019,8 @@ static int pqi_get_device_info(struct pqi_ctrl_info *ctrl_info,
 	if (rc)
 		goto out;
 
-	scsi_sanitize_inquiry_string(&buffer[8], 8);
-	scsi_sanitize_inquiry_string(&buffer[16], 16);
+	sanitize_inquiry_string(&buffer[8], 8);
+	sanitize_inquiry_string(&buffer[16], 16);
 
 	device->devtype = buffer[0] & 0x1f;
 	memcpy(device->vendor, &buffer[8],
@@ -1546,7 +1559,8 @@ static void pqi_update_device_list(struct pqi_ctrl_info *ctrl_info,
 		if (device->sdev && device->queue_depth !=
 			device->advertised_queue_depth) {
 			device->advertised_queue_depth = device->queue_depth;
-			scsi_change_queue_depth(device->sdev,
+			scsi_adjust_queue_depth(device->sdev,
+				scsi_get_tag_type(device->sdev),
 				device->advertised_queue_depth);
 		}
 	}
@@ -4743,7 +4757,8 @@ static int pqi_slave_alloc(struct scsi_device *sdev)
 		device->sdev = sdev;
 		if (device->queue_depth) {
 			device->advertised_queue_depth = device->queue_depth;
-			scsi_change_queue_depth(sdev,
+			scsi_adjust_queue_depth(sdev,
+				scsi_get_tag_type(sdev),
 				device->advertised_queue_depth);
 		}
 	}
@@ -5182,7 +5197,6 @@ static int pqi_register_scsi(struct pqi_ctrl_info *ctrl_info)
 	shost->transportt = pqi_sas_transport_template;
 	shost->irq = ctrl_info->msix_vectors[0];
 	shost->unique_id = shost->irq;
-	shost->nr_hw_queues = ctrl_info->num_queue_groups;
 	shost->hostdata[0] = (unsigned long)ctrl_info;
 
 	rc = scsi_add_host(shost, &ctrl_info->pci_dev->dev);
