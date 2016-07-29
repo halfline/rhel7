@@ -470,6 +470,14 @@ xfs_file_splice_write(
 	int			ioflags = 0;
 	ssize_t			ret;
 
+	/*
+	 * For dax, we need to avoid the page cache.  Locking and stats will
+	 * be handled in xfs_file_dio_aio_write().
+	 */
+	if (IS_DAX(inode))
+		return default_file_splice_write(pipe, outfilp, ppos, count,
+				flags);
+
 	XFS_STATS_INC(ip->i_mount, xs_write_calls);
 
 	if (outfilp->f_mode & FMODE_NOCMTIME)

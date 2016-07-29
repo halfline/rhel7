@@ -1054,6 +1054,34 @@ static ssize_t generic_file_splice_write_actor(struct pipe_inode_info *pipe,
 	return ret;
 }
 
+static int write_pipe_buf(struct pipe_inode_info *pipe, struct pipe_buffer *buf,
+			  struct splice_desc *sd)
+{
+	int ret;
+	void *data;
+	loff_t tmp = sd->pos;
+
+	data = buf->ops->map(pipe, buf, 0);
+	ret = __kernel_write(sd->u.file, data + buf->offset, sd->len, &tmp);
+	buf->ops->unmap(pipe, buf, data);
+
+	return ret;
+}
+
+ssize_t default_file_splice_write(struct pipe_inode_info *pipe,
+					 struct file *out, loff_t *ppos,
+					 size_t len, unsigned int flags)
+{
+	ssize_t ret;
+
+	ret = splice_from_pipe(pipe, out, ppos, len, flags, write_pipe_buf);
+	if (ret > 0)
+		*ppos += ret;
+
+	return ret;
+}
+EXPORT_SYMBOL(default_file_splice_write);
+
 /**
  * generic_file_splice_write - splice data from a pipe to a file
  * @pipe:	pipe info
@@ -1071,37 +1099,13 @@ ssize_t
 generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
 			  loff_t *ppos, size_t len, unsigned int flags)
 {
+	if (IS_DAX(out->f_mapping->host))
+		return default_file_splice_write(pipe, out, ppos, len, flags);
+
 	return splice_write_to_file(pipe, out, ppos, len, flags,
 				    generic_file_splice_write_actor);
 }
 EXPORT_SYMBOL(generic_file_splice_write);
-
-static int write_pipe_buf(struct pipe_inode_info *pipe, struct pipe_buffer *buf,
-			  struct splice_desc *sd)
-{
-	int ret;
-	void *data;
-	loff_t tmp = sd->pos;
-
-	data = buf->ops->map(pipe, buf, 0);
-	ret = __kernel_write(sd->u.file, data + buf->offset, sd->len, &tmp);
-	buf->ops->unmap(pipe, buf, data);
-
-	return ret;
-}
-
-static ssize_t default_file_splice_write(struct pipe_inode_info *pipe,
-					 struct file *out, loff_t *ppos,
-					 size_t len, unsigned int flags)
-{
-	ssize_t ret;
-
-	ret = splice_from_pipe(pipe, out, ppos, len, flags, write_pipe_buf);
-	if (ret > 0)
-		*ppos += ret;
-
-	return ret;
-}
 
 /**
  * generic_splice_sendpage - splice data from a pipe to a socket
