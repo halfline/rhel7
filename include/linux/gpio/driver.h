@@ -1,21 +1,22 @@
 #ifndef __LINUX_GPIO_DRIVER_H
 #define __LINUX_GPIO_DRIVER_H
 
+#include <linux/device.h>
 #include <linux/types.h>
 #include <linux/module.h>
 
-struct device;
 struct gpio_desc;
 struct of_phandle_args;
 struct device_node;
 struct seq_file;
+struct gpio_device;
 
 /**
  * struct gpio_chip - abstract a GPIO controller
  * @label: for diagnostics
+ * @gpiodev: the internal state holder, opaque struct
  * @dev: optional device providing the GPIOs
  * @owner: helps prevent removal of modules exporting active GPIOs
- * @list: links gpio_chips together for traversal
  * @request: optional hook for chip-specific activation, such as
  *	enabling module power and clock; may sleep
  * @free: optional hook for chip-specific deactivation, such as
@@ -61,9 +62,9 @@ struct seq_file;
  */
 struct gpio_chip {
 	const char		*label;
+	struct gpio_device	*gpiodev;
 	struct device		*dev;
 	struct module		*owner;
-	struct list_head        list;
 
 	int			(*request)(struct gpio_chip *chip,
 						unsigned offset);
