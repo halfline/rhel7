@@ -15,6 +15,7 @@
 #include <linux/backing-dev.h>
 #include <linux/wait.h>
 #include <linux/mempool.h>
+#include <linux/pfn.h>
 #include <linux/bio.h>
 #include <linux/stringify.h>
 #include <linux/gfp.h>
@@ -1688,7 +1689,7 @@ struct blk_dax_ctl {
 	sector_t sector;
 	void __pmem *addr;
 	long size;
-	unsigned long pfn;
+	pfn_t pfn;
 };
 
 struct block_device_operations {
@@ -1699,8 +1700,7 @@ struct block_device_operations {
 	RH_KABI_REPLACE(int (*direct_access) (struct block_device *, sector_t,
 						void **, unsigned long *),
 			long (*direct_access)(struct block_device *, sector_t,
-						void __pmem **,
-					      unsigned long *pfn))
+						void __pmem **, pfn_t *))
 	unsigned int (*check_events) (struct gendisk *disk,
 				      unsigned int clearing);
 	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
