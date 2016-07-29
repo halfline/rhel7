@@ -47,7 +47,20 @@ struct pmem_device {
 
 static int pmem_major;
 
-static void pmem_do_bvec(struct pmem_device *pmem, struct page *page,
+static bool is_bad_pmem(struct badblocks *bb, sector_t sector, unsigned int len)
+{
+	if (bb->count) {
+		sector_t first_bad;
+		int num_bad;
+
+		return !!badblocks_check(bb, sector, len / 512, &first_bad,
+				&num_bad);
+	}
+
+	return false;
+}
+
+static int pmem_do_bvec(struct pmem_device *pmem, struct page *page,
 			unsigned int len, unsigned int off, int rw,
 			sector_t sector)
 {
@@ -56,6 +69,8 @@ static void pmem_do_bvec(struct pmem_device *pmem, struct page *page,
 	void __pmem *pmem_addr = pmem->virt_addr + pmem_off;
 
 	if (rw == READ) {
+		if (unlikely(is_bad_pmem(&pmem->bb, sector, len)))
+			return -EIO;
 		memcpy_from_pmem(mem + off, pmem_addr, len);
 		flush_dcache_page(page);
 	} else {
@@ -64,10 +79,12 @@ static void pmem_do_bvec(struct pmem_device *pmem, struct page *page,
 	}
 
 	kunmap_atomic(mem);
+	return 0;
 }
 
 static void pmem_make_request(struct request_queue *q, struct bio *bio)
 {
+	int rc = 0;
 	bool do_acct;
 	unsigned long start;
 	struct block_device *bdev = bio->bi_bdev;
@@ -79,8 +96,10 @@ static void pmem_make_request(struct request_queue *q, struct bio *bio)
 	do_acct = nd_iostat_start(bio, &start);
 	sector = bio->bi_sector;
 	bio_for_each_segment(bvec, bio, i) {
-		pmem_do_bvec(pmem, bvec->bv_page, bvec->bv_len, bvec->bv_offset,
-			     bio_data_dir(bio), sector);
+		rc = pmem_do_bvec(pmem, bvec->bv_page, bvec->bv_len,
+				  bvec->bv_offset, bio_data_dir(bio), sector);
+		if (rc)
+			break;
 		sector += bvec->bv_len >> 9;
 	}
 	if (do_acct)
@@ -89,20 +108,29 @@ static void pmem_make_request(struct request_queue *q, struct bio *bio)
 	if (bio_data_dir(bio))
 		wmb_pmem();
 
-	bio_endio(bio, 0);
+	bio_endio(bio, rc);
 }
 
 static int pmem_rw_page(struct block_device *bdev, sector_t sector,
 		       struct page *page, int rw)
 {
 	struct pmem_device *pmem = bdev->bd_disk->private_data;
+	int rc;
 
-	pmem_do_bvec(pmem, page, PAGE_CACHE_SIZE, 0, rw, sector);
+	rc = pmem_do_bvec(pmem, page, PAGE_CACHE_SIZE, 0, rw, sector);
 	if (rw & WRITE)
 		wmb_pmem();
-	page_endio(page, rw & WRITE, 0);
 
-	return 0;
+	/*
+	 * The ->rw_page interface is subtle and tricky.  The core
+	 * retries on any error, so we can only invoke page_endio() in
+	 * the successful completion case.  Otherwise, we'll see crashes
+	 * caused by double completion.
+	 */
+	if (rc == 0)
+		page_endio(page, rw & WRITE, 0);
+
+	return rc;
 }
 
 static long pmem_direct_access(struct block_device *bdev, sector_t sector,
