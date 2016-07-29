@@ -36,6 +36,8 @@ struct gpio_device {
 	struct device		dev;
 	struct module		*owner;
 	struct gpio_chip	*chip;
+	int			base;
+	u16			ngpio;
 	struct list_head        list;
 };
 

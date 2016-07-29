@@ -164,10 +164,10 @@ struct gpio_desc *gpio_to_desc(unsigned gpio)
 	spin_lock_irqsave(&gpio_lock, flags);
 
 	list_for_each_entry(gdev, &gpio_devices, list) {
-		if (gdev->chip->base <= gpio &&
-		    gdev->chip->base + gdev->chip->ngpio > gpio) {
+		if (gdev->base <= gpio &&
+		    gdev->base + gdev->ngpio > gpio) {
 			spin_unlock_irqrestore(&gpio_lock, flags);
-			return &gdev->chip->desc[gpio - gdev->chip->base];
+			return &gdev->chip->desc[gpio - gdev->base];
 		}
 	}
 
@@ -253,11 +253,11 @@ static int gpiochip_find_base(int ngpio)
 
 	list_for_each_entry_reverse(gdev, &gpio_devices, list) {
 		/* found a free space? */
-		if (gdev->chip->base + gdev->chip->ngpio <= base)
+		if (gdev->base + gdev->ngpio <= base)
 			break;
 		else
 			/* nope, check the space right before the chip */
-			base = gdev->chip->base - ngpio;
+			base = gdev->base - ngpio;
 	}
 
 	if (gpio_is_valid(base)) {
@@ -1168,8 +1168,8 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 		 */
 		if (!iterator->chip)
 			continue;
-		if (iterator->chip->base >=
-		    gdev->chip->base + gdev->chip->ngpio) {
+		if (iterator->base >=
+		    gdev->base + gdev->ngpio) {
 			/*
 			 * Iterator is the first GPIO chip so there is no
 			 * previous one
@@ -1182,8 +1182,8 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 				 * [base, base + ngpio - 1]) between previous
 				 * and iterator chip.
 				 */
-				if (previous->chip->base + previous->chip->ngpio
-						<= gdev->chip->base)
+				if (previous->base + previous->ngpio
+						<= gdev->base)
 					goto found;
 			}
 		}
@@ -1197,7 +1197,7 @@ static int gpiodev_add_to_list(struct gpio_device *gdev)
 	 */
 
 	iterator = list_last_entry(&gpio_devices, struct gpio_device, list);
-	if (iterator->chip->base + iterator->chip->ngpio <= gdev->chip->base) {
+	if (iterator->base + iterator->ngpio <= gdev->base) {
 		list_add(&gdev->list, &iterator->list);
 		return 0;
 	}
@@ -1296,6 +1296,8 @@ int gpiochip_add(struct gpio_chip *chip)
 		goto err_free_descs;
 	}
 
+	gdev->ngpio = chip->ngpio;
+
 	spin_lock_irqsave(&gpio_lock, flags);
 
 	if (base < 0) {
@@ -1306,6 +1308,7 @@ int gpiochip_add(struct gpio_chip *chip)
 		}
 		chip->base = base;
 	}
+	gdev->base = base;
 
 	status = gpiodev_add_to_list(gdev);
 	if (status)
@@ -1353,7 +1356,7 @@ int gpiochip_add(struct gpio_chip *chip)
 	get_device(&gdev->dev);
 
 	pr_debug("%s: registered GPIOs %d to %d on device: %s\n", __func__,
-		chip->base, chip->base + chip->ngpio - 1,
+		gdev->base, gdev->base + chip->ngpio - 1,
 		chip->label ? : "generic");
 
 	return 0;
@@ -1371,7 +1374,7 @@ err_free_gdev:
 	kfree(gdev);
 	/* failures here can mean systems won't boot... */
 	pr_err("%s: GPIOs %d..%d (%s) failed to register\n", __func__,
-		chip->base, chip->base + chip->ngpio - 1,
+		gdev->base, gdev->base + gdev->ngpio - 1,
 		chip->label ? : "generic");
 	return status;
 }
@@ -1396,7 +1399,7 @@ int gpiochip_remove(struct gpio_chip *chip)
 	of_gpiochip_remove(chip);
 	acpi_gpiochip_remove(chip);
 
-	for (id = 0; id < chip->ngpio; id++) {
+	for (id = 0; id < gdev->ngpio; id++) {
 		if (test_bit(FLAG_REQUESTED, &chip->desc[id].flags)) {
 			status = -EBUSY;
 			break;
@@ -1494,6 +1497,7 @@ int gpiochip_add_pingroup_range(struct gpio_chip *chip,
 			unsigned int gpio_offset, const char *pin_group)
 {
 	struct gpio_pin_range *pin_range;
+	struct gpio_device *gdev = chip->gpiodev;
 	int ret;
 
 	pin_range = kzalloc(sizeof(*pin_range), GFP_KERNEL);
@@ -1506,7 +1510,7 @@ int gpiochip_add_pingroup_range(struct gpio_chip *chip,
 	pin_range->range.id = gpio_offset;
 	pin_range->range.gc = chip;
 	pin_range->range.name = chip->label;
-	pin_range->range.base = chip->base + gpio_offset;
+	pin_range->range.base = gdev->base + gpio_offset;
 	pin_range->pctldev = pctldev;
 
 	ret = pinctrl_get_group_pins(pctldev, pin_group,
@@ -1543,6 +1547,7 @@ int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
 			   unsigned int npins)
 {
 	struct gpio_pin_range *pin_range;
+	struct gpio_device *gdev = chip->gpiodev;
 	int ret;
 
 	pin_range = kzalloc(sizeof(*pin_range), GFP_KERNEL);
@@ -1555,7 +1560,7 @@ int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
 	pin_range->range.id = gpio_offset;
 	pin_range->range.gc = chip;
 	pin_range->range.name = chip->label;
-	pin_range->range.base = chip->base + gpio_offset;
+	pin_range->range.base = gdev->base + gpio_offset;
 	pin_range->range.pin_base = pin_offset;
 	pin_range->range.npins = npins;
 	pin_range->pctldev = pinctrl_find_and_add_gpio_range(pinctl_name,
@@ -2718,7 +2723,8 @@ EXPORT_SYMBOL_GPL(gpiod_put);
 static void gpiolib_dbg_show(struct seq_file *s, struct gpio_chip *chip)
 {
 	unsigned		i;
-	unsigned		gpio = chip->base;
+	struct gpio_device *gdev = chip->gpiodev;
+	unsigned		gpio = gdev->base;
 	struct gpio_desc	*gdesc = &chip->desc[0];
 	int			is_out;
 	int			is_irq;
@@ -2797,7 +2803,7 @@ static int gpiolib_seq_show(struct seq_file *s, void *v)
 
 	seq_printf(s, "%s%s: GPIOs %d-%d", (char *)s->private,
 		   dev_name(&gdev->dev),
-		   chip->base, chip->base + chip->ngpio - 1);
+		   gdev->base, gdev->base + chip->ngpio - 1);
 	parent = chip->dev;
 	if (parent)
 		seq_printf(s, ", parent: %s/%s",
