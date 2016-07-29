@@ -70,7 +70,6 @@ struct gpio_desc {
 	const char		*label;
 #endif
 };
-static struct gpio_desc gpio_desc[ARCH_NR_GPIOS];
 
 #define GPIO_OFFSET_VALID(chip, offset) (offset >= 0 && offset < chip->ngpio)
 
@@ -156,10 +155,22 @@ static int gpio_chip_hwgpio(const struct gpio_desc *desc)
  */
 struct gpio_desc *gpio_to_desc(unsigned gpio)
 {
-	if (WARN(!gpio_is_valid(gpio), "invalid GPIO %d\n", gpio))
-		return NULL;
-	else
-		return &gpio_desc[gpio];
+	struct gpio_chip *chip;
+	unsigned long flags;
+
+	spin_lock_irqsave(&gpio_lock, flags);
+
+	list_for_each_entry(chip, &gpio_chips, list) {
+		if (chip->base <= gpio && chip->base + chip->ngpio > gpio) {
+			spin_unlock_irqrestore(&gpio_lock, flags);
+			return &chip->desc[gpio - chip->base];
+		}
+	}
+
+	spin_unlock_irqrestore(&gpio_lock, flags);
+
+	WARN(1, "invalid GPIO %d\n", gpio);
+	return NULL;
 }
 EXPORT_SYMBOL_GPL(gpio_to_desc);
 
@@ -182,7 +193,7 @@ static struct gpio_desc *gpiochip_offset_to_desc(struct gpio_chip *chip,
  */
 int desc_to_gpio(const struct gpio_desc *desc)
 {
-	return desc - &gpio_desc[0];
+	return desc->chip->base + (desc - &desc->chip->desc[0]);
 }
 EXPORT_SYMBOL_GPL(desc_to_gpio);
 
@@ -1160,7 +1171,7 @@ static int gpiochip_add_to_list(struct gpio_chip *chip)
 /**
  * gpiochip_add() - register a gpio_chip
  * @chip: the chip to register, with chip->base initialized
- * Context: potentially before irqs or kmalloc will work
+ * Context: potentially before irqs will work
  *
  * Returns a negative errno if the chip can't be registered, such as
  * because the chip->base is invalid or already associated with a
@@ -1180,12 +1191,11 @@ int gpiochip_add(struct gpio_chip *chip)
 	int		status = 0;
 	unsigned	id;
 	int		base = chip->base;
+	struct gpio_desc *descs;
 
-	if ((!gpio_is_valid(base) || !gpio_is_valid(base + chip->ngpio - 1))
-			&& base >= 0) {
-		status = -EINVAL;
-		goto fail;
-	}
+	descs = kcalloc(chip->ngpio, sizeof(descs[0]), GFP_KERNEL);
+	if (!descs)
+		return -ENOMEM;
 
 	spin_lock_irqsave(&gpio_lock, flags);
 
@@ -1201,10 +1211,9 @@ int gpiochip_add(struct gpio_chip *chip)
 	status = gpiochip_add_to_list(chip);
 
 	if (status == 0) {
-		chip->desc = &gpio_desc[chip->base];
 
 		for (id = 0; id < chip->ngpio; id++) {
-			struct gpio_desc *desc = &chip->desc[id];
+			struct gpio_desc *desc = &descs[id];
 			desc->chip = chip;
 
 			/* REVISIT:  most hardware initializes GPIOs as
@@ -1219,6 +1228,7 @@ int gpiochip_add(struct gpio_chip *chip)
 				: 0;
 		}
 	}
+	chip->desc = descs;
 
 	spin_unlock_irqrestore(&gpio_lock, flags);
 
@@ -1286,9 +1296,11 @@ int gpiochip_remove(struct gpio_chip *chip)
 
 	spin_unlock_irqrestore(&gpio_lock, flags);
 
-	if (status == 0)
+	if (status == 0) {
 		gpiochip_unexport(chip);
-
+		kfree(chip->desc);
+		chip->desc = NULL;
+	}
 	return status;
 }
 EXPORT_SYMBOL_GPL(gpiochip_remove);
