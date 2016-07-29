@@ -202,18 +202,6 @@ ext4_file_write(struct kiocb *iocb, const struct iovec *iov,
 }
 
 #ifdef CONFIG_FS_DAX
-static void ext4_end_io_unwritten(struct buffer_head *bh, int uptodate)
-{
-	struct inode *inode = bh->b_assoc_map->host;
-	/* XXX: breaks on 32-bit > 16TB. Is that even supported? */
-	loff_t offset = (loff_t)(uintptr_t)bh->b_private << inode->i_blkbits;
-	int err;
-	if (!uptodate)
-		return;
-	WARN_ON(!buffer_unwritten(bh));
-	err = ext4_convert_unwritten_extents(NULL, inode, offset, bh->b_size);
-}
-
 static int ext4_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 {
 	int result;
@@ -234,8 +222,7 @@ static int ext4_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 	if (IS_ERR(handle))
 		result = VM_FAULT_SIGBUS;
 	else
-		result = __dax_fault(vma, vmf, ext4_get_block_dax,
-						ext4_end_io_unwritten);
+		result = __dax_fault(vma, vmf, ext4_dax_mmap_get_block, NULL);
 
 	if (write) {
 		if (!IS_ERR(handle))
@@ -271,7 +258,7 @@ static int ext4_dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
 		result = VM_FAULT_SIGBUS;
 	else
 		result = __dax_pmd_fault(vma, addr, pmd, flags,
-				ext4_get_block_dax, ext4_end_io_unwritten);
+				ext4_dax_mmap_get_block, NULL);
 
 	if (write) {
 		if (!IS_ERR(handle))
@@ -292,8 +279,7 @@ static int ext4_dax_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
 	sb_start_pagefault(inode->i_sb);
 	file_update_time(vma->vm_file);
 	down_read(&EXT4_I(inode)->i_mmap_sem);
-	err = __dax_mkwrite(vma, vmf, ext4_get_block_dax,
-			    ext4_end_io_unwritten);
+	err = __dax_mkwrite(vma, vmf, ext4_dax_mmap_get_block, NULL);
 	up_read(&EXT4_I(inode)->i_mmap_sem);
 	sb_end_pagefault(inode->i_sb);
 
