@@ -19,6 +19,7 @@
 #include <linux/bit_spinlock.h>
 #include <linux/shrinker.h>
 #include <linux/resource.h>
+#include <linux/err.h>
 #include <linux/page_ref.h>
 
 struct mempolicy;
