@@ -527,7 +527,7 @@ struct request_queue {
 	RH_KABI_EXTEND(struct work_struct		requeue_work)
 	RH_KABI_EXTEND(atomic_t				mq_freeze_depth)
 	RH_KABI_EXTEND(struct blk_flush_queue   *fq)
-	RH_KABI_EXTEND(struct percpu_ref	mq_usage_counter)
+	RH_KABI_EXTEND(struct percpu_ref	q_usage_counter)
 	RH_KABI_EXTEND(bool			mq_sysfs_init_done)
 };
 
