@@ -2527,6 +2527,8 @@ static int do_swap_page(struct mm_struct *mm, struct vm_area_struct *vma,
 			migration_entry_wait(mm, pmd, address);
 		} else if (is_hwpoison_entry(entry)) {
 			ret = VM_FAULT_HWPOISON;
+		} else if (is_hmm_entry(entry)) {
+			ret = hmm_migrate_fault(vma, address, entry, pmd);
 		} else {
 			print_bad_pte(vma, address, orig_pte, NULL);
 			ret = VM_FAULT_SIGBUS;

@@ -364,11 +364,6 @@ int hmm_walk(struct vm_area_struct *vma,
 	pgd_t *pgdp;
 
 	pgdp = pgd_offset(vma->vm_mm, addr);
-	/*
-	 * Flush cache even if we don't flush tlb, this for weird CPU arch for
-	 * which HMM probably will never be use.
-	 */
-	flush_cache_range(vma, addr, end);
 	do {
 		int ret;
 

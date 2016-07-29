@@ -158,6 +158,13 @@ static int hmm_migrate_unmap(struct vm_area_struct *vma,
 			     void *private)
 {
 	struct hmm_migrate *migrate = private;
+	struct mm_struct *mm = vma->vm_mm;
+
+	/*
+	 * Flush cache even if we don't flush tlb, this for weird CPU arch for
+	 * which HMM probably will never be use.
+	 */
+	flush_cache_range(vma, addr, end);
 
 	spin_lock(ptl);
 	spin_lock(gtl);
@@ -169,20 +176,35 @@ static int hmm_migrate_unmap(struct vm_area_struct *vma,
 
 		*gtep = 0;
 
-		if (!pte_present(pte))
+		/*
+		 * We clear the PTE but do not flush so potentially a remote
+		 * CPU could still be writing to the page. If the entry was
+		 * previously clean then the architecture must guarantee that
+		 * a clear->dirty transition on a cached TLB entry is written
+		 * through and traps if the PTE is unmapped.
+		 */
+		pte = ptep_get_and_clear(mm, addr, ptep);
+
+		if (!pte_present(pte)) {
+			set_pte_at(vma->vm_mm, addr, ptep, pte);
 			continue;
+		}
 
 		/* FIXME handle zero page, ksm page, THP page, ... */
 		spage = vm_normal_page(vma, addr, pte);
 		if (!spage || PageCompound(spage) || !PageAnon(spage) ||
-		    PageError(spage) || PageKsm(spage))
+		    PageError(spage) || PageKsm(spage)) {
+			set_pte_at(vma->vm_mm, addr, ptep, pte);
 			continue;
+		}
 
 		/* FIXME skip COW pages, we should break COW but leave this for
 		 * latter.
 		 */
-		if (page_mapcount(spage) > 1)
+		if (page_mapcount(spage) > 1) {
+			set_pte_at(vma->vm_mm, addr, ptep, pte);
 			continue;
+		}
 
 		/*
 		 * Check that page is not pin ie no one did call get_user_pages
@@ -200,8 +222,12 @@ static int hmm_migrate_unmap(struct vm_area_struct *vma,
 		 * skip those pages.
 		 */
 		/* FIXME how do we want to proceed with COW pages ? */
-		if (page_count(spage) != 1)
+		if (page_count(spage) != 1) {
+			set_pte_at(vma->vm_mm, addr, ptep, pte);
 			continue;
+		}
+
+		flush_cache_page(vma, addr, page_to_pfn(spage));
 		get_page(spage);
 
 		migrate->cpages++;
@@ -222,11 +248,14 @@ static int hmm_migrate_unmap(struct vm_area_struct *vma,
 		 * for sure we are migrating.
 		 */
 		swap = make_hmm_entry(page_to_pfn(spage), HMM_SWP_PAGE);
-		pte = swp_entry_to_pte(swap);
-		if (pte_soft_dirty(*ptep))
+		if (pte_soft_dirty(pte)) {
+			pte = swp_entry_to_pte(swap);
 			pte = pte_swp_mksoft_dirty(pte);
+		} else
+			pte = swp_entry_to_pte(swap);
 		set_pte_at(vma->vm_mm, addr, ptep, pte);
 		hmm_migrate_get(migrate);
+		BUG_ON(pte_file(*ptep));
 
 	} while (ptep++, gtep++, addr += PAGE_SIZE, addr != end);
 	arch_leave_lazy_mmu_mode();
@@ -256,6 +285,9 @@ static int hmm_migrate_isolate(struct vm_area_struct *vma,
 		struct page *spage;
 		pte_t pte = *ptep;
 		swp_entry_t swap;
+
+		if (pte_present(pte) || pte_file(pte))
+			continue;
 
 		swap = pte_to_swp_entry(pte);
 		if (!is_hmm_entry(swap) || !hmm_entry_is_migrate(*gtep))
@@ -319,6 +351,9 @@ static int hmm_migrate_check(struct vm_area_struct *vma,
 		struct mem_cgroup *memcg;
 		pte_t pte = *ptep;
 		swp_entry_t swap;
+
+		if (pte_present(pte) || pte_file(pte))
+			continue;
 
 		swap = pte_to_swp_entry(pte);
 		if (!is_hmm_entry(swap) || !hmm_entry_is_migrate(*gtep))
@@ -449,6 +484,9 @@ static int hmm_migrate_finalize(struct vm_area_struct *vma,
 		pte_t pte = *ptep;
 		swp_entry_t swap;
 
+		if (pte_present(pte) || pte_file(pte))
+			continue;
+
 		swap = pte_to_swp_entry(pte);
 		if (!is_hmm_entry(swap) || !hmm_entry_is_migrate(*gtep))
 			continue;
@@ -483,12 +521,16 @@ static int hmm_migrate_cleanup(struct vm_area_struct *vma,
 		pte_t pte = *ptep;
 		swp_entry_t swap;
 
+		if (pte_present(pte) || pte_file(pte))
+			continue;
+
 		swap = pte_to_swp_entry(pte);
 		if (!is_hmm_entry(swap))
 			continue;
 		spage = hmm_swp_entry_to_page(swap);
 		VM_BUG_ON(!spage);
 
+		dpage = hmm_entry_to_page(*gtep);
 		if (hmm_entry_is_memcg(*gtep)) {
 			struct mem_cgroup *memcg;
 
@@ -499,7 +541,6 @@ static int hmm_migrate_cleanup(struct vm_area_struct *vma,
 		}
 
 		if (hmm_entry_is_migrate(*gtep)) {
-			dpage = hmm_entry_to_page(*gtep);
 			VM_BUG_ON(!spage);
 
 			/* Map dst page and do anon_vma dance. */
