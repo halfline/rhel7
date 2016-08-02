@@ -6018,6 +6018,8 @@ int tcp_conn_request(struct request_sock_ops *rsk_ops,
 	if (!req)
 		goto drop;
 
+	inet_rsk(req)->ireq_family = sk->sk_family;
+
 	tcp_rsk(req)->af_specific = af_ops;
 
 	tcp_clear_options(&tmp_opt);
