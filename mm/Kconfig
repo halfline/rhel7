@@ -274,6 +274,7 @@ config ARCH_ENABLE_HUGEPAGE_MIGRATION
 config HMM
 	bool
 	select GENERIC_PAGE_TABLE
+	select MMU_NOTIFIER
 
 config HMM_MIGRATE
 	bool "Migration with heterogeneous memory management (HMM)"
