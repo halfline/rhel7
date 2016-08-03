@@ -4372,6 +4372,16 @@ F:	Documentation/networking/i40e.txt
 F:	Documentation/networking/i40evf.txt
 F:	drivers/net/ethernet/intel/
 
+INTEL RDMA RNIC DRIVER
+M:     Faisal Latif <faisal.latif@intel.com>
+R:     Chien Tin Tung <chien.tin.tung@intel.com>
+R:     Mustafa Ismail <mustafa.ismail@intel.com>
+R:     Shiraz Saleem <shiraz.saleem@intel.com>
+R:     Tatyana Nikolova <tatyana.e.nikolova@intel.com>
+L:     linux-rdma@vger.kernel.org
+S:     Supported
+F:     drivers/infiniband/hw/i40iw/
+
 INTEL PRO/WIRELESS 2100, 2200BG, 2915ABG NETWORK CONNECTION SUPPORT
 M:	Stanislav Yakovlev <stas.yakovlev@gmail.com>
 L:	linux-wireless@vger.kernel.org
