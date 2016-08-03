@@ -6363,6 +6363,12 @@ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
 S:	Maintained
 F:	drivers/pci/host/*imx6*
 
+PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (VMD)
+M:	Keith Busch <keith.busch@intel.com>
+L:	linux-pci@vger.kernel.org
+S:	Supported
+F:	arch/x86/pci/vmd.c
+
 PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
 M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 M:	Jason Cooper <jason@lakedaemon.net>
