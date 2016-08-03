@@ -1095,13 +1095,14 @@ struct resource * __request_region(struct resource *parent,
 	res->name = name;
 	res->start = start;
 	res->end = start + n - 1;
-	res->flags = resource_type(parent);
-	res->flags |= IORESOURCE_BUSY | flags;
 
 	write_lock(&resource_lock);
 
 	for (;;) {
 		struct resource *conflict;
+
+		res->flags = resource_type(parent);
+		res->flags |= IORESOURCE_BUSY | flags;
 
 		conflict = __request_resource(parent, res);
 		if (!conflict)
