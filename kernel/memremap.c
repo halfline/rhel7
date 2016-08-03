@@ -60,7 +60,7 @@ static void *try_ram_remap(resource_size_t offset, size_t size)
  */
 void *memremap(resource_size_t offset, size_t size, unsigned long flags)
 {
-	int is_ram = region_intersects(offset, size, "System RAM");
+	int is_ram = region_intersects_ram(offset, size);
 	void *addr = NULL;
 
 	if (is_ram == REGION_MIXED) {
@@ -279,7 +279,7 @@ void *devm_memremap_pages(struct device *dev, struct resource *res,
 	align_start = res->start & ~(SECTION_SIZE - 1);
 	align_size = ALIGN(res->start + resource_size(res), SECTION_SIZE)
 		- align_start;
-	is_ram = region_intersects(align_start, align_size, "System RAM");
+	is_ram = region_intersects_ram(align_start, align_size);
 
 	if (is_ram == REGION_MIXED) {
 		WARN_ONCE(1, "%s attempted on mixed region %pr\n",
