@@ -123,21 +123,40 @@ EXPORT_SYMBOL_GPL(x86_msi);
 /* MSI arch specific hooks */
 int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
 {
+	struct pci_sysdata *sysdata = dev->bus->sysdata;
+
+	if (sysdata && sysdata->msi_ops && sysdata->msi_ops->setup_msi_irqs)
+		return sysdata->msi_ops->setup_msi_irqs(dev, nvec, type);
 	return x86_msi.setup_msi_irqs(dev, nvec, type);
 }
 
 void arch_teardown_msi_irqs(struct pci_dev *dev)
 {
+	struct pci_sysdata *sysdata = dev->bus->sysdata;
+
+	if (sysdata && sysdata->msi_ops && sysdata->msi_ops->teardown_msi_irqs)
+		return sysdata->msi_ops->teardown_msi_irqs(dev);
 	x86_msi.teardown_msi_irqs(dev);
 }
 
 void arch_teardown_msi_irq(unsigned int irq)
 {
+	struct msi_desc *desc =  irq_get_msi_desc(irq);
+	struct pci_sysdata *sysdata = NULL;
+
+	if (desc)
+		sysdata = desc->dev->bus->sysdata;
+	if (sysdata && sysdata->msi_ops && sysdata->msi_ops->teardown_msi_irq)
+		return sysdata->msi_ops->teardown_msi_irq(irq);
 	x86_msi.teardown_msi_irq(irq);
 }
 
 void arch_restore_msi_irqs(struct pci_dev *dev)
 {
+	struct pci_sysdata *sysdata = dev->bus->sysdata;
+
+	if (sysdata && sysdata->msi_ops && sysdata->msi_ops->restore_msi_irqs)
+		return sysdata->msi_ops->restore_msi_irqs(dev);
 	x86_msi.restore_msi_irqs(dev);
 }
 u32 arch_msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
