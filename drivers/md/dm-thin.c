@@ -322,6 +322,114 @@ struct thin_c {
 
 /*----------------------------------------------------------------*/
 
+/**
+ * __blkdev_issue_discard_async - queue a discard with async completion
+ * @bdev:	blockdev to issue discard for
+ * @sector:	start sector
+ * @nr_sects:	number of sectors to discard
+ * @gfp_mask:	memory allocation flags (for bio_alloc)
+ * @flags:	BLKDEV_IFL_* flags to control behaviour
+ * @parent_bio: parent discard bio that all sub discards get chained to
+ *
+ * Description:
+ *    Asynchronously issue a discard request for the sectors in question.
+ *    NOTE: this variant of blk-core's blkdev_issue_discard() is a stop-gap
+ *    that is being kept local to DM thinp until the block changes to allow
+ *    late bio splitting land upstream.
+ */
+static int __blkdev_issue_discard_async(struct block_device *bdev, sector_t sector,
+					sector_t nr_sects, gfp_t gfp_mask, unsigned long flags,
+					struct bio *parent_bio)
+{
+	struct request_queue *q = bdev_get_queue(bdev);
+	int type = REQ_WRITE | REQ_DISCARD;
+	unsigned int max_discard_sectors, granularity;
+	int alignment;
+	struct bio *bio;
+	int ret = 0;
+	struct blk_plug plug;
+
+	if (!q)
+		return -ENXIO;
+
+	if (!blk_queue_discard(q))
+		return -EOPNOTSUPP;
+
+	/* Zero-sector (unknown) and one-sector granularities are the same.  */
+	granularity = max(q->limits.discard_granularity >> 9, 1U);
+	alignment = (bdev_discard_alignment(bdev) >> 9) % granularity;
+
+	/*
+	 * Ensure that max_discard_sectors is of the proper
+	 * granularity, so that requests stay aligned after a split.
+	 */
+	max_discard_sectors = min(q->limits.max_discard_sectors, UINT_MAX >> 9);
+	max_discard_sectors -= max_discard_sectors % granularity;
+	if (unlikely(!max_discard_sectors)) {
+		/* Avoid infinite loop below. Being cautious never hurts. */
+		return -EOPNOTSUPP;
+	}
+
+	if (flags & BLKDEV_DISCARD_SECURE) {
+		if (!blk_queue_secdiscard(q))
+			return -EOPNOTSUPP;
+		type |= REQ_SECURE;
+	}
+
+	blk_start_plug(&plug);
+	while (nr_sects) {
+		unsigned int req_sects;
+		sector_t end_sect, tmp;
+
+		/*
+		 * Required bio_put occurs in bio_endio thanks to bio_chain below
+		 */
+		bio = bio_alloc(gfp_mask, 1);
+		if (!bio) {
+			ret = -ENOMEM;
+			break;
+		}
+
+		req_sects = min_t(sector_t, nr_sects, max_discard_sectors);
+
+		/*
+		 * If splitting a request, and the next starting sector would be
+		 * misaligned, stop the discard at the previous aligned sector.
+		 */
+		end_sect = sector + req_sects;
+		tmp = end_sect;
+		if (req_sects < nr_sects &&
+		    sector_div(tmp, granularity) != alignment) {
+			end_sect = end_sect - alignment;
+			sector_div(end_sect, granularity);
+			end_sect = end_sect * granularity + alignment;
+			req_sects = end_sect - sector;
+		}
+
+		bio_chain(bio, parent_bio);
+
+		bio->bi_sector = sector;
+		bio->bi_bdev = bdev;
+
+		bio->bi_size = req_sects << 9;
+		nr_sects -= req_sects;
+		sector = end_sect;
+
+		submit_bio(type, bio);
+
+		/*
+		 * We can loop for a long time in here, if someone does
+		 * full device discards (like mkfs). Be nice and allow
+		 * us to schedule out to avoid softlocking if preempt
+		 * is disabled.
+		 */
+		cond_resched();
+	}
+	blk_finish_plug(&plug);
+
+	return ret;
+}
+
 static bool block_size_is_power_of_two(struct pool *pool)
 {
 	return pool->sectors_per_block_shift >= 0;
@@ -337,23 +445,11 @@ static sector_t block_to_sectors(struct pool *pool, dm_block_t b)
 static int issue_discard(struct thin_c *tc, dm_block_t data_b, dm_block_t data_e,
 			 struct bio *parent_bio)
 {
-	int type = REQ_WRITE | REQ_DISCARD;
 	sector_t s = block_to_sectors(tc->pool, data_b);
 	sector_t len = block_to_sectors(tc->pool, data_e - data_b);
-	struct bio *bio = NULL;
-	struct blk_plug plug;
-	int ret;
 
-	blk_start_plug(&plug);
-	ret = __blkdev_issue_discard(tc->pool_dev->bdev, s, len,
-				     GFP_NOWAIT, type, &bio);
-	if (!ret && bio) {
-		bio_chain(bio, parent_bio);
-		submit_bio(type, bio);
-	}
-	blk_finish_plug(&plug);
-
-	return ret;
+	return __blkdev_issue_discard_async(tc->pool_dev->bdev, s, len,
+					    GFP_NOWAIT, 0, parent_bio);
 }
 
 /*----------------------------------------------------------------*/
@@ -1499,11 +1595,11 @@ static void break_up_discard_bio(struct thin_c *tc, dm_block_t begin, dm_block_t
 
 		/*
 		 * The parent bio must not complete before sub discard bios are
-		 * chained to it (see issue_discard's bio_chain)!
+		 * chained to it (see __blkdev_issue_discard_async's bio_chain)!
 		 *
 		 * This per-mapping bi_remaining increment is paired with
 		 * the implicit decrement that occurs via bio_endio() in
-		 * process_prepared_discard_passdown().
+		 * process_prepared_discard_{passdown,no_passdown}.
 		 */
 		bio_inc_remaining(bio);
 		if (!dm_deferred_set_add_work(pool->all_io_ds, &m->list))
