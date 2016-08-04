@@ -1544,6 +1544,35 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Aug 04 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-485.el7]
+- [mm] percpu: fix synchronization between synchronous map extension and chunk destruction (Joe Lawrence) [1344569] {CVE-2016-4794}
+- [mm] percpu: fix synchronization between chunk->map_extend_work and chunk destruction (Joe Lawrence) [1344569] {CVE-2016-4794}
+- [mm] percpu: fix locking regression in the failure path of pcpu_alloc() (Joe Lawrence) [1344569] {CVE-2016-4794}
+- [s390] qeth: delete napi struct when removing a qeth device (Hendrik Brueckner) [1357030]
+- [s390] kprobes: Fix conflict between jprobes and function graph tracing (Jiri Olsa) [1347620]
+- [hid] hiddev: validate num_values for HIDIOCGUSAGES, HIDIOCSUSAGES commands (Yauheni Kaliuta) [1360029] {CVE-2016-5829}
+- [scsi] cxlflash: Verify problem state area is mapped before notifying shutdown (Steve Best) [1361359]
+- [scsi] cxlflash: Shutdown notify support for CXL Flash cards (Steve Best) [1361359]
+- [scsi] cxlflash: Add device dependent flags (Steve Best) [1361359]
+- [scsi] cxlflash: Fix to drain operations from previous reset (Steve Best) [1361359]
+- [scsi] cxl: Make vPHB device node match adapter's (Steve Best) [1361359]
+- [scsi] cxlflash: Fix to resolve dead-lock during EEH recovery (Steve Best) [1361359]
+- [scsi] fix race between simultaneous decrements of ->host_failed (Gustavo Duarte) [1357946]
+- [input] Enable VMMOUSE support (Lauro Ramos Venancio) [1331578]
+- [input] vmmouse - remove port reservation (Lauro Ramos Venancio) [1331578]
+- [input] vmmouse - fix absolute device registration (Lauro Ramos Venancio) [1331578]
+- [input] add vmmouse driver (Lauro Ramos Venancio) [1331578]
+- [kernel] modules: Add kernel parameter to blacklist modules (Prarit Bhargava) [1361585]
+- [kernel] rcu: Fix attempt to avoid unsolicited offloading of callbacks (Luiz Capitulino) [1356726]
+- [kernel] rcu: Fix CONFIG_RCU_NOCB_CPU_ALL panic on machines with sparse CPU mask (Luiz Capitulino) [1356726]
+- [kernel] rcu: Convert rcutree_plugin.h printk calls (Luiz Capitulino) [1356726]
+- [kernel] watchdog, sysctl: fix pointer to watch_cpumask in kernel_table (Jerome Marchand) [1360787]
+- [netdrv] ibmvnic: Fix passive VNIC server login process (Gustavo Duarte) [1357915]
+- [netdrv] ibmvnic: simplify and improve driver probe function (Gustavo Duarte) [1357915]
+- [netdrv] ibmvnic: dispose irq mappings (Gustavo Duarte) [1357915]
+- [netdrv] ibmvnic: properly start and stop tx queues (Gustavo Duarte) [1357915]
+- [netdrv] ibmvnic: fix to use list_for_each_safe() when delete items (Gustavo Duarte) [1357915]
+
 * Wed Aug 03 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-484.el7]
 - [net] geneve: fixup netdevice_notifier registration (Sabrina Dubroca) [1353790]
 - [wireless] convert to use netdev_notifier_info (Sabrina Dubroca) [1353790]
