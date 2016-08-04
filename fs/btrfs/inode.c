@@ -6587,6 +6587,7 @@ static int btrfs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
 	drop_on_err = 1;
 	/* these must be set before we unlock the inode */
 	inode->i_op = &btrfs_dir_inode_operations.ops;
+	inode->i_flags |= S_IOPS_WRAPPER;
 	inode->i_fop = &btrfs_dir_file_operations;
 
 	err = btrfs_init_inode_security(trans, inode, dir, &dentry->d_name);
@@ -9007,6 +9008,7 @@ int btrfs_create_subvol_root(struct btrfs_trans_handle *trans,
 	if (IS_ERR(inode))
 		return PTR_ERR(inode);
 	inode->i_op = &btrfs_dir_inode_operations.ops;
+	inode->i_flags |= S_IOPS_WRAPPER;
 	inode->i_fop = &btrfs_dir_file_operations;
 
 	set_nlink(inode, 1);
