@@ -3288,6 +3288,11 @@ static void ipr_worker_thread(struct work_struct *work)
 		return;
 	}
 
+	if (!ioa_cfg->scan_enabled) {
+		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+		return;
+	}
+
 restart:
 	do {
 		did_work = 0;
@@ -10427,6 +10432,7 @@ static void ipr_remove(struct pci_dev *pdev)
 static int ipr_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
 {
 	struct ipr_ioa_cfg *ioa_cfg;
+	unsigned long flags;
 	int rc, i;
 
 	rc = ipr_probe_ioa(pdev, dev_id);
@@ -10479,7 +10485,10 @@ static int ipr_probe(struct pci_dev *pdev, const struct pci_device_id *dev_id)
 		}
 	}
 
+	spin_lock_irqsave(ioa_cfg->host->host_lock, flags);
+	ioa_cfg->scan_enabled = 1;
 	schedule_work(&ioa_cfg->work_q);
+	spin_unlock_irqrestore(ioa_cfg->host->host_lock, flags);
 	return 0;
 }
 
