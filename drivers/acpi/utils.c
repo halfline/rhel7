@@ -699,9 +699,6 @@ bool acpi_check_dsm(acpi_handle handle, const u8 *uuid, u64 rev, u64 funcs)
 	u64 mask = 0;
 	union acpi_object *obj;
 
-	if (funcs == 0)
-		return false;
-
 	obj = acpi_evaluate_dsm(handle, uuid, rev, 0, NULL);
 	if (!obj)
 		return false;
@@ -713,6 +710,9 @@ bool acpi_check_dsm(acpi_handle handle, const u8 *uuid, u64 rev, u64 funcs)
 		for (i = 0; i < obj->buffer.length && i < 8; i++)
 			mask |= (((u8)obj->buffer.pointer[i]) << (i * 8));
 	ACPI_FREE(obj);
+
+	if (funcs == 0)
+		return true;
 
 	/*
 	 * RHEL7: If this is a Cisco system and a mask of 0x80 is returned
