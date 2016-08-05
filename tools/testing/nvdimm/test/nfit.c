@@ -1550,7 +1550,8 @@ static __init int nfit_test_init(void)
 			goto err_register;
 		}
 
-		rc = dma_coerce_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+		pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
+		rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
 		if (rc)
 			goto err_register;
 
