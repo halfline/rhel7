@@ -540,6 +540,7 @@ static struct vmem_altmap *__nvdimm_setup_pfn(struct nd_pfn *nd_pfn,
 
 static int nd_pfn_init(struct nd_pfn *nd_pfn)
 {
+	u32 dax_label_reserve = is_nd_dax(&nd_pfn->dev) ? SZ_128K : 0;
 	struct nd_namespace_common *ndns = nd_pfn->ndns;
 	u32 start_pad = 0, end_trunc = 0;
 	resource_size_t start, size;
@@ -611,10 +612,11 @@ static int nd_pfn_init(struct nd_pfn *nd_pfn)
 		 * PMD_SIZE chunks.
 		 */
 		memmap_size = ALIGN(64 * npfns, PMD_SIZE);
-		offset = ALIGN(start + SZ_8K + memmap_size, nd_pfn->align)
-			- start;
+		offset = ALIGN(start + SZ_8K + memmap_size + dax_label_reserve,
+				nd_pfn->align) - start;
 	} else if (nd_pfn->mode == PFN_MODE_RAM)
-		offset = ALIGN(start + SZ_8K, nd_pfn->align) - start;
+		offset = ALIGN(start + SZ_8K + dax_label_reserve,
+				nd_pfn->align) - start;
 	else
 		return -ENXIO;
 
