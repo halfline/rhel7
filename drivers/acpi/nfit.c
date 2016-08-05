@@ -875,6 +875,34 @@ static ssize_t device_show(struct device *dev,
 }
 static DEVICE_ATTR_RO(device);
 
+static ssize_t subsystem_vendor_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct acpi_nfit_control_region *dcr = to_nfit_dcr(dev);
+
+	return sprintf(buf, "0x%04x\n", be16_to_cpu(dcr->subsystem_vendor_id));
+}
+static DEVICE_ATTR_RO(subsystem_vendor);
+
+static ssize_t subsystem_rev_id_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct acpi_nfit_control_region *dcr = to_nfit_dcr(dev);
+
+	return sprintf(buf, "0x%04x\n",
+			be16_to_cpu(dcr->subsystem_revision_id));
+}
+static DEVICE_ATTR_RO(subsystem_rev_id);
+
+static ssize_t subsystem_device_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct acpi_nfit_control_region *dcr = to_nfit_dcr(dev);
+
+	return sprintf(buf, "0x%04x\n", be16_to_cpu(dcr->subsystem_device_id));
+}
+static DEVICE_ATTR_RO(subsystem_device);
+
 static int num_nvdimm_formats(struct nvdimm *nvdimm)
 {
 	struct nfit_mem *nfit_mem = nvdimm_provider_data(nvdimm);
@@ -992,11 +1020,14 @@ static struct attribute *acpi_nfit_dimm_attributes[] = {
 	&dev_attr_phys_id.attr,
 	&dev_attr_vendor.attr,
 	&dev_attr_device.attr,
+	&dev_attr_rev_id.attr,
+	&dev_attr_subsystem_vendor.attr,
+	&dev_attr_subsystem_device.attr,
+	&dev_attr_subsystem_rev_id.attr,
 	&dev_attr_format.attr,
 	&dev_attr_formats.attr,
 	&dev_attr_format1.attr,
 	&dev_attr_serial.attr,
-	&dev_attr_rev_id.attr,
 	&dev_attr_flags.attr,
 	&dev_attr_id.attr,
 	NULL,
