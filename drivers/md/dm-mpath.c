@@ -436,10 +436,17 @@ failed:
  */
 static int must_push_back(struct multipath *m)
 {
-	return (test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) ||
-		((test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) !=
-		  test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags)) &&
-		 dm_noflush_suspending(m->ti)));
+	bool r;
+	unsigned long flags;
+
+	spin_lock_irqsave(&m->lock, flags);
+	r = (test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) ||
+	     ((test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) !=
+	       test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags)) &&
+	      dm_noflush_suspending(m->ti)));
+	spin_unlock_irqrestore(&m->lock, flags);
+
+	return r;
 }
 
 /*
@@ -1424,12 +1431,14 @@ static void multipath_postsuspend(struct dm_target *ti)
 static void multipath_resume(struct dm_target *ti)
 {
 	struct multipath *m = ti->private;
+	unsigned long flags;
 
+	spin_lock_irqsave(&m->lock, flags);
 	if (test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags))
 		set_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags);
 	else
 		clear_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags);
-	smp_mb__after_atomic();
+	spin_unlock_irqrestore(&m->lock, flags);
 }
 
 /*
