@@ -189,7 +189,7 @@ int sysctl_lowmem_reserve_ratio[MAX_NR_ZONES-1] = {
 
 EXPORT_SYMBOL(totalram_pages);
 
-static char * const zone_names[MAX_NR_ZONES] = {
+static char * const zone_names[REAL_MAX_ZONES] = {
 #ifdef CONFIG_ZONE_DMA
 	 "DMA",
 #endif
@@ -4617,7 +4617,13 @@ void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
 	if (altmap && start_pfn == altmap->base_pfn)
 		start_pfn += altmap->reserve;
 
-	z = &pgdat->node_zones[zone];
+#ifdef CONFIG_ZONE_DEVICE
+	if (zone == ZONE_DEVICE)
+		z = pgdat->zone_device;
+	else
+#endif
+		z = &pgdat->node_zones[zone];
+
 	for (pfn = start_pfn; pfn < end_pfn; pfn++) {
 		/*
 		 * There can be holes in boot-time mem_map[]s handed to this
@@ -5236,6 +5242,16 @@ static void __meminit calculate_node_totalpages(struct pglist_data *pgdat,
 		totalpages += size;
 		realtotalpages += real_size;
 	}
+#ifdef CONFIG_ZONE_DEVICE
+	/*
+	 * The NVRAM driver adds pmem regions to the ZONE_DEVICE through
+	 * memory hotplug, which (through ensure_zone_is_initialized) will
+	 * take care of zone initialization, if the wait_table is NULL.
+	 */
+	pgdat->zone_device->wait_table = NULL;
+	pgdat->zone_device->spanned_pages = 0;
+	pgdat->zone_device->present_pages = 0;
+#endif
 
 	pgdat->node_spanned_pages = totalpages;
 	pgdat->node_present_pages = realtotalpages;
@@ -5362,10 +5378,17 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 	init_waitqueue_head(&pgdat->pfmemalloc_wait);
 	pgdat_page_cgroup_init(pgdat);
 
-	for (j = 0; j < MAX_NR_ZONES; j++) {
+	for (j = 0; j < REAL_MAX_ZONES; j++) {
 		struct zone *zone = pgdat->node_zones + j;
 		unsigned long size, realsize, freesize, memmap_pages;
-		unsigned long zone_start_pfn = zone->zone_start_pfn;
+		unsigned long zone_start_pfn;
+
+#ifdef CONFIG_ZONE_DEVICE
+		if (j == ZONE_DEVICE)
+			zone = pgdat->zone_device;
+#endif
+
+		zone_start_pfn = zone->zone_start_pfn;
 
 		size = zone->spanned_pages;
 		realsize = freesize = zone->present_pages;
@@ -5477,7 +5500,7 @@ static void __init_refok alloc_node_mem_map(struct pglist_data *pgdat)
 #endif /* CONFIG_FLAT_NODE_MEM_MAP */
 }
 
-void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
+void __init_refok free_area_init_node(int nid, unsigned long *zones_size,
 		unsigned long node_start_pfn, unsigned long *zholes_size)
 {
 	pg_data_t *pgdat = NODE_DATA(nid);
@@ -5494,6 +5517,13 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 	get_pfn_range_for_nid(nid, &start_pfn, &end_pfn);
 #else
 	start_pfn = node_start_pfn;
+#endif
+#ifdef CONFIG_ZONE_DEVICE
+	if (!slab_is_available())
+		pgdat->zone_device =
+			alloc_bootmem_node(pgdat, sizeof(struct zone));
+	else
+		pgdat->zone_device = kmalloc(sizeof(struct zone), GFP_KERNEL);
 #endif
 	calculate_node_totalpages(pgdat, start_pfn, end_pfn,
 				  zones_size, zholes_size);

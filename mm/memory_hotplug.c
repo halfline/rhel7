@@ -387,7 +387,13 @@ static int __meminit __add_zone(struct zone *zone, unsigned long phys_start_pfn)
 	unsigned long flags, pfn;
 	int ret;
 
-	zone_type = zone - pgdat->node_zones;
+#ifdef CONFIG_ZONE_DEVICE
+	if (zone == pgdat->zone_device)
+		zone_type = ZONE_DEVICE;
+	else
+#endif
+		zone_type = zone - pgdat->node_zones;
+
 	ret = ensure_zone_is_initialized(zone, phys_start_pfn, nr_pages);
 	if (ret)
 		return ret;

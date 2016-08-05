@@ -311,11 +311,22 @@ enum zone_type {
 	ZONE_HIGHMEM,
 #endif
 	ZONE_MOVABLE,
-#ifdef CONFIG_ZONE_DEVICE
-	ZONE_DEVICE,
-#endif
+
+	/*
+	 * RHEL: we cannot grow MAX_NR_ZONES (see below) and need to
+	 * encode ZONE_DEVICE another way.
+	 */
 	__MAX_NR_ZONES
 
+#ifndef __GENKSYMS__
+	,
+#ifdef CONFIG_ZONE_DEVICE
+	ZONE_DEVICE = __MAX_NR_ZONES,
+	REAL_MAX_ZONES,
+#else
+	REAL_MAX_ZONES = __MAX_NR_ZONES,
+#endif
+#endif
 };
 
 #ifndef __GENERATING_BOUNDS_H
@@ -805,8 +816,13 @@ typedef struct pglist_data {
 	RH_KABI_RESERVE(1)
 #endif /* CONFIG_DEFERRED_STRUCT_PAGE_INIT */
 
-	/* reserved for Red Hat */
+#ifdef CONFIG_ZONE_DEVICE
+	RH_KABI_USE(2, struct zone *zone_device)
+#else
 	RH_KABI_RESERVE(2)
+#endif
+
+	/* reserved for Red Hat */
 	RH_KABI_RESERVE(3)
 	RH_KABI_RESERVE(4)
 } pg_data_t;
@@ -836,7 +852,10 @@ static inline bool pgdat_is_empty(pg_data_t *pgdat)
 static inline int zone_id(const struct zone *zone)
 {
 	struct pglist_data *pgdat = zone->zone_pgdat;
-
+#ifdef CONFIG_ZONE_DEVICE
+	if (zone == pgdat->zone_device)
+		return ZONE_DEVICE;
+#endif
 	return zone - pgdat->node_zones;
 }
 

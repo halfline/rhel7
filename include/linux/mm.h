@@ -656,6 +656,7 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 #define NODES_PGOFF		(SECTIONS_PGOFF - NODES_WIDTH)
 #define ZONES_PGOFF		(NODES_PGOFF - ZONES_WIDTH)
 #define LAST_CPUPID_PGOFF	(ZONES_PGOFF - LAST_CPUPID_WIDTH)
+#define ZONE_DEVICE_PGOFF	(LAST_CPUPID_PGOFF - ZONE_DEVICE_WIDTH)
 
 /*
  * Define the bit shifts to access each section.  For non-existent
@@ -666,6 +667,7 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 #define NODES_PGSHIFT		(NODES_PGOFF * (NODES_WIDTH != 0))
 #define ZONES_PGSHIFT		(ZONES_PGOFF * (ZONES_WIDTH != 0))
 #define LAST_CPUPID_PGSHIFT	(LAST_CPUPID_PGOFF * (LAST_CPUPID_WIDTH != 0))
+#define ZONE_DEVICE_PGSHIFT	(ZONE_DEVICE_PGOFF * (ZONE_DEVICE_WIDTH != 0))
 
 /* NODE:ZONE or SECTION:ZONE is used to ID a zone for the buddy allocator */
 #ifdef NODE_NOT_IN_PAGE_FLAGS
@@ -689,6 +691,8 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 #define SECTIONS_MASK		((1UL << SECTIONS_WIDTH) - 1)
 #define LAST_CPUPID_MASK	((1UL << LAST_CPUPID_WIDTH) - 1)
 #define ZONEID_MASK		((1UL << ZONEID_SHIFT) - 1)
+
+#define ZONE_DEVICE_FLAG	(1UL << ZONE_DEVICE_PGSHIFT)
 
 static inline enum zone_type page_zonenum(const struct page *page)
 {
@@ -886,6 +890,10 @@ static inline bool cpupid_match_pid(struct task_struct *task, int cpupid)
 
 static inline struct zone *page_zone(const struct page *page)
 {
+#ifdef CONFIG_ZONE_DEVICE
+	if (page->flags & ZONE_DEVICE_FLAG)
+		return NODE_DATA(page_to_nid(page))->zone_device;
+#endif
 	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
 }
 
@@ -905,7 +913,13 @@ static inline unsigned long page_to_section(const struct page *page)
 static inline void set_page_zone(struct page *page, enum zone_type zone)
 {
 	page->flags &= ~(ZONES_MASK << ZONES_PGSHIFT);
-	page->flags |= (zone & ZONES_MASK) << ZONES_PGSHIFT;
+#ifdef CONFIG_ZONE_DEVICE
+	page->flags &= ~ZONE_DEVICE_FLAG;
+	if (zone == ZONE_DEVICE)
+		page->flags |= ZONE_DEVICE_FLAG;
+	else
+#endif
+		page->flags |= (zone & ZONES_MASK) << ZONES_PGSHIFT;
 }
 
 static inline void set_page_node(struct page *page, unsigned long node)
