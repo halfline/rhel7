@@ -24,15 +24,27 @@ long pmem_direct_access(struct block_device *bdev, sector_t sector,
 	sector_t first_bad;
 	int num_bad;
 
-	/* disable DAX for nfit_test pmem devices */
-	if (get_nfit_res(pmem->phys_addr + offset)) {
-		dev_info_once(pmem->bb.dev, "dax is disabled for nfit_test\n");
-		return -EIO;
-	}
-
 	/* If we can't even map the first page, return error */
 	if (unlikely(is_bad_pmem(&pmem->bb, sector, PAGE_SIZE)))
 		return -EIO;
+
+	/*
+	 * Limit dax to a single page at a time given vmalloc()-backed
+	 * in the nfit_test case.
+	 */
+	if (get_nfit_res(pmem->phys_addr + offset)) {
+		struct page *page;
+
+		*kaddr = pmem->virt_addr + offset;
+		page = vmalloc_to_page(pmem->virt_addr + offset);
+		*pfn = page_to_pfn_t(page);
+		dev_dbg_ratelimited(disk_to_dev(bdev->bd_disk)->parent,
+				"%s: sector: %#llx pfn: %#lx\n", __func__,
+				(unsigned long long) sector, page_to_pfn(page));
+
+		return PAGE_SIZE;
+	}
+
 	*kaddr = pmem->virt_addr + offset;
 	*pfn = phys_to_pfn_t(pmem->phys_addr + offset, pmem->pfn_flags);
 
