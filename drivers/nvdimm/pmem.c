@@ -133,8 +133,7 @@ static void pmem_make_request(struct request_queue *q, struct bio *bio)
 	int rc = 0;
 	bool do_acct;
 	unsigned long start;
-	struct block_device *bdev = bio->bi_bdev;
-	struct pmem_device *pmem = bdev->bd_disk->private_data;
+	struct pmem_device *pmem = q->queuedata;
 	struct bio_vec *bvec;
 	sector_t sector;
 	int i;
@@ -160,7 +159,7 @@ static void pmem_make_request(struct request_queue *q, struct bio *bio)
 static int pmem_rw_page(struct block_device *bdev, sector_t sector,
 		       struct page *page, int rw)
 {
-	struct pmem_device *pmem = bdev->bd_disk->private_data;
+	struct pmem_device *pmem = bdev->bd_queue->queuedata;
 	int rc;
 
 	rc = pmem_do_bvec(pmem, page, PAGE_CACHE_SIZE, 0, rw, sector);
@@ -182,7 +181,7 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
 static long pmem_direct_access(struct block_device *bdev, sector_t sector,
 		      void __pmem **kaddr, pfn_t *pfn)
 {
-	struct pmem_device *pmem = bdev->bd_disk->private_data;
+	struct pmem_device *pmem = bdev->bd_queue->queuedata;
 	resource_size_t offset = sector * 512 + pmem->data_offset;
 
 	*kaddr = pmem->virt_addr + offset;
@@ -266,6 +265,7 @@ static int pmem_attach_disk(struct device *dev,
 	blk_queue_max_hw_sectors(pmem->pmem_queue, UINT_MAX);
 	blk_queue_bounce_limit(pmem->pmem_queue, BLK_BOUNCE_ANY);
 	queue_flag_set_unlocked(QUEUE_FLAG_NONROT, pmem->pmem_queue);
+	pmem->pmem_queue->queuedata = pmem;
 
 	disk = alloc_disk_node(0, nid);
 	if (!disk) {
@@ -274,7 +274,6 @@ static int pmem_attach_disk(struct device *dev,
 	}
 
 	disk->fops		= &pmem_fops;
-	disk->private_data	= pmem;
 	disk->queue		= pmem->pmem_queue;
 	disk->flags		= GENHD_FL_EXT_DEVT;
 	nvdimm_namespace_disk_name(ndns, disk->disk_name);
