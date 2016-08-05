@@ -57,6 +57,8 @@ EXPORT_SYMBOL(I_BDEV);
 static void bdev_inode_switch_bdi(struct inode *inode,
 			struct backing_dev_info *dst)
 {
+	int ret;
+
 	while (true) {
 		spin_lock(&inode->i_lock);
 		if (!(inode->i_state & I_DIRTY)) {
@@ -65,7 +67,13 @@ static void bdev_inode_switch_bdi(struct inode *inode,
 			return;
 		}
 		spin_unlock(&inode->i_lock);
-		WARN_ON_ONCE(write_inode_now(inode, true));
+		ret = write_inode_now(inode, true);
+		if (ret) {
+			char name[BDEVNAME_SIZE];
+			pr_warn_ratelimited("VFS: Dirty inode writeback failed "
+					    "for block device %s (err=%d).\n",
+					    bdevname(I_BDEV(inode), name), ret);
+		}
 	}
 }
 
