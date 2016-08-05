@@ -18,6 +18,7 @@
 #include <linux/mutex.h>
 #include <linux/ndctl.h>
 #include <linux/types.h>
+#include <linux/nd.h>
 #include <linux/idr.h>
 #include "label.h"
 
@@ -169,6 +170,7 @@ int nd_integrity_init(struct gendisk *disk, unsigned long meta_size);
 void wait_nvdimm_bus_probe_idle(struct device *dev);
 void nd_device_register(struct device *dev);
 void nd_device_unregister(struct device *dev, enum nd_async_mode mode);
+void nd_device_notify(struct device *dev, enum nvdimm_event event);
 int nd_uuid_store(struct device *dev, u8 **uuid_out, const char *buf,
 		size_t len);
 ssize_t nd_sector_size_show(unsigned long current_lbasize,
