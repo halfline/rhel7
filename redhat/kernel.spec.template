@@ -1544,6 +1544,27 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Aug 08 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-489.el7]
+- [infiniband] ib/mlx4: Add diagnostic hardware counters (kamal heib) [1360924]
+- [netdrv] mlx4: Query performance and diagnostics counters (kamal heib) [1360924]
+- [netdrv] mlx4: Add diagnostic counters capability bit (kamal heib) [1360924]
+- [netdrv] bnxt_en: Add new NPAR and dual media device IDs (John Linville) [1360126]
+- [scsi] ipr: Fix error return code in ipr_probe_ioa() (Steve Best) [1364138]
+- [scsi] ipr: Wait to do async scan until scsi host is initialized (Steve Best) [1364138]
+- [scsi] ipr: Increase MSIX vectors number (Steve Best) [1364138]
+- [scsi] ipr: Add new CCIN for new adapters support (Steve Best) [1364138]
+- [acpi] Change NFIT driver to insert new resource (Jeff Moyer) [1342696]
+- [kernel] resource: Export insert_resource and remove_resource (Jeff Moyer) [1342696]
+- [kernel] resource: Add remove_resource interface (Jeff Moyer) [1342696]
+- [kernel] resource: Change __request_region to inherit from immediate parent (Jeff Moyer) [1342696]
+- [acpi] apei/einj: Allow memory error injection to NVDIMM (Jeff Moyer) [1342696]
+- [kernel] resource: Add region_intersects_pmem() (Jeff Moyer) [1342696]
+- [kernel] resource: Add @flags to region_intersects() (Jeff Moyer) [1342696]
+- [acpi] apei: Cleanup alignment-aware accesses (Jeff Moyer) [1342696]
+- [acpi] apei, einj: Changes to the ACPI/APEI/EINJ debugfs interface (Jeff Moyer) [1342696]
+- [acpi] apei: Add parameter check before error injection (Jeff Moyer) [1342696]
+- [acpi] apei, einj: Fix error return code in einj_init() (Jeff Moyer) [1342696]
+
 * Fri Aug 05 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-488.el7]
 - [block] revert "remove struct bio_batch" (Mike Snitzer) [1361484]
 - [block] revert "add __blkdev_issue_discard" (Mike Snitzer) [1361484]
