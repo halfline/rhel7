@@ -118,15 +118,12 @@ static int ovl_getattr(struct vfsmount *mnt, struct dentry *dentry,
 
 int ovl_permission(struct inode *inode, int mask)
 {
-	struct ovl_entry *oe = inode->i_private;
 	bool is_upper;
-	struct dentry *realdentry = ovl_entry_real(oe, &is_upper);
-	struct inode *realinode;
+	struct inode *realinode = ovl_inode_real(inode, &is_upper);
 	const struct cred *old_cred;
 	int err;
 
 	/* Careful in RCU walk mode */
-	realinode = d_inode_rcu(realdentry);
 	if (!realinode) {
 		WARN_ON(!(mask & MAY_NOT_BLOCK));
 		return -ENOENT;
@@ -344,7 +341,7 @@ out:
 
 struct posix_acl *ovl_get_acl(struct inode *inode, int type)
 {
-	struct inode *realinode = ovl_inode_real(inode);
+	struct inode *realinode = ovl_inode_real(inode, NULL);
 	const struct cred *old_cred;
 	struct posix_acl *acl;
 
@@ -422,8 +419,7 @@ static const struct inode_operations ovl_symlink_inode_operations = {
 	.removexattr	= ovl_removexattr,
 };
 
-struct inode *ovl_new_inode(struct super_block *sb, umode_t mode,
-			    struct ovl_entry *oe)
+struct inode *ovl_new_inode(struct super_block *sb, umode_t mode)
 {
 	struct inode *inode;
 
@@ -434,7 +430,6 @@ struct inode *ovl_new_inode(struct super_block *sb, umode_t mode,
 	inode->i_ino = get_next_ino();
 	inode->i_mode = mode;
 	inode->i_flags |= S_NOATIME | S_NOCMTIME;
-	inode->i_private = oe;
 
 	mode &= S_IFMT;
 	switch (mode) {
