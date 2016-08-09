@@ -2060,6 +2060,17 @@ static inline dop_real_t get_real_dop(struct dentry *dentry)
 	return (offsetof(struct dentry_operations_wrapper, d_real) < wrapper->size) ? wrapper->d_real : NULL;
 }
 
+/**
+ * d_real - Return the real dentry
+ * @dentry: the dentry to query
+ * @inode: inode to select the dentry from multiple layers (can be NULL)
+ * @flags: open flags to control copy-up behavior
+ *
+ * If dentry is on an union/overlay, then return the underlying, real dentry.
+ * Otherwise return the dentry itself.
+ *
+ * See also: Documentation/filesystems/vfs.txt
+ */
 static inline struct dentry *d_real(struct dentry *dentry,
 				    const struct inode *inode,
 				    unsigned int flags)

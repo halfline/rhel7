@@ -166,7 +166,8 @@ struct dentry_operations_wrapper {
 	struct dentry_operations ops;
 	size_t size;
 
-	struct dentry *(*d_real)(struct dentry *, const struct inode *, unsigned int);
+	struct dentry *(*d_real)(struct dentry *, const struct inode *,
+				 unsigned int);
 } ____cacheline_aligned;
 
 /*
