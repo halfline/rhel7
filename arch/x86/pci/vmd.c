@@ -144,10 +144,13 @@ static struct irq_chip vmd_msi_controller = {
  * XXX: We can be even smarter selecting the best IRQ once we solve the
  * affinity problem.
  */
-static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd)
+static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *desc)
 {
-	int i, best = 0;
+	int i, best = 1;
 	unsigned long flags;
+
+	if (!desc->msi_attrib.is_msix || vmd->msix_count == 1)
+		return &vmd->irqs[0];
 
 	raw_spin_lock_irqsave(&list_lock, flags);
 	for (i = 1; i < vmd->msix_count; i++)
@@ -191,7 +194,7 @@ static int vmd_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
 		desc->irq_data.msi_desc = msidesc;
 
 		INIT_LIST_HEAD(&vmdirq->node);
-		vmdirq->irq = vmd_next_irq(vmd);
+		vmdirq->irq = vmd_next_irq(vmd, msidesc);
 		vmdirq->virq = virq;
 
 		irq_set_handler_data(virq, vmdirq);
