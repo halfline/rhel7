@@ -241,7 +241,7 @@ static struct device *to_vmd_dev(struct device *dev)
 
 static struct dma_map_ops *vmd_dma_ops(struct device *dev)
 {
-	return to_vmd_dev(dev)->archdata.dma_ops;
+	return get_dma_ops(to_vmd_dev(dev));
 }
 
 static void *vmd_alloc(struct device *dev, size_t size, dma_addr_t *addr,
@@ -345,7 +345,8 @@ static u64 vmd_get_required_mask(struct device *dev)
 
 static void vmd_teardown_dma_ops(struct vmd_dev *vmd)
 {
-	vmd->dev->dev.archdata.dma_ops = NULL;
+	if (get_dma_ops(&vmd->dev->dev))
+		vmd->dev->dev.archdata.dma_ops = NULL;
 }
 
 #define ASSIGN_VMD_DMA_OPS(source, dest, fn)	\
@@ -356,7 +357,7 @@ static void vmd_teardown_dma_ops(struct vmd_dev *vmd)
 
 static void vmd_setup_dma_ops(struct vmd_dev *vmd)
 {
-	const struct dma_map_ops *source = vmd->dev->dev.archdata.dma_ops;
+	const struct dma_map_ops *source = get_dma_ops(&vmd->dev->dev);
 	struct dma_map_ops *dest = &vmd->dma_ops;
 
 	if (!source)
