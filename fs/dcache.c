@@ -1474,7 +1474,8 @@ void d_set_d_op(struct dentry *dentry, const struct dentry_operations *op)
 				DCACHE_OP_REVALIDATE	|
 				DCACHE_OP_WEAK_REVALIDATE	|
 				DCACHE_OP_DELETE	|
-				DCACHE_OP_SELECT_INODE));
+				DCACHE_OP_SELECT_INODE	|
+				DCACHE_OP_REAL));
 	dentry->d_op = op;
 	if (!op)
 		return;
@@ -1493,6 +1494,8 @@ void d_set_d_op(struct dentry *dentry, const struct dentry_operations *op)
 
 	if (get_select_inode_dop(dentry))
 		dentry->d_flags |= DCACHE_OP_SELECT_INODE;
+	if (get_real_dop(dentry))
+		dentry->d_flags |= DCACHE_OP_REAL;
 }
 EXPORT_SYMBOL(d_set_d_op);
 
