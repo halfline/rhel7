@@ -886,13 +886,13 @@ int vfs_open(const struct path *path, struct file *filp,
 	if (dentry_open)
 		return dentry_open(path->dentry, filp, cred);
 	else {
-		inode = vfs_select_inode(path->dentry, filp->f_flags);
+		struct dentry *dentry = d_real(path->dentry, NULL, filp->f_flags);
 
-		if (IS_ERR(inode))
-			return PTR_ERR(inode);
+		if (IS_ERR(dentry))
+			return PTR_ERR(dentry);
 
 		filp->f_path = *path;
-		return do_dentry_open(filp, inode, NULL, cred);
+		return do_dentry_open(filp, dentry->d_inode, NULL, cred);
 	}
 }
 EXPORT_SYMBOL(vfs_open);

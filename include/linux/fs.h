@@ -2051,15 +2051,6 @@ static inline const struct dentry_operations_wrapper *get_dop_wrapper(struct den
 	return container_of(dentry->d_op, const struct dentry_operations_wrapper, ops);
 }
 
-static inline dop_select_inode_t get_select_inode_dop(struct dentry *dentry)
-{
-	const struct dentry_operations_wrapper *wrapper = get_dop_wrapper(dentry);
-	if (!wrapper)
-		return NULL;
-
-	return (offsetof(struct dentry_operations_wrapper, d_select_inode) < wrapper->size) ? wrapper->d_select_inode : NULL;
-}
-
 static inline dop_real_t get_real_dop(struct dentry *dentry)
 {
 	const struct dentry_operations_wrapper *wrapper = get_dop_wrapper(dentry);
@@ -2069,26 +2060,17 @@ static inline dop_real_t get_real_dop(struct dentry *dentry)
 	return (offsetof(struct dentry_operations_wrapper, d_real) < wrapper->size) ? wrapper->d_real : NULL;
 }
 
-static inline struct dentry *d_real(struct dentry *dentry)
+static inline struct dentry *d_real(struct dentry *dentry,
+				    const struct inode *inode,
+				    unsigned int flags)
 {
 	if (unlikely(dentry->d_flags & DCACHE_OP_REAL)) {
 		dop_real_t d_real_op = get_real_dop(dentry);
 
-		return d_real_op(dentry, NULL);
+		return d_real_op(dentry, inode, flags);
 	} else {
 		return dentry;
 	}
-}
-
-static inline struct inode *vfs_select_inode(struct dentry *dentry,
-					     unsigned open_flags)
-{
-	struct inode *inode = dentry->d_inode;
-
-	if (inode && unlikely(dentry->d_flags & DCACHE_OP_SELECT_INODE))
-		inode = (get_select_inode_dop(dentry))(dentry, open_flags);
-
-	return inode;
 }
 
 /**
@@ -2100,20 +2082,12 @@ static inline struct inode *vfs_select_inode(struct dentry *dentry,
  */
 static inline struct inode *d_real_inode(struct dentry *dentry)
 {
-	return vfs_select_inode(dentry, 0);
+	return d_real(dentry, NULL, 0)->d_inode;
 }
 
 static inline struct dentry *file_dentry(const struct file *file)
 {
-	struct dentry *dentry = file->f_path.dentry;
-
-	if (unlikely(dentry->d_flags & DCACHE_OP_REAL)) {
-		dop_real_t d_real_op = get_real_dop(dentry);
-
-		return d_real_op(dentry, file_inode(file));
-	} else {
-		return dentry;
-	}
+	return d_real(file->f_path.dentry, file_inode(file), 0);
 }
 
 /*

@@ -160,15 +160,13 @@ struct dentry_operations {
 	int (*d_manage)(struct dentry *, bool);
 } ____cacheline_aligned;
 
-typedef struct inode* (*dop_select_inode_t) (struct dentry *, unsigned);
-typedef struct dentry* (*dop_real_t) (struct dentry *, struct inode *);
+typedef struct dentry* (*dop_real_t) (struct dentry *, const struct inode *, unsigned int);
 
 struct dentry_operations_wrapper {
 	struct dentry_operations ops;
 	size_t size;
 
-	struct inode *(*d_select_inode)(struct dentry *, unsigned);
-	struct dentry *(*d_real)(struct dentry *, struct inode *);
+	struct dentry *(*d_real)(struct dentry *, const struct inode *, unsigned int);
 } ____cacheline_aligned;
 
 /*
@@ -228,8 +226,7 @@ struct dentry_operations_wrapper {
 #define DCACHE_AUTODIR_TYPE		0x02000000 /* Lookupless directory (presumed automount) */
 #define DCACHE_SYMLINK_TYPE		0x03000000 /* Symlink */
 #define DCACHE_FILE_TYPE		0x04000000 /* Other file type */
-#define DCACHE_OP_SELECT_INODE		0x08000000 /* Unioned entry: dcache op selects inode */
-#define DCACHE_OP_REAL			0x10000000
+#define DCACHE_OP_REAL			0x08000000
 
 extern seqlock_t rename_lock;
 
