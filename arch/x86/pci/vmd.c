@@ -202,8 +202,8 @@ static int vmd_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
 		irq_set_chip_data(virq, vmdirq);
 
 		msg.address_hi = MSI_ADDR_BASE_HI;
-		msg.address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_DEST_ID(i);
-		msg.data = MSI_DATA_VECTOR(vmd->msix_entries[i].vector);
+		msg.address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_DEST_ID(vmdirq->irq->index);
+		msg.data = 0;
 
 		msidesc->irq = virq;
 		msidesc->msg = msg;
