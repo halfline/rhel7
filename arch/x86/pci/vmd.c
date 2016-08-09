@@ -106,13 +106,10 @@ static void vmd_irq_enable(struct irq_data *data)
 
 	data->chip->irq_unmask(data);
 	msidesc->irq = data->irq;
-	dev_info(&msidesc->dev->dev, "%s: virq:%d\n", __func__, data->irq);
 }
 
 static void vmd_irq_disable(struct irq_data *data)
 {
-	struct irq_desc *desc = irq_to_desc(data->irq);
-	struct msi_desc *msidesc = irq_desc_get_msi_desc(desc);
 	struct vmd_irq *vmdirq = data->chip_data;
 
 	data->chip->irq_mask(data);
@@ -120,8 +117,6 @@ static void vmd_irq_disable(struct irq_data *data)
 	raw_spin_lock(&list_lock);
 	list_del_rcu(&vmdirq->node);
 	raw_spin_unlock(&list_lock);
-
-	dev_info(&msidesc->dev->dev, "%s: virq:%d\n", __func__, data->irq);
 }
 
 /*
@@ -209,8 +204,6 @@ static int vmd_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
 		msidesc->msg = msg;
 		write_msi_msg(virq, &msg);
 
-		dev_info(&dev->dev, "irq %d mapped to %d for MSI\n",
-				virq, vmd->msix_entries[i].vector);
 		i++;
 	}
 	return 0;
