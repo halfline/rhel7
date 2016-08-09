@@ -139,6 +139,8 @@ static struct irq_chip vmd_msi_controller = {
 	.name			= "VMD-MSI",
 	.irq_enable		= vmd_irq_enable,
 	.irq_disable		= vmd_irq_disable,
+	.irq_mask		= mask_msi_irq,
+	.irq_unmask		= unmask_msi_irq,
 	.irq_set_affinity	= vmd_irq_set_affinity,
 };
 
