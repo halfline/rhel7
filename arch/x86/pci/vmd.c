@@ -99,10 +99,11 @@ static void vmd_irq_enable(struct irq_data *data)
 	struct irq_desc *desc = irq_to_desc(data->irq);
 	struct msi_desc *msidesc = irq_desc_get_msi_desc(desc);
 	struct vmd_irq *vmdirq = data->chip_data;
+	unsigned long flags;
 
-	raw_spin_lock(&list_lock);
+	raw_spin_lock_irqsave(&list_lock, flags);
 	list_add_tail_rcu(&vmdirq->node, &vmdirq->irq->irq_list);
-	raw_spin_unlock(&list_lock);
+	raw_spin_unlock_irqrestore(&list_lock, flags);
 
 	data->chip->irq_unmask(data);
 	msidesc->irq = data->irq;
@@ -111,12 +112,13 @@ static void vmd_irq_enable(struct irq_data *data)
 static void vmd_irq_disable(struct irq_data *data)
 {
 	struct vmd_irq *vmdirq = data->chip_data;
+	unsigned long flags;
 
 	data->chip->irq_mask(data);
 
-	raw_spin_lock(&list_lock);
+	raw_spin_lock_irqsave(&list_lock, flags);
 	list_del_rcu(&vmdirq->node);
-	raw_spin_unlock(&list_lock);
+	raw_spin_unlock_irqrestore(&list_lock, flags);
 }
 
 /*
@@ -145,13 +147,14 @@ static struct irq_chip vmd_msi_controller = {
 static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd)
 {
 	int i, best = 0;
+	unsigned long flags;
 
-	raw_spin_lock(&list_lock);
+	raw_spin_lock_irqsave(&list_lock, flags);
 	for (i = 1; i < vmd->msix_count; i++)
 		if (vmd->irqs[i].count < vmd->irqs[best].count)
 			best = i;
 	vmd->irqs[best].count++;
-	raw_spin_unlock(&list_lock);
+	raw_spin_unlock_irqrestore(&list_lock, flags);
 
 	return &vmd->irqs[best];
 }
@@ -212,10 +215,11 @@ static int vmd_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
 static void vmd_teardown_msi_irq(unsigned int irq)
 {
 	struct vmd_irq *vmdirq = irq_get_handler_data(irq);
+	unsigned long flags;
 
-	raw_spin_lock(&list_lock);
+	raw_spin_lock_irqsave(&list_lock, flags);
 	vmdirq->irq->count--;
-	raw_spin_unlock(&list_lock);
+	raw_spin_unlock_irqrestore(&list_lock, flags);
 
 	kfree_rcu(vmdirq, rcu);
 }
