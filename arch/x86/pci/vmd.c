@@ -121,7 +121,6 @@ static void vmd_irq_disable(struct irq_data *data)
 	list_del_rcu(&vmdirq->node);
 	raw_spin_unlock(&list_lock);
 
-	msidesc->irq = 0;
 	dev_info(&msidesc->dev->dev, "%s: virq:%d\n", __func__, data->irq);
 }
 
@@ -221,9 +220,11 @@ static void vmd_teardown_msi_irq(unsigned int irq)
 {
 	struct vmd_irq *vmdirq = irq_get_handler_data(irq);
 
-	BUG_ON(!vmdirq || !list_empty(&vmdirq->node));
-	kfree(vmdirq);
-	irq_free_desc(irq);
+	raw_spin_lock(&list_lock);
+	vmdirq->irq->count--;
+	raw_spin_unlock(&list_lock);
+
+	kfree_rcu(vmdirq, rcu);
 }
 
 static struct x86_msi_ops vmd_msi = {
