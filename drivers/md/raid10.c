@@ -2122,9 +2122,16 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
 		tbio->bi_rw = WRITE;
 		tbio->bi_private = r10_bio;
 		tbio->bi_sector = r10_bio->devs[i].addr;
-		tbio->bi_end_io = end_sync_write;
 
-		bio_copy_data(tbio, fbio);
+		for (j=0; j < vcnt ; j++) {
+			tbio->bi_io_vec[j].bv_offset = 0;
+			tbio->bi_io_vec[j].bv_len = PAGE_SIZE;
+
+			memcpy(page_address(tbio->bi_io_vec[j].bv_page),
+			       page_address(fbio->bi_io_vec[j].bv_page),
+			       PAGE_SIZE);
+		}
+		tbio->bi_end_io = end_sync_write;
 
 		d = r10_bio->devs[i].devnum;
 		atomic_inc(&conf->mirrors[d].rdev->nr_pending);
@@ -2140,14 +2147,17 @@ static void sync_request_write(struct mddev *mddev, struct r10bio *r10_bio)
 	 * that are active
 	 */
 	for (i = 0; i < conf->copies; i++) {
-		int d;
+		int j, d;
 
 		tbio = r10_bio->devs[i].repl_bio;
 		if (!tbio || !tbio->bi_end_io)
 			continue;
 		if (r10_bio->devs[i].bio->bi_end_io != end_sync_write
 		    && r10_bio->devs[i].bio != fbio)
-			bio_copy_data(tbio, fbio);
+			for (j = 0; j < vcnt; j++)
+				memcpy(page_address(tbio->bi_io_vec[j].bv_page),
+				       page_address(fbio->bi_io_vec[j].bv_page),
+				       PAGE_SIZE);
 		d = r10_bio->devs[i].devnum;
 		atomic_inc(&r10_bio->remaining);
 		md_sync_acct(conf->mirrors[d].replacement->bdev,
