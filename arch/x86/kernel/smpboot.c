@@ -316,7 +316,10 @@ static void __init smp_init_package_map(void)
 	 * primary cores.
 	 */
 	ncpus = boot_cpu_data.x86_max_cores;
-	__max_logical_packages = DIV_ROUND_UP(total_cpus, ncpus);
+	if (is_uv_system())
+		__max_logical_packages = total_cpus;
+	else
+		__max_logical_packages = DIV_ROUND_UP(total_cpus, ncpus);
 
 	/*
 	 * Possibly larger than what we need as the number of apic ids per
