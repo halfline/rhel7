@@ -1221,6 +1221,15 @@ int __ref add_memory(int nid, u64 start, u64 size)
 		void *p = NODE_DATA(nid);
 		new_pgdat = !p;
 	}
+
+	/*
+	 * Add new range to memblock so that when hotadd_new_pgdat() is called
+	 * to allocate new pgdat, get_pfn_range_for_nid() will be able to find
+	 * this new range and calculate total pages correctly.  The range will
+	 * be removed at hot-remove time.
+	 */
+	memblock_add_node(start, size, nid);
+
 	new_node = !node_online(nid);
 	if (new_node) {
 		pgdat = hotadd_new_pgdat(nid, start);
@@ -1250,7 +1259,6 @@ int __ref add_memory(int nid, u64 start, u64 size)
 
 	/* create new memmap entry */
 	firmware_map_add_hotplug(start, start + size, "System RAM");
-	memblock_add_node(start, size, nid);
 
 	goto out;
 
@@ -1259,6 +1267,7 @@ error:
 	if (new_pgdat)
 		rollback_node_hotadd(nid, pgdat);
 	release_memory_resource(res);
+	memblock_remove(start, size);
 
 out:
 	unlock_memory_hotplug();
