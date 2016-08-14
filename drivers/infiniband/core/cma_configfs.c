@@ -146,7 +146,11 @@ static struct configfs_attribute *cma_configfs_attributes[] = {
 	NULL,
 };
 
+static struct configfs_item_operations cma_configfs_ops = {
+};
+
 static struct config_item_type cma_port_group_type = {
+	.ct_item_ops	= &cma_configfs_ops,
 	.ct_attrs	= cma_configfs_attributes,
 	.ct_owner	= THIS_MODULE
 };
