@@ -106,7 +106,6 @@ int dax_clear_sectors(struct block_device *bdev, sector_t _sector, long _size)
 		cond_resched();
 	} while (dax.size);
 
-	wmb_pmem();
 	return 0;
 }
 EXPORT_SYMBOL_GPL(dax_clear_sectors);
@@ -173,7 +172,7 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 			struct buffer_head *bh)
 {
 	loff_t pos = start, max = start, bh_max = start;
-	bool hole = false, need_wmb = false;
+	bool hole = false;
 	struct block_device *bdev = NULL;
 	int rc;
 	long map_len = 0;
@@ -226,7 +225,6 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 				if (buffer_unwritten(bh) || buffer_new(bh)) {
 					dax_new_buf(dax.addr, map_len, first,
 							pos, end);
-					need_wmb = true;
 				}
 				dax.addr += first;
 				size = map_len - first;
@@ -261,8 +259,6 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 			dax.addr += len;
 	}
 
-	if (need_wmb)
-		wmb_pmem();
 	dax_unmap_atomic(bdev, &dax);
 
 	return (pos == start) ? rc : pos - start;
@@ -566,7 +562,6 @@ int dax_writeback_mapping_range(struct address_space *mapping,
 				return ret;
 		}
 	}
-	wmb_pmem();
 	return 0;
 }
 EXPORT_SYMBOL_GPL(dax_writeback_mapping_range);
@@ -606,7 +601,6 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
 
 	if (buffer_unwritten(bh) || buffer_new(bh)) {
 		clear_pmem(dax.addr, PAGE_SIZE);
-		wmb_pmem();
 	}
 	dax_unmap_atomic(bdev, &dax);
 
@@ -958,7 +952,6 @@ int __dax_pmd_fault(struct vm_area_struct *vma, unsigned long address,
 
 		if (buffer_unwritten(&bh) || buffer_new(&bh)) {
 			clear_pmem(dax.addr, PMD_SIZE);
-			wmb_pmem();
 			count_vm_event(PGMAJFAULT);
 			mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
 			result |= VM_FAULT_MAJOR;
@@ -1112,7 +1105,6 @@ int dax_zero_page_range(struct inode *inode, loff_t from, unsigned length,
 		if (dax_map_atomic(bdev, &dax) < 0)
 			return PTR_ERR(dax.addr);
 		clear_pmem(dax.addr + offset, length);
-		wmb_pmem();
 		dax_unmap_atomic(bdev, &dax);
 	}
 
