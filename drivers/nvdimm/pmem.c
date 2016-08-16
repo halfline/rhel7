@@ -122,6 +122,10 @@ static void pmem_make_request(struct request_queue *q, struct bio *bio)
 	struct bio_vec *bvec;
 	sector_t sector;
 	int i;
+	struct nd_region *nd_region = to_region(pmem);
+
+	if (bio->bi_rw & REQ_FLUSH)
+		nvdimm_flush(nd_region);
 
 	do_acct = nd_iostat_start(bio, &start);
 	sector = bio->bi_sector;
@@ -135,8 +139,8 @@ static void pmem_make_request(struct request_queue *q, struct bio *bio)
 	if (do_acct)
 		nd_iostat_end(bio, start);
 
-	if (bio_data_dir(bio))
-		nvdimm_flush(to_region(pmem));
+	if (bio->bi_rw & REQ_FUA)
+		nvdimm_flush(nd_region);
 
 	bio_endio(bio, rc);
 }
@@ -148,8 +152,6 @@ static int pmem_rw_page(struct block_device *bdev, sector_t sector,
 	int rc;
 
 	rc = pmem_do_bvec(pmem, page, PAGE_CACHE_SIZE, 0, rw, sector);
-	if (rw & WRITE)
-		nvdimm_flush(to_region(pmem));
 
 	/*
 	 * The ->rw_page interface is subtle and tricky.  The core
@@ -272,6 +274,7 @@ static int pmem_attach_disk(struct device *dev,
 		return PTR_ERR(addr);
 	pmem->virt_addr = (void __pmem *) addr;
 
+	blk_queue_flush(q, REQ_FLUSH|REQ_FUA);
 	blk_queue_make_request(q, pmem_make_request);
 	blk_queue_physical_block_size(q, PAGE_SIZE);
 	blk_queue_max_hw_sectors(q, UINT_MAX);
