@@ -26,8 +26,7 @@
  * @n: length of the copy in bytes
  *
  * Copy data to persistent memory media via non-temporal stores so that
- * a subsequent arch_wmb_pmem() can flush cpu and memory controller
- * write buffers to guarantee durability.
+ * a subsequent pmem driver flush operation will drain posted write queues.
  */
 static inline void arch_memcpy_to_pmem(void __pmem *dst, const void *src,
 		size_t n)
@@ -48,32 +47,12 @@ static inline void arch_memcpy_to_pmem(void __pmem *dst, const void *src,
 }
 
 /**
- * arch_wmb_pmem - synchronize writes to persistent memory
- *
- * After a series of arch_memcpy_to_pmem() operations this drains data
- * from cpu write buffers and any platform (memory controller) buffers
- * to ensure that written data is durable on persistent memory media.
- */
-static inline void arch_wmb_pmem(void)
-{
-	/*
-	 * wmb() to 'sfence' all previous writes such that they are
-	 * architecturally visible to 'pcommit'.  Note, that we've
-	 * already arranged for pmem writes to avoid the cache via
-	 * arch_memcpy_to_pmem().
-	 */
-	wmb();
-	pcommit_sfence();
-}
-
-/**
  * arch_wb_cache_pmem - write back a cache range with CLWB
  * @vaddr:	virtual start address
  * @size:	number of bytes to write back
  *
  * Write back a cache range using the CLWB (cache line write back)
- * instruction.  This function requires explicit ordering with an
- * arch_wmb_pmem() call.
+ * instruction.
  */
 static inline void arch_wb_cache_pmem(void __pmem *addr, size_t size)
 {
@@ -94,7 +73,6 @@ static inline void arch_wb_cache_pmem(void __pmem *addr, size_t size)
  * @size:	number of bytes to zero
  *
  * Write zeros into the memory range starting at 'addr' for 'size' bytes.
- * This function requires explicit ordering with an arch_wmb_pmem() call.
  */
 static inline void arch_clear_pmem(void __pmem *addr, size_t size)
 {
@@ -107,15 +85,6 @@ static inline void arch_clear_pmem(void __pmem *addr, size_t size)
 static inline void arch_invalidate_pmem(void __pmem *addr, size_t size)
 {
 	clflush_cache_range((void __force *) addr, size);
-}
-
-static inline bool __arch_has_wmb_pmem(void)
-{
-	/*
-	 * We require that wmb() be an 'sfence', that is only guaranteed on
-	 * 64-bit builds
-	 */
-	return static_cpu_has(X86_FEATURE_PCOMMIT);
 }
 #endif /* CONFIG_ARCH_HAS_PMEM_API */
 #endif /* __ASM_X86_PMEM_H__ */
