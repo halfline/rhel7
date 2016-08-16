@@ -605,6 +605,7 @@ void __inquire_remote_apic(int apicid)
  * many cores and don't require that delay.
  *
  * Cmdline "init_cpu_udelay=" is available to over-ride this delay.
+ * Modern processor families are quirked to remove the delay entirely.
  */
 #define UDELAY_10MS_DEFAULT 10000
 
@@ -617,6 +618,18 @@ static int __init cpu_init_udelay(char *str)
 	return 0;
 }
 early_param("cpu_init_udelay", cpu_init_udelay);
+
+static void __init smp_quirk_init_udelay(void)
+{
+	/* if cmdline changed it from default, leave it alone */
+	if (init_udelay != UDELAY_10MS_DEFAULT)
+		return;
+
+	/* if modern processor, use no delay */
+	if (((boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) && (boot_cpu_data.x86 == 6)) ||
+	    ((boot_cpu_data.x86_vendor == X86_VENDOR_AMD) && (boot_cpu_data.x86 >= 0xF)))
+		init_udelay = 0;
+}
 
 /*
  * Poke the other CPU in the eye via NMI to wake it up. Remember that the normal
@@ -1278,6 +1291,8 @@ out:
 void arch_enable_nonboot_cpus_begin(void)
 {
 	set_mtrr_aps_delayed_init();
+
+	smp_quirk_init_udelay();
 }
 
 void arch_enable_nonboot_cpus_end(void)
