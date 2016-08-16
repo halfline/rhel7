@@ -271,6 +271,8 @@ unflush:
 	pp = udp_sk(sk)->gro_receive(sk, head, skb);
 
 out_unlock:
+	if (sk)
+		sock_put(sk);
 	rcu_read_unlock();
 out:
 	NAPI_GRO_CB(skb)->flush |= flush;
@@ -326,6 +328,8 @@ int udp_gro_complete(struct sk_buff *skb, int nhoff,
 		err = udp_sk(sk)->gro_complete(sk, skb,
 				nhoff + sizeof(struct udphdr));
 	rcu_read_unlock();
+	if (sk)
+		sock_put(sk);
 
 	if (skb->remcsum_offload)
 		skb_shinfo(skb)->gso_type |= SKB_GSO_TUNNEL_REMCSUM;
