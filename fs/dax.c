@@ -38,13 +38,13 @@ static long dax_map_atomic(struct block_device *bdev, struct blk_dax_ctl *dax)
 	struct request_queue *q = bdev->bd_queue;
 	long rc = -EIO;
 
-	dax->addr = (void __pmem *) ERR_PTR(-EIO);
+	dax->addr = ERR_PTR(-EIO);
 	if (blk_queue_enter(q, true) != 0)
 		return rc;
 
 	rc = bdev_direct_access(bdev, dax);
 	if (rc < 0) {
-		dax->addr = (void __pmem *) ERR_PTR(rc);
+		dax->addr = ERR_PTR(rc);
 		blk_queue_exit(q);
 		return rc;
 	}
@@ -111,7 +111,7 @@ int dax_clear_sectors(struct block_device *bdev, sector_t _sector, long _size)
 EXPORT_SYMBOL_GPL(dax_clear_sectors);
 
 /* the clear_pmem() calls are ordered by a wmb_pmem() in the caller */
-static void dax_new_buf(void __pmem *addr, unsigned size, unsigned first,
+static void dax_new_buf(void *addr, unsigned size, unsigned first,
 		loff_t pos, loff_t end)
 {
 	loff_t final = end - pos + first; /* The final byte of the buffer */
@@ -177,7 +177,7 @@ static ssize_t dax_io(int rw, struct inode *inode, const struct iovec *iov,
 	int rc;
 	long map_len = 0;
 	struct blk_dax_ctl dax = {
-		.addr = (void __pmem *) ERR_PTR(-EIO),
+		.addr = ERR_PTR(-EIO),
 	};
 
 	rw &= RW_MASK;

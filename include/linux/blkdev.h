@@ -1685,7 +1685,7 @@ static inline bool blk_integrity_is_initialized(struct gendisk *g)
  */
 struct blk_dax_ctl {
 	sector_t sector;
-	void __pmem *addr;
+	void *addr;
 	long size;
 	pfn_t pfn;
 };
@@ -1698,7 +1698,7 @@ struct block_device_operations {
 	RH_KABI_REPLACE(int (*direct_access) (struct block_device *, sector_t,
 						void **, unsigned long *),
 			long (*direct_access)(struct block_device *, sector_t,
-						void __pmem **, pfn_t *))
+						void **, pfn_t *))
 	unsigned int (*check_events) (struct gendisk *disk,
 				      unsigned int clearing);
 	/* ->media_changed() is DEPRECATED, use ->check_events() instead */
