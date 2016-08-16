@@ -455,7 +455,7 @@ xfs_qm_scall_getqstat(
 			IRELE(gip);
 	}
 	if (pip) {
-		out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
+		out->qs_gquota.qfs_ino = mp->m_sb.sb_pquotino;
 		out->qs_gquota.qfs_nblks = pip->i_d.di_nblocks;
 		out->qs_gquota.qfs_nextents = pip->i_d.di_nextents;
 		if (temppqip)
