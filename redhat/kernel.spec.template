@@ -1544,6 +1544,22 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Aug 16 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-493.el7]
+- [powerpc] mm: use get_user_pages_unlocked within get_user_pages_fast (Laurent Vivier) [1362454]
+- [net] udp_offload: put sk before returning (Florian Westphal) [1366515]
+- [fs] jbd2: limit number of reserved credits (Lukas Czerner) [1172496]
+- [fs] cachefiles: Fix attempt to read i_blocks after deleting file (David Howells) [1357234]
+- [fs] cachefiles: Fix race between inactivating and culling a cache object (David Howells) [1357234]
+- [fs] svcrdma: Remove superfluous line from rdma_read_chunks() (Sachin Prabhu) [1353408]
+- [fs] svcrdma: Do not add XDR padding to xdr_buf page vector (Sachin Prabhu) [1353408]
+- [fs] svcrdma: Use correct XID in error replies (Sachin Prabhu) [1353408]
+- [fs] svcrdma: Make RDMA_ERROR messages work (Sachin Prabhu) [1353408]
+- [fs] svcrdma: svc_rdma_post_recv() should close connection on error (Sachin Prabhu) [1353408]
+- [fs] svcrdma: Backport merge conflict resolution ab9f2faf (Sachin Prabhu) [1353408]
+- [fs] svcrdma: Find rmsgp more reliably (Sachin Prabhu) [1353408]
+- [fs] svcrdma: Remove unused variable (Sachin Prabhu) [1353408]
+- [md] revert "raid10: make sync_request_write() call bio_copy_data()" (Jes Sorensen) [1354469]
+
 * Thu Aug 11 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-492.el7]
 - [target] iscsi-target: Rework the configfs of cxgbit (Sai Vemuri) [1211351]
 - [target] iscsi-target: Convert transport drivers to signal rdma_shutdown (Sai Vemuri) [1211351]
