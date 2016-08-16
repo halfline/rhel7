@@ -758,7 +758,8 @@ wakeup_secondary_cpu_via_init(int phys_apicid, unsigned long start_eip)
 		/*
 		 * Give the other CPU some time to accept the IPI.
 		 */
-		udelay(300);
+		if (init_udelay)
+			udelay(300);
 
 		pr_debug("Startup point 1\n");
 
@@ -768,7 +769,8 @@ wakeup_secondary_cpu_via_init(int phys_apicid, unsigned long start_eip)
 		/*
 		 * Give the other CPU some time to accept the IPI.
 		 */
-		udelay(200);
+		if (init_udelay)
+			udelay(200);
 		if (maxlvt > 3)		/* Due to the Pentium erratum 3AP.  */
 			apic_write(APIC_ESR, 0);
 		accept_status = (apic_read(APIC_ESR) & 0xEF);
