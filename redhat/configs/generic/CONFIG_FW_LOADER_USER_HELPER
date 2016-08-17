@@ -13,8 +13,9 @@
 # [  554.386315] microcode: CPU9 sig=0x206f2, pf=0x4, revision=0x26
 # etc.
 #
-# This was enabled on x86_64 after the introduction of upstream's
-# request_firmware_direct().
+# Upstream has introduced request_firmware_direct() which will not delay 60
+# seconds, however, each use of request_firmware() in the tree will have to be
+# audited for possible replacement.
 #
 # In other words ... proceed at your own risk.
 #
