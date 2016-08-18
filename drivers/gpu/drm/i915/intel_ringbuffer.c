@@ -912,21 +912,21 @@ static int gen9_init_workarounds(struct intel_engine_cs *ring)
 	uint32_t tmp;
 	int ret;
 
-	/* WaEnableLbsSlaRetryTimerDecrement:skl */
+	/* WaEnableLbsSlaRetryTimerDecrement:skl,bxt,kbl */
 	I915_WRITE(BDW_SCRATCH1, I915_READ(BDW_SCRATCH1) |
 		   GEN9_LBS_SLA_RETRY_TIMER_DECREMENT_ENABLE);
 
-	/* WaDisableKillLogic:bxt,skl */
+	/* WaDisableKillLogic:bxt,skl,kbl */
 	I915_WRITE(GAM_ECOCHK, I915_READ(GAM_ECOCHK) |
 		   ECOCHK_DIS_TLB);
 
-	/* WaClearFlowControlGpgpuContextSave:skl,bxt */
-	/* WaDisablePartialInstShootdown:skl,bxt */
+	/* WaClearFlowControlGpgpuContextSave:skl,bxt,kbl */
+	/* WaDisablePartialInstShootdown:skl,bxt,kbl */
 	WA_SET_BIT_MASKED(GEN8_ROW_CHICKEN,
 			  FLOW_CONTROL_ENABLE |
 			  PARTIAL_INSTRUCTION_SHOOTDOWN_DISABLE);
 
-	/* Syncing dependencies between camera and graphics:skl,bxt */
+	/* Syncing dependencies between camera and graphics:skl,bxt,kbl */
 	WA_SET_BIT_MASKED(HALF_SLICE_CHICKEN3,
 			  GEN9_DISABLE_OCL_OOB_SUPPRESS_LOGIC);
 
@@ -948,18 +948,18 @@ static int gen9_init_workarounds(struct intel_engine_cs *ring)
 		 */
 	}
 
-	/* WaEnableYV12BugFixInHalfSliceChicken7:skl,bxt */
-	/* WaEnableSamplerGPGPUPreemptionSupport:skl,bxt */
+	/* WaEnableYV12BugFixInHalfSliceChicken7:skl,bxt,kbl */
+	/* WaEnableSamplerGPGPUPreemptionSupport:skl,bxt,kbl */
 	WA_SET_BIT_MASKED(GEN9_HALF_SLICE_CHICKEN7,
 			  GEN9_ENABLE_YV12_BUGFIX |
 			  GEN9_ENABLE_GPGPU_PREEMPTION);
 
-	/* Wa4x4STCOptimizationDisable:skl,bxt */
-	/* WaDisablePartialResolveInVc:skl,bxt */
+	/* Wa4x4STCOptimizationDisable:skl,bxt,kbl */
+	/* WaDisablePartialResolveInVc:skl,bxt,kbl */
 	WA_SET_BIT_MASKED(CACHE_MODE_1, (GEN8_4x4_STC_OPTIMIZATION_DISABLE |
 					 GEN9_PARTIAL_RESOLVE_IN_VC_DISABLE));
 
-	/* WaCcsTlbPrefetchDisable:skl,bxt */
+	/* WaCcsTlbPrefetchDisable:skl,bxt,kbl */
 	WA_CLR_BIT_MASKED(GEN9_HALF_SLICE_CHICKEN5,
 			  GEN9_CCS_TLB_PREFETCH_ENABLE);
 
@@ -976,15 +976,17 @@ static int gen9_init_workarounds(struct intel_engine_cs *ring)
 		tmp |= HDC_FORCE_CSR_NON_COHERENT_OVR_DISABLE;
 	WA_SET_BIT_MASKED(HDC_CHICKEN0, tmp);
 
-	/* WaDisableSamplerPowerBypassForSOPingPong:skl,bxt */
-	if (IS_SKYLAKE(dev) || IS_BXT_REVID(dev, 0, BXT_REVID_B0))
+	/* WaDisableSamplerPowerBypassForSOPingPong:skl,bxt,kbl */
+	if (IS_SKYLAKE(dev_priv) ||
+	    IS_KABYLAKE(dev_priv) ||
+	    IS_BXT_REVID(dev_priv, 0, BXT_REVID_B0))
 		WA_SET_BIT_MASKED(HALF_SLICE_CHICKEN3,
 				  GEN8_SAMPLER_POWER_BYPASS_DIS);
 
-	/* WaDisableSTUnitPowerOptimization:skl,bxt */
+	/* WaDisableSTUnitPowerOptimization:skl,bxt,kbl */
 	WA_SET_BIT_MASKED(HALF_SLICE_CHICKEN2, GEN8_ST_PO_DISABLE);
 
-	/* WaOCLCoherentLineFlush:skl,bxt */
+	/* WaOCLCoherentLineFlush:skl,bxt,kbl */
 	I915_WRITE(GEN8_L3SQCREG4, (I915_READ(GEN8_L3SQCREG4) |
 				    GEN8_LQSC_FLUSH_COHERENT_LINES));
 
@@ -993,12 +995,12 @@ static int gen9_init_workarounds(struct intel_engine_cs *ring)
 	if (ret)
 		return ret;
 
-	/* WaEnablePreemptionGranularityControlByUMD:skl,bxt */
+	/* WaEnablePreemptionGranularityControlByUMD:skl,bxt,kbl */
 	ret= wa_ring_whitelist_reg(ring, GEN8_CS_CHICKEN1);
 	if (ret)
 		return ret;
 
-	/* WaAllowUMDToModifyHDCChicken1:skl,bxt */
+	/* WaAllowUMDToModifyHDCChicken1:skl,bxt,kbl */
 	ret = wa_ring_whitelist_reg(ring, GEN8_HDC_CHICKEN1);
 	if (ret)
 		return ret;
@@ -1181,6 +1183,17 @@ static int bxt_init_workarounds(struct intel_engine_cs *ring)
 	return 0;
 }
 
+static int kbl_init_workarounds(struct intel_engine_cs *engine)
+{
+	int ret;
+
+	ret = gen9_init_workarounds(engine);
+	if (ret)
+		return ret;
+
+	return 0;
+}
+
 int init_workarounds_ring(struct intel_engine_cs *ring)
 {
 	struct drm_device *dev = ring->dev;
@@ -1202,6 +1215,9 @@ int init_workarounds_ring(struct intel_engine_cs *ring)
 
 	if (IS_BROXTON(dev))
 		return bxt_init_workarounds(ring);
+
+	if (IS_KABYLAKE(dev_priv))
+		return kbl_init_workarounds(ring);
 
 	return 0;
 }
