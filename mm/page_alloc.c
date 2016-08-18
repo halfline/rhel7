@@ -4891,7 +4891,14 @@ int __meminit init_currently_empty_zone(struct zone *zone,
 	ret = zone_wait_table_init(zone, size);
 	if (ret)
 		return ret;
-	pgdat->nr_zones = zone_idx(zone) + 1;
+	/*
+	 * RHEL: nr_zones is often used to index into the zone_table.
+	 * Since there is no array entry for ZONE_DEVICE, and because we
+	 * don't support allocations from ZONE_DEVICE, avoid incrementing
+	 * nr_zones.
+	 */
+	if (!is_dev_zone(zone))
+		pgdat->nr_zones = zone_idx(zone) + 1;
 
 	zone->zone_start_pfn = zone_start_pfn;
 

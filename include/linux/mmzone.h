@@ -918,7 +918,12 @@ unsigned long __init node_memmap_size_bytes(int, unsigned long, unsigned long);
 /*
  * zone_idx() returns 0 for the ZONE_DMA zone, 1 for the ZONE_NORMAL zone, etc.
  */
+#ifdef CONFIG_ZONE_DEVICE
+#define zone_idx(zone)		(is_dev_zone(zone) ? ZONE_DEVICE : \
+				 (zone) - (zone)->zone_pgdat->node_zones)
+#else
 #define zone_idx(zone)		((zone) - (zone)->zone_pgdat->node_zones)
+#endif
 
 static inline int populated_zone(struct zone *zone)
 {

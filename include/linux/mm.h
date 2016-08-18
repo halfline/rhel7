@@ -696,6 +696,10 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 
 static inline enum zone_type page_zonenum(const struct page *page)
 {
+#ifdef CONFIG_ZONE_DEVICE
+	if (page->flags & ZONE_DEVICE_FLAG)
+		return ZONE_DEVICE;
+#endif
 	return (page->flags >> ZONES_PGSHIFT) & ZONES_MASK;
 }
 

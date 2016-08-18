@@ -680,7 +680,12 @@ static void __remove_zone(struct zone *zone, unsigned long start_pfn)
 	int zone_type;
 	unsigned long flags;
 
-	zone_type = zone - pgdat->node_zones;
+#ifdef CONFIG_ZONE_DEVICE
+	if (zone == pgdat->zone_device)
+		zone_type = ZONE_DEVICE;
+	else
+#endif
+		zone_type = zone - pgdat->node_zones;
 
 	pgdat_resize_lock(zone->zone_pgdat, &flags);
 	shrink_zone_span(zone, start_pfn, start_pfn + nr_pages);
