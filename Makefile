@@ -12,7 +12,7 @@ RHEL_RELEASE = 499
 #
 RHEL_DRM_VERSION = 4
 RHEL_DRM_PATCHLEVEL = 6
-RHEL_DRM_SUBLEVEL = 0
+RHEL_DRM_SUBLEVEL = 5
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
