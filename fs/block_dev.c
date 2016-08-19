@@ -28,6 +28,7 @@
 #include <linux/log2.h>
 #include <linux/cleancache.h>
 #include <linux/dax.h>
+#include <linux/badblocks.h>
 #include <linux/aio.h>
 #include <asm/uaccess.h>
 #include "internal.h"
@@ -552,6 +553,11 @@ int bdev_dax_supported(struct super_block *sb, int blocksize)
 
 	if (blocksize != PAGE_SIZE) {
 		vfs_msg(sb, KERN_ERR, "error: unsupported blocksize for dax");
+		return -EINVAL;
+	}
+
+	if (sb->s_bdev->bd_disk->bb && sb->s_bdev->bd_disk->bb->count) {
+		vfs_msg(sb, KERN_ERR, "error: media errors detected");
 		return -EINVAL;
 	}
 
