@@ -1039,6 +1039,7 @@ static int i2c_hid_suspend(struct device *dev)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 
+	disable_irq(client->irq);
 	if (device_may_wakeup(&client->dev))
 		enable_irq_wake(client->irq);
 
@@ -1053,6 +1054,7 @@ static int i2c_hid_resume(struct device *dev)
 	int ret;
 	struct i2c_client *client = to_i2c_client(dev);
 
+	enable_irq(client->irq);
 	ret = i2c_hid_hwreset(client);
 	if (ret)
 		return ret;
