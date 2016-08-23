@@ -58,6 +58,7 @@ struct dw8250_data {
 	int		last_mcr;
 	int		line;
 	struct clk	*clk;
+	struct clk		*pclk;
 };
 
 #define BYT_PRV_CLK			0x800
@@ -303,10 +304,25 @@ static int dw8250_probe(struct platform_device *pdev)
 	if (!data)
 		return -ENOMEM;
 
-	data->clk = devm_clk_get(&pdev->dev, NULL);
+	data->clk = devm_clk_get(&pdev->dev, "baudclk");
+	if (IS_ERR(data->clk))
+		data->clk = devm_clk_get(&pdev->dev, NULL);
 	if (!IS_ERR(data->clk)) {
-		clk_prepare_enable(data->clk);
-		uart.port.uartclk = clk_get_rate(data->clk);
+		err = clk_prepare_enable(data->clk);
+		if (err)
+			dev_warn(&pdev->dev, "could not enable optional baudclk: %d\n",
+				 err);
+		else
+			uart.port.uartclk = clk_get_rate(data->clk);
+	}
+
+	data->pclk = devm_clk_get(&pdev->dev, "apb_pclk");
+	if (!IS_ERR(data->pclk)) {
+		err = clk_prepare_enable(data->pclk);
+		if (err) {
+			dev_err(&pdev->dev, "could not enable apb_pclk\n");
+			return err;
+		}
 	}
 
 	uart.port.iotype = UPIO_MEM;
@@ -348,6 +364,9 @@ static int dw8250_remove(struct platform_device *pdev)
 
 	serial8250_unregister_port(data->line);
 
+	if (!IS_ERR(data->pclk))
+		clk_disable_unprepare(data->pclk);
+
 	if (!IS_ERR(data->clk))
 		clk_disable_unprepare(data->clk);
 
@@ -385,12 +404,18 @@ static int dw8250_runtime_suspend(struct device *dev)
 	if (!IS_ERR(data->clk))
 		clk_disable_unprepare(data->clk);
 
+	if (!IS_ERR(data->pclk))
+		clk_disable_unprepare(data->pclk);
+
 	return 0;
 }
 
 static int dw8250_runtime_resume(struct device *dev)
 {
 	struct dw8250_data *data = dev_get_drvdata(dev);
+
+	if (!IS_ERR(data->pclk))
+		clk_prepare_enable(data->pclk);
 
 	if (!IS_ERR(data->clk))
 		clk_prepare_enable(data->clk);
