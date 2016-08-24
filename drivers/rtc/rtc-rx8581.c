@@ -273,6 +273,8 @@ static int rx8581_probe(struct i2c_client *client,
 
 	dev_dbg(&client->dev, "%s\n", __func__);
 
+	mark_tech_preview(rx8581_driver.driver.name, THIS_MODULE);
+
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_BYTE_DATA)
 		&& !i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_I2C_BLOCK))
 		return -EIO;
