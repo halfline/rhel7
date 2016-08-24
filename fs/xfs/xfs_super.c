@@ -1558,6 +1558,8 @@ xfs_fs_fill_super(
 	"EXPERIMENTAL sparse inode feature enabled. Use at your own risk!");
 
 	if (mp->m_flags & XFS_MOUNT_DAX) {
+		static bool printed = false;
+
 		xfs_warn(mp,
 		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
 
@@ -1566,6 +1568,11 @@ xfs_fs_fill_super(
 			xfs_alert(mp,
 			"DAX unsupported by block device. Turning off DAX.");
 			mp->m_flags &= ~XFS_MOUNT_DAX;
+		}
+
+		if (!printed) {
+			mark_tech_preview("xfs direct access (dax)", NULL);
+			printed = true;
 		}
 	}
 

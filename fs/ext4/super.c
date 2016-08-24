@@ -3702,9 +3702,14 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 	}
 
 	if (sbi->s_mount_opt & EXT4_MOUNT_DAX) {
+		static bool printed = false;
 		err = bdev_dax_supported(sb, blocksize);
 		if (err)
 			goto failed_mount;
+		if (!printed) {
+			mark_tech_preview("ext4 direct access (dax)", NULL);
+			printed = true;
+		}
 	}
 
 	if (sb->s_blocksize != blocksize) {
