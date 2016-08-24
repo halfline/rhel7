@@ -452,7 +452,9 @@ static struct ocrdma_driver ocrdma_drv = {
 static int __init ocrdma_init_module(void)
 {
 	int status;
+	const char tpmsg[] = "RoCE on OCE14xxx Adapters";
 
+	mark_tech_preview(tpmsg, THIS_MODULE);
 	ocrdma_init_debugfs();
 
 	status = be_roce_register_driver(&ocrdma_drv);
