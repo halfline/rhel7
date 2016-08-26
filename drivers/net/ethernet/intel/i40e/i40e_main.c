@@ -5406,8 +5406,6 @@ int i40e_open(struct net_device *netdev)
 		geneve_get_rx_port(netdev);
 #endif
 
-	i40e_notify_client_of_netdev_open(vsi);
-
 	return 0;
 }
 
