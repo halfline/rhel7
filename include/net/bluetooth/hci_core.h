@@ -57,6 +57,29 @@ struct inquiry_entry {
 	struct inquiry_data	data;
 };
 
+/*
+ * RHEL-7 snapshot of struct discovery_state
+ *
+ * This is used to maintain the original kabi protected hole
+ * for this embedded struct in hci_dev.
+ * The enums have an added _orig to avoid compiler conflicts with
+ * the current struct discovery_state.
+ */
+struct discovery_state_orig {
+	int			type;
+	enum {
+		DISCOVERY_STOPPED_orig,
+		DISCOVERY_STARTING_orig,
+		DISCOVERY_FINDING_orig,
+		DISCOVERY_RESOLVING_orig,
+		DISCOVERY_STOPPING_orig,
+	} state;
+	struct list_head	all;	/* All devices found during inquiry */
+	struct list_head	unknown;	/* Name state not known */
+	struct list_head	resolve;	/* Name needs to be resolved */
+	__u32			timestamp;
+};
+
 struct discovery_state {
 	int			type;
 	enum {
@@ -86,6 +109,20 @@ struct discovery_state {
 	unsigned long		scan_start;
 	unsigned long		scan_duration;
 #endif
+};
+
+/*
+ * RHEL-7 snapshot of struct hci_conn_hash
+ *
+ * This is used to maintain the original kabi protected hole
+ * for this embedded struct in hci_dev.
+ */
+struct hci_conn_hash_orig {
+	struct list_head list;
+	unsigned int     acl_num;
+	unsigned int     amp_num;
+	unsigned int     sco_num;
+	unsigned int     le_num;
 };
 
 struct hci_conn_hash {
@@ -333,10 +370,16 @@ struct hci_dev {
 	/*
 	 * RHEL-7 structs were expanded and only used internally.
 	 * Deprecate here and add them at the bottom.
-	 * (discovery and conn_hash)
+	 * (discovery and conn_hash).  Use _orig snapshot of structs
+	 * to maintain original size alignment for kabi.
 	 */
-	RH_KABI_DEPRECATE(struct discovery_state, discovery)
-	RH_KABI_DEPRECATE(struct hci_conn_hash, conn_hash)
+#ifdef __GENKSYMS__
+	struct discovery_state discovery;
+	struct hci_conn_hash conn_hash;
+#else
+	struct discovery_state_orig discovery_deprecated;
+	struct hci_conn_hash_orig conn_hash_deprecated;
+#endif
 
 	struct list_head	blacklist;
 
