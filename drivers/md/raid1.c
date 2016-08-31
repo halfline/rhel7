@@ -2557,6 +2557,13 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
 		return sync_blocks;
 	}
 
+	/*
+	 * If there is non-resync activity waiting for a turn, then let it
+	 * though before starting on this new sync request.
+	 */
+	if (conf->nr_waiting)
+		schedule_timeout_uninterruptible(1);
+
 	bitmap_cond_end_sync(mddev->bitmap, sector_nr);
 	r1_bio = mempool_alloc(conf->r1buf_pool, GFP_NOIO);
 
