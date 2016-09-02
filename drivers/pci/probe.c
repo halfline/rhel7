@@ -6,7 +6,9 @@
 #include <linux/delay.h>
 #include <linux/init.h>
 #include <linux/pci.h>
+#ifndef __GENKSYMS__
 #include <linux/pci_hotplug.h>
+#endif
 #include <linux/slab.h>
 #include <linux/module.h>
 #include <linux/cpumask.h>
