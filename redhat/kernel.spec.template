@@ -1544,6 +1544,28 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Sat Sep 03 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-503.el7]
+- [scsi] sas: remove is_sas_attached() (Ewan Milne) [1370231]
+- [scsi] ses: use scsi_is_sas_rphy instead of is_sas_attached (Ewan Milne) [1370231]
+- [scsi] sas: provide stub implementation for scsi_is_sas_rphy (Ewan Milne) [1370231]
+- [target] lio: assume a maximum of 1024 iovecs (Andy Grover) [1367597]
+- [scsi] smartpqi: bump driver version (Scott Benesh) [1370631]
+- [scsi] smartpqi: add smartpqi.txt (Scott Benesh) [1370631]
+- [scsi] smartpqi: update maintainers (Scott Benesh) [1370631]
+- [scsi] smartpqi: update Kconfig (Scott Benesh) [1370631]
+- [scsi] smartpqi: remove timeout for cache flush operations (Scott Benesh) [1370631]
+- [scsi] smartpqi: scsi queuecommand cleanup (Scott Benesh) [1370631]
+- [scsi] smartpqi: minor tweaks to update time support (Scott Benesh) [1370631]
+- [scsi] smartpqi: minor function reformating (Scott Benesh) [1370631]
+- [scsi] smartpqi: correct event acknowledgement timeout issue (Scott Benesh) [1370631]
+- [scsi] smartpqi: correct controller offline issue (Scott Benesh) [1370631]
+- [scsi] smartpqi: add kdump support (Scott Benesh) [1370631]
+- [scsi] smartpqi: enhance reset logic (Scott Benesh) [1370631]
+- [scsi] smartpqi: enhance drive offline informational message (Scott Benesh) [1370631]
+- [scsi] smartpqi: simplify spanning (Scott Benesh) [1370631]
+- [scsi] smartpqi: change tmf macro names (Scott Benesh) [1370631]
+- [scsi] smartpqi: change aio sg processing (Scott Benesh) [1370631]
+
 * Fri Sep 02 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-502.el7]
 - [fs] rbd: add force close option (Ilya Dryomov) [1196119]
 - [fs] rbd: add 'config_info' sysfs rbd device attribute (Ilya Dryomov) [1196119]
