@@ -1544,6 +1544,31 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Sep 06 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-505.el7]
+- [hv] balloon: replace ha_region_mutex with spinlock (Vitaly Kuznetsov) [1361245]
+- [hv] balloon: don't wait for ol_waitevent when memhp_auto_online is enabled (Vitaly Kuznetsov) [1361245]
+- [hv] balloon: account for gaps in hot add regions (Vitaly Kuznetsov) [1361245]
+- [hv] balloon: keep track of where ha_region starts (Vitaly Kuznetsov) [1361245]
+- [mm] memory-hotplug: add hot-added memory ranges to memblock before allocate node_data for a node (Yasuaki Ishimatsu) [1365766]
+- [mm] memory-hotplug: fix wrong edge when hot add a new node (Yasuaki Ishimatsu) [1365766]
+- [rtc] rtc-rx8581: Mark tech preview (Prarit Bhargava) [1362164]
+- [rtc] rtc-rx8581.c: add SMBus-only adapters support (Prarit Bhargava) [1362164]
+- [rtc] rtc-rx8581.c: remove empty function (Prarit Bhargava) [1362164]
+- [pci] Restore original checksums of pci symbols (Stanislav Kozina) [1370477]
+- [net] reserve kABI fields in struct packet_type (Jiri Benc) [1358738]
+- [net] openvswitch: Ignore negative headroom value (Jakub Sitnicki) [1369642]
+- [scsi] qla2xxx: Update the driver version to 8.07.00.33.07.3-k1 (Chad Dupuis) [1367530]
+- [scsi] qla2xxx: Set FLOGI retry in additional firmware options for P2P (N2N) mode (Chad Dupuis) [1361279]
+- [scsi] qla2xxx: prevent board_disable from running during EEH (Chad Dupuis) [1367530]
+- [kernel] sched/fair: Fix typo in sync_throttle() (Xunlei Pang) [1341003]
+- [kernel] sched/fair: Rework throttle_count sync (Xunlei Pang) [1341003]
+- [kernel] sched/fair: Do not announce throttled next buddy in dequeue_task_fair() (Xunlei Pang) [1341003]
+- [kernel] sched/fair: Initialize throttle_count for new task-groups lazily (Xunlei Pang) [1341003]
+- [kernel] audit: fix a double fetch in audit_log_single_execve_arg() (Paul Moore) [1359306] {CVE-2016-6136}
+- [powerpc] revert "pci: Assign fixed PHB number based on device-tree properties" (Gustavo Duarte) [1360353 1373109]
+- [powerpc] revert "pci: Fix endian bug in fixed PHB numbering" (Gustavo Duarte) [1360353 1373109]
+- [infiniband] rdma/ocrdma: Fix the max_sge reported from FW (Honggang Li) [1369540]
+
 * Mon Sep 05 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-504.el7]
 - [fs] dax: disable dax on ext2 and ext3 (Jeff Moyer) [1369900]
 - [fs] dax: mark tech preview (Jeff Moyer) [1369825]
