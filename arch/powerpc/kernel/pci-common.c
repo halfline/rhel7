@@ -79,7 +79,6 @@ EXPORT_SYMBOL(get_pci_dma_ops);
 static int get_phb_number(struct device_node *dn)
 {
 	int ret, phb_id = -1;
-	u32 prop_32;
 	u64 prop;
 
 	/*
@@ -88,10 +87,8 @@ static int get_phb_number(struct device_node *dn)
 	 * reading "ibm,opal-phbid", only present in OPAL environment.
 	 */
 	ret = of_property_read_u64(dn, "ibm,opal-phbid", &prop);
-	if (ret) {
-		ret = of_property_read_u32_index(dn, "reg", 1, &prop_32);
-		prop = prop_32;
-	}
+	if (ret)
+		ret = of_property_read_u32_index(dn, "reg", 1, (u32 *)&prop);
 
 	if (!ret)
 		phb_id = (int)(prop & (MAX_PHBS - 1));
