@@ -33,7 +33,7 @@
 /* - set: nonlinear file mapping, saved PTE; unset:swap */
 #if defined(CONFIG_X86_64) || defined(CONFIG_X86_PAE)
 /* Pick a bit unaffected by the "KNL4 erratum": */
-#define _PAGE_BIT_FILE		_PAGE_BIT_PSE
+#define _PAGE_BIT_FILE		_PAGE_BIT_PCD
 #else
 #define _PAGE_BIT_FILE		_PAGE_BIT_DIRTY
 #endif
@@ -77,6 +77,9 @@
  * The same hidden bit is used by kmemcheck, but since kmemcheck
  * works on kernel pages while soft-dirty engine on user space,
  * they do not conflict with each other.
+ *
+ * Note that this is well in to the swap PTE's entry/type space
+ * so can not be used for !present PTEs.
  */
 
 #define _PAGE_BIT_SOFT_DIRTY	_PAGE_BIT_HIDDEN
@@ -95,9 +98,33 @@
  * file mapping, so we borrow bit 7 for soft dirty tracking.
  */
 #ifdef CONFIG_MEM_SOFT_DIRTY
-#define _PAGE_SWP_SOFT_DIRTY	_PAGE_PSE
+#define _PAGE_BIT_SWP_SOFT_DIRTY	_PAGE_BIT_PSE
+#define _PAGE_SWP_SOFT_DIRTY	(_AT(pteval_t, 1) << _PAGE_BIT_SWP_SOFT_DIRTY)
 #else
 #define _PAGE_SWP_SOFT_DIRTY	(_AT(pteval_t, 0))
+#endif
+
+#if defined(CONFIG_X86_64) || defined(CONFIG_X86_PAE)
+/*
+ * Do compile-time checks for all the bits that may be set on
+ * non-present PTEs
+ */
+#if _PAGE_BIT_FILE == _PAGE_BIT_SWP_SOFT_DIRTY
+#error conflicting _PAGE_BIT_FILE
+#endif
+#if _PAGE_BIT_FILE == _PAGE_BIT_PROTNONE
+#error conflicting _PAGE_BIT_FILE
+#endif
+/*
+ * Do compile-time checks for all the bits affected by the "KNL4"
+ * erratum:
+ */
+#if _PAGE_BIT_FILE == _PAGE_BIT_DIRTY
+#error conflicting _PAGE_BIT_FILE
+#endif
+#if _PAGE_BIT_FILE == _PAGE_BIT_ACCESSED
+#error conflicting _PAGE_BIT_FILE
+#endif
 #endif
 
 #if defined(CONFIG_X86_64) || defined(CONFIG_X86_PAE)
