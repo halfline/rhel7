@@ -926,7 +926,7 @@ const struct inode_operations_wrapper ovl_dir_inode_operations = {
 	.setxattr	= generic_setxattr,
 	.getxattr	= ovl_getxattr,
 	.listxattr	= ovl_listxattr,
-	.removexattr	= ovl_removexattr,
+	.removexattr	= generic_removexattr,
 	.get_acl	= ovl_get_acl,
 	},
 	.rename2	= ovl_rename2,
