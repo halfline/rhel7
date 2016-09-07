@@ -31,7 +31,12 @@
 /* - if the user mapped it with PROT_NONE; pte_present gives true */
 #define _PAGE_BIT_PROTNONE	_PAGE_BIT_GLOBAL
 /* - set: nonlinear file mapping, saved PTE; unset:swap */
+#if defined(CONFIG_X86_64) || defined(CONFIG_X86_PAE)
+/* Pick a bit unaffected by the "KNL4 erratum": */
+#define _PAGE_BIT_FILE		_PAGE_BIT_PSE
+#else
 #define _PAGE_BIT_FILE		_PAGE_BIT_DIRTY
+#endif
 
 #define _PAGE_PRESENT	(_AT(pteval_t, 1) << _PAGE_BIT_PRESENT)
 #define _PAGE_RW	(_AT(pteval_t, 1) << _PAGE_BIT_RW)
@@ -54,6 +59,11 @@
 #if defined(CONFIG_X86_64) || defined(CONFIG_X86_PAE)
 #define _PAGE_KNL_ERRATUM_MASK (_PAGE_DIRTY | _PAGE_ACCESSED)
 #else
+/*
+ * With 32-bit PTEs, _PAGE_DIRTY is used to denote a nonlinear
+ * PTE.  We must not clear the bit.  We do not allow 32-bit
+ * kernels to run on KNL
+ */
 #define _PAGE_KNL_ERRATUM_MASK 0
 #endif
 
