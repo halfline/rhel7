@@ -192,6 +192,7 @@ struct posix_acl *ovl_get_acl(struct inode *inode, int type);
 int ovl_open_maybe_copy_up(struct dentry *dentry, unsigned int file_flags);
 
 struct inode *ovl_new_inode(struct super_block *sb, umode_t mode);
+struct inode *ovl_get_inode(struct super_block *sb, struct inode *realinode);
 static inline void ovl_copyattr(struct inode *from, struct inode *to)
 {
 	to->i_uid = from->i_uid;
