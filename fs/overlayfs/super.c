@@ -1002,8 +1002,12 @@ ovl_posix_acl_xattr_set(struct dentry *dentry,
 
 	posix_acl_release(acl);
 
-	return ovl_xattr_set(dentry, handler_flags == ACL_TYPE_DEFAULT ? XATTR_NAME_POSIX_ACL_DEFAULT : XATTR_NAME_POSIX_ACL_ACCESS,
+	err = ovl_xattr_set(dentry, handler_flags == ACL_TYPE_DEFAULT ? XATTR_NAME_POSIX_ACL_DEFAULT : XATTR_NAME_POSIX_ACL_ACCESS,
 			     value, size, flags);
+	if (!err)
+		ovl_copyattr(ovl_inode_real(inode, NULL), inode);
+
+	return err;
 
 out_acl_release:
 	posix_acl_release(acl);
