@@ -1499,7 +1499,7 @@ int zap_huge_pmd(struct mmu_gather *tlb, struct vm_area_struct *vma,
 		pte_free(tlb->mm, pgtable_trans_huge_withdraw(tlb->mm, pmd));
 		atomic_long_dec(&tlb->mm->nr_ptes);
 		spin_unlock(ptl);
-		put_huge_zero_page();
+		tlb_remove_page(tlb, huge_zero_page_release_encode());
 	} else {
 		struct page *page = pmd_page(orig_pmd);
 		page_remove_rmap(page);
