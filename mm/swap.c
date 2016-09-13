@@ -893,6 +893,7 @@ void release_pages(struct page **pages, int nr, bool cold)
 	for (i = 0; i < nr; i++) {
 		struct page *page = pages[i];
 		const bool was_thp = is_trans_huge_page_release(page);
+		bool check_mmu_gather = false;
 
 		if (unlikely(!was_thp && PageCompound(page))) {
 			zone = zone_lru_unlock(zone, flags);
@@ -951,7 +952,7 @@ void release_pages(struct page **pages, int nr, bool cold)
 					put_page(page);
 				}
 				continue;
-			} else
+			} else {
 				/*
 				 * __split_huge_page_refcount() cannot
 				 * run from under us, so we can
@@ -964,10 +965,15 @@ void release_pages(struct page **pages, int nr, bool cold)
 				 * tails to be freed anymore.
 				 */
 				dec_trans_huge_mmu_gather_count(page);
+				check_mmu_gather = true;
+			}
 		}
 
 		if (!put_page_testzero(page))
 			continue;
+
+		VM_BUG_ON_PAGE(check_mmu_gather &&
+			       trans_huge_mmu_gather_count(page), page);
 
 		if (PageLRU(page)) {
 			if (!was_thp)
