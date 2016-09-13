@@ -1815,6 +1815,8 @@ fail_putback:
 	 */
 	mem_cgroup_prepare_migration(page, new_page, &memcg);
 
+	init_trans_huge_mmu_gather_count(new_page);
+
 	orig_entry = *pmd;
 	entry = mk_pmd(new_page, vma->vm_page_prot);
 	entry = pmd_mkhuge(entry);
