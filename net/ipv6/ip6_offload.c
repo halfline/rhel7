@@ -247,6 +247,9 @@ static int ipv6_gro_complete(struct sk_buff *skb, int nhoff)
 	struct ipv6hdr *iph = (struct ipv6hdr *)(skb->data + nhoff);
 	int err = -ENOSYS;
 
+	if (skb->encapsulation)
+		skb_set_inner_network_header(skb, nhoff);
+
 	iph->payload_len = htons(skb->len - nhoff - sizeof(*iph));
 
 	rcu_read_lock();
