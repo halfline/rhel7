@@ -530,6 +530,7 @@ struct request_queue {
 	RH_KABI_EXTEND(struct blk_flush_queue   *fq)
 	RH_KABI_EXTEND(struct percpu_ref	q_usage_counter)
 	RH_KABI_EXTEND(bool			mq_sysfs_init_done)
+	RH_KABI_EXTEND(struct work_struct	timeout_work)
 };
 
 #define QUEUE_FLAG_QUEUED	1	/* uses generic tag queueing */
