@@ -1618,6 +1618,9 @@ void ilk_wm_get_hw_state(struct drm_device *dev);
 void skl_wm_get_hw_state(struct drm_device *dev);
 void skl_ddb_get_hw_state(struct drm_i915_private *dev_priv,
 			  struct skl_ddb_allocation *ddb /* out */);
+bool skl_can_enable_sagv(struct drm_atomic_state *state);
+int skl_enable_sagv(struct drm_i915_private *dev_priv);
+int skl_disable_sagv(struct drm_i915_private *dev_priv);
 uint32_t ilk_pipe_pixel_rate(const struct intel_crtc_state *pipe_config);
 int sanitize_rc6_option(const struct drm_device *dev, int enable_rc6);
 

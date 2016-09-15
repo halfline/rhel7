@@ -13571,6 +13571,13 @@ static int intel_atomic_commit(struct drm_device *dev,
 		if (dev_priv->display.modeset_commit_cdclk &&
 		    intel_state->dev_cdclk != dev_priv->cdclk_freq)
 			dev_priv->display.modeset_commit_cdclk(state);
+
+		/*
+		 * SKL workaround: bspec recommends we disable the SAGV when we
+		 * have more then one pipe enabled
+		 */
+		if (IS_SKYLAKE(dev_priv) && !skl_can_enable_sagv(state))
+			skl_disable_sagv(dev_priv);
 	}
 
 	/* Now enable the clocks, plane, pipe, and connectors that we set up. */
@@ -13611,6 +13618,10 @@ static int intel_atomic_commit(struct drm_device *dev,
 		if (put_domains[i])
 			modeset_put_power_domains(dev_priv, put_domains[i]);
 	}
+
+	if (IS_SKYLAKE(dev_priv) && intel_state->modeset &&
+	    skl_can_enable_sagv(state))
+		skl_enable_sagv(dev_priv);
 
 	if (intel_state->modeset)
 		intel_display_power_put(dev_priv, POWER_DOMAIN_MODESET);
