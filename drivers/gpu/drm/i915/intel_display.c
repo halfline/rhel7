@@ -13486,6 +13486,51 @@ static bool needs_vblank_wait(struct intel_crtc_state *crtc_state)
 	return false;
 }
 
+static void intel_update_crtc(struct drm_crtc *crtc,
+			      struct drm_atomic_state *state,
+			      struct drm_crtc_state *old_crtc_state,
+			      unsigned int *crtc_vblank_mask)
+{
+	struct drm_device *dev = crtc->dev;
+	struct drm_i915_private *dev_priv = to_i915(dev);
+	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
+	struct intel_crtc_state *pipe_config = to_intel_crtc_state(crtc->state);
+	bool modeset = needs_modeset(crtc->state);
+	bool update_pipe = !modeset && pipe_config->update_pipe;
+
+	if (modeset) {
+		update_scanline_offset(intel_crtc);
+		dev_priv->display.crtc_enable(crtc);
+	} else {
+		intel_pre_plane_update(to_intel_crtc_state(old_crtc_state));
+	}
+
+	if (intel_crtc->atomic.update_fbc)
+		intel_fbc_enable(intel_crtc);
+
+	if (crtc->state->planes_changed || update_pipe)
+		drm_atomic_helper_commit_planes_on_crtc(old_crtc_state);
+
+	if (needs_vblank_wait(pipe_config))
+		*crtc_vblank_mask |= drm_crtc_mask(crtc);
+}
+
+static void intel_update_crtcs(struct drm_atomic_state *state,
+			       unsigned int *crtc_vblank_mask)
+{
+	struct drm_crtc *crtc;
+	struct drm_crtc_state *old_crtc_state;
+	int i;
+
+	for_each_crtc_in_state(state, crtc, old_crtc_state, i) {
+		if (!crtc->state->active)
+			continue;
+
+		intel_update_crtc(crtc, state, old_crtc_state,
+				  crtc_vblank_mask);
+	}
+}
+
 /**
  * intel_atomic_commit - commit validated state object
  * @dev: DRM device
@@ -13592,34 +13637,9 @@ static int intel_atomic_commit(struct drm_device *dev,
 	}
 
 	/* Now enable the clocks, plane, pipe, and connectors that we set up. */
-	for_each_crtc_in_state(state, crtc, crtc_state, i) {
-		struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
-		bool modeset = needs_modeset(crtc->state);
-		struct intel_crtc_state *pipe_config =
-			to_intel_crtc_state(crtc->state);
-		bool update_pipe = !modeset && pipe_config->update_pipe;
-
-		if (modeset && crtc->state->active) {
-			update_scanline_offset(to_intel_crtc(crtc));
-			dev_priv->display.crtc_enable(crtc);
-		}
-
-		if (!modeset)
-			intel_pre_plane_update(to_intel_crtc_state(crtc_state));
-
-		if (crtc->state->active && intel_crtc->atomic.update_fbc)
-			intel_fbc_enable(intel_crtc);
-
-		if (crtc->state->active &&
-		    (crtc->state->planes_changed || update_pipe))
-			drm_atomic_helper_commit_planes_on_crtc(crtc_state);
-
-		if (pipe_config->base.active && needs_vblank_wait(pipe_config))
-			crtc_vblank_mask |= 1 << i;
-	}
+	dev_priv->display.update_crtcs(state, &crtc_vblank_mask);
 
 	/* FIXME: add subpixel order */
-
 	if (!state->legacy_cursor_update)
 		intel_atomic_wait_for_vblanks(dev, dev_priv, crtc_vblank_mask);
 
@@ -14978,6 +14998,8 @@ static void intel_init_display(struct drm_device *dev)
 		dev_priv->display.crtc_enable = i9xx_crtc_enable;
 		dev_priv->display.crtc_disable = i9xx_crtc_disable;
 	}
+
+	dev_priv->display.update_crtcs = intel_update_crtcs;
 
 	/* Returns the core display clock speed */
 	if (IS_SKYLAKE(dev) || IS_KABYLAKE(dev))
