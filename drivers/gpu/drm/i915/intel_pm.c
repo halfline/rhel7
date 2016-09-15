@@ -3885,6 +3885,10 @@ skl_compute_ddb(struct drm_atomic_state *state)
 		ret = skl_allocate_pipe_ddb(cstate, ddb);
 		if (ret)
 			return ret;
+
+		ret = drm_atomic_add_affected_planes(state, &intel_crtc->base);
+		if (ret)
+			return ret;
 	}
 
 	return 0;
@@ -3967,6 +3971,8 @@ skl_compute_wm(struct drm_atomic_state *state)
 			/* This pipe's WM's did not change */
 			continue;
 
+		intel_cstate->update_wm_pre = true;
+		intel_cstate->base.planes_changed = true;
 		skl_compute_wm_results(crtc->dev, pipe_wm, results, intel_crtc);
 	}
 
