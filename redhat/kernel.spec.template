@@ -1544,6 +1544,21 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Sep 15 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-507.el7]
+- [netdrv] ixgbe: fix spoofed packets with macvlans (Ken Cox) [1324631]
+- [tools] perf mem: Fix -t store option for record command (Jiri Olsa) [1357531 1357543]
+- [x86] clock: Fix kvm guest tsc initialization (Prarit Bhargava) [1372759]
+- [x86] tsc: Enumerate BXT tsc_khz via CPUID (Prarit Bhargava) [1372759]
+- [drm] i915: Enable polling when we don't have hpd (Lyude Paul) [1277863]
+- [drm] i915/vlv: Disable HPD in valleyview_crt_detect_hotplug() (Lyude Paul) [1277863]
+- [drm] i915/vlv: Reset the ADPA in vlv_display_power_well_init() (Lyude Paul) [1277863]
+- [drm] i915/vlv: Make intel_crt_reset() per-encoder (Lyude Paul) [1277863]
+- [fs] Fix NULL pointer dereference in bl_free_device() (Benjamin Coddington) [1356796]
+- [fs] nfs/blocklayout: support RH/Fedora dm-mpath device nodes (Benjamin Coddington) [1356796]
+- [fs] nfs/blocklayout: refactor open-by-wwn (Benjamin Coddington) [1356796]
+- [fs] nfs/blocklayout: use proper fmode for opening block devices (Benjamin Coddington) [1356796]
+- [fs] sunrpc: fix UDP memory accounting (Paolo Abeni) [1298899]
+
 * Mon Sep 12 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-506.el7]
 - [kernel] timekeeping: Cap adjustments so they don't exceed the maxadj value (Marcelo Tosatti) [1246218]
 - [kernel] fork: allocate idle task for a CPU always on its local node (Oleg Nesterov) [1339635]
