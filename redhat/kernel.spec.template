@@ -1544,6 +1544,23 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Sep 19 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-508.el7]
+- [drm] i915: Add GEN7_PCODE_MIN_FREQ_TABLE_GT_RATIO_OUT_OF_RANGE to SNB (Lyude Paul) [1341633 1355776]
+- [drm] i915/gen9: implement missing case for SKL watermarks calculation (Lyude Paul) [1341633 1355776]
+- [drm] i915/gen9: fix the watermark res_blocks value (Lyude Paul) [1341633 1355776]
+- [drm] i915/gen9: fix plane_blocks_per_line on watermarks calculations (Lyude Paul) [1341633 1355776]
+- [drm] i915/gen9: minimum scanlines for Y tile is not always 4 (Lyude Paul) [1341633 1355776]
+- [drm] i915/gen9: fix the WaWmMemoryReadLatency implementation (Lyude Paul) [1341633 1355776]
+- [drm] i915/skl: Don't try to update plane watermarks if they haven't changed (Lyude Paul) [1341633 1355776]
+- [drm] i915/skl: Update DDB values atomically with wms/plane attrs (Lyude Paul) [1341633 1355776]
+- [drm] i915: Move CRTC updating in atomic_commit into it's own hook (Lyude Paul) [1341633 1355776]
+- [drm] i915/skl: Ensure pipes with changed wms get added to the state (Lyude Paul) [1341633 1355776]
+- [drm] i915/skl: Update plane watermarks atomically during plane updates (Lyude Paul) [1341633 1355776]
+- [drm] i915/gen9: Only copy WM results for changed pipes to skl_hw (Lyude Paul) [1341633 1355776]
+- [drm] i915/skl: Add support for the SAGV, fix underrun hangs (Lyude Paul) [1341633 1355776]
+- [drm] i915/gen6+: Interpret mailbox error flags (Lyude Paul) [1341633 1355776]
+- [drm] i915/gen9: Only copy WM results for changed pipes to skl_hw (Lyude Paul) [1341633 1355776]
+
 * Thu Sep 15 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-507.el7]
 - [netdrv] ixgbe: fix spoofed packets with macvlans (Ken Cox) [1324631]
 - [tools] perf mem: Fix -t store option for record command (Jiri Olsa) [1357531 1357543]
