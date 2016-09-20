@@ -1544,6 +1544,27 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Sep 20 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-509.el7]
+- [mm] sparse: use memblock apis for early memory allocations (Koki Sanagi) [1375453]
+- [mm] memblock: add memblock memory allocation apis (Koki Sanagi) [1375453]
+- [mm] thp: harden the debug kernel with a strict check for thp_mmu_gather (Andrea Arcangeli) [1369365]
+- [mm] thp: initialize thp_mmu_gather for newly allocated migrated pages (Andrea Arcangeli) [1369365]
+- [mm] thp: put_huge_zero_page() with MMU gather #2 (Andrea Arcangeli) [1369365]
+- [fs] nfs: fix BUG() crash in notify_change() with patch to chown_common() ("J. Bruce Fields") [1342695]
+- [net] ipv6: gro: fix forwarding of tunneled packets (Jiri Benc) [1375438]
+- [net] sctp: hold the transport before using it in sctp_hash_cmp (Xin Long) [1368884]
+- [net] sctp: identify chunks that need to be fragmented at IP level (Xin Long) [1371377]
+- [scsi] be2iscsi: revert: _bh for io_sgl_lock and mgmt_sgl_lock (Maurizio Lombardi) [1374223]
+- [block] blk-mq: Allow timeouts to run while queue is freezing (Gustavo Duarte) [1372483]
+- [block] defer timeouts to a workqueue (Gustavo Duarte) [1372483]
+- [netdrv] tg3: Fix for disallow tx coalescing time to be 0 (Ivan Vecera) [1368885]
+- [netdrv] tg3: Fix for diasllow rx coalescing time to be 0 (Ivan Vecera) [1368885]
+- [infiniband] rdma/ocrdma: Support user AH creation for RoCE-v2 (Don Dutile) [1376120]
+- [infiniband] rdma/ocrdma: Support RoCE-v2 in the RC path (Don Dutile) [1376120]
+- [infiniband] rdma/ocrdma: Support RoCE-v2 in the UD path (Don Dutile) [1376120]
+- [infiniband] rdma/ocrdma: Export udp encapsulation capability (Don Dutile) [1376120]
+- [infiniband] ib/mlx5: Fix wrong naming of port_rcv_data counter (Don Dutile) [1374862]
+
 * Mon Sep 19 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-508.el7]
 - [drm] i915: Add GEN7_PCODE_MIN_FREQ_TABLE_GT_RATIO_OUT_OF_RANGE to SNB (Lyude Paul) [1341633 1355776]
 - [drm] i915/gen9: implement missing case for SKL watermarks calculation (Lyude Paul) [1341633 1355776]
