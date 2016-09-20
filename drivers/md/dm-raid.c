@@ -1316,10 +1316,10 @@ static int parse_raid_params(struct raid_set *rs, struct dm_arg_set *as,
 		return -EINVAL;
 	}
 
+	/* HM FIXME: reject nosync again once userspace copes with it (rhbz1371717) */
 	if (test_bit(__CTR_FLAG_REBUILD, &rs->ctr_flags) &&
-	    (test_bit(__CTR_FLAG_SYNC, &rs->ctr_flags) ||
-	     test_bit(__CTR_FLAG_NOSYNC, &rs->ctr_flags))) {
-		rs->ti->error = "sync/nosync and rebuild are mutually exclusive";
+	    test_bit(__CTR_FLAG_SYNC, &rs->ctr_flags)) {
+		rs->ti->error = "sync and rebuild are mutually exclusive";
 		return -EINVAL;
 	}
 
