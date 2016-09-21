@@ -1544,6 +1544,19 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Sep 21 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-510.el7]
+- [kernel] audit: fix exe_file access in audit_exe_compare (Richard Guy Briggs) [1374478]
+- [kernel] mm: introduce get_task_exe_file (Richard Guy Briggs) [1374478]
+- [kernel] prctl: avoid using mmap_sem for exe_file serialization (Richard Guy Briggs) [1374478]
+- [kernel] mm: rcu-protected get_mm_exe_file() (Richard Guy Briggs) [1374478]
+- [dm] dm-raid: reverse validation of nosync+rebuild flags (Heinz Mauelshagen) [1371717]
+- [x86] kvm: correctly reset dest_map->vector when restoring LAPIC state (Paolo Bonzini) [1367716]
+- [s390] dasd: fix hanging device after clear subchannel (Gustavo Duarte) [1368068]
+- [netdrv] bna: fix crash in bnad_get_strings() (Ivan Vecera) [1376508]
+- [netdrv] bna: add missing per queue ethtool stat (Ivan Vecera) [1376508]
+- [powerpc] kvm: Implement kvm_arch_intc_initialized() for PPC (David Gibson) [1375778]
+- [powerpc] kvm: book3s: Don't crash if irqfd used with no in-kernel XICS emulation (David Gibson) [1375778]
+
 * Tue Sep 20 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-509.el7]
 - [mm] sparse: use memblock apis for early memory allocations (Koki Sanagi) [1375453]
 - [mm] memblock: add memblock memory allocation apis (Koki Sanagi) [1375453]
