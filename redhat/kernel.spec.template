@@ -265,7 +265,7 @@ Provides: kernel-modeset = 1\
 Provides: kernel-uname-r = %{KVRA}%{?1:.%{1}}\
 Requires(pre): %{kernel_prereq}\
 Requires(pre): %{initrd_prereq}\
-Requires(pre): linux-firmware >= 20160615-46\
+Requires(pre): linux-firmware >= 20160830-49\
 Requires(post): %{_sbindir}/new-kernel-pkg\
 Requires(post): system-release\
 Requires(preun): %{_sbindir}/new-kernel-pkg\
