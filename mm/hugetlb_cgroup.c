@@ -271,12 +271,16 @@ static ssize_t hugetlb_cgroup_read(struct cgroup *cgroup, struct cftype *cft,
 	switch (MEMFILE_ATTR(cft->private)) {
 	case RES_USAGE:
 		val = (u64)page_counter_read(counter) * PAGE_SIZE;
+		break;
 	case RES_LIMIT:
 		val = (u64)counter->limit * PAGE_SIZE;
+		break;
 	case RES_MAX_USAGE:
 		val = (u64)counter->watermark * PAGE_SIZE;
+		break;
 	case RES_FAILCNT:
-		return counter->failcnt;
+		val = counter->failcnt;
+		break;
 	default:
 		BUG();
 	}
