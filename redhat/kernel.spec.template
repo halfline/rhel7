@@ -1544,6 +1544,19 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Sep 28 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-511.el7]
+- [net] add recursion limit to GRO (Sabrina Dubroca) [1374191] {CVE-2016-7039}
+- [mm] cgroup: fix hugetlb_cgroup_read() (Jerome Marchand) [1378236]
+- [fs] nfs: change invalidatepage prototype to accept length (Benjamin Coddington) [1366131]
+- [fs] xfs: quiesce the filesystem after recovery on readonly mount (Eric Sandeen) [1375457]
+- [fs] xfs: rework buffer dispose list tracking (Brian Foster) [1349175]
+- [fs] ext4: pre-zero allocated blocks for DAX IO (Eric Sandeen) [1367989]
+- [fs] gfs2: Initialize atime of I_NEW inodes (Andreas Grunbacher) [1379447]
+- [fs] gfs2: Update file times after grabbing glock (Andreas Grunbacher) [1379447]
+- [x86] topology: Handle CPUID bogosity gracefully (Vitaly Kuznetsov) [1377988]
+- [netdrv] sfc: check async completer is !NULL before calling (Jarod Wilson) [1368201]
+- [infiniband] ib/mlx5: Fix iteration overrun in GSI qps (Don Dutile) [1376941]
+
 * Wed Sep 21 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-510.el7]
 - [kernel] audit: fix exe_file access in audit_exe_compare (Richard Guy Briggs) [1374478]
 - [kernel] mm: introduce get_task_exe_file (Richard Guy Briggs) [1374478]
