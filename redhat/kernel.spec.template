@@ -1544,6 +1544,17 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Sep 30 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-512.el7]
+- [fs] revert "ext4: pre-zero allocated blocks for DAX IO" (Eric Sandeen) [1380571]
+- [fs] nfsd: fix corruption in notifier registration ("J. Bruce Fields") [1378363]
+- [fs] xfs: log recovery tracepoints to track current lsn and buffer submission (Brian Foster) [1362730]
+- [fs] xfs: update metadata LSN in buffers during log recovery (Brian Foster) [1362730]
+- [fs] xfs: don't warn on buffers not being recovered due to LSN (Brian Foster) [1362730]
+- [fs] xfs: pass current lsn to log recovery buffer validation (Brian Foster) [1362730]
+- [fs] xfs: rework log recovery to submit buffers on LSN boundaries (Brian Foster) [1362730]
+- [x86] perf/uncore: Disable uncore on kdump kernel (Jiri Olsa) [1379569]
+- [netdrv] mlx4_core: Fix to clean devlink resources (Kamal Heib) [1379504]
+
 * Wed Sep 28 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-511.el7]
 - [net] add recursion limit to GRO (Sabrina Dubroca) [1374191] {CVE-2016-7039}
 - [mm] cgroup: fix hugetlb_cgroup_read() (Jerome Marchand) [1378236]
