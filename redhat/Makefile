@@ -60,12 +60,12 @@ rh-check-kabi: rh-kabi
 	 -s $(_OUTPUT)/Module.symvers
 
 rh-configs:
-	cd $(REDHAT)/configs; ./build_configs.sh
+	cd $(REDHAT)/configs; ./build_configs.sh $(RPMVERSION)
 
 rh-configs-prep: rh-configs
 
 rh-configs-arch-prep:
-	cd $(REDHAT)/configs; ./build_configs.sh $(MACH)
+	cd $(REDHAT)/configs; ./build_configs.sh $(RPMVERSION) $(MACH)
 
 rh-clean-configs:
 	cd $(REDHAT)/configs; rm -f kernel-*.config

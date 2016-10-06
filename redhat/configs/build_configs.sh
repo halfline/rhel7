@@ -4,7 +4,8 @@
 # and debug to form the necessary kernel-<version>-<arch>-<variant>.config
 # files for building RHEL kernels, based on the contents of a control file
 
-SUBARCH=$1 # defines a specific arch for use with rh-configs-arch-prep target
+KVERREL=$1 # sets the kenrel version-release string used for config file naming
+SUBARCH=$2 # defines a specific arch for use with rh-configs-arch-prep target
 
 set errexit
 set nounset
@@ -30,7 +31,7 @@ function merge_configs()
 	archvar=$1
 	arch=$(echo "$archvar" | cut -f1 -d"-")
 	configs=$2
-	name=kernel-3.10.0-$archvar.config
+	name=kernel-$KVERREL-$archvar.config
 	echo -n "Building $name ... "
 	touch config-merging config-merged
 	for config in $(echo $configs | sed -e 's/:/ /g')
@@ -68,7 +69,7 @@ function process_configs()
 	if [ -e .config ]; then
 		mv .config .config-saveme
 	fi
-	for cfg in $cfg_dir/kernel-3.10.0-$SUBARCH*.config
+	for cfg in $cfg_dir/kernel-$KVERREL-$SUBARCH*.config
 	do
 		mv $cfg .config
 		arch=$(head -1 .config | cut -b 3-)
