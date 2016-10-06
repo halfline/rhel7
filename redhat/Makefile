@@ -49,7 +49,7 @@ rh-kabi:
 			-r $(RHELMAJOR).$$i > $(REDHAT)/kabi/kabi-rhel$(RHELMAJOR)$$i/kabi_whitelist_$$KABIARCH;\
 		done;\
 	done;
-	@(cd $(REDHAT)/kabi/ && ln -Tsf kabi-rhel7$(RHELMINOR) kabi-current)
+	@(cd $(REDHAT)/kabi/ && ln -Tsf kabi-rhel$(RHELMAJOR)$(RHELMINOR) kabi-current)
 
 rh-check-kabi: rh-kabi
 	@if [ ! -e $(_OUTPUT)/Module.symvers ]; then \
@@ -98,7 +98,7 @@ $(TARBALL):
 
 .PHONY: $(KABI_TARBALL)
 $(KABI_TARBALL):
-	@(cd kabi && tar cjvf $(SOURCES)/$(KABI_TARFILE) kabi-rhel7* kabi-current)
+	@(cd kabi && tar cjvf $(SOURCES)/$(KABI_TARFILE) kabi-rhel$(RHELMAJOR)* kabi-current)
 
 setup-source: rh-clean-sources
 	@cp $(REDHAT)/$(SPECFILE).template $(SOURCES)/$(SPECFILE)
@@ -126,7 +126,7 @@ sources-rh: $(TARBALL)
 		touch keys/extra_certificates; \
 	fi)
 	@cp cpupower.* x509.genkey keys/rhel*.x509 keys/extra_certificates Makefile.common kabi/check-kabi kabi/Module.kabi_{ppc64,ppc64le,s390x,x86_64} configs/kernel-*.config rhpkg/Makefile scripts/sign-modules keys/*.cer $(SOURCES)/
-	@(cd kabi && tar cjvf $(SOURCES)/$(KABI_TARFILE) kabi-rhel7* kabi-current)
+	@(cd kabi && tar cjvf $(SOURCES)/$(KABI_TARFILE) kabi-rhel$(RHELMAJOR)* kabi-current)
 
 rh-sources: setup-source rh-configs rh-kabi sources-rh
 
