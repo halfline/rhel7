@@ -1544,6 +1544,9 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Oct 12 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-513.el7]
+- [md] dm raid: fix compat_features validation (Mike Snitzer) [1383726]
+
 * Fri Sep 30 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-512.el7]
 - [fs] revert "ext4: pre-zero allocated blocks for DAX IO" (Eric Sandeen) [1380571]
 - [fs] nfsd: fix corruption in notifier registration ("J. Bruce Fields") [1378363]
