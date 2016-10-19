@@ -1544,6 +1544,9 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Oct 19 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-514.el7]
+- [mm] remove gup_flags FOLL_WRITE games from __get_user_pages() (Larry Woodman) [1385124] {CVE-2016-5195}
+
 * Wed Oct 12 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-513.el7]
 - [md] dm raid: fix compat_features validation (Mike Snitzer) [1383726]
 
