@@ -139,8 +139,9 @@ S:	Maintained
 F:	block/
 
 BNA ETHERNET DRIVER (bna)
-M:	Ivan Vecera <ivecera@redhat.com>
+M:	Jonathan Toppins <jtoppins@redhat.com>
 S:	Maintained
+F:	drivers/net/ethernet/brocade/bna/
 
 BROADCOM B44 10/100 ETHERNET DRIVER
 M:	Stanislaw Gruszka <sgruszka@redhat.com>
@@ -175,7 +176,7 @@ S:	Maintained
 F:	drivers/net/ethernet/broadcom/cnic*
 
 BROADCOM TG3 GIGABIT ETHERNET DRIVER
-M:	Ivan Vecera <ivecera@redhat.com>
+M:	Jonathan Toppins <jtoppins@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/broadcom/tg3.*
 
