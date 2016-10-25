@@ -44,7 +44,8 @@ FILES=					\
 	test-compile-x32.bin		\
 	test-zlib.bin			\
 	test-lzma.bin			\
-	test-get_cpuid.bin
+	test-get_cpuid.bin		\
+	test-sdt.bin
 
 FILES := $(addprefix $(OUTPUT),$(FILES))
 
@@ -207,6 +208,9 @@ $(OUTPUT)test-lzma.bin:
 	$(BUILD) -llzma
 
 $(OUTPUT)test-get_cpuid.bin:
+	$(BUILD)
+
+$(OUTPUT)test-sdt.bin:
 	$(BUILD)
 
 -include $(OUTPUT)*.d
