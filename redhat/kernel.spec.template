@@ -1544,6 +1544,28 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Oct 26 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-515.el7]
+- [kernel] sched/core: Fix a race between try_to_wake_up() and a woken up task (Lauro Ramos Venancio) [1379256]
+- [kernel] pm/sleep: Fix request_firmware() error at resume (Don Zickus) [1375203]
+- [block] blk-mq: improve warning for running a queue on the wrong CPU (Gustavo Duarte) [1376948]
+- [block] blk-mq: don't overwrite rq->mq_ctx (Gustavo Duarte) [1376948]
+- [nvme] Don't suspend admin queue that wasn't created (Gustavo Duarte) [1370507]
+- [nvme] Suspend all queues before deletion (Gustavo Duarte) [1370507]
+- [scsi] cxgb4i: Increased the value of MAX_IMM_TX_PKT_LEN from 128 to 256 bytes (Sai Vemuri) [1379954]
+- [scsi] cxgb4i: fix credit check for tx_data_wr (Sai Vemuri) [1379954]
+- [vfio] vfio-pci: Disable INTx after MSI/X teardown (Alex Williamson) [1371495]
+- [vfio] vfio-pci: Virtualize PCIe & AF FLR (Alex Williamson) [1371495]
+- [misc] hpilo: Changes to support new security states in iLO5 FW (Nigel Croxon) [1376576]
+- [misc] genwqe: Change default access rights for device node (Steve Best) [1325797]
+- [hid] i2c-hid: exit if the IRQ is not valid (David Arcari) [1376599]
+- [x86] fix call location of smp_quirk_init_udelay() (Prarit Bhargava) [1377296]
+- [x86] hpet: Re-enable HPET on Purley 4S (Prarit Bhargava) [1372853]
+- [x86] hpet: Reduce HPET counter read contention (Prarit Bhargava) [1372853]
+- [powerpc] kvm: ppc: book3s hv: Take out virtual core piggybacking code (Thomas Huth) [1350719]
+- [powerpc] kvm: ppc: book3s: Treat VTB as a per-subcore register, not per-thread (Thomas Huth) [1350719]
+- [powerpc] kvm: ppc: book3s hv: Move struct kvmppc_vcore from kvm_host.h to kvm_book3s.h (Thomas Huth) [1350719]
+- [infiniband] ib/iser: Fix max_sectors calculation (Jonathan Toppins) [1380515]
+
 * Wed Oct 19 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-514.el7]
 - [mm] remove gup_flags FOLL_WRITE games from __get_user_pages() (Larry Woodman) [1385124] {CVE-2016-5195}
 
