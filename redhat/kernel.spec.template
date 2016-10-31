@@ -1544,6 +1544,23 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Mon Oct 31 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-516.el7]
+- [md] dm: free io_barrier after blk_cleanup_queue call (Mike Snitzer) [1385813]
+- [md] dm raid: fix activation of existing raid4/10 devices (Mike Snitzer) [1385149]
+- [rtc] cmos: Initialize hpet timer before irq is registered (Pratyush Anand) [1299001]
+- [x86] Add support for missing Kabylake Sunrise Point PCH (David Arcari) [1379401]
+- [x86] pci: vmd: Request userspace control of PCIe hotplug indicators (Myron Stowe) [1380181]
+- [pci] pciehp: Allow exclusive userspace control of indicators (Myron Stowe) [1380181]
+- [acpi] acpica: Fix for a Store->ArgX when ArgX contains a reference to a field (Lenny Szubowicz) [1330897]
+- [misc] cxl: Flush PSL cache before resetting the adapter (Steve Best) [1383478]
+- [scsi] ibmvfc: Fix I/O hang when port is not mapped (Steve Best) [1378001]
+- [netdrv] xen-netfront: avoid packet loss when ethernet header crosses page boundary (Vitaly Kuznetsov) [1348581]
+- [powerpc] ppc64: Fix incorrect return value from __copy_tofrom_user (Steve Best) [1387244]
+- [powerpc] pseries: use pci_host_bridge.release_fn() to kfree(phb) (Steve Best) [1385635]
+- [powerpc] pseries: Fix stack corruption in htpe code (Steve Best) [1384099]
+- [powerpc] eeh: Fix stale cached primary bus (Steve Best) [1383281]
+- [infiniband] ib/ipoib: move back IB LL address into the hard header (Jonathan Toppins) [1378656]
+
 * Wed Oct 26 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-515.el7]
 - [kernel] sched/core: Fix a race between try_to_wake_up() and a woken up task (Lauro Ramos Venancio) [1379256]
 - [kernel] pm/sleep: Fix request_firmware() error at resume (Don Zickus) [1375203]
