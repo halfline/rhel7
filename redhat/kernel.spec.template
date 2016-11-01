@@ -1544,6 +1544,27 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Tue Nov 01 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-518.el7]
+- [spi] spi-gpio: Fix compiler warning when building for 64 bit systems (Prarit Bhargava) [1373655]
+- [spi] spi-gpio: Add dt support for a single device with no chip select (Prarit Bhargava) [1373655]
+- [misc] mei: me: disable driver on SPT SPS firmware (Jeremy McNicoll) [1369645]
+- [acpi] acpi / ipmi: Cleanup coding styles (David Arcari) [1373703]
+- [acpi] acpi / ipmi: Cleanup some inclusion codes (David Arcari) [1373703]
+- [acpi] acpi / ipmi: Cleanup some initialization codes (David Arcari) [1373703]
+- [acpi] acpi / ipmi: Cleanup several acpi_ipmi_device members (David Arcari) [1373703]
+- [acpi] acpi / ipmi: Add reference counting for ACPI IPMI transfers (David Arcari) [1373703]
+- [acpi] acpi / ipmi: Use global IPMI operation region handler (David Arcari) [1373703]
+- [acpi] acpi / ipmi: Fix race caused by the unprotected ACPI IPMI user (David Arcari) [1373703]
+- [acpi] acpi / ipmi: Fix race caused by the timed out ACPI IPMI transfers (David Arcari) [1373703]
+- [acpi] acpi / ipmi: Fix race caused by the unprotected ACPI IPMI transfers (David Arcari) [1373703]
+- [acpi] acpi / ipmi: Fix potential response buffer overflow (David Arcari) [1373703]
+- [kernel] sched/core, x86/topology: Fix NUMA in package topology bug (Jiri Olsa) [1369832]
+- [kernel] sched: Allow hotplug notifiers to be setup early (Jiri Olsa) [1369832]
+- [cpufreq] Ref the policy object sooner (Oleksandr Natalenko) [1382608]
+- [cpufreq] expose scaling_cur_freq sysfs file for set_policy() drivers (Oleksandr Natalenko) [1382608]
+- [lib] kobject: WARN as tip when call kobject_get() to a kobject not initialized (Oleksandr Natalenko) [1382608]
+- [cpufreq] Set cpufreq_cpu_data to NULL before putting kobject (Oleksandr Natalenko) [1382608]
+
 * Mon Oct 31 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-517.el7]
 - [fs] fanotify: fix list corruption in fanotify_get_response() (Miklos Szeredi) [1362421]
 - [fs] fsnotify: add a way to stop queueing events on group shutdown (Miklos Szeredi) [1362421]
