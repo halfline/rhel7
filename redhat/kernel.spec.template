@@ -1544,6 +1544,21 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Nov 03 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-520.el7]
+- [firmware] efi: Fix usage of illegal alignment on efi_low_alloc (Lenny Szubowicz) [1387689]
+- [net] tcp: fix use after free in tcp_xmit_retransmit_queue() (Mateusz Guzik) [1379531] {CVE-2016-6828}
+- [net] team: Fixing a bug in team driver due to incorrect 'unsigned int' to 'int' conversion (Hangbin Liu) [1382098]
+- [net] sctp: not return ENOMEM err back in sctp_packet_transmit (Xin Long) [1371362]
+- [net] sctp: make sctp_outq_flush/tail/uncork return void (Xin Long) [1371362]
+- [net] sctp: save transmit error to sk_err in sctp_outq_flush (Xin Long) [1371362]
+- [net] sctp: free msg->chunks when sctp_primitive_SEND return err (Xin Long) [1371362]
+- [net] sctp: do not return the transmit err back to sctp_sendmsg (Xin Long) [1371362]
+- [net] sctp: remove the unnecessary state check in sctp_outq_tail (Xin Long) [1371362]
+- [net] vxlan: fix duplicated and wrong error messages (Jiri Benc) [1366024]
+- [net] vxlan: reject multicast destination without an interface (Jiri Benc) [1366024]
+- [net] netdev, sched/wait: Fix sleeping inside wait event (Paolo Abeni) [1382175]
+- [net] Separate the close_list and the unreg_list (Paolo Abeni) [1382175]
+
 * Thu Nov 03 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-519.el7]
 - [hv] do not lose pending heartbeat vmbus packets (Vitaly Kuznetsov) [1378615]
 - [net] openvswitch: avoid deferred execution of recirc actions (Lance Richardson) [1370643]
