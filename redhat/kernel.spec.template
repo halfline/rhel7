@@ -1544,6 +1544,21 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Thu Nov 03 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-519.el7]
+- [hv] do not lose pending heartbeat vmbus packets (Vitaly Kuznetsov) [1378615]
+- [net] openvswitch: avoid deferred execution of recirc actions (Lance Richardson) [1370643]
+- [net] ipv4: Use math to point per net sysctls into the appropriate struct net (Eric Garver) [1363661]
+- [x86] cpu/intel: Add Knights Mill to Intel family (Steve Best) [1380829]
+- [x86] kvm: lapic: cap __delay at lapic_timer_advance_ns (Marcelo Tosatti) [1389431]
+- [x86] kvm: x86: move nsec_to_cycles from x86.c to x86.h (Marcelo Tosatti) [1389431]
+- [tty] serial/8250: Touch NMI watchdog in wait_for_xmitr (Jiri Olsa) [1377938]
+- [acpi] acpi / scan: use platform bus type by default for _HID enumeration (Tony Camuso) [1383505]
+- [acpi] acpi / scan: introduce platform_id device PNP type flag (Tony Camuso) [1383505]
+- [char] ipmi: Convert the IPMI SI ACPI handling to a platform device (Tony Camuso) [1383505]
+- [vfio] pci: Fix ordering of eventfd vs virqfd shutdown (Alex Williamson) [1322026]
+- [netdrv] netvsc: fix incorrect receive checksum offloading (Vitaly Kuznetsov) [1388702]
+- [watchdog] hpwdt: add support for iLO5 (Linda Knippers) [1382798]
+
 * Tue Nov 01 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-518.el7]
 - [spi] spi-gpio: Fix compiler warning when building for 64 bit systems (Prarit Bhargava) [1373655]
 - [spi] spi-gpio: Add dt support for a single device with no chip select (Prarit Bhargava) [1373655]
