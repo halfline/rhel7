@@ -325,6 +325,7 @@ INTEL IOMMU (VT-d)
 M:	Myron Stowe <myron.stowe@redhat.com>
 M:	Alex Williamson <alex.williamson@redhat.com>
 M:	Don Dutile <ddutile@redhat.com>
+M:	Brad Peters <brpeters@redhat.com>
 S:	Maintained
 F:	drivers/iommu/intel_iommu.c
 F:	include/linux/intel-iommu.h
