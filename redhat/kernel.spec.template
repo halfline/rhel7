@@ -1544,6 +1544,15 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Fri Nov 11 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-521.el7]
+- [fs] Retry operation on EREMOTEIO on an interrupted slot (Steve Dickson) [1378981]
+- [fs] ext4: pre-zero allocated blocks for DAX IO (Eric Sandeen) [1367989]
+- [x86] apic, doc: Justification for disabling IO APIC before Local APIC (Prarit Bhargava) [1384277]
+- [x86] apic: Disable I/O APIC before shutdown of the local APIC (Prarit Bhargava) [1384277]
+- [scsi] megaraid-sas: request irqs later (Tomas Henzl) [1392978]
+- [netdrv] i40e: Fix errors resulted while turning off TSO (Stefan Assmann) [1378509]
+- [powerpc] eeh: eeh_pci_enable(): fix checking of post-request state (Steve Best) [1383670]
+
 * Thu Nov 03 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-520.el7]
 - [firmware] efi: Fix usage of illegal alignment on efi_low_alloc (Lenny Szubowicz) [1387689]
 - [net] tcp: fix use after free in tcp_xmit_retransmit_queue() (Mateusz Guzik) [1379531] {CVE-2016-6828}
