@@ -1544,6 +1544,35 @@ fi
 
 %changelog
 %%CHANGELOG%%
+* Wed Nov 23 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-523.el7]
+- [kernel] rcu: sysctl: Panic on RCU Stall (Lauro Ramos Venancio) [1360867]
+- [kernel] sched/core: Panic on scheduling while atomic bugs if kernel.panic_on_warn is set (Lauro Ramos Venancio) [1360867]
+- [kernel] sched: Fix possible divide by zero in avg_atom() calculation (Mateusz Guzik) [1392466]
+- [kernel] printk: avoid livelock if another CPU printks continuously (Denys Vlasenko) [1294066]
+- [x86] smp: Fix __max_logical_packages value setup (Prarit Bhargava) [1394239]
+- [x86] revert "smp: Fix __max_logical_packages value setup" (Prarit Bhargava) [1394239]
+- [net] ipv6: add mtu lock check in __ip6_rt_update_pmtu (Xin Long) [1389210]
+- [net] Fix use after free in the recvmmsg exit path (Davide Caratti) [1390047] {CVE-2016-7117}
+- [net] pktgen: fix pkt_size (Paolo Abeni) [1381652]
+- [scsi] megaraid_sas: driver version upgrade (Tomas Henzl) [1396165]
+- [scsi] megaraid_sas: Do not set MPI2_TYPE_CUDA for JBOD FP path for FW which does not support JBOD sequence map (Tomas Henzl) [1380441]
+- [scsi] megaraid_sas: Send SYNCHRONIZE_CACHE for VD to firmware (Tomas Henzl) [1380447]
+- [scsi] megaraid_sas: Do not fire DCMDs during PCI shutdown/detach (Tomas Henzl) [1396165]
+- [scsi] megaraid_sas: Send correct PhysArm to FW for R1 VD downgrade (Tomas Henzl) [1396165]
+- [scsi] megaraid_sas: For SRIOV enabled firmware, ensure VF driver waits for 30secs before reset (Tomas Henzl) [1396165]
+- [scsi] megaraid_sas: Fix data integrity failure for JBOD (passthrough) devices (Tomas Henzl) [1380447]
+- [scsi] megaraid_sas: fix macro MEGASAS_IS_LOGICAL to avoid regression (Tomas Henzl) [1380447]
+- [scsi] megaraid_sas: clean function declarations in megaraid_sas_base.c up (Tomas Henzl) [1396165]
+- [scsi] megaraid_sas: add in missing white space in error message text (Tomas Henzl) [1396165]
+- [scsi] megaraid_sas: Fix the search of first memory bar (Tomas Henzl) [1396165]
+- [scsi] megaraid_sas: Use memdup_user() rather than duplicating its implementation (Tomas Henzl) [1396165]
+- [scsi] megaraid_sas: Fix probing cards without io port (Tomas Henzl) [1396165]
+- [scsi] vmw_pvscsi: return SUCCESS for successful command aborts (Ewan Milne) [1394172]
+- [virtio] virtio-pci: alloc only resources actually used (Laurent Vivier) [1375153]
+- [netdrv] ibmvnic: Unmap ibmvnic_statistics structure (Steve Best) [1394911]
+- [netdrv] ibmveth: Add function to enable live MAC address changes (Laurent Vivier) [1375165]
+- [security] keys: Fix short sprintf buffer in /proc/keys show function (Frantisek Hrbata) [1375209] {CVE-2016-7042}
+
 * Tue Nov 15 2016 Rafael Aquini <aquini@redhat.com> [3.10.0-522.el7]
 - [netdrv] net/hyperv: avoid uninitialized variable (Vitaly Kuznetsov) [1392220]
 - [netdrv] netvsc: Remove mistaken udp.h inclusion (Vitaly Kuznetsov) [1392220]
