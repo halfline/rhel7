@@ -105,7 +105,7 @@ setup-source: rh-clean-sources
 	@$(REDHAT)/genspec.sh $(SOURCES) $(SOURCES)/$(SPECFILE) $(PKGRELEASE) $(RPMVERSION) $(RELEASED_KERNEL) $(SPECRELEASE) $(DISTRO_BUILD) $(__ZSTREAM)
 	@cp $(SOURCES)/$(SPECFILE) $(SOURCES)/../SPECS/
 
-sources-rh: $(TARBALL)
+sources-rh: $(TARBALL) rh-configs rh-kabi
 	@cp -l $(TARBALL) $(SOURCES)/ || cp $(TARBALL) $(SOURCES)/
 	@touch $(TESTPATCH)
 	@git diff --no-renames HEAD > $(TESTPATCH).tmp
@@ -128,7 +128,7 @@ sources-rh: $(TARBALL)
 	@cp cpupower.* x509.genkey keys/rhel*.x509 keys/extra_certificates Makefile.common kabi/check-kabi kabi/Module.kabi_{ppc64,ppc64le,s390x,x86_64} configs/kernel-*.config rhpkg/Makefile scripts/sign-modules keys/*.cer $(SOURCES)/
 	@(cd kabi && tar cjvf $(SOURCES)/$(KABI_TARFILE) kabi-rhel$(RHELMAJOR)* kabi-current)
 
-rh-sources: setup-source rh-configs rh-kabi sources-rh
+rh-sources: setup-source sources-rh
 
 rh-test-patch:
 	@git diff --no-renames HEAD > $(TESTPATCH);
