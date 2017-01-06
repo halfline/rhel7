@@ -53,36 +53,23 @@ function merge_configs()
 	echo "done"
 }
 
-function restore_orig_config()
-{
-	if [ -e .config-saveme ]; then
-		mv .config-saveme .config
-	fi
-}
-
 function process_configs()
 {
 	cfg_dir=$(pwd)
 	kroot=$(cd ../..; pwd)
 	pushd $kroot/ > /dev/null
-	trap restore_orig_config EXIT
-	if [ -e .config ]; then
-		mv .config .config-saveme
-	fi
 	for cfg in $cfg_dir/kernel-$KVERREL-$SUBARCH*.config
 	do
-		mv $cfg .config
-		arch=$(head -1 .config | cut -b 3-)
+		arch=$(head -1 $cfg | cut -b 3-)
 		echo -n "Processing $cfg ... "
-		make ARCH=$arch listnewconfig > /dev/null || exit 1
-		make ARCH=$arch oldnoconfig > /dev/null || exit 1
-		echo "# $arch" > $cfg
-		cat .config >> $cfg
-		rm -f .config
+		make ARCH=$arch KCONFIG_CONFIG=$cfg listnewconfig > /dev/null || exit 1
+		make ARCH=$arch KCONFIG_CONFIG=$cfg oldnoconfig > /dev/null || exit 1
+		echo "# $arch" > ${cfg}.tmp
+		cat "${cfg}" >> ${cfg}.tmp
+		mv "${cfg}.tmp" "${cfg}"
 		echo "done"
 	done
-	restore_orig_config
-	trap - EXIT
+	rm "$cfg_dir"/*.config.old
 	popd > /dev/null
 
 	echo "Processed config files are in $cfg_dir"
