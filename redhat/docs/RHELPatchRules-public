@@ -214,17 +214,25 @@ b) Upstream Status:
 
     Engineers need to know where a patch is coming from.
 We follow the upstream-first rule, so most patches should have a linux.git
-sha1 number.
+sha1 number.  We also have automatic tools that parse patch descriptions
+and need to connect the backported patch to its upstream counterpart. For
+this reason, the format of the upstream reference is strict.
 
-Good examples:
-	commit XXXXXXXX  [As explained below this _only_ refers to linux.git]
-	This is a backport of upstream's commit XXXXXXXX
-	Backport linux.git commit XXXXXXX
-	Backport linux commit XXXXXXX
-	Backport net-next commit XXXXXX
-	linux-block commit XXXXXX
-	Backport torvalds/linux.git commit XXXXXX
-	Backport git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git commit XXXXXX
+[Required] The upstream sha1 number must be referenced using one of these
+two formats (pick one that suits better your workflow):
+
+commit <full sha1 hash>
+(cherry picked from commit <full sha1 hash>)
+
+    Note that it starts at the first column (no whitespace at front is
+allowed) and is followed by new line.  To be precise, the following Perl
+regex must be able to match:
+
+	^commit [0-9a-f]{40}$|^\(cherry picked from commit [0-9a-f]{40}\)$
+
+    The upstream reference may be put anywhere in the patch description; in
+particular, either of 'git cherry-pick -x' and 'git show' output for the
+upstream commit satisfies this requirement.
 
 [Required] If not linux.git, include location of where the patch came from.
 
@@ -378,9 +386,10 @@ RHEL codebase.
 
 In either case of a broken out patchset, or a monolithic patch, you are
 required to list all upstream commits for the patch or patchset in the
-changelog.  In the broken out patchset case, please include the upstream
-commit information in each individual patch and not as a list inside the 0/X
-cover letter patch.  Failure to do so will result in the rejection of the patch.
+changelog in the format described in section IIIb.  In the broken out
+patchset case, please include the upstream commit information in each
+individual patch and not as a list inside the 0/X cover letter patch.
+Failure to do so will result in the rejection of the patch.
 
 6.  I'm going to do something different in my patch posting that isn't
 detailed in this document.  Is that okay?
