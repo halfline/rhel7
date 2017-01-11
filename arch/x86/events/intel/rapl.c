@@ -58,6 +58,8 @@
 #include <asm/intel-family.h>
 #include "../perf_event.h"
 
+MODULE_LICENSE("GPL");
+
 /*
  * RAPL energy status counters
  */
@@ -869,4 +871,14 @@ out:
 	cpu_notifier_register_done();
 	return ret;
 }
-device_initcall(rapl_pmu_init);
+module_init(rapl_pmu_init);
+
+static void __exit intel_rapl_exit(void)
+{
+	cpu_notifier_register_begin();
+	__unregister_cpu_notifier(&rapl_cpu_nb);
+	perf_pmu_unregister(&rapl_pmus->pmu);
+	cleanup_rapl_pmus();
+	cpu_notifier_register_done();
+}
+module_exit(intel_rapl_exit);
