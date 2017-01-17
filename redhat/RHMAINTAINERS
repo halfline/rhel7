@@ -166,6 +166,11 @@ S:	Maintained
 F:	drivers/net/ethernet/broadcom/bnx2x.*
 F:	drivers/net/ethernet/broadcom/bnx2x_*
 
+BROADCOM BNXT_EN 50 GIGABIT ETHERNET DRIVER
+M:	John W. Linville <linville@redhat.com>
+S:	Maintained
+F:	drivers/net/ethernet/broadcom/bnxt/
+
 Broadcom NetXtreme II BCM5706/5708/5709/57710/57711/57712/57800/57810/57840 iSCSI Driver
 M:	Maurizio Lombardi <mlombard@redhat.com>
 S:	Maintained
