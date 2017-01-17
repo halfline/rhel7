@@ -99,7 +99,7 @@ M:	Jaroslav Kysela <jkysela@redhat.com>
 S:	Maintained
 
 AMAZON ETHERNET DRIVERS
-M:      Vitaly Kuznetsov <vkuznets@redhat.com>
+M:      John Linville <linville@redhat.com>
 S:      Supported
 F:      Documentation/networking/ena.txt
 F:      drivers/net/ethernet/amazon/
