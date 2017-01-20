@@ -180,6 +180,9 @@ rhg-koji: BUILD_FLAGS ?= $(KOJI_FLAGS) $(TEST_FLAGS)
 rh-brew rh-koji: rh-%: rh-srpm
 	$* build $(BUILD_FLAGS) $(BUILD_TARGET) $(SRPMS)/kernel-$(KVERSION)-$(PKGRELEASE).src.rpm $(OUTPUT_FILE)
 
+rh-brew-gcov rh-koji-gcov: rh-%-gcov: rh-srpm-gcov
+	$* build $(BUILD_FLAGS) $(BUILD_TARGET) $(SRPMS)/kernel-$(KVERSION)-$(PREBUILD)$(BUILD)$(DIST).gcov.src.rpm $(OUTPUT_FILE)
+
 rhg-brew rhg-koji: rhg-%:
 	$* build $(BUILD_FLAGS) $(BUILD_TARGET) "$(RHGITURL)?redhat/koji#$(RHGITCOMMIT)"
 
@@ -218,6 +221,8 @@ rh-help:
 	@echo  '  rh-srpm-gcov	- Create a source RPM with gcov enabled and put it into the redhat/rpm/SRPMS/ directory'
 	@echo  '  rh-brew	- Create a kernel SRPM and then call brew to build the created SRPM'
 	@echo  '  rh-koji	- Create a kernel SRPM and then call koji to build the created SRPM'
+	@echo  '  rh-brew-gcov	- Create a kernel SRPM with gcov enabled and then call brew to build the created SRPM'
+	@echo  '  rh-koji-gcov	- Create a kernel SRPM with gcov enabled and then call koji to build the created SRPM'
 	@echo  '  rhg-brew	- Pass HEAD of the current git branch to brew to build an RPM set.'
 	@echo  '                  Preceed make command by RHGITCOMMIT=<commitID> to specify commit ID to use.'
 	@echo  '  rhg-koji	- Pass HEAD of the current git branch to koji to build an RPM set.'
