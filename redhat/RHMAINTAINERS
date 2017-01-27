@@ -429,6 +429,9 @@ F:	drivers/iommu/
 IPMI SUBSYSTEM
 M:	Tony Camuso <tcamuso@redhat.com>
 S:	Maintained
+F:	drivers/char/ipmi
+F:	include/linux/ipmi*
+F:	include/uapi/linux/ipmi*
 
 IPV4 PROTOCOL
 M:	Jiri Benc <jbenc@redhat.com>
