@@ -167,7 +167,7 @@ F:	drivers/net/ethernet/broadcom/bnx2x.*
 F:	drivers/net/ethernet/broadcom/bnx2x_*
 
 BROADCOM BNXT_EN 50 GIGABIT ETHERNET DRIVER
-M:	John W. Linville <linville@redhat.com>
+M:	Jonathan Toppins <jtoppins@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/broadcom/bnxt/
 
