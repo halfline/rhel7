@@ -302,8 +302,7 @@ enum {
 	IFLA_BRPORT_UNICAST_FLOOD, /* flood unicast traffic */
 	IFLA_BRPORT_PROXYARP,	/* proxy ARP */
 	IFLA_BRPORT_LEARNING_SYNC, /* mac learning sync from device */
-	/* RHEL: IFLA_BRPORT_PROXYARP_WIFI not fully supported yet */
-	RESERVED_IFLA_BRPORT_PROXYARP_WIFI, /* proxy ARP for Wi-Fi */
+	IFLA_BRPORT_PROXYARP_WIFI, /* proxy ARP for Wi-Fi */
 	IFLA_BRPORT_ROOT_ID,	/* designated root */
 	IFLA_BRPORT_BRIDGE_ID,	/* designated bridge */
 	IFLA_BRPORT_DESIGNATED_PORT,
