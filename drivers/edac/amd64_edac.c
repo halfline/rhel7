@@ -3340,7 +3340,7 @@ static int probe_one_instance(unsigned int nid)
 	ecc_stngs[nid] = s;
 
 	if (!ecc_enabled(F3, nid)) {
-		ret = -ENODEV;
+		ret = 0;
 
 		if (!ecc_enable_override)
 			goto err_enable;
@@ -3476,6 +3476,11 @@ static int __init amd64_edac_init(void)
 				remove_one_instance(i);
 			goto err_pci;
 		}
+
+	if (!edac_has_mcs()) {
+		err = -ENODEV;
+		goto err_pci;
+	}
 
 	setup_pci_device();
 	return 0;
