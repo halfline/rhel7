@@ -126,7 +126,7 @@ open(MAINT, "<${lk_path}/redhat/RHMAINTAINERS") || die "$P: Can't open redhat/RH
 while (<MAINT>) {
     my $line = $_;
 
-    if ($line =~ m/^(\C):\s*(.*)/) {
+    if ($line =~ m/^([A-Z]):\s*(.*)/) {
 	my $type = $1;
 	my $value = $2;
 
@@ -251,7 +251,7 @@ foreach my $file (@files) {
 
     my $exclude = 0;
     foreach my $line (@typevalue) {
-	if ($line =~ m/^(\C):\s*(.*)/) {
+	if ($line =~ m/^([A-Z]):\s*(.*)/) {
 	    my $type = $1;
 	    my $value = $2;
 	    if ($type eq 'X') {
@@ -267,7 +267,7 @@ foreach my $file (@files) {
 	my $tvi = 0;
 	my %hash;
 	foreach my $line (@typevalue) {
-	    if ($line =~ m/^(\C):\s*(.*)/) {
+	    if ($line =~ m/^([A-Z]):\s*(.*)/) {
 		my $type = $1;
 		my $value = $2;
 		if ($type eq 'F') {
@@ -495,7 +495,7 @@ sub find_starting_index {
 
     while ($index > 0) {
 	my $tv = $typevalue[$index];
-	if (!($tv =~ m/^(\C):\s*(.*)/)) {
+	if (!($tv =~ m/^([A-Z]):\s*(.*)/)) {
 	    last;
 	}
 	$index--;
@@ -509,7 +509,7 @@ sub find_ending_index {
 
     while ($index < @typevalue) {
 	my $tv = $typevalue[$index];
-	if (!($tv =~ m/^(\C):\s*(.*)/)) {
+	if (!($tv =~ m/^([A-Z]):\s*(.*)/)) {
 	    last;
 	}
 	$index++;
@@ -529,7 +529,7 @@ sub add_categories {
 
     for ($i = $start + 1; $i < $end; $i++) {
 	my $tv = $typevalue[$i];
-	if ($tv =~ m/^(\C):\s*(.*)/) {
+	if ($tv =~ m/^([A-Z]):\s*(.*)/) {
 	    my $ptype = $1;
 	    my $pvalue = $2;
 	    if ($ptype eq "L") {
@@ -553,7 +553,7 @@ sub add_categories {
 		if ($name eq "") {
 		    if ($i > 0) {
 			my $tv = $typevalue[$i - 1];
-			if ($tv =~ m/^(\C):\s*(.*)/) {
+			if ($tv =~ m/^([A-Z]):\s*(.*)/) {
 			    if ($1 eq "P") {
 				$name = $2;
 				$pvalue = format_email($name, $address);
