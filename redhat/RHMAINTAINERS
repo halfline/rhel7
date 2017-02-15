@@ -687,6 +687,11 @@ M:	Chad Dupuis <cdupuis@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/qlogic/qlge/
 
+QLOGIC QL41xxx ISCSI DRIVER
+M:	Chad Dupuis <cdupuis@redhat.com>
+S:	Maintained
+F:	drivers/scsi/qedi
+
 RALINK RT2X00 WIRELESS LAN DRIVER
 M:	Stanislaw Gruszka <sgruszka@redhat.com>
 S:	Maintained
