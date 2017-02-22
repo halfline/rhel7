@@ -481,7 +481,6 @@ static void tcindex_destroy(struct tcf_proto *tp)
 	walker.fn = &tcindex_destroy_element;
 	tcindex_walk(tp, &walker);
 
-	RCU_INIT_POINTER(tp->root, NULL);
 	call_rcu(&p->rcu, __tcindex_destroy);
 }
 

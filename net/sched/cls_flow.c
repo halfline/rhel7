@@ -570,7 +570,6 @@ static void flow_destroy(struct tcf_proto *tp)
 		list_del_rcu(&f->list);
 		call_rcu(&f->rcu, flow_destroy_filter);
 	}
-	RCU_INIT_POINTER(tp->root, NULL);
 	kfree_rcu(head, rcu);
 }
 

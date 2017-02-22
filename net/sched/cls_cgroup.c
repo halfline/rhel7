@@ -248,10 +248,9 @@ static void cls_cgroup_destroy(struct tcf_proto *tp)
 {
 	struct cls_cgroup_head *head = rtnl_dereference(tp->root);
 
-	if (head) {
-		RCU_INIT_POINTER(tp->root, NULL);
+	/* Head can still be NULL due to cls_cgroup_init(). */
+	if (head)
 		call_rcu(&head->rcu, cls_cgroup_destroy_rcu);
-	}
 }
 
 static int cls_cgroup_delete(struct tcf_proto *tp, unsigned long arg)
