@@ -71,6 +71,7 @@
 #include <linux/atomic.h>
 #include <net/dst.h>
 #include <net/checksum.h>
+#include <linux/net_tstamp.h>
 
 #include <linux/rh_kabi.h>
 #include <net/tcp_states.h>
@@ -279,6 +280,7 @@ struct cg_proto;
   *	@sk_protinfo: private area, net family specific, when not using slab
   *	@sk_timer: sock cleanup timer
   *	@sk_stamp: time stamp of last packet received
+  *	@sk_tsflags: SO_TIMESTAMPING socket options
   *	@sk_socket: Identd and reporting IO signals
   *	@sk_user_data: RPC layer private data
   *	@sk_frag: cached page frag
@@ -442,7 +444,7 @@ struct sock {
 	 * additions of your backport.
 	 */
 	RH_KABI_USE2_P(1, __u32	sk_txhash, u32 sk_max_pacing_rate)
-	RH_KABI_RESERVE_P(2)
+	RH_KABI_USE_P(2, u16 sk_tsflags)
 	RH_KABI_RESERVE_P(3)
 	RH_KABI_RESERVE_P(4)
 	RH_KABI_RESERVE_P(5)
@@ -720,13 +722,15 @@ enum sock_flags {
 	SOCK_LOCALROUTE, /* route locally only, %SO_DONTROUTE setting */
 	SOCK_QUEUE_SHRUNK, /* write queue has been shrunk recently */
 	SOCK_MEMALLOC, /* VM depends on this socket for swapping */
-	SOCK_TIMESTAMPING_TX_HARDWARE,  /* %SOF_TIMESTAMPING_TX_HARDWARE */
-	SOCK_TIMESTAMPING_TX_SOFTWARE,  /* %SOF_TIMESTAMPING_TX_SOFTWARE */
-	SOCK_TIMESTAMPING_RX_HARDWARE,  /* %SOF_TIMESTAMPING_RX_HARDWARE */
+	SOCK_RH_RESERVED_1, /* placeholders to avoid shifting the rest of
+			     * the SOCK_* flags
+			     */
+	SOCK_RH_RESERVED_2,
+	SOCK_RH_RESERVED_3,
 	SOCK_TIMESTAMPING_RX_SOFTWARE,  /* %SOF_TIMESTAMPING_RX_SOFTWARE */
-	SOCK_TIMESTAMPING_SOFTWARE,     /* %SOF_TIMESTAMPING_SOFTWARE */
-	SOCK_TIMESTAMPING_RAW_HARDWARE, /* %SOF_TIMESTAMPING_RAW_HARDWARE */
-	SOCK_TIMESTAMPING_SYS_HARDWARE, /* %SOF_TIMESTAMPING_SYS_HARDWARE */
+	SOCK_RH_RESERVED_4,
+	SOCK_RH_RESERVED_5,
+	SOCK_RH_RESERVED_6,
 	SOCK_FASYNC, /* fasync() active */
 	SOCK_RXQ_OVFL,
 	SOCK_ZEROCOPY, /* buffers from userspace */
@@ -2252,23 +2256,19 @@ sock_recv_timestamp(struct msghdr *msg, struct sock *sk, struct sk_buff *skb)
 
 	/*
 	 * generate control messages if
-	 * - receive time stamping in software requested (SOCK_RCVTSTAMP
-	 *   or SOCK_TIMESTAMPING_RX_SOFTWARE)
+	 * - receive time stamping in software requested
 	 * - software time stamp available and wanted
-	 *   (SOCK_TIMESTAMPING_SOFTWARE)
 	 * - hardware time stamps available and wanted
-	 *   (SOCK_TIMESTAMPING_SYS_HARDWARE or
-	 *   SOCK_TIMESTAMPING_RAW_HARDWARE)
 	 */
 	if (sock_flag(sk, SOCK_RCVTSTAMP) ||
-	    sock_flag(sk, SOCK_TIMESTAMPING_RX_SOFTWARE) ||
+	    (sk->sk_tsflags & SOF_TIMESTAMPING_RX_SOFTWARE) ||
 	    (kt.tv64 &&
-	     (sock_flag(sk, SOCK_TIMESTAMPING_SOFTWARE) ||
+	     (sk->sk_tsflags & SOF_TIMESTAMPING_SOFTWARE ||
 	      skb_shinfo(skb)->tx_flags & SKBTX_ANY_SW_TSTAMP)) ||
 	    (hwtstamps->hwtstamp.tv64 &&
-	     sock_flag(sk, SOCK_TIMESTAMPING_RAW_HARDWARE)) ||
+	     (sk->sk_tsflags & SOF_TIMESTAMPING_RAW_HARDWARE)) ||
 	    (hwtstamps->syststamp.tv64 &&
-	     sock_flag(sk, SOCK_TIMESTAMPING_SYS_HARDWARE)))
+	     (sk->sk_tsflags & SOF_TIMESTAMPING_SYS_HARDWARE)))
 		__sock_recv_timestamp(msg, sk, skb);
 	else
 		sk->sk_stamp = kt;
@@ -2284,12 +2284,12 @@ static inline void sock_recv_ts_and_drops(struct msghdr *msg, struct sock *sk,
 					  struct sk_buff *skb)
 {
 #define FLAGS_TS_OR_DROPS ((1UL << SOCK_RXQ_OVFL)			| \
-			   (1UL << SOCK_RCVTSTAMP)			| \
-			   (1UL << SOCK_TIMESTAMPING_SOFTWARE)		| \
-			   (1UL << SOCK_TIMESTAMPING_RAW_HARDWARE)	| \
-			   (1UL << SOCK_TIMESTAMPING_SYS_HARDWARE))
+			   (1UL << SOCK_RCVTSTAMP))
+#define TSFLAGS_ANY	  (SOF_TIMESTAMPING_SOFTWARE			| \
+			   SOF_TIMESTAMPING_RAW_HARDWARE		| \
+			   SOF_TIMESTAMPING_SYS_HARDWARE)
 
-	if (sk->sk_flags & FLAGS_TS_OR_DROPS)
+	if (sk->sk_flags & FLAGS_TS_OR_DROPS || sk->sk_tsflags & TSFLAGS_ANY)
 		__sock_recv_ts_and_drops(msg, sk, skb);
 	else
 		sk->sk_stamp = skb->tstamp;
@@ -2299,8 +2299,6 @@ static inline void sock_recv_ts_and_drops(struct msghdr *msg, struct sock *sk,
  * sock_tx_timestamp - checks whether the outgoing packet is to be time stamped
  * @sk:		socket sending this packet
  * @tx_flags:	filled with instructions for time stamping
- *
- * Currently only depends on SOCK_TIMESTAMPING* flags.
  */
 extern void sock_tx_timestamp(struct sock *sk, __u8 *tx_flags);
 
