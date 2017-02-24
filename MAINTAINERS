@@ -2112,9 +2112,9 @@ S:	Maintained
 F:	include/linux/clk.h
 
 CISCO FCOE HBA DRIVER
-M:	Hiral Patel <hiralpat@cisco.com>
-M:	Suma Ramars <sramars@cisco.com>
-M:	Brian Uchino <buchino@cisco.com>
+M:	Satish Kharat <satishkh@cisco.com>
+M:	Sesidhar Baddela <sebaddel@cisco.com>
+M:	Karan Tilak Kumar <kartilak@cisco.com>
 L:	linux-scsi@vger.kernel.org
 S:	Supported
 F:	drivers/scsi/fnic/
