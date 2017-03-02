@@ -7977,6 +7977,8 @@ void kvm_arch_free_memslot(struct kvm *kvm, struct kvm_memory_slot *free,
 			free->arch.lpage_info[i - 1] = NULL;
 		}
 	}
+
+	kvm_page_track_free_memslot(free, dont);
 }
 
 int kvm_arch_create_memslot(struct kvm *kvm, struct kvm_memory_slot *slot,
@@ -8024,6 +8026,9 @@ int kvm_arch_create_memslot(struct kvm *kvm, struct kvm_memory_slot *slot,
 				linfo[j].disallow_lpage = 1;
 		}
 	}
+
+	if (kvm_page_track_create_memslot(slot, npages))
+		goto out_free;
 
 	return 0;
 
