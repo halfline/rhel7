@@ -149,7 +149,6 @@ struct tpm_vendor_specific {
 	void *priv;
 
 	wait_queue_head_t read_queue;
-	wait_queue_head_t int_queue;
 
 	u16 manufacturer_id;
 };
