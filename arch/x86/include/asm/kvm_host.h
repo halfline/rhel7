@@ -363,8 +363,13 @@ struct kvm_vcpu_hv {
 	u64 hv_vapic;
 };
 
+struct kvm_mtrr_range {
+	u64 base;
+	u64 mask;
+};
+
 struct kvm_mtrr {
-	struct mtrr_var_range var_ranges[MTRR_MAX_VAR_RANGES];
+	struct kvm_mtrr_range var_ranges[KVM_NR_VAR_MTRR];
 	mtrr_type fixed_ranges[KVM_NR_FIXED_MTRR_REGION];
 	u64 deftype;
 };
