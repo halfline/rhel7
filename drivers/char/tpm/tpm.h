@@ -19,6 +19,10 @@
  * License.
  *
  */
+
+#ifndef __TPM_H__
+#define __TPM_H__
+
 #include <linux/module.h>
 #include <linux/delay.h>
 #include <linux/fs.h>
@@ -529,3 +533,4 @@ extern unsigned long tpm2_calc_ordinal_duration(struct tpm_chip *, u32);
 extern int tpm2_do_selftest(struct tpm_chip *chip);
 extern int tpm2_gen_interrupt(struct tpm_chip *chip);
 extern int tpm2_probe(struct tpm_chip *chip);
+#endif
