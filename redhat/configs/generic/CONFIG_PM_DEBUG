@@ -1,1 +1,1 @@
-# CONFIG_PM_DEBUG is not set
+CONFIG_PM_DEBUG=y
