@@ -105,12 +105,11 @@ static int tcf_mirred_init(struct net *net, struct nlattr *nla,
 		dev = NULL;
 	}
 
-	pc = tcf_hash_check(parm->index, a, bind, &mirred_hash_info);
+	pc = tcf_hash_check(parm->index, a, bind);
 	if (!pc) {
 		if (dev == NULL)
 			return -EINVAL;
-		pc = tcf_hash_create(parm->index, est, a, sizeof(*m), bind,
-				     &mirred_hash_info);
+		pc = tcf_hash_create(parm->index, est, a, sizeof(*m), bind);
 		if (IS_ERR(pc))
 			return PTR_ERR(pc);
 		ret = ACT_P_CREATED;
@@ -138,7 +137,7 @@ static int tcf_mirred_init(struct net *net, struct nlattr *nla,
 		spin_lock_bh(&mirred_list_lock);
 		list_add(&m->tcfm_list, &mirred_list);
 		spin_unlock_bh(&mirred_list_lock);
-		tcf_hash_insert(pc, &mirred_hash_info);
+		tcf_hash_insert(pc, a->ops->hinfo);
 	}
 
 	return ret;
