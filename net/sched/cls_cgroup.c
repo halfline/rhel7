@@ -179,7 +179,7 @@ static void cls_cgroup_destroy_rcu(struct rcu_head *root)
 						    struct cls_cgroup_head,
 						    rcu);
 
-	tcf_exts_destroy(head->tp, &head->exts);
+	tcf_exts_destroy(&head->exts);
 	tcf_em_tree_destroy(head->tp, &head->ematches);
 	kfree(head);
 }
@@ -228,7 +228,7 @@ static int cls_cgroup_change(struct net *net, struct sk_buff *in_skb,
 
 	err = tcf_em_tree_validate(tp, tb[TCA_CGROUP_EMATCHES], &t);
 	if (err < 0) {
-		tcf_exts_destroy(tp, &e);
+		tcf_exts_destroy(&e);
 		goto errout;
 	}
 
