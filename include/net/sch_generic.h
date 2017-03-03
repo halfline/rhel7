@@ -86,20 +86,17 @@ struct Qdisc {
 	 */
 	unsigned long		state;
 	struct sk_buff_head	q;
-	RH_KABI_REPLACE(struct gnet_stats_basic_packed bstats,
-			union {
-				struct gnet_stats_basic_packed bstats;
-				struct gnet_stats_basic_cpu __percpu *cpu_bstats;
-			} __packed)
+	struct gnet_stats_basic_packed bstats;
 	unsigned int		__state;
-	RH_KABI_REPLACE(struct gnet_stats_queue	qstats,
-			union {
-				struct gnet_stats_queue	qstats;
-				struct gnet_stats_queue	__percpu *cpu_qstats;
-			} __packed)
+	struct gnet_stats_queue	qstats;
 	struct rcu_head		rcu_head;
 	int			padded;
 	atomic_t		refcnt;
+
+	RH_KABI_FILL_HOLE(struct gnet_stats_basic_cpu __percpu *cpu_bstats)
+	RH_KABI_FILL_HOLE(struct gnet_stats_queue __percpu *cpu_qstats)
+	RH_KABI_FILL_HOLE(void *rh_reserved_1)
+	RH_KABI_FILL_HOLE(void *rh_reserved_2)
 
 	spinlock_t		busylock ____cacheline_aligned_in_smp;
 };
