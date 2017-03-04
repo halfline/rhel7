@@ -117,10 +117,13 @@ static int cls_bpf_delete(struct tcf_proto *tp, unsigned long arg)
 	return 0;
 }
 
-static void cls_bpf_destroy(struct tcf_proto *tp)
+static bool cls_bpf_destroy(struct tcf_proto *tp, bool force)
 {
 	struct cls_bpf_head *head = rtnl_dereference(tp->root);
 	struct cls_bpf_prog *prog, *tmp;
+
+	if (!force && !list_empty(&head->plist))
+		return false;
 
 	list_for_each_entry_safe(prog, tmp, &head->plist, link) {
 		list_del_rcu(&prog->link);
@@ -129,6 +132,7 @@ static void cls_bpf_destroy(struct tcf_proto *tp)
 	}
 
 	kfree_rcu(head, rcu);
+	return true;
 }
 
 static unsigned long cls_bpf_get(struct tcf_proto *tp, u32 handle)

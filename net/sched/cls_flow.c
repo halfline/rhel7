@@ -558,16 +558,20 @@ static int flow_init(struct tcf_proto *tp)
 	return 0;
 }
 
-static void flow_destroy(struct tcf_proto *tp)
+static bool flow_destroy(struct tcf_proto *tp, bool force)
 {
 	struct flow_head *head = rtnl_dereference(tp->root);
 	struct flow_filter *f, *next;
+
+	if (!force && !list_empty(&head->filters))
+		return false;
 
 	list_for_each_entry_safe(f, next, &head->filters, list) {
 		list_del_rcu(&f->list);
 		call_rcu(&f->rcu, flow_destroy_filter);
 	}
 	kfree_rcu(head, rcu);
+	return true;
 }
 
 static unsigned long flow_get(struct tcf_proto *tp, u32 handle)
