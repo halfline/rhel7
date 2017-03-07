@@ -295,7 +295,6 @@ xfs_file_aio_read(
 	struct xfs_mount	*mp = ip->i_mount;
 	size_t			size = 0;
 	ssize_t			ret = 0;
-	xfs_fsize_t		n;
 
 	XFS_STATS_INC(mp, xs_read_calls);
 
@@ -316,13 +315,6 @@ xfs_file_aio_read(
 			return -EINVAL;
 		}
 	}
-
-	n = mp->m_super->s_maxbytes - pos;
-	if (n <= 0 || size == 0)
-		return 0;
-
-	if (n < size)
-		size = n;
 
 	if (XFS_FORCED_SHUTDOWN(mp))
 		return -EIO;
