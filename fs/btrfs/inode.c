@@ -3814,7 +3814,7 @@ cache_acl:
 		inode->i_mapping->a_ops = &btrfs_aops;
 		inode->i_mapping->backing_dev_info = &root->fs_info->bdi;
 		BTRFS_I(inode)->io_tree.ops = &btrfs_extent_io_ops;
-		inode->i_fop = &btrfs_file_operations;
+		inode->i_fop = &btrfs_file_operations.kabi_fops;
 		inode->i_op = &btrfs_file_inode_operations;
 		break;
 	case S_IFDIR:
@@ -6540,7 +6540,7 @@ static int btrfs_create(struct inode *dir, struct dentry *dentry,
 	* if the filesystem supports xattrs by looking at the
 	* ops vector.
 	*/
-	inode->i_fop = &btrfs_file_operations;
+	inode->i_fop = &btrfs_file_operations.kabi_fops;
 	inode->i_op = &btrfs_file_inode_operations;
 	inode->i_mapping->a_ops = &btrfs_aops;
 	inode->i_mapping->backing_dev_info = &root->fs_info->bdi;
@@ -9946,7 +9946,7 @@ static int btrfs_symlink(struct inode *dir, struct dentry *dentry,
 	* if the filesystem supports xattrs by looking at the
 	* ops vector.
 	*/
-	inode->i_fop = &btrfs_file_operations;
+	inode->i_fop = &btrfs_file_operations.kabi_fops;
 	inode->i_op = &btrfs_file_inode_operations;
 	inode->i_mapping->a_ops = &btrfs_aops;
 	inode->i_mapping->backing_dev_info = &root->fs_info->bdi;

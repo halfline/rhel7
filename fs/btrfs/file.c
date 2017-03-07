@@ -3030,22 +3030,25 @@ out:
 	return offset;
 }
 
-const struct file_operations btrfs_file_operations = {
-	.llseek		= btrfs_file_llseek,
-	.read		= do_sync_read,
-	.write		= do_sync_write,
-	.aio_read       = generic_file_aio_read,
-	.splice_read	= generic_file_splice_read,
-	.aio_write	= btrfs_file_aio_write,
-	.mmap		= btrfs_file_mmap,
-	.open		= generic_file_open,
-	.release	= btrfs_release_file,
-	.fsync		= btrfs_sync_file,
-	.fallocate	= btrfs_fallocate,
-	.unlocked_ioctl	= btrfs_ioctl,
-#ifdef CONFIG_COMPAT
-	.compat_ioctl	= btrfs_compat_ioctl,
+const struct file_operations_extend btrfs_file_operations = {
+	.kabi_fops = {
+		.llseek		= btrfs_file_llseek,
+		.read		= do_sync_read,
+		.write		= do_sync_write,
+		.aio_read       = generic_file_aio_read,
+		.splice_read	= generic_file_splice_read,
+		.aio_write	= btrfs_file_aio_write,
+		.mmap		= btrfs_file_mmap,
+		.open		= generic_file_open,
+		.release	= btrfs_release_file,
+		.fsync		= btrfs_sync_file,
+		.fallocate	= btrfs_fallocate,
+		.unlocked_ioctl	= btrfs_ioctl,
+#ifdef 	CONFIG_COMPAT
+		.compat_ioctl	= btrfs_ioctl,
 #endif
+	},
+	.copy_file_range = btrfs_copy_file_range,
 };
 
 void btrfs_auto_defrag_exit(void)
