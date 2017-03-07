@@ -200,7 +200,7 @@ static int vmd_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
 
 		irq_set_handler_data(virq, vmdirq);
 		irq_set_chip_and_handler(virq, &vmd_msi_controller,
-					 handle_simple_irq);
+					 handle_untracked_irq);
 
 		msg.address_hi = MSI_ADDR_BASE_HI;
 		msg.address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_DEST_ID(vmdirq->irq->index);
