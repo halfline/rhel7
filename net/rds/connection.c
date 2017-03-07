@@ -273,6 +273,8 @@ new_conn:
 			kmem_cache_free(rds_conn_slab, conn);
 			conn = found;
 		} else {
+			conn->c_my_gen_num = rds_gen_num;
+			conn->c_peer_gen_num = 0;
 			hlist_add_head_rcu(&conn->c_hash_node, head);
 			rds_cong_add_conn(conn);
 			rds_conn_count++;
