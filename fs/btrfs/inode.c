@@ -7230,7 +7230,6 @@ static struct extent_map *btrfs_create_dio_extent(struct inode *inode,
 	struct extent_map *em = NULL;
 	int ret;
 
-	down_read(&BTRFS_I(inode)->dio_sem);
 	if (type != BTRFS_ORDERED_NOCOW) {
 		em = create_pinned_em(inode, start, len, orig_start,
 				      block_start, block_len, orig_block_len,
@@ -7249,7 +7248,6 @@ static struct extent_map *btrfs_create_dio_extent(struct inode *inode,
 		em = ERR_PTR(ret);
 	}
  out:
-	up_read(&BTRFS_I(inode)->dio_sem);
 
 	return em;
 }
@@ -8700,6 +8698,7 @@ static ssize_t btrfs_direct_IO(int rw, struct kiocb *iocb,
 		 */
 		dio_data.reserve = round_up(count, root->sectorsize);
 		current->journal_info = &dio_data;
+		down_read(&BTRFS_I(inode)->dio_sem);
 	} else if (test_bit(BTRFS_INODE_READDIO_NEED_LOCK,
 				     &BTRFS_I(inode)->runtime_flags)) {
 		inode_dio_end(inode);
@@ -8712,6 +8711,7 @@ static ssize_t btrfs_direct_IO(int rw, struct kiocb *iocb,
 			iov, offset, nr_segs, btrfs_get_blocks_direct, NULL,
 			btrfs_submit_direct, flags);
 	if (rw & WRITE) {
+		up_read(&BTRFS_I(inode)->dio_sem);
 		current->journal_info = NULL;
 		if (ret < 0 && ret != -EIOCBQUEUED) {
 			if (dio_data.reserve)
