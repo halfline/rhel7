@@ -973,23 +973,11 @@ xfs_file_dax_write(
 	struct address_space	*mapping = file->f_mapping;
 	struct inode		*inode = mapping->host;
 	struct xfs_inode	*ip = XFS_I(inode);
-	struct xfs_mount	*mp = ip->i_mount;
 	ssize_t			ret = 0;
 	size_t			count = ocount;
-	int			unaligned_io = 0;
-	int			iolock;
+	int			iolock = XFS_IOLOCK_EXCL;
 
-	/* "unaligned" here means not aligned to a filesystem block */
-	if ((pos & mp->m_blockmask) || ((pos + count) & mp->m_blockmask)) {
-		unaligned_io = 1;
-		iolock = XFS_IOLOCK_EXCL;
-	} else if (mapping->nrpages)  {
-		iolock = XFS_IOLOCK_EXCL;
-	} else {
-		iolock = XFS_IOLOCK_SHARED;
-	}
 	xfs_rw_ilock(ip, iolock);
-
 	ret = xfs_file_aio_write_checks(file, &pos, &count, &iolock);
 	if (ret)
 		goto out;
@@ -1013,11 +1001,6 @@ xfs_file_dax_write(
 						iocb->ki_pos >> PAGE_SHIFT,
 						end >> PAGE_SHIFT);
 		WARN_ON_ONCE(ret);
-	}
-
-	if (iolock == XFS_IOLOCK_EXCL && !unaligned_io) {
-		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
-		iolock = XFS_IOLOCK_SHARED;
 	}
 
 	trace_xfs_file_dax_write(ip, count, iocb->ki_pos);
