@@ -227,6 +227,8 @@ static void vmd_teardown_msi_irq(unsigned int irq)
 	struct vmd_irq *vmdirq = irq_get_handler_data(irq);
 	unsigned long flags;
 
+	synchronize_rcu();
+
 	raw_spin_lock_irqsave(&list_lock, flags);
 	vmdirq->irq->count--;
 	raw_spin_unlock_irqrestore(&list_lock, flags);
