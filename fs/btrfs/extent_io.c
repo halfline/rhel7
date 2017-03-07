@@ -4293,7 +4293,7 @@ int try_release_extent_mapping(struct extent_map_tree *map,
 	u64 end = start + PAGE_CACHE_SIZE - 1;
 
 	if ((mask & __GFP_WAIT) &&
-	    page->mapping->host->i_size > 16 * 1024 * 1024) {
+	    page->mapping->host->i_size > SZ_16M) {
 		u64 len;
 		while (start <= end) {
 			len = end - start + 1;
