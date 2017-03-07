@@ -365,7 +365,13 @@ xfs_file_dio_aio_read(
 		}
 		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
 	}
-	ret = mapping->a_ops->direct_IO(READ, iocb, iovp, pos, nr_segs);
+	if (IS_DAX(inode)) {
+		ret = dax_do_io(READ, iocb, inode, iovp, pos, nr_segs,
+				xfs_get_blocks_direct, NULL, 0);
+	} else {
+		ret = __blockdev_direct_IO(READ, iocb, inode, target->bt_bdev,
+				iovp, pos, nr_segs, xfs_get_blocks_direct, NULL, NULL, 0);
+	}
 	if (ret > 0) {
 		iocb->ki_pos = pos + ret;
 	}
@@ -899,7 +905,15 @@ xfs_file_dio_aio_write(
 
 	end = pos + count - 1;
 
-	ret = mapping->a_ops->direct_IO(WRITE, iocb, iovp, pos, nr_segs);
+	if (IS_DAX(inode)) {
+		ret = dax_do_io(WRITE, iocb, inode, iovp, pos, nr_segs,
+				xfs_get_blocks_direct,
+				xfs_end_io_direct_write, 0);
+	} else {
+		ret = __blockdev_direct_IO(WRITE, iocb, inode, target->bt_bdev, iovp,
+				pos, nr_segs, xfs_get_blocks_direct, xfs_end_io_direct_write,
+				NULL, DIO_ASYNC_EXTEND);
+	}
 
 	/* see generic_file_direct_write() for why this is necessary */
 	if (mapping->nrpages) {

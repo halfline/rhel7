@@ -61,6 +61,9 @@ int	xfs_get_blocks_direct(struct inode *inode, sector_t offset,
 int	xfs_get_blocks_dax_fault(struct inode *inode, sector_t offset,
 			         struct buffer_head *map_bh, int create);
 
+void	xfs_end_io_direct_write(struct kiocb *iocb, loff_t offset,
+		ssize_t size, void *private, int ret, bool is_async);
+
 extern void xfs_count_page_state(struct page *, int *, int *);
 extern struct block_device *xfs_find_bdev_for_inode(struct inode *);
 
