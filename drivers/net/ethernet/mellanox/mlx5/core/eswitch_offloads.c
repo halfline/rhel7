@@ -84,6 +84,9 @@ mlx5_eswitch_add_offloaded_rule(struct mlx5_eswitch *esw,
 	spec->match_criteria_enable = MLX5_MATCH_OUTER_HEADERS |
 				      MLX5_MATCH_MISC_PARAMETERS;
 
+	if (attr->encap)
+		flow_act.encap_id = attr->encap->encap_id;
+
 	rule = mlx5_add_flow_rules((struct mlx5_flow_table *)esw->fdb_table.fdb,
 				   spec, &flow_act, dest, i);
 	if (IS_ERR(rule))
