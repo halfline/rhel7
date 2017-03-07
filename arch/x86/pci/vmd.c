@@ -83,6 +83,7 @@ struct vmd_dev {
 
 #ifdef CONFIG_X86_DEV_DMA_OPS
 	struct dma_map_ops	dma_ops;
+	struct dma_domain	dma_domain;
 #endif
 };
 
@@ -351,8 +352,10 @@ static u64 vmd_get_required_mask(struct device *dev)
 
 static void vmd_teardown_dma_ops(struct vmd_dev *vmd)
 {
+	struct dma_domain *domain = &vmd->dma_domain;
+
 	if (get_dma_ops(&vmd->dev->dev))
-		vmd->dev->dev.archdata.dma_ops = NULL;
+		del_dma_domain(domain);
 }
 
 #define ASSIGN_VMD_DMA_OPS(source, dest, fn)	\
@@ -365,6 +368,10 @@ static void vmd_setup_dma_ops(struct vmd_dev *vmd)
 {
 	const struct dma_map_ops *source = get_dma_ops(&vmd->dev->dev);
 	struct dma_map_ops *dest = &vmd->dma_ops;
+	struct dma_domain *domain = &vmd->dma_domain;
+
+	domain->domain_nr = vmd->sysdata.domain;
+	domain->dma_ops = dest;
 
 	if (!source)
 		return;
@@ -385,7 +392,7 @@ static void vmd_setup_dma_ops(struct vmd_dev *vmd)
 #ifdef ARCH_HAS_DMA_GET_REQUIRED_MASK
 	ASSIGN_VMD_DMA_OPS(source, dest, get_required_mask);
 #endif
-	vmd->dev->dev.archdata.dma_ops = &vmd->dma_ops;
+	add_dma_domain(domain);
 }
 #undef ASSIGN_VMD_DMA_OPS
 #else
