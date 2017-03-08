@@ -507,6 +507,7 @@ struct hci_dev {
 #endif
 	RH_KABI_EXTEND( const char		*hw_info)
 	RH_KABI_EXTEND( const char		*fw_info)
+	RH_KABI_EXTEND( __u16			appearance)
 
 };
 
