@@ -502,7 +502,9 @@ struct hci_dev {
 	int (*set_diag)(struct hci_dev *hdev, bool enable);
 	int (*set_bdaddr)(struct hci_dev *hdev, const bdaddr_t *bdaddr);
 #endif
+#if IS_ENABLED(CONFIG_BT_LEDS)
 	RH_KABI_EXTEND( struct led_trigger	*power_led)
+#endif
 	RH_KABI_EXTEND( const char		*hw_info)
 	RH_KABI_EXTEND( const char		*fw_info)
 
