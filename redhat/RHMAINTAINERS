@@ -692,6 +692,11 @@ M:	Chad Dupuis <cdupuis@redhat.com>
 S:	Maintained
 F:	drivers/scsi/qedi
 
+QLOGIC QL41xxx FCOE DRIVER
+M:	Chad Dupuis <cdupuis@redhat.com>
+S:	Maintained
+F:	drivers/scsi/qedf
+
 RALINK RT2X00 WIRELESS LAN DRIVER
 M:	Stanislaw Gruszka <sgruszka@redhat.com>
 S:	Maintained
