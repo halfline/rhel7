@@ -2292,7 +2292,6 @@ static int __init nfs4flexfilelayout_init(void)
 {
 	printk(KERN_INFO "%s: NFSv4 Flexfile Layout Driver Registering...\n",
 	       __func__);
-	mark_tech_preview("NFSv4 Flexfile Layout Driver", NULL);
 	if (!ff_zero_group) {
 		ff_zero_group = groups_alloc(0);
 		if (!ff_zero_group)
