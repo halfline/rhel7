@@ -831,11 +831,10 @@ EXPORT_SYMBOL_GPL(nfs_request_add_commit_list_locked);
  * holding the nfs_page lock.
  */
 void
-nfs_request_add_commit_list(struct nfs_page *req, struct list_head *dst,
-			    struct nfs_commit_info *cinfo)
+nfs_request_add_commit_list(struct nfs_page *req, struct nfs_commit_info *cinfo)
 {
 	spin_lock(cinfo->lock);
-	nfs_request_add_commit_list_locked(req, dst, cinfo);
+	nfs_request_add_commit_list_locked(req, &cinfo->mds->list, cinfo);
 	spin_unlock(cinfo->lock);
 	if (req->wb_page)
 		nfs_mark_page_unstable(req->wb_page, cinfo);
@@ -894,7 +893,7 @@ nfs_mark_request_commit(struct nfs_page *req, struct pnfs_layout_segment *lseg,
 {
 	if (pnfs_mark_request_commit(req, lseg, cinfo, ds_commit_idx))
 		return;
-	nfs_request_add_commit_list(req, &cinfo->mds->list, cinfo);
+	nfs_request_add_commit_list(req, cinfo);
 }
 
 static void
@@ -1728,7 +1727,7 @@ int nfs_commit_file(struct file *file, struct nfs_write_verifier *verf)
 	nfs_init_cinfo_from_inode(&cinfo, inode);
 
 	memcpy(&req->wb_verf, verf, sizeof(struct nfs_write_verifier));
-	nfs_request_add_commit_list(req, &cinfo.mds->list, &cinfo);
+	nfs_request_add_commit_list(req, &cinfo);
 	ret = nfs_commit_inode(inode, FLUSH_SYNC);
 	if (ret > 0)
 		ret = 0;
