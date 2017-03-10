@@ -780,7 +780,7 @@ ff_layout_alloc_commit_info(struct pnfs_layout_segment *lseg,
 	else {
 		int i;
 
-		spin_lock(cinfo->lock);
+		spin_lock(&cinfo->inode->i_lock);
 		if (cinfo->ds->nbuckets != 0)
 			kfree(buckets);
 		else {
@@ -794,7 +794,7 @@ ff_layout_alloc_commit_info(struct pnfs_layout_segment *lseg,
 					NFS_INVALID_STABLE_HOW;
 			}
 		}
-		spin_unlock(cinfo->lock);
+		spin_unlock(&cinfo->inode->i_lock);
 		return 0;
 	}
 }
