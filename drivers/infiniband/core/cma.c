@@ -2928,7 +2928,7 @@ static int cma_alloc_any_port(enum rdma_port_space ps,
 
 	inet_get_local_port_range(net, &low, &high);
 	remaining = (high - low) + 1;
-	rover = net_random() % remaining + low;
+	rover = prandom_u32() % remaining + low;
 retry:
 	if (last_used_port != rover &&
 	    !cma_ps_find(net, ps, (unsigned short)rover)) {

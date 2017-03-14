@@ -85,7 +85,7 @@ static int rds_add_bound(struct rds_sock *rs, __be32 addr, __be16 *port)
 			return -EINVAL;
 		last = rover;
 	} else {
-		rover = max_t(u16, net_random(), 2);
+		rover = max_t(u16, prandom_u32(), 2);
 		last = rover - 1;
 	}
 
