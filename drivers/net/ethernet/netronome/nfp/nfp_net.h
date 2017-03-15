@@ -561,12 +561,28 @@ struct nfp_net {
 /* Functions to read/write from/to a BAR
  * Performs any endian conversion necessary.
  */
+static inline u16 nn_readb(struct nfp_net *nn, int off)
+{
+	return readb(nn->ctrl_bar + off);
+}
+
 static inline void nn_writeb(struct nfp_net *nn, int off, u8 val)
 {
 	writeb(val, nn->ctrl_bar + off);
 }
 
-/* NFP-3200 can't handle 16-bit accesses too well - hence no readw/writew */
+/* NFP-3200 can't handle 16-bit accesses too well */
+static inline u16 nn_readw(struct nfp_net *nn, int off)
+{
+	WARN_ON_ONCE(nn->is_nfp3200);
+	return readw(nn->ctrl_bar + off);
+}
+
+static inline void nn_writew(struct nfp_net *nn, int off, u16 val)
+{
+	WARN_ON_ONCE(nn->is_nfp3200);
+	writew(val, nn->ctrl_bar + off);
+}
 
 static inline u32 nn_readl(struct nfp_net *nn, int off)
 {
