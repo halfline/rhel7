@@ -1296,6 +1296,34 @@ static void nfp_net_set_hash(struct net_device *netdev, struct sk_buff *skb,
 	}
 }
 
+static void
+nfp_net_set_hash_desc(struct net_device *netdev, struct sk_buff *skb,
+		      struct nfp_net_rx_desc *rxd)
+{
+	struct nfp_net_rx_hash *rx_hash;
+
+	if (!(rxd->rxd.flags & PCIE_DESC_RX_RSS))
+		return;
+
+	rx_hash = (struct nfp_net_rx_hash *)(skb->data - sizeof(*rx_hash));
+
+	nfp_net_set_hash(netdev, skb, rxd);
+}
+
+static void
+nfp_net_rx_drop(struct nfp_net_r_vector *r_vec, struct nfp_net_rx_ring *rx_ring,
+		struct nfp_net_rx_buf *rxbuf, struct sk_buff *skb)
+{
+	u64_stats_update_begin(&r_vec->rx_sync);
+	r_vec->rx_drops++;
+	u64_stats_update_end(&r_vec->rx_sync);
+
+	if (rxbuf)
+		nfp_net_rx_give_one(rx_ring, rxbuf->skb, rxbuf->dma_addr);
+	if (skb)
+		dev_kfree_skb_any(skb);
+}
+
 /**
  * nfp_net_rx() - receive up to @budget packets on @rx_ring
  * @rx_ring:   RX ring to receive from
@@ -1338,11 +1366,8 @@ static int nfp_net_rx(struct nfp_net_rx_ring *rx_ring, int budget)
 		new_skb = nfp_net_rx_alloc_one(rx_ring, &new_dma_addr,
 					       nn->fl_bufsz);
 		if (!new_skb) {
-			nfp_net_rx_give_one(rx_ring, rx_ring->rxbufs[idx].skb,
-					    rx_ring->rxbufs[idx].dma_addr);
-			u64_stats_update_begin(&r_vec->rx_sync);
-			r_vec->rx_drops++;
-			u64_stats_update_end(&r_vec->rx_sync);
+			nfp_net_rx_drop(r_vec, rx_ring, &rx_ring->rxbufs[idx],
+					NULL);
 			continue;
 		}
 
@@ -1380,6 +1405,8 @@ static int nfp_net_rx(struct nfp_net_rx_ring *rx_ring, int budget)
 		r_vec->rx_pkts++;
 		r_vec->rx_bytes += skb->len;
 		u64_stats_update_end(&r_vec->rx_sync);
+
+		nfp_net_set_hash_desc(nn->netdev, skb, rxd);
 
 		skb_record_rx_queue(skb, rx_ring->idx);
 		skb->protocol = eth_type_trans(skb, nn->netdev);
