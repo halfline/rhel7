@@ -1432,7 +1432,7 @@ static int nvme_rdma_queue_rq(struct blk_mq_hw_ctx *hctx,
 			sizeof(struct nvme_command), DMA_TO_DEVICE);
 
 	ret = nvme_setup_cmd(ns, rq, c);
-	if (ret)
+	if (ret != BLK_MQ_RQ_QUEUE_OK)
 		return ret;
 
 	blk_mq_start_request(rq);
