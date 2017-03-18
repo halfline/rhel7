@@ -23,3 +23,5 @@ config BLK_DEV_NVME_SCSI
 	  driver.  If you don't know what this means you probably want
 	  to say N here, and if you know what it means you probably
 	  want to say N as well.
+config NVME_FABRICS
+	tristate
