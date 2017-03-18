@@ -18,6 +18,7 @@
 #include <linux/pci.h>
 #include <linux/kref.h>
 #include <linux/blk-mq.h>
+#include <linux/idr.h>
 
 enum {
 	/*
