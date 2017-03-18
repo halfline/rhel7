@@ -2276,6 +2276,8 @@ static struct nvmet_fabrics_ops nvmet_fc_tgt_fcp_ops = {
 
 static int __init nvmet_fc_init_module(void)
 {
+	mark_tech_preview("NVMe over FC", THIS_MODULE);
+
 	return nvmet_register_transport(&nvmet_fc_tgt_fcp_ops);
 }
 

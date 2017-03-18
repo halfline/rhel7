@@ -1059,6 +1059,8 @@ static int __init fcloop_init(void)
 {
 	int ret;
 
+	mark_tech_preview("NVMe over FC", THIS_MODULE);
+
 	fcloop_class = class_create(THIS_MODULE, "fcloop");
 	if (IS_ERR(fcloop_class)) {
 		pr_err("couldn't register class fcloop\n");
