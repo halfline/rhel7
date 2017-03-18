@@ -537,7 +537,7 @@ int nvme_identify_ctrl(struct nvme_ctrl *dev, struct nvme_id_ctrl **id)
 {
 	struct nvme_command c = {
 		.identify.opcode = nvme_admin_identify,
-		.identify.cns = cpu_to_le32(1),
+		.identify.cns = cpu_to_le32(NVME_ID_CNS_CTRL),
 	};
 	int error;
 
@@ -557,7 +557,7 @@ static int nvme_identify_ns_list(struct nvme_ctrl *dev, unsigned nsid, __le32 *n
 	struct nvme_command c = { };
 
 	c.identify.opcode = nvme_admin_identify;
-	c.identify.cns = cpu_to_le32(2);
+	c.identify.cns = cpu_to_le32(NVME_ID_CNS_NS_ACTIVE_LIST);
 	c.identify.nsid = cpu_to_le32(nsid);
 	return nvme_submit_sync_cmd(dev->admin_q, &c, ns_list, 0x1000);
 }
