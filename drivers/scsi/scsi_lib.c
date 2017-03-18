@@ -592,14 +592,14 @@ static struct scatterlist *scsi_sg_alloc(unsigned int nents, gfp_t gfp_mask)
 	return mempool_alloc(sgp->pool, gfp_mask);
 }
 
-static void scsi_free_sgtable(struct scsi_data_buffer *sdb, bool mq)
+static void scsi_free_sgtable(struct sg_table *table, bool mq)
 {
-	if (mq && sdb->table.orig_nents <= SCSI_MAX_SG_SEGMENTS)
+	if (mq && table->orig_nents <= SCSI_MAX_SG_SEGMENTS)
 		return;
-	__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS, mq, scsi_sg_free);
+	__sg_free_table(table, SCSI_MAX_SG_SEGMENTS, mq, scsi_sg_free);
 }
 
-static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents,
+static int scsi_alloc_sgtable(struct sg_table *table, int nents,
 			      gfp_t gfp_mask, bool mq)
 {
 	struct scatterlist *first_chunk = NULL;
@@ -609,17 +609,17 @@ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents,
 
 	if (mq) {
 		if (nents <= SCSI_MAX_SG_SEGMENTS) {
-			sdb->table.nents = sdb->table.orig_nents = nents;
-			sg_init_table(sdb->table.sgl, nents);
+			table->nents = table->orig_nents = nents;
+			sg_init_table(table->sgl, nents);
 			return 0;
 		}
-		first_chunk = sdb->table.sgl;
+		first_chunk = table->sgl;
 	}
 
-	ret = __sg_alloc_table(&sdb->table, nents, SCSI_MAX_SG_SEGMENTS,
+	ret = __sg_alloc_table(table, nents, SCSI_MAX_SG_SEGMENTS,
 			       first_chunk, gfp_mask, scsi_sg_alloc);
 	if (unlikely(ret))
-		scsi_free_sgtable(sdb, mq);
+		scsi_free_sgtable(table, mq);
 	return ret;
 }
 
@@ -635,12 +635,17 @@ static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
 
 static void scsi_mq_free_sgtables(struct scsi_cmnd *cmd)
 {
+	struct scsi_data_buffer *sdb;
+
 	if (cmd->sdb.table.nents)
-		scsi_free_sgtable(&cmd->sdb, true);
-	if (cmd->request->next_rq && cmd->request->next_rq->special)
-		scsi_free_sgtable(cmd->request->next_rq->special, true);
+		scsi_free_sgtable(&cmd->sdb.table, true);
+	if (cmd->request->next_rq) {
+		sdb = cmd->request->next_rq->special;
+		if (sdb)
+			scsi_free_sgtable(&sdb->table, true);
+	}
 	if (scsi_prot_sg_count(cmd))
-		scsi_free_sgtable(cmd->prot_sdb, true);
+		scsi_free_sgtable(&cmd->prot_sdb->table, true);
 }
 
 static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
@@ -679,12 +684,12 @@ static void scsi_mq_uninit_cmd(struct scsi_cmnd *cmd)
 void scsi_release_buffers(struct scsi_cmnd *cmd)
 {
 	if (cmd->sdb.table.nents)
-		scsi_free_sgtable(&cmd->sdb, false);
+		scsi_free_sgtable(&cmd->sdb.table, false);
 
 	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
 
 	if (scsi_prot_sg_count(cmd))
-		scsi_free_sgtable(cmd->prot_sdb, false);
+		scsi_free_sgtable(&cmd->prot_sdb->table, false);
 }
 EXPORT_SYMBOL(scsi_release_buffers);
 
@@ -692,7 +697,7 @@ static void scsi_release_bidi_buffers(struct scsi_cmnd *cmd)
 {
 	struct scsi_data_buffer *bidi_sdb = cmd->request->next_rq->special;
 
-	scsi_free_sgtable(bidi_sdb, false);
+	scsi_free_sgtable(&bidi_sdb->table, false);
 	kmem_cache_free(scsi_sdb_cache, bidi_sdb);
 	cmd->request->next_rq->special = NULL;
 }
@@ -1099,7 +1104,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
 	/*
 	 * If sg table allocation fails, requeue request later.
 	 */
-	if (unlikely(scsi_alloc_sgtable(sdb, req->nr_phys_segments,
+	if (unlikely(scsi_alloc_sgtable(&sdb->table, req->nr_phys_segments,
 					gfp_mask, req->mq_ctx != NULL)))
 		return BLKPREP_DEFER;
 
@@ -1175,7 +1180,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
 
 		ivecs = blk_rq_count_integrity_sg(rq->q, rq->bio);
 
-		if (scsi_alloc_sgtable(prot_sdb, ivecs, gfp_mask, is_mq)) {
+		if (scsi_alloc_sgtable(&prot_sdb->table, ivecs, gfp_mask, is_mq)) {
 			error = BLKPREP_DEFER;
 			goto err_exit;
 		}
