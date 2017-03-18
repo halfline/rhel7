@@ -42,6 +42,8 @@ extern unsigned char shutdown_timeout;
 #define NVME_DEFAULT_KATO	5
 #define NVME_KATO_GRACE		10
 
+extern unsigned int nvme_max_retries;
+
 /*
  * List of workarounds for devices that required behavior not specified in
  * the standard.
@@ -234,7 +236,8 @@ static inline int nvme_error_status(u16 status)
 static inline bool nvme_req_needs_retry(struct request *req, u16 status)
 {
 	return !(status & NVME_SC_DNR || blk_noretry_request(req)) &&
-		(jiffies - req->start_time) < req->timeout;
+		(jiffies - req->start_time) < req->timeout &&
+		req->retries < nvme_max_retries;
 }
 
 void nvme_cancel_request(struct request *req, void *data, bool reserved);
