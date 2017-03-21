@@ -730,7 +730,9 @@ void __init hpte_init_lpar(void)
 	ppc_md.flush_hash_range	= pSeries_lpar_flush_hash_range;
 	ppc_md.hpte_clear_all   = pseries_hpte_clear_all;
 	ppc_md.hugepage_invalidate = pSeries_lpar_hugepage_invalidate;
-	ppc_md.resize_hpt	= pseries_lpar_resize_hpt;
+
+	if (firmware_has_feature(FW_FEATURE_HPT_RESIZE))
+		ppc_md.resize_hpt =  pseries_lpar_resize_hpt;
 }
 
 #ifdef CONFIG_PPC_SMLPAR
