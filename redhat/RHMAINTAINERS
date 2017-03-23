@@ -667,7 +667,7 @@ F:	drivers/ptp/
 F:	include/linux/ptp_cl*
 
 QLOGIC QLA2XXX FC-SCSI DRIVER
-M:	Chad Dupuis <cdupuis@redhat.com>
+M:	Himanshu Madhani <hmadhani@redhat.com>
 S:	Maintained
 F:	drivers/scsi/qla2xxx/
 
