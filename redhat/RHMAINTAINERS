@@ -697,6 +697,22 @@ M:	Chad Dupuis <cdupuis@redhat.com>
 S:	Maintained
 F:	drivers/scsi/qedf
 
+QLOGIC QED NETWORK DRIVER
+M:	Harish Patil <hpatil@redhat.com>
+M:	Ram Amrani <ramrani@redhat.com>
+S:	Maintained
+F:	drivers/net/ethernet/qlogic/qed
+
+QLOGIC QEDE ETHERNET NETWORK DRIVER
+M:	Harish Patil <hpatil@redhat.com>
+S:	Maintained
+F:	drivers/net/ethernet/qlogic/qede
+
+QLOGIC QEDR RDMA ETHERNET NETWORK DRIVER
+M:	Ram Amrani <ramrani@redhat.com>
+S:	Maintained
+F:	drivers/infiniband/hw/qedr
+
 RALINK RT2X00 WIRELESS LAN DRIVER
 M:	Stanislaw Gruszka <sgruszka@redhat.com>
 S:	Maintained
