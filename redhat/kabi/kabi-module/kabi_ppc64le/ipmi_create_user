@@ -1,0 +1,2 @@
+#4-
+0x423b776a	ipmi_create_user	drivers/char/ipmi/ipmi_msghandler	EXPORT_SYMBOL
