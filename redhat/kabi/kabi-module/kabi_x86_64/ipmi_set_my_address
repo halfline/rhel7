@@ -1,0 +1,2 @@
+#4-
+0x16dcec76	ipmi_set_my_address	drivers/char/ipmi/ipmi_msghandler	EXPORT_SYMBOL
