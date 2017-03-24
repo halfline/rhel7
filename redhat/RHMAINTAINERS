@@ -150,6 +150,7 @@ M:	Lenny Szubowicz <lszubowi@redhat.com>
 M:	Prarit Bhargava <prarit@redhat.com>
 
 BLOCK LAYER
+M:	Ming Lei <minlei@redhat.com>
 M:	Jeff Moyer <jmoyer@redhat.com>
 M:	Vivek Goyal <vgoyal@redhat.com>
 S:	Maintained
