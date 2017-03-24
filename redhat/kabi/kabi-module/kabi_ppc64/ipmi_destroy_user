@@ -1,0 +1,2 @@
+#4-
+0x8c8ee770	ipmi_destroy_user	drivers/char/ipmi/ipmi_msghandler	EXPORT_SYMBOL
