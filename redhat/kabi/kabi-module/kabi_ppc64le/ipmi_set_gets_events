@@ -1,0 +1,2 @@
+#4-
+0xa28a2ace	ipmi_set_gets_events	drivers/char/ipmi/ipmi_msghandler	EXPORT_SYMBOL
