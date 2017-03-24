@@ -1,0 +1,2 @@
+#4-
+0x1348760d	ipmi_request_settime	drivers/char/ipmi/ipmi_msghandler	EXPORT_SYMBOL
