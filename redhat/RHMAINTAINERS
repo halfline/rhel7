@@ -105,6 +105,7 @@ F:      Documentation/networking/ena.txt
 F:      drivers/net/ethernet/amazon/
 
 AMD IOMMU (AMD-VI)
+M:	Jerry Snitselaar <jsnitsel@redhat.com>
 M:	Myron Stowe <myron.stowe@redhat.com>
 M:	Alex Williamson <alex.williamson@redhat.com>
 M:	Don Dutile <ddutile@redhat.com>
@@ -343,6 +344,7 @@ S:	Maintained
 F:	drivers/net/ethernet/intel/igbvf/
 
 INTEL IOMMU (VT-d)
+M:	Jerry Snitselaar <jsnitsel@redhat.com>
 M:	Myron Stowe <myron.stowe@redhat.com>
 M:	Alex Williamson <alex.williamson@redhat.com>
 M:	Don Dutile <ddutile@redhat.com>
@@ -360,6 +362,14 @@ INTEL IXGBEVF ETHERNET DRIVER (ixgbevf)
 M:	Ken Cox <jkc@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/intel/ixgbevf/
+
+INTEL MANAGEMENT ENGINE (mei)
+M:	Jerry Snitselaar <jsnitsel@redhat.com>
+S:	Maintained
+F:	include/uapi/mei.h
+F:	include/linux/mei_cl_bus.h
+F:	drivers/misc/mei/
+F:	drivers/watchdog/mei_wdt.c
 
 INTEL POWERCLAMP DRIVER
 M:	Steve Best <sbest@redhat.com>
@@ -431,6 +441,7 @@ F:	include/rdma/
 F:	include/uapi/rdma/
 
 IOMMU DRIVERS
+M:	Jerry Snitselaar <jsnitsel@redhat.com>
 M:	Myron Stowe <myron.stowe@redhat.com>
 M:	Alex Williamson <alex.williamson@redhat.com>
 M:	Don Dutile <ddutile@redhat.com>
