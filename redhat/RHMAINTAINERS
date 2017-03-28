@@ -134,6 +134,11 @@ M:	Jarod Wilson <jarod@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/atheros/
 
+AQUANTIA ETHERNET DRIVER
+M:	David Arcari <darcari@redhat.com>
+S:	Maintained
+F:	drivers/net/ethernet/aquantia/
+
 BE2NET ETHERNET DRIVER (be2net)
 M:	Ivan Vecera <ivecera@redhat.com>
 S:	Maintained
