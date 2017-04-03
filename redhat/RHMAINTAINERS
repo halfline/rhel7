@@ -812,6 +812,16 @@ SKY2 10/100/1000 GIGABIT ETHERNET DRIVER
 S:	Orphan
 F:	drivers/net/ethernet/marvell/sky2.*
 
+MICROSEMI SMART ARRAY SMARTPQI DRIVER (smartpqi)
+M:	Don Brace <dbrace@redhat.com>
+S:	Maintained
+F:	drivers/scsi/smartpqi/smartpqi*.[ch]
+F:	drivers/scsi/smartpqi/Kconfig
+F:	drivers/scsi/smartpqi/Makefile
+F:	include/linux/cciss*.h
+F:	include/uapi/linux/cciss*.h
+F:	Documentation/scsi/smartpqi.txt
+
 SOFTWARE RAID (Multiple Disks, MD) SUPPORT
 M:	Nigel Croxon <ncroxon@redhat.com>
 S:	Maintained
