@@ -2023,7 +2023,7 @@ int nfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 {
 	struct inode *old_inode = old_dentry->d_inode;
 	struct inode *new_inode = new_dentry->d_inode;
-	struct dentry *dentry = NULL, *rehash = NULL;
+	struct dentry *dentry = NULL;
 	struct rpc_task *task;
 	int error = -EBUSY;
 
@@ -2043,10 +2043,8 @@ int nfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 		 * To prevent any new references to the target during the
 		 * rename, we unhash the dentry in advance.
 		 */
-		if (!d_unhashed(new_dentry)) {
+		if (!d_unhashed(new_dentry))
 			d_drop(new_dentry);
-			rehash = new_dentry;
-		}
 
 		if (d_count(new_dentry) > 2) {
 			int err;
@@ -2063,7 +2061,6 @@ int nfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 				goto out;
 
 			new_dentry = dentry;
-			rehash = NULL;
 			new_inode = NULL;
 		}
 	}
@@ -2084,8 +2081,6 @@ int nfs_rename(struct inode *old_dir, struct dentry *old_dentry,
 		error = task->tk_status;
 	rpc_put_task(task);
 out:
-	if (rehash)
-		d_rehash(rehash);
 	trace_nfs_rename_exit(old_dir, old_dentry,
 			new_dir, new_dentry, error);
 	/* new dentry created? */
