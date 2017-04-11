@@ -167,7 +167,7 @@ S:	Maintained
 F:	drivers/net/ethernet/broadcom/b44.*
 
 BROADCOM BNX2 GIGABIT ETHERNET DRIVER (bnx2)
-M:	Neil Horman <nhorman@redhat.com>
+M:	Ken Cox <jkc@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/broadcom/bnx2.*
 F:	drivers/net/ethernet/broadcom/bnx2_*
