@@ -17,6 +17,10 @@ Module.kabi_ppc64
 Module.kabi_ppc64le
 Module.kabi_s390x
 Module.kabi_x86_64
+Module.kabi_dup_ppc64
+Module.kabi_dup_ppc64le
+Module.kabi_dup_s390x
+Module.kabi_dup_x86_64
 kernel-3.10.0-ppc64.config
 kernel-3.10.0-ppc64-debug.config
 kernel-3.10.0-ppc64le.config
