@@ -2100,11 +2100,8 @@ static void mlxsw_sp_pude_event_func(const struct mlxsw_reg_info *reg,
 
 	local_port = mlxsw_reg_pude_local_port_get(pude_pl);
 	mlxsw_sp_port = mlxsw_sp->ports[local_port];
-	if (!mlxsw_sp_port) {
-		dev_warn(mlxsw_sp->bus_info->dev, "Port %d: Link event received for non-existent port\n",
-			 local_port);
+	if (!mlxsw_sp_port)
 		return;
-	}
 
 	status = mlxsw_reg_pude_oper_status_get(pude_pl);
 	if (status == MLXSW_PORT_OPER_STATUS_UP) {
@@ -2406,16 +2403,10 @@ static int mlxsw_sp_init(struct mlxsw_core *mlxsw_core,
 		return err;
 	}
 
-	err = mlxsw_sp_ports_create(mlxsw_sp);
-	if (err) {
-		dev_err(mlxsw_sp->bus_info->dev, "Failed to create ports\n");
-		return err;
-	}
-
 	err = mlxsw_sp_event_register(mlxsw_sp, MLXSW_TRAP_ID_PUDE);
 	if (err) {
 		dev_err(mlxsw_sp->bus_info->dev, "Failed to register for PUDE events\n");
-		goto err_event_register;
+		return err;
 	}
 
 	err = mlxsw_sp_traps_init(mlxsw_sp);
@@ -2448,8 +2439,16 @@ static int mlxsw_sp_init(struct mlxsw_core *mlxsw_core,
 		goto err_switchdev_init;
 	}
 
+	err = mlxsw_sp_ports_create(mlxsw_sp);
+	if (err) {
+		dev_err(mlxsw_sp->bus_info->dev, "Failed to create ports\n");
+		goto err_ports_create;
+	}
+
 	return 0;
 
+err_ports_create:
+	mlxsw_sp_switchdev_fini(mlxsw_sp);
 err_switchdev_init:
 err_lag_init:
 	mlxsw_sp_buffers_fini(mlxsw_sp);
@@ -2458,8 +2457,6 @@ err_flood_init:
 	mlxsw_sp_traps_fini(mlxsw_sp);
 err_rx_listener_register:
 	mlxsw_sp_event_unregister(mlxsw_sp, MLXSW_TRAP_ID_PUDE);
-err_event_register:
-	mlxsw_sp_ports_remove(mlxsw_sp);
 	return err;
 }
 
@@ -2467,11 +2464,11 @@ static void mlxsw_sp_fini(struct mlxsw_core *mlxsw_core)
 {
 	struct mlxsw_sp *mlxsw_sp = mlxsw_core_driver_priv(mlxsw_core);
 
+	mlxsw_sp_ports_remove(mlxsw_sp);
 	mlxsw_sp_switchdev_fini(mlxsw_sp);
 	mlxsw_sp_buffers_fini(mlxsw_sp);
 	mlxsw_sp_traps_fini(mlxsw_sp);
 	mlxsw_sp_event_unregister(mlxsw_sp, MLXSW_TRAP_ID_PUDE);
-	mlxsw_sp_ports_remove(mlxsw_sp);
 	WARN_ON(!list_empty(&mlxsw_sp->fids));
 }
 
