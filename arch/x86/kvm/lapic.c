@@ -156,6 +156,13 @@ static inline bool kvm_apic_map_get_logical_dest(struct kvm_apic_map *map,
 	}
 }
 
+static void kvm_apic_map_free(struct rcu_head *rcu)
+{
+	struct kvm_apic_map *map = container_of(rcu, struct kvm_apic_map, rcu);
+
+	kvfree(map);
+}
+
 static void recalculate_apic_map(struct kvm *kvm)
 {
 	struct kvm_apic_map *new, *old = NULL;
@@ -169,8 +176,8 @@ static void recalculate_apic_map(struct kvm *kvm)
 		if (kvm_apic_present(vcpu))
 			max_id = max(max_id, kvm_x2apic_id(vcpu->arch.apic));
 
-	new = kzalloc(sizeof(struct kvm_apic_map) +
-	              sizeof(struct kvm_lapic *) * (max_id + 1), GFP_KERNEL);
+	new = kvm_kvzalloc(sizeof(struct kvm_apic_map) +
+	                   sizeof(struct kvm_lapic *) * ((u64)max_id + 1));
 
 	if (!new)
 		goto out;
@@ -227,7 +234,7 @@ out:
 	mutex_unlock(&kvm->arch.apic_map_lock);
 
 	if (old)
-		kfree_rcu(old, rcu);
+		call_rcu(&old->rcu, kvm_apic_map_free);
 
 	kvm_make_scan_ioapic_request(kvm);
 }
