@@ -27,6 +27,9 @@ BUILD_TARGET ?= --scratch $(BUILD_SCRATCH_TARGET)
 RHGITURL:=$(shell git config rhg.url || git config remote.origin.pushurl || git config remote.origin.url)
 RHGITCOMMIT?=$(shell git log -1 --pretty=format:%H)
 
+FAILDIRTY:=$(shell git config rhel.faildirtytree)
+FAILDIRTYMSG="There are uncommitted changes in your tree or the changes are not in sync with linux-kernel-test.patch. Either commit the changes or run 'make rh-test-patch'."
+
 # this section is needed in order to make O= to work
 _OUTPUT := ..
 ifeq ("$(origin O)", "command line")
@@ -125,8 +128,7 @@ setup-source: rh-clean-sources
 	@$(REDHAT)/genspec.sh $(SOURCES) $(SOURCES)/$(SPECFILE) $(PKGRELEASE) $(RPMVERSION) $(RELEASED_KERNEL) $(SPECRELEASE) $(DISTRO_BUILD) $(__ZSTREAM) $(KABIDUPCHK)
 	@cp $(SOURCES)/$(SPECFILE) $(SOURCES)/../SPECS/
 
-sources-rh: $(TARBALL) rh-configs rh-kabi rh-kabi-dup
-	@cp -l $(TARBALL) $(SOURCES)/ || cp $(TARBALL) $(SOURCES)/
+rh-git-dirtytree:
 	@touch $(TESTPATCH)
 	@git diff --no-renames HEAD > $(TESTPATCH).tmp
 	@# 1) filterdiff will return crap from the patches it just filtered,
@@ -137,9 +139,18 @@ sources-rh: $(TARBALL) rh-configs rh-kabi rh-kabi-dup
 	@#    lines, which will be considered an error
 	@($(FILTERDIFF) $(TESTPATCH).tmp | egrep -v "^index|^diff" >$(TESTPATCH).tmp2; true)
 	@mv $(TESTPATCH).tmp2 $(TESTPATCH).tmp
-	@diff $(TESTPATCH).tmp $(TESTPATCH) > /dev/null || \
-		echo "WARNING: There are uncommitted changes in your tree or the changes are not in sync with linux-kernel-test.patch.  Either commit the changes or run 'make rh-test-patch'"
+	@diff $(TESTPATCH).tmp $(TESTPATCH) > /dev/null ||	\
+		(if [ "$(FAILDIRTY)" != "true" ]; then		\
+			echo "WARNING: $(FAILDIRTYMSG)";	\
+		else						\
+			echo "ERROR: $(FAILDIRTYMSG)";		\
+			rm $(TESTPATCH).tmp;			\
+			exit 1;					\
+		fi)
 	@rm $(TESTPATCH).tmp
+
+sources-rh: rh-git-dirtytree $(TARBALL) rh-configs rh-kabi rh-kabi-dup
+	@cp -l $(TARBALL) $(SOURCES)/ || cp $(TARBALL) $(SOURCES)/
 	@cp $(TESTPATCH) $(SOURCES)/linux-kernel-test.patch
 	@# if the extra_certificates doesn't exist, create a empty one
 	@(if [ ! -f keys/extra_certificates ]; then \
@@ -277,6 +288,8 @@ rh-help:
 	@echo  '  rh-cross-[ARCH]-rpm - [x86_64 only] execute rpm builds for specified'
 	@echo  '			ARCH using RHEL cross compiler'
 	@echo  '  rh-get-latest - returns latest-pkg tag from brew'
+	@echo  '  rh-git-dirtytree  - Test to see if git tree is dirty.  Will fail if'
+	@echo  '		      git config value rhel.faildirtytree is true.'
 
 	@echo  ''
 	@echo  'Configuration targets:'
