@@ -408,7 +408,9 @@ out:
 		if (phba->ktime_on)
 			lpfc_nvmet_ktime(phba, ctxp);
 #endif
-		/* lpfc_nvmet_xmt_fcp_release() will recycle the context */
+		/* Let Abort cmpl repost the context */
+		if (!(ctxp->flag & LPFC_NVMET_ABORT_OP))
+			lpfc_nvmet_rq_post(phba, ctxp, &ctxp->rqb_buffer->hbuf);
 	} else {
 		ctxp->entry_cnt++;
 		start_clean = offsetof(struct lpfc_iocbq, wqe);
@@ -632,47 +634,10 @@ lpfc_nvmet_targetport_delete(struct nvmet_fc_target_port *targetport)
 	complete(&tport->tport_unreg_done);
 }
 
-static void
-lpfc_nvmet_xmt_fcp_release(struct nvmet_fc_target_port *tgtport,
-			   struct nvmefc_tgt_fcp_req *rsp)
-{
-	struct lpfc_nvmet_tgtport *lpfc_nvmep = tgtport->private;
-	struct lpfc_nvmet_rcv_ctx *ctxp =
-		container_of(rsp, struct lpfc_nvmet_rcv_ctx, ctx.fcp_req);
-	struct lpfc_hba *phba = ctxp->phba;
-	unsigned long flags;
-	bool aborting = false;
-
-	spin_lock_irqsave(&ctxp->ctxlock, flags);
-	if (ctxp->flag & LPFC_NVMET_ABORT_OP) {
-		aborting = true;
-		ctxp->flag |= LPFC_NVMET_CTX_RLS;
-	}
-	spin_unlock_irqrestore(&ctxp->ctxlock, flags);
-
-	if (aborting)
-		/* let the abort path do the real release */
-		return;
-
-	/* Sanity check */
-	if (ctxp->state != LPFC_NVMET_STE_DONE) {
-		atomic_inc(&lpfc_nvmep->xmt_fcp_drop);
-		lpfc_printf_log(phba, KERN_ERR, LOG_NVME_IOERR,
-				"6117 Bad state IO x%x aborted\n",
-				ctxp->oxid);
-	}
-
-	lpfc_nvmeio_data(phba, "NVMET FCP FREE: xri x%x ste %d\n", ctxp->oxid,
-			 ctxp->state, 0);
-
-	lpfc_nvmet_rq_post(phba, ctxp, &ctxp->rqb_buffer->hbuf);
-}
-
 static struct nvmet_fc_target_template lpfc_tgttemplate = {
 	.targetport_delete = lpfc_nvmet_targetport_delete,
 	.xmt_ls_rsp     = lpfc_nvmet_xmt_ls_rsp,
 	.fcp_op         = lpfc_nvmet_xmt_fcp_op,
-	.fcp_req_release = lpfc_nvmet_xmt_fcp_release,
 
 	.max_hw_queues  = 1,
 	.max_sgl_segments = LPFC_NVMET_DEFAULT_SEGS,
@@ -869,7 +834,6 @@ dropit:
 	ctxp->wqeq = NULL;
 	ctxp->state = LPFC_NVMET_STE_RCV;
 	ctxp->rqb_buffer = (void *)nvmebuf;
-	spin_lock_init(&ctxp->ctxlock);
 
 	lpfc_nvmeio_data(phba, "NVMET LS   RCV: xri x%x sz %d from %06x\n",
 			 oxid, size, sid);
@@ -1631,8 +1595,6 @@ lpfc_nvmet_sol_fcp_abort_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
 	struct lpfc_nvmet_rcv_ctx *ctxp;
 	struct lpfc_nvmet_tgtport *tgtp;
 	uint32_t status, result;
-	unsigned long flags;
-	bool released = false;
 
 	ctxp = cmdwqe->context2;
 	status = bf_get(lpfc_wcqe_c_status, wcqe);
@@ -1647,18 +1609,7 @@ lpfc_nvmet_sol_fcp_abort_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
 			result, wcqe->word3);
 
 	ctxp->state = LPFC_NVMET_STE_DONE;
-	spin_lock_irqsave(&ctxp->ctxlock, flags);
-	if (ctxp->flag & LPFC_NVMET_CTX_RLS)
-		released = true;
-	ctxp->flag &= ~LPFC_NVMET_ABORT_OP;
-	spin_unlock_irqrestore(&ctxp->ctxlock, flags);
-
-	/*
-	 * if transport has released ctx, then can reuse it. Otherwise,
-	 * will be recycled by transport release call.
-	 */
-	if (released)
-		lpfc_nvmet_rq_post(phba, ctxp, &ctxp->rqb_buffer->hbuf);
+	lpfc_nvmet_rq_post(phba, ctxp, &ctxp->rqb_buffer->hbuf);
 
 	cmdwqe->context2 = NULL;
 	cmdwqe->context3 = NULL;
@@ -1681,9 +1632,7 @@ lpfc_nvmet_xmt_fcp_abort_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
 {
 	struct lpfc_nvmet_rcv_ctx *ctxp;
 	struct lpfc_nvmet_tgtport *tgtp;
-	unsigned long flags;
 	uint32_t status, result;
-	bool released = false;
 
 	ctxp = cmdwqe->context2;
 	status = bf_get(lpfc_wcqe_c_status, wcqe);
@@ -1705,19 +1654,7 @@ lpfc_nvmet_xmt_fcp_abort_cmp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdwqe,
 					ctxp->state, ctxp->oxid);
 		}
 		ctxp->state = LPFC_NVMET_STE_DONE;
-		spin_lock_irqsave(&ctxp->ctxlock, flags);
-		if (ctxp->flag & LPFC_NVMET_CTX_RLS)
-			released = true;
-		ctxp->flag &= ~LPFC_NVMET_ABORT_OP;
-		spin_unlock_irqrestore(&ctxp->ctxlock, flags);
-
-		/*
-		 * if transport has released ctx, then can reuse it. Otherwise,
-		 * will be recycled by transport release call.
-		 */
-		if (released)
-			lpfc_nvmet_rq_post(phba, ctxp, &ctxp->rqb_buffer->hbuf);
-
+		lpfc_nvmet_rq_post(phba, ctxp, &ctxp->rqb_buffer->hbuf);
 		cmdwqe->context2 = NULL;
 		cmdwqe->context3 = NULL;
 	}
