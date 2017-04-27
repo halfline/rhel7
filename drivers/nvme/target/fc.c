@@ -86,7 +86,6 @@ struct nvmet_fc_fcp_iod {
 
 	struct nvmet_req		req;
 	struct work_struct		work;
-	struct work_struct		done_work;
 
 	struct nvmet_fc_tgtport		*tgtport;
 	struct nvmet_fc_tgt_queue	*queue;
@@ -214,7 +213,6 @@ static DEFINE_IDA(nvmet_fc_tgtport_cnt);
 
 static void nvmet_fc_handle_ls_rqst_work(struct work_struct *work);
 static void nvmet_fc_handle_fcp_rqst_work(struct work_struct *work);
-static void nvmet_fc_fcp_rqst_op_done_work(struct work_struct *work);
 static void nvmet_fc_tgt_a_put(struct nvmet_fc_tgt_assoc *assoc);
 static int nvmet_fc_tgt_a_get(struct nvmet_fc_tgt_assoc *assoc);
 static void nvmet_fc_tgt_q_put(struct nvmet_fc_tgt_queue *queue);
@@ -416,7 +414,6 @@ nvmet_fc_prep_fcp_iodlist(struct nvmet_fc_tgtport *tgtport,
 
 	for (i = 0; i < queue->sqsize; fod++, i++) {
 		INIT_WORK(&fod->work, nvmet_fc_handle_fcp_rqst_work);
-		INIT_WORK(&fod->done_work, nvmet_fc_fcp_rqst_op_done_work);
 		fod->tgtport = tgtport;
 		fod->queue = queue;
 		fod->active = false;
@@ -1810,13 +1807,10 @@ nvmet_fc_transfer_fcp_data(struct nvmet_fc_tgtport *tgtport,
 	}
 }
 
-/*
- * actual done handler for FCP operations when completed by the lldd
- */
 static void
-nvmet_fc_fod_op_done(struct nvmet_fc_fcp_iod *fod)
+nvmet_fc_xmt_fcp_op_done(struct nvmefc_tgt_fcp_req *fcpreq)
 {
-	struct nvmefc_tgt_fcp_req *fcpreq = fod->fcpreq;
+	struct nvmet_fc_fcp_iod *fod = fcpreq->nvmet_fc_private;
 	struct nvmet_fc_tgtport *tgtport = fod->tgtport;
 	unsigned long flags;
 	bool abort;
@@ -1909,28 +1903,6 @@ nvmet_fc_fod_op_done(struct nvmet_fc_fcp_iod *fod)
 		nvmet_fc_abort_op(tgtport, fod->fcpreq);
 		break;
 	}
-}
-
-static void
-nvmet_fc_fcp_rqst_op_done_work(struct work_struct *work)
-{
-	struct nvmet_fc_fcp_iod *fod =
-		container_of(work, struct nvmet_fc_fcp_iod, done_work);
-
-	nvmet_fc_fod_op_done(fod);
-}
-
-static void
-nvmet_fc_xmt_fcp_op_done(struct nvmefc_tgt_fcp_req *fcpreq)
-{
-	struct nvmet_fc_fcp_iod *fod = fcpreq->nvmet_fc_private;
-	struct nvmet_fc_tgt_queue *queue = fod->queue;
-
-	if (fod->tgtport->ops->target_features & NVMET_FCTGTFEAT_OPDONE_IN_ISR)
-		/* context switch so completion is not in ISR context */
-		queue_work_on(queue->cpu, queue->work_q, &fod->done_work);
-	else
-		nvmet_fc_fod_op_done(fod);
 }
 
 /*
@@ -2177,10 +2149,7 @@ nvmet_fc_rcv_fcp_req(struct nvmet_fc_target_port *target_port,
 			((queue->qid - 1) % tgtport->ops->max_hw_queues) : 0;
 	memcpy(&fod->cmdiubuf, cmdiubuf, cmdiubuf_len);
 
-	if (tgtport->ops->target_features & NVMET_FCTGTFEAT_CMD_IN_ISR)
-		queue_work_on(queue->cpu, queue->work_q, &fod->work);
-	else
-		nvmet_fc_handle_fcp_rqst(tgtport, fod);
+	queue_work_on(queue->cpu, queue->work_q, &fod->work);
 
 	return 0;
 }
