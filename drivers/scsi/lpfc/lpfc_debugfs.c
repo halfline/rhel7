@@ -4569,31 +4569,31 @@ lpfc_debugfs_terminate(struct lpfc_vport *vport)
 void
 lpfc_debug_dump_all_queues(struct lpfc_hba *phba)
 {
-	int idx;
+	int fcp_wqidx;
 
 	/*
 	 * Dump Work Queues (WQs)
 	 */
-	lpfc_debug_dump_wq(phba, DUMP_MBX, 0);
-	lpfc_debug_dump_wq(phba, DUMP_ELS, 0);
+	lpfc_debug_dump_mbx_wq(phba);
+	lpfc_debug_dump_els_wq(phba);
 
-	for (idx = 0; idx < phba->cfg_fcp_io_channel; idx++)
-		lpfc_debug_dump_wq(phba, DUMP_FCP, idx);
+	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_io_channel; fcp_wqidx++)
+		lpfc_debug_dump_fcp_wq(phba, fcp_wqidx);
 
 	lpfc_debug_dump_hdr_rq(phba);
 	lpfc_debug_dump_dat_rq(phba);
 	/*
 	 * Dump Complete Queues (CQs)
 	 */
-	lpfc_debug_dump_cq(phba, DUMP_MBX, 0);
-	lpfc_debug_dump_cq(phba, DUMP_ELS, 0);
+	lpfc_debug_dump_mbx_cq(phba);
+	lpfc_debug_dump_els_cq(phba);
 
-	for (idx = 0; idx < phba->cfg_fcp_io_channel; idx++)
-		lpfc_debug_dump_cq(phba, DUMP_FCP, idx);
+	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_io_channel; fcp_wqidx++)
+		lpfc_debug_dump_fcp_cq(phba, fcp_wqidx);
 
 	/*
 	 * Dump Event Queues (EQs)
 	 */
-	for (idx = 0; idx < phba->cfg_fcp_io_channel; idx++)
-		lpfc_debug_dump_hba_eq(phba, idx);
+	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_io_channel; fcp_wqidx++)
+		lpfc_debug_dump_hba_eq(phba, fcp_wqidx);
 }
