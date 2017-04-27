@@ -135,8 +135,6 @@ struct lpfc_scsi_buf {
 
 	uint32_t timeout;
 
-	uint16_t flags;  /* TBD convert exch_busy to flags */
-#define LPFC_SBUF_XBUSY         0x1     /* SLI4 hba reported XB on WCQE cmpl */
 	uint16_t exch_busy;     /* SLI4 hba reported XB on complete WCQE */
 	uint16_t status;	/* From IOCB Word 7- ulpStatus */
 	uint32_t result;	/* From IOCB Word 4. */
@@ -166,8 +164,6 @@ struct lpfc_scsi_buf {
 	 * Iotag is in here
 	 */
 	struct lpfc_iocbq cur_iocbq;
-	uint16_t cpu;
-
 	wait_queue_head_t *waitq;
 	unsigned long start_time;
 
@@ -189,8 +185,6 @@ struct lpfc_scsi_buf {
 #define FIND_FIRST_OAS_LUN	0
 #define NO_MORE_OAS_LUN		-1
 #define NOT_OAS_ENABLED_LUN	NO_MORE_OAS_LUN
-
-#define TXRDY_PAYLOAD_LEN	12
 
 int lpfc_sli4_scmd_to_wqidx_distr(struct lpfc_hba *phba,
 				  struct lpfc_scsi_buf *lpfc_cmd);
