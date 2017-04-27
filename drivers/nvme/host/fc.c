@@ -1147,7 +1147,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
 	struct nvme_fc_ctrl *ctrl = op->ctrl;
 	struct nvme_fc_queue *queue = op->queue;
 	struct nvme_completion *cqe = &op->rsp_iu.cqe;
-	u16 status = NVME_SC_SUCCESS;
+	u16 status;
 
 	/*
 	 * WARNING:
@@ -1183,8 +1183,8 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
 
 	if (atomic_read(&op->state) == FCPOP_STATE_ABORTED)
 		status = NVME_SC_ABORT_REQ | NVME_SC_DNR;
-	else if (freq->status)
-		status = NVME_SC_FC_TRANSPORT_ERROR;
+	else
+		status = freq->status;
 
 	/*
 	 * For the linux implementation, if we have an unsuccesful
@@ -1212,7 +1212,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
 		 */
 		if (freq->transferred_length !=
 			be32_to_cpu(op->cmd_iu.data_len)) {
-			status = NVME_SC_FC_TRANSPORT_ERROR;
+			status = -EIO;
 			goto done;
 		}
 		op->nreq.result.u64 = 0;
@@ -1229,7 +1229,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
 					freq->transferred_length ||
 			     op->rsp_iu.status_code ||
 			     op->rqno != le16_to_cpu(cqe->command_id))) {
-			status = NVME_SC_FC_TRANSPORT_ERROR;
+			status = -EIO;
 			goto done;
 		}
 		op->nreq.result = cqe->result;
@@ -1237,7 +1237,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
 		break;
 
 	default:
-		status = NVME_SC_FC_TRANSPORT_ERROR;
+		status = -EIO;
 		goto done;
 	}
 
@@ -1764,7 +1764,7 @@ nvme_fc_start_fcp_op(struct nvme_fc_ctrl *ctrl, struct nvme_fc_queue *queue,
 	op->fcp_req.io_dir = io_dir;
 	op->fcp_req.transferred_length = 0;
 	op->fcp_req.rcv_rsplen = 0;
-	op->fcp_req.status = NVME_SC_SUCCESS;
+	op->fcp_req.status = 0;
 	op->fcp_req.sqid = cpu_to_le16(queue->qnum);
 
 	/*
