@@ -8760,9 +8760,12 @@ lpfc_sli4_queue_setup(struct lpfc_hba *phba)
 		}
 	}
 
-	for (qidx = 0; qidx < io_channel; qidx += LPFC_MAX_EQ_DELAY_EQID_CNT)
+	/*
+	 * Configure EQ delay multipier for interrupt coalescing using
+	 * MODIFY_EQ_DELAY for all EQs created, LPFC_MAX_EQ_DELAY at a time.
+	 */
+	for (qidx = 0; qidx < io_channel; qidx += LPFC_MAX_EQ_DELAY)
 		lpfc_modify_hba_eq_delay(phba, qidx);
-
 	return 0;
 
 out_destroy:
