@@ -15136,14 +15136,14 @@ lpfc_mrq_create(struct lpfc_hba *phba, struct lpfc_queue **hrqp,
 		drq = drqp[idx];
 		cq  = cqp[idx];
 
-		/* sanity check on queue memory */
-		if (!hrq || !drq || !cq) {
-			status = -ENODEV;
+		if (hrq->entry_count != drq->entry_count) {
+			status = -EINVAL;
 			goto out;
 		}
 
-		if (hrq->entry_count != drq->entry_count) {
-			status = -EINVAL;
+		/* sanity check on queue memory */
+		if (!hrq || !drq || !cq) {
+			status = -ENODEV;
 			goto out;
 		}
 
