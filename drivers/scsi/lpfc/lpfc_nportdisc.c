@@ -1655,7 +1655,9 @@ lpfc_cmpl_reglogin_reglogin_issue(struct lpfc_vport *vport,
 			     (phba->cfg_enable_fc4_type == LPFC_ENABLE_NVME)) {
 				ndlp->nlp_fc4_type |= NLP_FC4_NVME;
 				/* We need to update the localport also */
-				lpfc_nvme_update_localport(vport);
+				/* todo: init: revise localport nvme
+				 * attributes
+				 */
 			}
 
 		} else if (ndlp->nlp_fc4_type == 0) {
