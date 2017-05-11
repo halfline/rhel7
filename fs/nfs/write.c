@@ -82,8 +82,10 @@ static struct nfs_pgio_header *nfs_writehdr_alloc(void)
 {
 	struct nfs_pgio_header *p = mempool_alloc(nfs_wdata_mempool, GFP_NOIO);
 
-	if (p)
+	if (p) {
 		memset(p, 0, sizeof(*p));
+		p->rw_mode = FMODE_WRITE;
+	}
 	return p;
 }
 
@@ -1352,7 +1354,7 @@ void nfs_pageio_init_write(struct nfs_pageio_descriptor *pgio,
 		pg_ops = server->pnfs_curr_ld->pg_write_ops;
 #endif
 	nfs_pageio_init(pgio, inode, pg_ops, compl_ops, &nfs_rw_write_ops,
-			server->wsize, ioflags);
+			server->wsize, ioflags, GFP_NOIO);
 }
 EXPORT_SYMBOL_GPL(nfs_pageio_init_write);
 
@@ -2079,7 +2081,6 @@ void nfs_destroy_writepagecache(void)
 }
 
 static const struct nfs_rw_ops nfs_rw_write_ops = {
-	.rw_mode		= FMODE_WRITE,
 	.rw_alloc_header	= nfs_writehdr_alloc,
 	.rw_free_header		= nfs_writehdr_free,
 	.rw_done		= nfs_writeback_done,
