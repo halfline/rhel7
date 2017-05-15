@@ -234,9 +234,8 @@ rh-rtg: rh-release
 
 # RH_LATEST returns the value of the latest "known good" kernel from brew.
 # This should not be confused with the latest top-of-tree development tag.
-RH_LATEST:=$(shell brew latest-pkg --quiet rhel-${RHELMAJOR}.${RHELMINOR}-candidate kernel | awk ' { print $$1 } ')
-
 rh-get-latest:
+	$(eval RH_LATEST:=$(shell brew latest-pkg --quiet rhel-${RHELMAJOR}.${RHELMINOR}-candidate kernel | awk ' { print $$1 } '))
 	@echo "The latest kernel package tag is ${RH_LATEST}."
 
 rh-help:
