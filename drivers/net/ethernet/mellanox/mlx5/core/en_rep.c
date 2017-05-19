@@ -394,7 +394,7 @@ static int mlx5e_init_rep_rx(struct mlx5e_priv *priv)
 	return 0;
 
 err_del_flow_rule:
-	mlx5_del_flow_rule(rep->vport_rx_rule);
+	mlx5_del_flow_rules(rep->vport_rx_rule);
 err_destroy_direct_tirs:
 	mlx5e_destroy_direct_tirs(priv);
 err_destroy_direct_rqts:
