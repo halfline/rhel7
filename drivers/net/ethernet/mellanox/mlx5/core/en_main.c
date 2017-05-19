@@ -30,9 +30,12 @@
  * SOFTWARE.
  */
 
+#include <net/tc_act/tc_gact.h>
+#include <net/pkt_cls.h>
 #include <linux/mlx5/fs.h>
 #include <net/vxlan.h>
 #include "en.h"
+#include "en_tc.h"
 #include "eswitch.h"
 #include "vxlan.h"
 
@@ -2618,6 +2621,17 @@ static int mlx5e_setup_tc(struct net_device *netdev, u8 tc)
 static int mlx5e_ndo_setup_tc(struct net_device *dev, u32 handle,
 			      __be16 proto, struct tc_to_netdev *tc)
 {
+	struct mlx5e_priv *priv = netdev_priv(dev);
+
+	if (TC_H_MAJ(handle) != TC_H_MAJ(TC_H_INGRESS))
+		goto mqprio;
+
+	switch (tc->type) {
+	default:
+		return -EOPNOTSUPP;
+	}
+
+mqprio:
 	if (tc->type != TC_SETUP_MQPRIO)
 		return -EINVAL;
 
@@ -3543,8 +3557,14 @@ static int mlx5e_init_nic_rx(struct mlx5e_priv *priv)
 		goto err_destroy_direct_tirs;
 	}
 
+	err = mlx5e_tc_init(priv);
+	if (err)
+		goto err_destroy_flow_steering;
+
 	return 0;
 
+err_destroy_flow_steering:
+	mlx5e_destroy_flow_steering(priv);
 err_destroy_direct_tirs:
 	mlx5e_destroy_direct_tirs(priv);
 err_destroy_indirect_tirs:
@@ -3561,6 +3581,7 @@ static void mlx5e_cleanup_nic_rx(struct mlx5e_priv *priv)
 {
 	int i;
 
+	mlx5e_tc_cleanup(priv);
 	mlx5e_destroy_flow_steering(priv);
 	mlx5e_destroy_direct_tirs(priv);
 	mlx5e_destroy_indirect_tirs(priv);
