@@ -1082,8 +1082,12 @@ int mlx5e_stats_flower(struct mlx5e_priv *priv,
 
 	mlx5_fc_query_cached(counter, &bytes, &packets, &lastuse);
 
+	preempt_disable();
+
 	tc_for_each_action(a, f->exts)
 		tcf_action_stats_update(a, bytes, packets, lastuse);
+
+	preempt_enable();
 
 	return 0;
 }
