@@ -36,6 +36,7 @@
 
 #include "eswitch.h"
 #include "en.h"
+#include "en_tc.h"
 
 static const char mlx5e_rep_driver_name[] = "mlx5e_rep";
 
@@ -202,6 +203,10 @@ void mlx5e_nic_rep_unload(struct mlx5_eswitch *esw,
 
 	if (test_bit(MLX5E_STATE_OPENED, &priv->state))
 		mlx5e_remove_sqs_fwd_rules(priv);
+
+	/* clean (and re-init) existing uplink offloaded TC rules */
+	mlx5e_tc_cleanup(priv);
+	mlx5e_tc_init(priv);
 }
 
 static int mlx5e_rep_open(struct net_device *dev)
