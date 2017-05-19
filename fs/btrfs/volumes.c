@@ -1358,7 +1358,7 @@ int find_free_dev_extent_start(struct btrfs_transaction *transaction,
 	 * at an offset of at least 1MB.
 	 */
 	min_search_start = max(root->fs_info->alloc_start, 1024ull * 1024);
-	search_start = max_t(u64, root->fs_info->alloc_start, SZ_1M);
+	search_start = max(search_start, min_search_start);
 
 	path = btrfs_alloc_path();
 	if (!path)
