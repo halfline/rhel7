@@ -232,6 +232,7 @@ struct cg_proto;
   *	@sk_wq: sock wait queue and async head
   *	@sk_rx_dst: receive input route used by early demux
   *	@sk_dst_cache: destination cache
+  *	@sk_dst_pending_confirm: need to confirm neighbour
   *	@sk_policy: flow policy
   *	@sk_receive_queue: incoming packets
   *	@sk_wmem_alloc: transmit queue bytes committed
@@ -444,7 +445,7 @@ struct sock {
 	 * additions of your backport.
 	 */
 	RH_KABI_USE2_P(1, __u32	sk_txhash, u32 sk_max_pacing_rate)
-	RH_KABI_USE_P(2, u16 sk_tsflags)
+	RH_KABI_USE2_P(2, u16 sk_tsflags, __u32 sk_dst_pending_confirm)
 	RH_KABI_RESERVE_P(3)
 	RH_KABI_RESERVE_P(4)
 	RH_KABI_RESERVE_P(5)
@@ -1856,6 +1857,7 @@ static inline void dst_negative_advice(struct sock *sk)
 		if (ndst != dst) {
 			rcu_assign_pointer(sk->sk_dst_cache, ndst);
 			sk_reset_txq(sk);
+			sk->sk_dst_pending_confirm = 0;
 		}
 	}
 }
@@ -1866,6 +1868,7 @@ __sk_dst_set(struct sock *sk, struct dst_entry *dst)
 	struct dst_entry *old_dst;
 
 	sk_tx_queue_clear(sk);
+	sk->sk_dst_pending_confirm = 0;
 	/*
 	 * This can be called while sk is owned by the caller only,
 	 * with no state that can be checked in a rcu_dereference_check() cond
@@ -1881,6 +1884,7 @@ sk_dst_set(struct sock *sk, struct dst_entry *dst)
 	struct dst_entry *old_dst;
 
 	sk_tx_queue_clear(sk);
+	sk->sk_dst_pending_confirm = 0;
 	old_dst = xchg(&sk->sk_dst_cache, dst);
 	dst_release(old_dst);
 }
@@ -1900,6 +1904,12 @@ sk_dst_reset(struct sock *sk)
 extern struct dst_entry *__sk_dst_check(struct sock *sk, u32 cookie);
 
 extern struct dst_entry *sk_dst_check(struct sock *sk, u32 cookie);
+
+static inline void sk_dst_confirm(struct sock *sk)
+{
+	if (!sk->sk_dst_pending_confirm)
+		sk->sk_dst_pending_confirm = 1;
+}
 
 bool sk_mc_loop(struct sock *sk);
 
