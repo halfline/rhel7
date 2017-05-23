@@ -16,7 +16,11 @@ else
 endif
 
 rh-cross-sources: rh-cross-download rh-sources
-	@yum-builddep rpms/SOURCES/kernel.spec
+ifeq ($(shell whoami), root)
+	@yum-builddep $(RPM)/SOURCES/kernel.spec
+else
+	@echo "Skipping yum-builddep.  If your cross build fails due to missing dependencies, you may need to run \"make rh-cross-sources\" as root."
+endif
 
 rh-cross-ppc64-rpms: rh-cross-sources
 	$(REDHAT)/scripts/x86_rngd.sh
