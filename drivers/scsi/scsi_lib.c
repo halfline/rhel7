@@ -2784,7 +2784,7 @@ EXPORT_SYMBOL(scsi_target_resume);
  * remove the rport mutex lock and unlock calls from srp_queuecommand().
  */
 int
-scsi_internal_device_block(struct scsi_device *sdev, bool wait)
+scsi_internal_device_block_internal(struct scsi_device *sdev, bool wait)
 {
 	struct request_queue *q = sdev->request_queue;
 	unsigned long flags;
@@ -2818,8 +2818,21 @@ scsi_internal_device_block(struct scsi_device *sdev, bool wait)
 
 	return 0;
 }
+
+int
+scsi_internal_device_block(struct scsi_device *sdev)
+{
+	return 	scsi_internal_device_block_internal (sdev, true);
+}
 EXPORT_SYMBOL_GPL(scsi_internal_device_block);
- 
+
+int
+scsi_internal_device_block_nowait(struct scsi_device *sdev)
+{
+	return 	scsi_internal_device_block_internal (sdev, false);
+}
+EXPORT_SYMBOL_GPL(scsi_internal_device_block_nowait);
+
 /**
  * scsi_internal_device_unblock - resume a device after a block request
  * @sdev:	device to resume
@@ -2875,7 +2888,7 @@ EXPORT_SYMBOL_GPL(scsi_internal_device_unblock);
 static void
 device_block(struct scsi_device *sdev, void *data)
 {
-	scsi_internal_device_block(sdev, true);
+	scsi_internal_device_block(sdev);
 }
 
 static int
