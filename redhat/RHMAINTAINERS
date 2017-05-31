@@ -867,6 +867,11 @@ M:	Don Zickus <dzickus@redhat.com>
 S:	Maintained
 F:	drivers/usb/
 
+USB MEDIA DRIVERS
+M:	Torez Smith <torez@redhat.com>
+S:	Maintained
+F:	drivers/media/usb/
+
 UVC WEBCAM DRIVER
 M:	Tony Camuso <tcamuso@redhat.com>
 S:	Maintained
