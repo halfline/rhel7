@@ -877,6 +877,15 @@ M:	Tony Camuso <tcamuso@redhat.com>
 S:	Maintained
 F:	drivers/media/video/uvc/
 
+VFIO
+M:	Alex Williamson <alex.williamson@redhat.com>
+M:	David Gibson <dgibson@redhat.com>
+M:	Eric Auger <eric.auger@redhat.com>
+S:	Maintained
+F:	drivers/vfio/
+F:	include/linux/vfio.h
+F:	include/uapi/linux/vfio.h
+
 VIDEO DRIVERS
 M:	David Airlie <airlied@redhat.com>
 M:	Adam Jackson <ajax@redhat.com>
