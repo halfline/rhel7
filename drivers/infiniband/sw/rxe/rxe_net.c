@@ -441,9 +441,9 @@ static int send(struct rxe_dev *rxe, struct rxe_pkt_info *pkt,
 	nskb->sk = pkt->qp->sk->sk;
 
 	if (av->network_type == RDMA_NETWORK_IPV4) {
-		err = ip_local_out(skb);
+		err = ip_local_out(nskb);
 	} else if (av->network_type == RDMA_NETWORK_IPV6) {
-		err = ip6_local_out(skb);
+		err = ip6_local_out(nskb);
 	} else {
 		pr_err("Unknown layer 3 protocol: %d\n", av->network_type);
 		kfree_skb(nskb);
