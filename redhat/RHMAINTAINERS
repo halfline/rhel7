@@ -216,6 +216,7 @@ F:	fs/cifs/
 
 CISCO VIC ETHERNET NIC DRIVER
 M:	Stefan Assmann <sassmann@redhat.com>
+M:	Govindarajulu Varadarajan <gvaradar@redhat.com>
 S:	Maintained
 F:	drivers/net/ethernet/cisco/enic/
 
