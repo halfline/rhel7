@@ -1355,7 +1355,8 @@ static void __clear_irq_vector(int irq, struct irq_cfg *cfg)
 {
 	int cpu, vector;
 
-	BUG_ON(!cfg->vector);
+	if (!cfg->vector)
+		return;
 
 	vector = cfg->vector;
 	for_each_cpu_and(cpu, cfg->domain, cpu_online_mask)
