@@ -332,6 +332,8 @@ struct qed_dev_info {
 	bool wol_support;
 
 	enum qed_dev_type dev_type;
+
+	u8		abs_pf_id;
 };
 
 enum qed_sb_type {
