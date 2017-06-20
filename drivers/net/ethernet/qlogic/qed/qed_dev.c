@@ -1576,13 +1576,18 @@ static void qed_hw_set_feat(struct qed_hwfn *p_hwfn)
 		  RESC_NUM(p_hwfn, QED_L2_QUEUE) -
 		  FEAT_NUM(p_hwfn, QED_PF_L2_QUE), sb_cnt_info.sb_iov_cnt);
 
+	if (p_hwfn->hw_info.personality == QED_PCI_ISCSI)
+		feat_num[QED_ISCSI_CQ] = min_t(u32, RESC_NUM(p_hwfn, QED_SB),
+					       RESC_NUM(p_hwfn,
+							QED_CMDQS_CQS));
 	DP_VERBOSE(p_hwfn,
 		   NETIF_MSG_PROBE,
-		   "#PF_L2_QUEUES=%d VF_L2_QUEUES=%d #ROCE_CNQ=%d #SBS=%d num_features=%d\n",
+		   "#PF_L2_QUEUES=%d VF_L2_QUEUES=%d #ROCE_CNQ=%d ISCSI_CQ=%d #SBS=%d\n",
 		   (int)FEAT_NUM(p_hwfn, QED_PF_L2_QUE),
 		   (int)FEAT_NUM(p_hwfn, QED_VF_L2_QUE),
 		   (int)FEAT_NUM(p_hwfn, QED_RDMA_CNQ),
-		   RESC_NUM(p_hwfn, QED_SB), num_features);
+		   (int)FEAT_NUM(p_hwfn, QED_ISCSI_CQ),
+		   RESC_NUM(p_hwfn, QED_SB));
 }
 
 static enum resource_id_enum qed_hw_get_mfw_res_id(enum qed_resources res_id)
