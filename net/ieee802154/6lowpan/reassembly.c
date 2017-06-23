@@ -117,6 +117,7 @@ fq_find(struct net *net, const struct lowpan_802154_cb *cb,
 	arg.src = src;
 	arg.dst = dst;
 
+	read_lock(&lowpan_frags.lock);
 	hash = lowpan_hash_frag(cb->d_tag, cb->d_size, src, dst);
 
 	q = inet_frag_find(&ieee802154_lowpan->frags,
