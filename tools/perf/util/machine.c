@@ -787,7 +787,7 @@ static int machine__get_running_kernel_start(struct machine *machine,
 int __machine__create_kernel_maps(struct machine *machine, struct dso *kernel)
 {
 	int type;
-	u64 start;
+	u64 start = 0;
 
 	if (machine__get_running_kernel_start(machine, NULL, &start))
 		return -1;
@@ -1151,8 +1151,8 @@ static int machine__create_modules(struct machine *machine)
 int machine__create_kernel_maps(struct machine *machine)
 {
 	struct dso *kernel = machine__get_kernel(machine);
-	const char *name;
-	u64 addr;
+	const char *name = NULL;
+	u64 addr = 0;
 	int ret;
 
 	if (kernel == NULL)
