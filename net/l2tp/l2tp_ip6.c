@@ -602,6 +602,11 @@ static int l2tp_ip6_sendmsg(struct kiocb *iocb, struct sock *sk,
 
 	security_sk_classify_flow(sk, flowi6_to_flowi(&fl6));
 
+	if (tclass < 0)
+		tclass = np->tclass;
+
+	fl6.flowlabel = ip6_make_flowinfo(tclass, fl6.flowlabel);
+
 	dst = ip6_dst_lookup_flow(sk, &fl6, final_p);
 	if (IS_ERR(dst)) {
 		err = PTR_ERR(dst);
@@ -616,9 +621,6 @@ static int l2tp_ip6_sendmsg(struct kiocb *iocb, struct sock *sk,
 		if (hlimit < 0)
 			hlimit = ip6_dst_hoplimit(dst);
 	}
-
-	if (tclass < 0)
-		tclass = np->tclass;
 
 	if (dontfrag < 0)
 		dontfrag = np->dontfrag;

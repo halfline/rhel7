@@ -1279,6 +1279,11 @@ do_udp_sendmsg:
 
 	security_sk_classify_flow(sk, flowi6_to_flowi(&fl6));
 
+	if (tclass < 0)
+		tclass = np->tclass;
+
+	fl6.flowlabel = ip6_make_flowinfo(tclass, fl6.flowlabel);
+
 	dst = ip6_sk_dst_lookup_flow(sk, &fl6, final_p);
 	if (IS_ERR(dst)) {
 		err = PTR_ERR(dst);
@@ -1294,9 +1299,6 @@ do_udp_sendmsg:
 		if (hlimit < 0)
 			hlimit = ip6_dst_hoplimit(dst);
 	}
-
-	if (tclass < 0)
-		tclass = np->tclass;
 
 	if (msg->msg_flags&MSG_CONFIRM)
 		goto do_confirm;
