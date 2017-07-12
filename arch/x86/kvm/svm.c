@@ -925,6 +925,14 @@ static void svm_disable_lbrv(struct vcpu_svm *svm)
 	set_msr_interception(msrpm, MSR_IA32_LASTINTTOIP, 0, 0);
 }
 
+static void disable_nmi_singlestep(struct vcpu_svm *svm)
+{
+	svm->nmi_singlestep = false;
+	if (!(svm->vcpu.guest_debug & KVM_GUESTDBG_SINGLESTEP))
+		svm->vmcb->save.rflags &=
+			~(X86_EFLAGS_TF | X86_EFLAGS_RF);
+}
+
 static __init int svm_hardware_setup(void)
 {
 	int cpu;
@@ -1944,10 +1952,7 @@ static int db_interception(struct vcpu_svm *svm)
 	}
 
 	if (svm->nmi_singlestep) {
-		svm->nmi_singlestep = false;
-		if (!(svm->vcpu.guest_debug & KVM_GUESTDBG_SINGLESTEP))
-			svm->vmcb->save.rflags &=
-				~(X86_EFLAGS_TF | X86_EFLAGS_RF);
+		disable_nmi_singlestep(svm);
 	}
 
 	if (svm->vcpu.guest_debug &
