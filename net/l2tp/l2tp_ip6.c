@@ -128,6 +128,7 @@ static inline struct sock *l2tp_ip6_bind_lookup(struct net *net,
  */
 static int l2tp_ip6_recv(struct sk_buff *skb)
 {
+	struct net *net = dev_net(skb->dev);
 	struct sock *sk;
 	u32 session_id;
 	u32 tunnel_id;
@@ -155,7 +156,7 @@ static int l2tp_ip6_recv(struct sk_buff *skb)
 	}
 
 	/* Ok, this is a data packet. Lookup the session. */
-	session = l2tp_session_find(&init_net, NULL, session_id);
+	session = l2tp_session_find(net, NULL, session_id);
 	if (session == NULL)
 		goto discard;
 
@@ -186,7 +187,7 @@ pass_up:
 		goto discard;
 
 	tunnel_id = ntohl(*(__be32 *) &skb->data[4]);
-	tunnel = l2tp_tunnel_find(&init_net, tunnel_id);
+	tunnel = l2tp_tunnel_find(net, tunnel_id);
 	if (tunnel) {
 		sk = tunnel->sock;
 		sock_hold(sk);
@@ -195,7 +196,7 @@ pass_up:
 
 		read_lock_bh(&l2tp_ip6_lock);
 
-		sk = __l2tp_ip6_bind_lookup(&init_net, &iph->daddr, inet6_iif(skb),
+		sk = __l2tp_ip6_bind_lookup(net, &iph->daddr, inet6_iif(skb),
 					    tunnel_id);
 		if (!sk) {
 			read_unlock_bh(&l2tp_ip6_lock);
@@ -264,6 +265,7 @@ static int l2tp_ip6_bind(struct sock *sk, struct sockaddr *uaddr, int addr_len)
 	struct inet_sock *inet = inet_sk(sk);
 	struct ipv6_pinfo *np = inet6_sk(sk);
 	struct sockaddr_l2tpip6 *addr = (struct sockaddr_l2tpip6 *) uaddr;
+	struct net *net = sock_net(sk);
 	__be32 v4addr = 0;
 	int bound_dev_if;
 	int addr_type;
@@ -327,7 +329,7 @@ static int l2tp_ip6_bind(struct sock *sk, struct sockaddr *uaddr, int addr_len)
 	rcu_read_unlock();
 
 	write_lock_bh(&l2tp_ip6_lock);
-	if (__l2tp_ip6_bind_lookup(&init_net, &addr->l2tp_addr, bound_dev_if,
+	if (__l2tp_ip6_bind_lookup(net, &addr->l2tp_addr, bound_dev_if,
 				   addr->l2tp_conn_id)) {
 		write_unlock_bh(&l2tp_ip6_lock);
 		err = -EADDRINUSE;
@@ -452,7 +454,7 @@ static int l2tp_ip6_backlog_recv(struct sock *sk, struct sk_buff *skb)
 	return 0;
 
 drop:
-	IP_INC_STATS(&init_net, IPSTATS_MIB_INDISCARDS);
+	IP_INC_STATS(sock_net(sk), IPSTATS_MIB_INDISCARDS);
 	kfree_skb(skb);
 	return -1;
 }
