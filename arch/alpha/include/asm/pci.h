@@ -7,7 +7,6 @@
 #include <linux/dma-mapping.h>
 #include <asm/scatterlist.h>
 #include <asm/machvec.h>
-#include <asm-generic/pci-bridge.h>
 
 /*
  * The following structure is used to manage multiple PCI busses.

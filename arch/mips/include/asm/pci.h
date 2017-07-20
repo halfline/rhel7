@@ -89,7 +89,6 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
 #include <asm/scatterlist.h>
 #include <linux/string.h>
 #include <asm/io.h>
-#include <asm-generic/pci-bridge.h>
 
 struct pci_dev;
 

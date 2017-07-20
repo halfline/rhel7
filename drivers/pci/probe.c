@@ -14,7 +14,6 @@
 #include <linux/cpumask.h>
 #include <linux/pci-aspm.h>
 #include <linux/aer.h>
-#include <asm-generic/pci-bridge.h>
 #include <linux/pm_runtime.h>
 #include "pci.h"
 
