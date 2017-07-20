@@ -128,7 +128,7 @@ static u32 flow_get_mark(const struct sk_buff *skb)
 static u32 flow_get_nfct(const struct sk_buff *skb)
 {
 #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
-	return addr_fold(skb->nfct);
+	return addr_fold(skb_nfct(skb));
 #else
 	return 0;
 #endif
