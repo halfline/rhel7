@@ -67,9 +67,6 @@ extern void pcibios_set_master(struct pci_dev *dev);
 
 #ifdef CONFIG_PCI
 
-/* implement the pci_ DMA API in terms of the generic device dma_ one */
-#include <asm-generic/pci-dma-compat.h>
-
 static inline void pci_dma_burst_advice(struct pci_dev *pdev,
 					enum pci_dma_burst_strategy *strat,
 					unsigned long *strategy_parameter)

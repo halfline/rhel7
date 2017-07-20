@@ -8,7 +8,6 @@
 
 #include <linux/pci.h>
 #include <asm-generic/pci.h>
-#include <asm-generic/pci-dma-compat.h>
 #include <asm/pci_clp.h>
 #include <asm/pci_debug.h>
 
