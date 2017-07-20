@@ -2470,8 +2470,6 @@ config AMD_NB
 
 source "drivers/pcmcia/Kconfig"
 
-source "drivers/pci/hotplug/Kconfig"
-
 config RAPIDIO
 	bool "RapidIO support"
 	depends on PCI

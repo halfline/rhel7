@@ -2481,8 +2481,6 @@ config ZONE_DMA32
 
 source "drivers/pcmcia/Kconfig"
 
-source "drivers/pci/hotplug/Kconfig"
-
 config RAPIDIO
 	bool "RapidIO support"
 	depends on PCI

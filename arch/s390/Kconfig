@@ -547,7 +547,6 @@ config PCI_NR_FUNCTIONS
 	  this kernel will support.
 
 source "drivers/pci/Kconfig"
-source "drivers/pci/hotplug/Kconfig"
 
 endif	# PCI
 
