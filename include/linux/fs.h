@@ -993,6 +993,7 @@ static inline int file_check_writeable(struct file *filp)
 #define FL_SLEEP	128	/* A blocking lock */
 #define FL_DOWNGRADE_PENDING	256 /* Lease is being downgraded */
 #define FL_UNLOCK_PENDING	512 /* Lease is being broken */
+#define FL_FILE_PVT	1024	/* lock is private to the file */
 #define FL_LAYOUT	2048	/* outstanding pNFS layout */
 #define FL_LM_OPS_EXTEND	65536 /* safe to use lock_manager_operations_extend */
 
