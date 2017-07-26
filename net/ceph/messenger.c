@@ -7,6 +7,7 @@
 #include <linux/kthread.h>
 #include <linux/net.h>
 #include <linux/nsproxy.h>
+#include <linux/sched.h>
 #include <linux/slab.h>
 #include <linux/socket.h>
 #include <linux/string.h>
@@ -466,11 +467,16 @@ static int ceph_tcp_connect(struct ceph_connection *con)
 {
 	struct sockaddr_storage *paddr = &con->peer_addr.in_addr;
 	struct socket *sock;
+	unsigned int noio_flag;
 	int ret;
 
 	BUG_ON(con->sock);
+
+	/* __sock_create() allocates with GFP_KERNEL */
+	noio_flag = memalloc_noio_save();
 	ret = __sock_create(read_pnet(&con->msgr->net), paddr->ss_family,
 			    SOCK_STREAM, IPPROTO_TCP, &sock, 1);
+	memalloc_noio_restore(noio_flag);
 	if (ret)
 		return ret;
 	sock->sk->sk_allocation = GFP_NOFS;
