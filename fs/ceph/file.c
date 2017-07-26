@@ -1337,7 +1337,9 @@ again:
 		     inode, ceph_vinop(inode), pos, (unsigned)len,
 		     ceph_cap_string(got));
 
+		current->journal_info = filp;
 		ret = generic_file_aio_read(iocb, iov, nr_segs, pos);
+		current->journal_info = NULL;
 	}
 out:
 	dout("aio_read %p %llx.%llx dropping cap refs on %s = %d\n",
