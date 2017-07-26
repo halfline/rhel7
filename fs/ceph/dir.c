@@ -229,8 +229,6 @@ static int __dcache_readdir(struct file *filp,
 		spin_lock(&dentry->d_lock);
 		if (di->lease_shared_gen == shared_gen &&
 		    dentry->d_inode &&
-		    ceph_snap(dentry->d_inode) != CEPH_SNAPDIR &&
-		    ceph_ino(dentry->d_inode) != CEPH_INO_CEPH &&
 		    fpos_cmp(filp->f_pos, di->offset) <= 0) {
 			emit_dentry = true;
 		}
