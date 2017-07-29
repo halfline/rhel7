@@ -27,9 +27,9 @@
 
 #define gtod (&VVAR(vsyscall_gtod_data))
 
-notrace static cycle_t vread_tsc(void)
+notrace static u64 vread_tsc(void)
 {
-	cycle_t ret = (cycle_t)rdtsc_ordered();
+	u64 ret = (u64)rdtsc_ordered();
 	u64 last = VVAR(vsyscall_gtod_data).clock.cycle_last;
 
 	if (likely(ret >= last))
@@ -47,7 +47,7 @@ notrace static cycle_t vread_tsc(void)
 	return last;
 }
 
-static notrace cycle_t vread_hpet(void)
+static notrace u64 vread_hpet(void)
 {
 	return readl((const void __iomem *)fix_to_virt(VSYSCALL_HPET) + HPET_COUNTER);
 }
@@ -68,10 +68,10 @@ static notrace const struct pvclock_vsyscall_time_info *get_pvti(int cpu)
 	return &pvti_base[offset];
 }
 
-static notrace cycle_t vread_pvclock(int *mode)
+static notrace u64 vread_pvclock(int *mode)
 {
 	const struct pvclock_vsyscall_time_info *pvti;
-	cycle_t ret;
+	u64 ret;
 	u64 last;
 	u32 version;
 	u8 flags;
