@@ -1687,7 +1687,7 @@ struct net_device {
 /*
  * Cache lines mostly used on receive path (including eth_type_trans())
  */
-	unsigned long		last_rx;	/* Time of last Rx
+	RH_KABI_DEPRECATE(unsigned long, last_rx) /* Time of last Rx
 						 * This should not be set in
 						 * drivers, unless really needed,
 						 * because network stack (bonding)
