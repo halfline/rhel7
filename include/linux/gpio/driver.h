@@ -152,6 +152,7 @@ extern struct gpio_chip *gpiochip_find(void *data,
 /* lock/unlock as IRQ */
 int gpiod_lock_as_irq(struct gpio_desc *desc);
 void gpiod_unlock_as_irq(struct gpio_desc *desc);
+bool gpiochip_line_is_irq(struct gpio_chip *chip, unsigned int offset);
 
 /* get driver data */
 static inline void *gpiochip_get_data(struct gpio_chip *chip)

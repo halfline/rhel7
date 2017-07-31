@@ -1809,6 +1809,19 @@ int gpiochip_add_pin_range(struct gpio_chip *chip, const char *pinctl_name,
 }
 EXPORT_SYMBOL_GPL(gpiochip_add_pin_range);
 
+bool gpiochip_line_is_irq(struct gpio_chip *chip, unsigned int offset)
+{
+	struct gpio_desc *desc;
+
+	if (offset >= chip->ngpio)
+		return false;
+
+	desc = &chip->desc[offset];
+
+	return test_bit(FLAG_USED_AS_IRQ, &desc->flags);
+}
+EXPORT_SYMBOL_GPL(gpiochip_line_is_irq);
+
 /**
  * gpiochip_remove_pin_ranges() - remove all the GPIO <-> pin mappings
  * @chip: the chip to remove all the mappings for
