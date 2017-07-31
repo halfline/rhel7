@@ -71,6 +71,7 @@ struct gpio_chip {
 	struct gpio_device	*gpiodev;
 	struct device		*dev;
 	struct module		*owner;
+	void			*data;
 
 	int			(*request)(struct gpio_chip *chip,
 						unsigned offset);
@@ -139,7 +140,11 @@ extern const char *gpiochip_is_requested(struct gpio_chip *chip,
 			unsigned offset);
 
 /* add/remove chips */
-extern int gpiochip_add(struct gpio_chip *chip);
+extern int gpiochip_add_data(struct gpio_chip *chip, void *data);
+static inline int gpiochip_add(struct gpio_chip *chip)
+{
+	return gpiochip_add_data(chip, NULL);
+}
 extern int gpiochip_remove(struct gpio_chip *chip);
 extern struct gpio_chip *gpiochip_find(void *data,
 			      int (*match)(struct gpio_chip *chip, void *data));
@@ -147,6 +152,12 @@ extern struct gpio_chip *gpiochip_find(void *data,
 /* lock/unlock as IRQ */
 int gpiod_lock_as_irq(struct gpio_desc *desc);
 void gpiod_unlock_as_irq(struct gpio_desc *desc);
+
+/* get driver data */
+static inline void *gpiochip_get_data(struct gpio_chip *chip)
+{
+	return chip->data;
+}
 
 enum gpio_lookup_flags {
 	GPIO_ACTIVE_HIGH = (0 << 0),

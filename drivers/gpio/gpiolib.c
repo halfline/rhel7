@@ -1197,7 +1197,7 @@ static void gpiodevice_release(struct device *dev)
 }
 
 /**
- * gpiochip_add() - register a gpio_chip
+ * gpiochip_add_data() - register a gpio_chip
  * @chip: the chip to register, with chip->base initialized
  * Context: potentially before irqs will work
  *
@@ -1205,7 +1205,7 @@ static void gpiodevice_release(struct device *dev)
  * because the chip->base is invalid or already associated with a
  * different chip.  Otherwise it returns zero as a success code.
  *
- * When gpiochip_add() is called very early during boot, so that GPIOs
+ * When gpiochip_add_data() is called very early during boot, so that GPIOs
  * can be freely used, the chip->dev device must be registered before
  * the gpio framework's arch_initcall().  Otherwise sysfs initialization
  * for GPIOs will fail rudely.
@@ -1213,7 +1213,7 @@ static void gpiodevice_release(struct device *dev)
  * If chip->base is negative, this requests dynamic assignment of
  * a range of valid GPIOs.
  */
-int gpiochip_add(struct gpio_chip *chip)
+int gpiochip_add_data(struct gpio_chip *chip, void *data)
 {
 	unsigned long	flags;
 	int		status = 0;
@@ -1266,6 +1266,8 @@ int gpiochip_add(struct gpio_chip *chip)
 	}
 
 	/* FIXME: move driver data into gpio_device dev_set_drvdata() */
+
+	chip->data = data;
 
 	if (chip->ngpio == 0) {
 		chip_err(chip, "tried to insert a GPIO chip with zero lines\n");
@@ -1355,7 +1357,7 @@ err_free_gdev:
 		chip->label ? : "generic");
 	return status;
 }
-EXPORT_SYMBOL_GPL(gpiochip_add);
+EXPORT_SYMBOL_GPL(gpiochip_add_data);
 
 /* Forward-declaration */
 static void gpiochip_irqchip_remove(struct gpio_chip *gpiochip);
