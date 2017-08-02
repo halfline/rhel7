@@ -19,7 +19,46 @@
 #include <asm/efi.h>
 
 /*
- * As per commit ef68c8f87ed1 ("x86: Serialize EFI time accesses on rtc_lock"),
+ * Arch code can implement the following three template macros, avoiding
+ * reptition for the void/non-void return cases of {__,}efi_call_virt:
+ *
+ *  * arch_efi_call_virt_setup
+ *
+ *    Sets up the environment for the call (e.g. switching page tables,
+ *    allowing kernel-mode use of floating point, if required).
+ *
+ *  * arch_efi_call_virt
+ *
+ *    Performs the call. The last expression in the macro must be the call
+ *    itself, allowing the logic to be shared by the void and non-void
+ *    cases.
+ *
+ *  * arch_efi_call_virt_teardown
+ *
+ *    Restores the usual kernel environment once the call has returned.
+ */
+
+#ifndef efi_call_virt
+#define efi_call_virt(f, args...)					\
+({									\
+	efi_status_t __s;						\
+	arch_efi_call_virt_setup();					\
+	__s = arch_efi_call_virt(f, args);				\
+	arch_efi_call_virt_teardown();					\
+	__s;								\
+})
+#endif
+
+#ifndef __efi_call_virt
+#define __efi_call_virt(f, args...)					\
+({									\
+	arch_efi_call_virt_setup();					\
+	arch_efi_call_virt(f, args);					\
+	arch_efi_call_virt_teardown();					\
+})
+#endif
+
+/* As per commit ef68c8f87ed1 ("x86: Serialize EFI time accesses on rtc_lock"),
  * the EFI specification requires that callers of the time related runtime
  * functions serialize with other CMOS accesses in the kernel, as the EFI time
  * functions may choose to also use the legacy CMOS RTC.
