@@ -1222,4 +1222,5 @@ static inline int efi_runtime_map_copy(void *buf, size_t bufsz)
 
 #endif
 
+bool efi_runtime_disabled(void);
 #endif /* _LINUX_EFI_H */
