@@ -19,40 +19,29 @@
 #include <asm/efi.h>
 
 /*
- * Arch code can implement the following three template macros, avoiding
- * reptition for the void/non-void return cases of {__,}efi_call_virt:
- *
- *  * arch_efi_call_virt_setup
- *
- *    Sets up the environment for the call (e.g. switching page tables,
- *    allowing kernel-mode use of floating point, if required).
- *
- *  * arch_efi_call_virt
- *
- *    Performs the call. The last expression in the macro must be the call
- *    itself, allowing the logic to be shared by the void and non-void
- *    cases.
- *
- *  * arch_efi_call_virt_teardown
- *
- *    Restores the usual kernel environment once the call has returned.
+ * Wrap around the new efi_call_virt_generic() macros so that the
+ * code doesn't get too cluttered:
  */
+#define efi_call_virt(f, args...)   \
+	efi_call_virt_pointer(efi.systab->runtime, f, args)
+#define __efi_call_virt(f, args...) \
+	__efi_call_virt_pointer(efi.systab->runtime, f, args)
 
-#define efi_call_virt(f, args...)					\
-({									\
-	efi_status_t __s;						\
-	arch_efi_call_virt_setup();					\
-	__s = arch_efi_call_virt(f, args);				\
-	arch_efi_call_virt_teardown();					\
-	__s;								\
-})
+void efi_call_virt_check_flags(unsigned long flags, const char *call)
+{
+	unsigned long cur_flags, mismatch;
 
-#define __efi_call_virt(f, args...)					\
-({									\
-	arch_efi_call_virt_setup();					\
-	arch_efi_call_virt(f, args);					\
-	arch_efi_call_virt_teardown();					\
-})
+	local_save_flags(cur_flags);
+
+	mismatch = flags ^ cur_flags;
+	if (!WARN_ON_ONCE(mismatch & ARCH_EFI_IRQ_FLAGS_MASK))
+		return;
+
+	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_NOW_UNRELIABLE);
+	pr_err_ratelimited(FW_BUG "IRQ flags corrupted (0x%08lx=>0x%08lx) by EFI %s\n",
+			   flags, cur_flags, call);
+	local_irq_restore(flags);
+}
 
 /* As per commit ef68c8f87ed1 ("x86: Serialize EFI time accesses on rtc_lock"),
  * the EFI specification requires that callers of the time related runtime
