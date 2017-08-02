@@ -3,6 +3,7 @@
 
 #include <asm/i387.h>
 #include <asm/pgtable.h>
+#include <asm/processor-flags.h>
 #include <asm/tlb.h>
 
 /*
@@ -26,8 +27,9 @@
 #define EFI32_LOADER_SIGNATURE	"EL32"
 #define EFI64_LOADER_SIGNATURE	"EL64"
 
-#ifdef CONFIG_X86_32
+#define ARCH_EFI_IRQ_FLAGS_MASK	X86_EFLAGS_IF
 
+#ifdef CONFIG_X86_32
 
 extern unsigned long asmlinkage efi_call_phys(void *, ...);
 
