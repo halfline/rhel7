@@ -1427,9 +1427,7 @@ static void __init uv_system_init_hub(void)
 	}
 	pr_info("UV: Found %s hub\n", hub);
 
-	/* We now only need to map the MMRs on UV1 */
-	if (is_uv1_hub())
-		map_low_mmrs();
+	map_low_mmrs();
 
 	uv_bios_init();			/* get uv_systab for decoding */
 	if (decode_uv_systab() < 0)
