@@ -68,8 +68,6 @@ struct efi_memory_map memmap;
 static struct efi efi_phys __initdata;
 static efi_system_table_t efi_systab __initdata;
 
-unsigned long x86_efi_facility;
-
 static efi_config_table_type_t arch_tables[] __initdata = {
 #ifdef CONFIG_X86_UV
 	{UV_SYSTEM_TABLE_GUID, "UVsystab", &efi.uv_systab},
@@ -78,15 +76,6 @@ static efi_config_table_type_t arch_tables[] __initdata = {
 };
 
 u64 efi_setup;		/* efi setup_data physical address */
-
-/*
- * Returns 1 if 'facility' is enabled, 0 otherwise.
- */
-int efi_enabled(int facility)
-{
-	return test_bit(facility, &x86_efi_facility) != 0;
-}
-EXPORT_SYMBOL(efi_enabled);
 
 static bool disable_runtime __initdata = false;
 static int __init setup_noefi(char *arg)
@@ -460,7 +449,7 @@ void __init efi_reserve_boot_services(void)
 
 void __init efi_unmap_memmap(void)
 {
-	clear_bit(EFI_MEMMAP, &x86_efi_facility);
+	clear_bit(EFI_MEMMAP, &efi.flags);
 	if (memmap.map) {
 		early_iounmap(memmap.map, memmap.nr_map * memmap.desc_size);
 		memmap.map = NULL;
@@ -757,7 +746,7 @@ void __init efi_init(void)
 	if (efi_systab_init(efi_phys.systab))
 		return;
 
-	set_bit(EFI_SYSTEM_TABLES, &x86_efi_facility);
+	set_bit(EFI_SYSTEM_TABLES, &efi.flags);
 
 	efi.config_table = (unsigned long)efi.systab->tables;
 	efi.fw_vendor	 = (unsigned long)efi.systab->fw_vendor;
@@ -785,7 +774,7 @@ void __init efi_init(void)
 	if (efi_config_init(arch_tables))
 		return;
 
-	set_bit(EFI_CONFIG_TABLES, &x86_efi_facility);
+	set_bit(EFI_CONFIG_TABLES, &efi.flags);
 
 	/*
 	 * Note: We currently don't support runtime services on an EFI
@@ -797,13 +786,13 @@ void __init efi_init(void)
 	else {
 		if (disable_runtime || efi_runtime_init())
 			return;
-		set_bit(EFI_RUNTIME_SERVICES, &x86_efi_facility);
+		set_bit(EFI_RUNTIME_SERVICES, &efi.flags);
 	}
 
 	if (efi_memmap_init())
 		return;
 
-	set_bit(EFI_MEMMAP, &x86_efi_facility);
+	set_bit(EFI_MEMMAP, &efi.flags);
 
 #ifdef CONFIG_X86_32
 	if (efi_is_native()) {
@@ -1407,7 +1396,7 @@ static int __init parse_efi_cmdline(char *str)
 		str++;
 
 	if (!strncmp(str, "old_map", 7))
-		set_bit(EFI_OLD_MEMMAP, &x86_efi_facility);
+		set_bit(EFI_OLD_MEMMAP, &efi.flags);
 
 	return 0;
 }
@@ -1429,5 +1418,5 @@ void __init efi_apply_memmap_quirks(void)
 	 * UV doesn't support the new EFI pagetable mapping yet.
 	 */
 	if (is_uv_system())
-		set_bit(EFI_OLD_MEMMAP, &x86_efi_facility);
+		set_bit(EFI_OLD_MEMMAP, &efi.flags);
 }

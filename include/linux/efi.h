@@ -853,6 +853,8 @@ extern struct efi {
 	RH_KABI_EXTEND(unsigned long smbios3)
 	/* ESRT table */
 	RH_KABI_EXTEND(unsigned long esrt)
+	/* EFI facility flags */
+	RH_KABI_EXTEND(unsigned long flags)
 } efi;
 
 static inline int
@@ -954,17 +956,24 @@ extern int __init efi_setup_pcdp_console(char *);
 
 #ifdef CONFIG_EFI
 # ifdef CONFIG_X86
-extern int efi_enabled(int facility);
-# else
-static inline int efi_enabled(int facility)
+
+/*
+ * Test whether the above EFI_* bits are enabled.
+ */
+static inline bool efi_enabled(int feature)
 {
-	return 1;
+	return test_bit(feature, &efi.flags) != 0;
+}
+# else
+static inline bool efi_enabled(int feature)
+{
+	return true;
 }
 # endif
 #else
-static inline int efi_enabled(int facility)
+static inline bool efi_enabled(int feature)
 {
-	return 0;
+	return false;
 }
 #endif
 
