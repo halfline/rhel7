@@ -38,7 +38,6 @@
  *    Restores the usual kernel environment once the call has returned.
  */
 
-#ifndef efi_call_virt
 #define efi_call_virt(f, args...)					\
 ({									\
 	efi_status_t __s;						\
@@ -47,16 +46,13 @@
 	arch_efi_call_virt_teardown();					\
 	__s;								\
 })
-#endif
 
-#ifndef __efi_call_virt
 #define __efi_call_virt(f, args...)					\
 ({									\
 	arch_efi_call_virt_setup();					\
 	arch_efi_call_virt(f, args);					\
 	arch_efi_call_virt_teardown();					\
 })
-#endif
 
 /* As per commit ef68c8f87ed1 ("x86: Serialize EFI time accesses on rtc_lock"),
  * the EFI specification requires that callers of the time related runtime
