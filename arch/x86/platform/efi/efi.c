@@ -355,7 +355,7 @@ static void __init do_add_efi_memmap(void)
 int __init efi_memblock_x86_reserve_range(void)
 {
 	struct efi_info *e = &boot_params.efi_info;
-	unsigned long pmap;
+	phys_addr_t pmap;
 
 #ifdef CONFIG_X86_32
 	/* Can't handle data above 4GB at this time */
@@ -367,7 +367,7 @@ int __init efi_memblock_x86_reserve_range(void)
 #else
 	pmap = (e->efi_memmap |	((__u64)e->efi_memmap_hi << 32));
 #endif
-	memmap.phys_map		= (void *)pmap;
+	memmap.phys_map		= pmap;
 	memmap.nr_map		= e->efi_memmap_size /
 				  e->efi_memdesc_size;
 	memmap.desc_size	= e->efi_memdesc_size;

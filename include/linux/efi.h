@@ -677,7 +677,7 @@ typedef struct {
 } efi_system_table_t;
 
 struct efi_memory_map {
-	void *phys_map;
+	RH_KABI_REPLACE(void *phys_map, phys_addr_t phys_map)
 	void *map;
 	void *map_end;
 	int nr_map;
