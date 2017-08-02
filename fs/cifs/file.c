@@ -479,9 +479,9 @@ int cifs_open(struct inode *inode, struct file *file)
 	if (file->f_flags & O_DIRECT &&
 	    cifs_sb->mnt_cifs_flags & CIFS_MOUNT_STRICT_IO) {
 		if (cifs_sb->mnt_cifs_flags & CIFS_MOUNT_NO_BRL)
-			file->f_op = &cifs_file_direct_nobrl_ops;
+			file->f_op = &cifs_file_direct_nobrl_ops.kabi_fops;
 		else
-			file->f_op = &cifs_file_direct_ops;
+			file->f_op = &cifs_file_direct_ops.kabi_fops;
 	}
 
 	if (server->oplocks)
