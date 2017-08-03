@@ -393,6 +393,11 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
 {
 	struct qla_tgt_cmd *cmd = container_of(work, struct qla_tgt_cmd, work);
 
+	cmd->cmd_in_wq = 0;
+
+	WARN_ON(cmd->cmd_flags &  BIT_16);
+
+	cmd->cmd_flags |= BIT_16;
 	transport_generic_free_cmd(&cmd->se_cmd, 0);
 }
 
@@ -403,6 +408,7 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
  */
 static void tcm_qla2xxx_free_cmd(struct qla_tgt_cmd *cmd)
 {
+	cmd->cmd_in_wq = 1;
 	INIT_WORK(&cmd->work, tcm_qla2xxx_complete_free);
 	queue_work(tcm_qla2xxx_free_wq, &cmd->work);
 }
@@ -412,6 +418,13 @@ static void tcm_qla2xxx_free_cmd(struct qla_tgt_cmd *cmd)
  */
 static int tcm_qla2xxx_check_stop_free(struct se_cmd *se_cmd)
 {
+	struct qla_tgt_cmd *cmd;
+
+	if ((se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB) == 0) {
+		cmd = container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
+		cmd->cmd_flags |= BIT_14;
+	}
+
 	return target_put_sess_cmd(se_cmd);
 }
 
@@ -600,6 +613,8 @@ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
 	 * Ensure that the complete FCP WRITE payload has been received.
 	 * Otherwise return an exception via CHECK_CONDITION status.
 	 */
+	cmd->cmd_in_wq = 0;
+	cmd->cmd_flags |= BIT_11;
 	if (!cmd->write_data_transferred) {
 		/*
 		 * Check if se_cmd has already been aborted via LUN_RESET, and
@@ -628,6 +643,8 @@ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
  */
 static void tcm_qla2xxx_handle_data(struct qla_tgt_cmd *cmd)
 {
+	cmd->cmd_flags |= BIT_10;
+	cmd->cmd_in_wq = 1;
 	INIT_WORK(&cmd->work, tcm_qla2xxx_handle_data_work);
 	queue_work(tcm_qla2xxx_free_wq, &cmd->work);
 }
@@ -671,6 +688,7 @@ static int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
 	struct qla_tgt_cmd *cmd = container_of(se_cmd,
 				struct qla_tgt_cmd, se_cmd);
 
+	cmd->cmd_flags |= BIT_4;
 	cmd->bufflen = se_cmd->data_length;
 	cmd->dma_data_direction = tcm_qla2xxx_mapping_dir(se_cmd);
 	cmd->aborted = (se_cmd->transport_state & CMD_T_ABORTED);
@@ -678,6 +696,7 @@ static int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
 	cmd->sg_cnt = se_cmd->t_data_nents;
 	cmd->sg = se_cmd->t_data_sg;
 	cmd->offset = 0;
+	cmd->cmd_flags |= BIT_3;
 
 	cmd->prot_sg_cnt = se_cmd->t_prot_nents;
 	cmd->prot_sg = se_cmd->t_prot_sg;
@@ -703,6 +722,11 @@ static int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
 	cmd->offset = 0;
 	cmd->dma_data_direction = tcm_qla2xxx_mapping_dir(se_cmd);
 	cmd->aborted = (se_cmd->transport_state & CMD_T_ABORTED);
+	if (cmd->cmd_flags & BIT_5) {
+		pr_crit("Bit_5 already set for cmd = %p.\n", cmd);
+		dump_stack();
+	}
+	cmd->cmd_flags |= BIT_5;
 
 	if (se_cmd->data_direction == DMA_FROM_DEVICE) {
 		/*
