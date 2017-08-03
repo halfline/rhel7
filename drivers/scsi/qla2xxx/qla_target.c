@@ -4851,6 +4851,9 @@ int qlt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
 	tgt->datasegs_per_cmd = QLA_TGT_DATASEGS_PER_CMD_24XX;
 	tgt->datasegs_per_cont = QLA_TGT_DATASEGS_PER_CONT_24XX;
 
+	if (base_vha->fc_vport)
+		return 0;
+
 	mutex_lock(&qla_tgt_mutex);
 	list_add_tail(&tgt->tgt_list_entry, &qla_tgt_glist);
 	mutex_unlock(&qla_tgt_mutex);
@@ -4864,6 +4867,10 @@ int qlt_remove_target(struct qla_hw_data *ha, struct scsi_qla_host *vha)
 	if (!vha->vha_tgt.qla_tgt)
 		return 0;
 
+	if (vha->fc_vport) {
+		qlt_release(vha->vha_tgt.qla_tgt);
+		return 0;
+	}
 	mutex_lock(&qla_tgt_mutex);
 	list_del(&vha->vha_tgt.qla_tgt->tgt_list_entry);
 	mutex_unlock(&qla_tgt_mutex);
@@ -4932,6 +4939,12 @@ int qlt_lport_register(void *target_lport_ptr, u64 phys_wwpn,
 		if ((!npiv_wwpn || !npiv_wwnn) && host->active_mode & MODE_TARGET) {
 			pr_debug("MODE_TARGET already active on qla2xxx(%d)\n",
 			    host->host_no);
+			spin_unlock_irqrestore(&ha->hardware_lock, flags);
+			continue;
+		}
+		if (tgt->tgt_stop) {
+			pr_debug("MODE_TARGET in shutdown on qla2xxx(%d)\n",
+				 host->host_no);
 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
 			continue;
 		}
