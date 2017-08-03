@@ -1261,6 +1261,7 @@ static void qlt_24xx_send_task_mgmt_ctio(struct scsi_qla_host *ha,
 {
 	struct atio_from_isp *atio = &mcmd->orig_iocb.atio;
 	struct ctio7_to_24xx *ctio;
+	uint16_t temp;
 
 	ql_dbg(ql_dbg_tgt, ha, 0xe008,
 	    "Sending task mgmt CTIO7 (ha=%p, atio=%p, resp_code=%x\n",
@@ -1290,7 +1291,8 @@ static void qlt_24xx_send_task_mgmt_ctio(struct scsi_qla_host *ha,
 	ctio->exchange_addr = atio->u.isp24.exchange_addr;
 	ctio->u.status1.flags = (atio->u.isp24.attr << 9) |
 	    cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS);
-	ctio->u.status1.ox_id = cpu_to_le16(atio->u.isp24.fcp_hdr.ox_id);
+	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
+	ctio->u.status1.ox_id = cpu_to_le16(temp);
 	ctio->u.status1.scsi_status =
 	    cpu_to_le16(SS_RESPONSE_INFO_LEN_VALID);
 	ctio->u.status1.response_len = cpu_to_le16(8);
@@ -1511,6 +1513,7 @@ static int qlt_24xx_build_ctio_pkt(struct qla_tgt_prm *prm,
 	struct ctio7_to_24xx *pkt;
 	struct qla_hw_data *ha = vha->hw;
 	struct atio_from_isp *atio = &prm->cmd->atio;
+	uint16_t temp;
 
 	pkt = (struct ctio7_to_24xx *)vha->req->ring_ptr;
 	prm->pkt = pkt;
@@ -1539,13 +1542,13 @@ static int qlt_24xx_build_ctio_pkt(struct qla_tgt_prm *prm,
 	pkt->initiator_id[2] = atio->u.isp24.fcp_hdr.s_id[0];
 	pkt->exchange_addr = atio->u.isp24.exchange_addr;
 	pkt->u.status0.flags |= (atio->u.isp24.attr << 9);
-	pkt->u.status0.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
+	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
+	pkt->u.status0.ox_id = cpu_to_le16(temp);
 	pkt->u.status0.relative_offset = cpu_to_le32(prm->cmd->offset);
 
 	ql_dbg(ql_dbg_tgt, vha, 0xe00c,
 	    "qla_target(%d): handle(cmd) -> %08x, timeout %d, ox_id %#x\n",
-	    vha->vp_idx, pkt->handle, QLA_TGT_TIMEOUT,
-	    le16_to_cpu(pkt->u.status0.ox_id));
+	    vha->vp_idx, pkt->handle, QLA_TGT_TIMEOUT, temp);
 	return 0;
 }
 
@@ -2598,6 +2601,7 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
 	struct qla_hw_data *ha = vha->hw;
 	request_t *pkt;
 	int ret = 0;
+	uint16_t temp;
 
 	ql_dbg(ql_dbg_tgt, vha, 0xe01c, "Sending TERM EXCH CTIO (ha=%p)\n", ha);
 
@@ -2634,7 +2638,8 @@ static int __qlt_send_term_exchange(struct scsi_qla_host *vha,
 	ctio24->u.status1.flags = (atio->u.isp24.attr << 9) |
 	    cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 |
 		CTIO7_FLAGS_TERMINATE);
-	ctio24->u.status1.ox_id = swab16(atio->u.isp24.fcp_hdr.ox_id);
+	temp = be16_to_cpu(atio->u.isp24.fcp_hdr.ox_id);
+	ctio24->u.status1.ox_id = cpu_to_le16(temp);
 
 	/* Most likely, it isn't needed */
 	ctio24->u.status1.residual = get_unaligned((uint32_t *)
