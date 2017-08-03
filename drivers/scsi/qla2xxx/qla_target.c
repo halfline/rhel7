@@ -2997,7 +2997,7 @@ qlt_abort_cmd_on_host_reset(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd)
 		dump_stack();
 	}
 
-	cmd->cmd_flags |= BIT_12;
+	cmd->cmd_flags |= BIT_17;
 	ha->tgt.tgt_ops->free_cmd(cmd);
 }
 
@@ -3159,7 +3159,7 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha, uint32_t handle,
 skip_term:
 
 	if (cmd->state == QLA_TGT_STATE_PROCESSED) {
-		;
+		cmd->cmd_flags |= BIT_12;
 	} else if (cmd->state == QLA_TGT_STATE_NEED_DATA) {
 		cmd->state = QLA_TGT_STATE_DATA_IN;
 
@@ -3169,9 +3169,11 @@ skip_term:
 		ha->tgt.tgt_ops->handle_data(cmd);
 		return;
 	} else if (cmd->state == QLA_TGT_STATE_ABORTED) {
+		cmd->cmd_flags |= BIT_18;
 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf01e,
 		    "Aborted command %p (tag %d) finished\n", cmd, cmd->tag);
 	} else {
+		cmd->cmd_flags |= BIT_19;
 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf05c,
 		    "qla_target(%d): A command in state (%d) should "
 		    "not return a CTIO complete\n", vha->vp_idx, cmd->state);
@@ -3182,7 +3184,6 @@ skip_term:
 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf01f, "Finishing failed CTIO\n");
 		dump_stack();
 	}
-
 
 	ha->tgt.tgt_ops->free_cmd(cmd);
 }
