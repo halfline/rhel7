@@ -24,7 +24,7 @@ FILTERDIFF:=/usr/bin/filterdiff -x '*redhat/*' -x '*/.gitignore' -x '*/makefile'
 #	0 : pre-release (devel) secureboot keys are used for signing
 #	1 : release (RC/GA) secureboot keys are used for signing
 #
-RELEASED_KERNEL:=1
+RELEASED_KERNEL:=0
 
 STAMP_VERSION:=$(KVERSION)
 
