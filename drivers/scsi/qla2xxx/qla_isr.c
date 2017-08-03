@@ -3075,14 +3075,13 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
 			if (QLA_TGT_MODE_ENABLED())
 				ha->max_req_queues--;
 
-			ha->max_rsp_queues = ha->max_req_queues;
+			ha->max_rsp_queues = ha->msix_count - 1;
 
 			ha->max_qpairs = ha->max_req_queues - 1;
 			ql_dbg_pci(ql_dbg_init, ha->pdev, 0x0190,
 				"Adjusted Max no of queues pairs: %d.\n",
 					ha->max_qpairs);
 		}
-
 	}
 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
 				ha->msix_count, GFP_KERNEL);

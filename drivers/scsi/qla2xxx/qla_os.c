@@ -431,6 +431,9 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
 
 	spin_lock_irqsave(&ha->hardware_lock, flags);
 	for (cnt = 0; cnt < ha->max_req_queues; cnt++) {
+		if (!test_bit(cnt, ha->req_qid_map))
+			continue;
+
 		req = ha->req_q_map[cnt];
 		clear_bit(cnt, ha->req_qid_map);
 		ha->req_q_map[cnt] = NULL;
@@ -446,6 +449,9 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
 
 	spin_lock_irqsave(&ha->hardware_lock, flags);
 	for (cnt = 0; cnt < ha->max_rsp_queues; cnt++) {
+		if (!test_bit(cnt, ha->rsp_qid_map))
+			continue;
+
 		rsp = ha->rsp_q_map[cnt];
 		clear_bit(cnt, ha->rsp_qid_map);
 		ha->rsp_q_map[cnt] =  NULL;
