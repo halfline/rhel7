@@ -70,7 +70,7 @@
  * |                              |                    | 0xd101-0xd1fe	|
  * |                              |                    | 0xd213-0xd2fe	|
  * | Target Mode		  |	  0xe079       | 0xe021		|
- * | Target Mode Management	  |	  0xf080       | 0xf002		|
+ * | Target Mode Management	  |	  0xf083       | 0xf002		|
  * |                              |                    | 0xf046-0xf049  |
  * | Target Mode Task Management  |	  0x1000b      |		|
  * ----------------------------------------------------------------------
