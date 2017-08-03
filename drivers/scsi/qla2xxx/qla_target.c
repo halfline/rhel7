@@ -112,6 +112,7 @@ static void qlt_abort_cmd_on_host_reset(struct scsi_qla_host *vha,
 	struct qla_tgt_cmd *cmd);
 static void qlt_alloc_qfull_cmd(struct scsi_qla_host *vha,
 	struct atio_from_isp *atio, uint16_t status, int qfull);
+static void qlt_disable_vha(struct scsi_qla_host *vha);
 /*
  * Global Variables
  */
@@ -210,7 +211,7 @@ static inline void qlt_decr_num_pend_cmds(struct scsi_qla_host *vha)
 	spin_unlock_irqrestore(&vha->hw->tgt.q_full_lock, flags);
 }
 
-void qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+static void qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
 	struct atio_from_isp *atio)
 {
 	ql_dbg(ql_dbg_tgt, vha, 0xe072,
@@ -5325,7 +5326,7 @@ void qlt_lport_deregister(struct scsi_qla_host *vha)
 EXPORT_SYMBOL(qlt_lport_deregister);
 
 /* Must be called under HW lock */
-void qlt_set_mode(struct scsi_qla_host *vha)
+static void qlt_set_mode(struct scsi_qla_host *vha)
 {
 	struct qla_hw_data *ha = vha->hw;
 
@@ -5346,7 +5347,7 @@ void qlt_set_mode(struct scsi_qla_host *vha)
 }
 
 /* Must be called under HW lock */
-void qlt_clear_mode(struct scsi_qla_host *vha)
+static void qlt_clear_mode(struct scsi_qla_host *vha)
 {
 	struct qla_hw_data *ha = vha->hw;
 
@@ -5410,8 +5411,7 @@ EXPORT_SYMBOL(qlt_enable_vha);
  *
  * Disable Target Mode and reset the adapter
  */
-void
-qlt_disable_vha(struct scsi_qla_host *vha)
+static void qlt_disable_vha(struct scsi_qla_host *vha)
 {
 	struct qla_hw_data *ha = vha->hw;
 	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
