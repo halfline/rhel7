@@ -1629,6 +1629,7 @@ struct smb_version_operations smb20_operations = {
 	.copychunk_range = smb2_copychunk_range,
 	.wp_retry_size = smb2_wp_retry_size,
 	.dir_needs_close = smb2_dir_needs_close,
+	.select_sectype = smb2_select_sectype,
 };
 
 struct smb_version_operations smb21_operations = {
@@ -1710,6 +1711,7 @@ struct smb_version_operations smb21_operations = {
 	.wp_retry_size = smb2_wp_retry_size,
 	.dir_needs_close = smb2_dir_needs_close,
 	.enum_snapshots = smb3_enum_snapshots,
+	.select_sectype = smb2_select_sectype,
 };
 
 struct smb_version_operations smb30_operations = {
@@ -1797,6 +1799,7 @@ struct smb_version_operations smb30_operations = {
 	.dir_needs_close = smb2_dir_needs_close,
 	.fallocate = smb3_fallocate,
 	.enum_snapshots = smb3_enum_snapshots,
+	.select_sectype = smb2_select_sectype,
 };
 
 #ifdef CONFIG_CIFS_SMB311
@@ -1885,6 +1888,7 @@ struct smb_version_operations smb311_operations = {
 	.dir_needs_close = smb2_dir_needs_close,
 	.fallocate = smb3_fallocate,
 	.enum_snapshots = smb3_enum_snapshots,
+	.select_sectype = smb2_select_sectype,
 };
 #endif /* CIFS_SMB311 */
 

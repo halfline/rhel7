@@ -435,6 +435,9 @@ struct smb_version_operations {
 	bool (*dir_needs_close)(struct cifsFileInfo *);
 	long (*fallocate)(struct file *, struct cifs_tcon *, int, loff_t,
 			  loff_t);
+	enum securityEnum (*select_sectype)(struct TCP_Server_Info *,
+			    enum securityEnum);
+
 };
 
 struct smb_version_values {
