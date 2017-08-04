@@ -2303,6 +2303,8 @@ static int __init tcm_qla2xxx_init(void)
 {
 	int ret;
 
+	mark_tech_preview("QLA2XXX Target Mode Operation", THIS_MODULE);
+
 	ret = tcm_qla2xxx_register_configfs();
 	if (ret < 0)
 		return ret;
