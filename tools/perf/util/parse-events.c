@@ -1245,7 +1245,7 @@ static void perf_pmu__parse_cleanup(void)
 
 		for (i = 0; i < perf_pmu_events_list_num; i++) {
 			p = perf_pmu_events_list + i;
-			free(p->symbol);
+			zfree(&p->symbol);
 		}
 		zfree(&perf_pmu_events_list);
 		perf_pmu_events_list_num = 0;
@@ -1336,7 +1336,7 @@ perf_pmu__parse_check(const char *name)
 	r = bsearch(&p, perf_pmu_events_list,
 			(size_t) perf_pmu_events_list_num,
 			sizeof(struct perf_pmu_event_symbol), comp_pmu);
-	free(p.symbol);
+	zfree(&p.symbol);
 	return r ? r->type : PMU_EVENT_SYMBOL_ERR;
 }
 
@@ -1482,8 +1482,8 @@ static void parse_events_print_error(struct parse_events_error *err,
 		fprintf(stderr, "%*s\\___ %s\n", idx + 1, "", err->str);
 		if (err->help)
 			fprintf(stderr, "\n%s\n", err->help);
-		free(err->str);
-		free(err->help);
+		zfree(&err->str);
+		zfree(&err->help);
 	}
 
 	fprintf(stderr, "Run 'perf list' for a list of valid events\n");
