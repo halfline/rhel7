@@ -74,7 +74,7 @@ struct fgraph_data {
 #define TRACE_GRAPH_PRINT_ABS_TIME	0x20
 #define TRACE_GRAPH_PRINT_IRQS		0x40
 
-static unsigned int max_depth;
+unsigned int fgraph_max_depth;
 
 static struct tracer_opt trace_opts[] = {
 	/* Display overruns? (for self-debug purpose) */
@@ -227,7 +227,7 @@ unsigned long ftrace_return_to_handler(unsigned long frame_pointer)
 	/*
 	 * The trace should run after decrementing the ret counter
 	 * in case an interrupt were to come in. We don't want to
-	 * lose the interrupt if max_depth is set.
+	 * lose the interrupt if fgraph_max_depth is set.
 	 */
 	ftrace_graph_return(&trace);
 
@@ -290,7 +290,7 @@ int trace_graph_entry(struct ftrace_graph_ent *trace)
 	/* trace it when it is-nested-in or is a function enabled. */
 	if ((!(trace->depth || ftrace_graph_addr(trace->func)) ||
 	     ftrace_graph_ignore_irqs()) ||
-	    (max_depth && trace->depth >= max_depth))
+	    (fgraph_max_depth && trace->depth >= fgraph_max_depth))
 		return 0;
 
 	local_irq_save(flags);
@@ -1509,7 +1509,7 @@ graph_depth_write(struct file *filp, const char __user *ubuf, size_t cnt,
 	if (ret)
 		return ret;
 
-	max_depth = val;
+	fgraph_max_depth = val;
 
 	*ppos += cnt;
 
@@ -1523,7 +1523,7 @@ graph_depth_read(struct file *filp, char __user *ubuf, size_t cnt,
 	char buf[15]; /* More than enough to hold UINT_MAX + "\n"*/
 	int n;
 
-	n = sprintf(buf, "%d\n", max_depth);
+	n = sprintf(buf, "%d\n", fgraph_max_depth);
 
 	return simple_read_from_buffer(ubuf, cnt, ppos, buf, n);
 }

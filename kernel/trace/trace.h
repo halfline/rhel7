@@ -776,6 +776,9 @@ static inline int ftrace_graph_addr(unsigned long addr)
 	return 1;
 }
 #endif /* CONFIG_DYNAMIC_FTRACE */
+
+extern unsigned int fgraph_max_depth;
+
 #else /* CONFIG_FUNCTION_GRAPH_TRACER */
 static inline enum print_line_t
 print_graph_function_flags(struct trace_iterator *iter, u32 flags)
