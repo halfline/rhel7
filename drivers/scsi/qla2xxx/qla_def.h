@@ -2932,6 +2932,13 @@ struct qlfc_fw {
 	uint32_t len;
 };
 
+struct scsi_qlt_host {
+	void *target_lport_ptr;
+	struct mutex tgt_mutex;
+	struct mutex tgt_host_action_mutex;
+	struct qla_tgt *qla_tgt;
+};
+
 struct qlt_hw_data {
 	/* Protected by hw lock */
 	uint32_t enable_class_2:1;
@@ -2947,15 +2954,11 @@ struct qlt_hw_data {
 	uint32_t __iomem *atio_q_in;
 	uint32_t __iomem *atio_q_out;
 
-	void *target_lport_ptr;
 	struct qla_tgt_func_tmpl *tgt_ops;
-	struct qla_tgt *qla_tgt;
 	struct qla_tgt_cmd *cmds[DEFAULT_OUTSTANDING_COMMANDS];
 	uint16_t current_handle;
 
 	struct qla_tgt_vp_map *tgt_vp_map;
-	struct mutex tgt_mutex;
-	struct mutex tgt_host_action_mutex;
 
 	int saved_set;
 	uint16_t saved_exchange_count;
@@ -3684,6 +3687,7 @@ typedef struct scsi_qla_host {
 #define VP_ERR_FAB_LOGOUT	4
 #define VP_ERR_ADAP_NORESOURCES	5
 	struct qla_hw_data *hw;
+	struct scsi_qlt_host vha_tgt;
 	struct req_que *req;
 	struct qla_percpu_qp_hint *qps_hint;
 	int		fw_heartbeat_counter;
