@@ -418,6 +418,15 @@ struct bndcsr {
 	u64 bndstatus;
 } __packed;
 
+/*
+ * State component 9: 32-bit PKRU register.  The state is
+ * 8 bytes long but only 4 bytes is used currently.
+ */
+struct pkru_state {
+	u32				pkru;
+	u32				pad;
+} __packed;
+
 struct xsave_hdr_struct {
 	u64 xstate_bv;
 #ifdef __GENKSYMS__

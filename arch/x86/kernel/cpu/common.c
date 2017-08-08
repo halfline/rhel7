@@ -168,6 +168,7 @@ static int __init x86_xsave_setup(char *s)
 	setup_clear_cpu_cap(X86_FEATURE_AVX512_4VNNIW);
 	setup_clear_cpu_cap(X86_FEATURE_AVX512_4FMAPS);
 	setup_clear_cpu_cap(X86_FEATURE_AVX512_VPOPCNTDQ);
+	setup_clear_cpu_cap(X86_FEATURE_PKU);
 	return 1;
 }
 __setup("noxsave", x86_xsave_setup);
