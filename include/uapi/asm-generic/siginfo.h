@@ -99,7 +99,7 @@ typedef struct siginfo {
 					void __user *_upper;
 				} _addr_bnd;
 				/* used when si_code=SEGV_PKUERR */
-				u64 _pkey;
+				__u32 _pkey;
 			};
 #endif
 		} _sigfault;
