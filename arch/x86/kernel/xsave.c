@@ -9,6 +9,7 @@
 #include <linux/bootmem.h>
 #include <linux/compat.h>
 #include <linux/cpu.h>
+#include <linux/mman.h>
 #include <linux/pkeys.h>
 #include <asm/i387.h>
 #include <asm/fpu-internal.h>
@@ -815,6 +816,8 @@ const void *get_xsave_field_ptr(int xsave_state)
 	return get_xsave_addr(&current->thread.fpu.state->xsave, xsave_state);
 }
 
+#ifdef CONFIG_ARCH_HAS_PKEYS
+
 #define NR_VALID_PKRU_BITS (CONFIG_NR_PROTECTION_KEYS * 2)
 #define PKRU_VALID_MASK (NR_VALID_PKRU_BITS - 1)
 
@@ -863,3 +866,4 @@ int arch_set_user_pkey_access(struct task_struct *tsk, int pkey,
 
 	return 0;
 }
+#endif /* ! CONFIG_ARCH_HAS_PKEYS */
