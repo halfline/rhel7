@@ -417,7 +417,11 @@ long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 		    !(vm_flags & vma->vm_flags))
 			return i ? : -EFAULT;
 
-		if (!arch_vma_access_permitted(vma, write, foreign))
+		/*
+		 * gups are always data accesses, not instruction
+		 * fetches, so execute=false here
+		 */
+		if (!arch_vma_access_permitted(vma, write, false, foreign))
 			return i ? : -EFAULT;
 
 		if (is_vm_hugetlb_page(vma)) {
@@ -555,8 +559,11 @@ bool vma_permits_fault(struct vm_area_struct *vma, unsigned int fault_flags)
 	/*
 	 * The architecture might have a hardware protection
 	 * mechanism other than read/write that can deny access.
+	 *
+	 * gup always represents data access, not instruction
+	 * fetches, so execute=false here:
 	 */
-	if (!arch_vma_access_permitted(vma, write, foreign))
+	if (!arch_vma_access_permitted(vma, write, false, foreign))
 		return false;
 
 	return true;
