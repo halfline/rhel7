@@ -718,6 +718,19 @@ void eager_fpu_init(void)
 }
 
 /*
+ * Given an xstate feature mask, calculate where in the xsave
+ * buffer the state is.  Callers should ensure that the buffer
+ * is valid.
+ *
+ * Note: does not work for compacted buffers.
+ */
+void *__raw_xsave_addr(struct xsave_struct *xsave, int xstate_feature_mask)
+{
+	int feature_nr = fls64(xstate_feature_mask) - 1;
+
+	return (void *)xsave + xstate_comp_offsets[feature_nr];
+}
+/*
  * Given the xsave area and a state inside, this function returns the
  * address of the state.
  *
@@ -737,7 +750,6 @@ void eager_fpu_init(void)
  */
 void *get_xsave_addr(struct xsave_struct *xsave, int xstate_feature)
 {
-	int feature_nr = fls64(xstate_feature) - 1;
 	/*
 	 * Do we even *have* xsave state?
 	 */
@@ -766,7 +778,7 @@ void *get_xsave_addr(struct xsave_struct *xsave, int xstate_feature)
 	if (!(xsave->xsave_hdr.xstate_bv & xstate_feature))
 		return NULL;
 
-	return (void *)xsave + xstate_comp_offsets[feature_nr];
+	return __raw_xsave_addr(xsave, xstate_feature);
 }
 EXPORT_SYMBOL_GPL(get_xsave_addr);
 
