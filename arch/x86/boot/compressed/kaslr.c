@@ -625,9 +625,6 @@ void choose_random_location(unsigned long input,
 {
 	unsigned long random_addr, min_addr;
 
-	/* By default, keep output position unchanged. */
-	*virt_addr = *output;
-
 	if (!cmdline_find_option_bool("kaslr")) {
 		debug_putstr("KASLR disabled: no 'kaslr' on cmdline.");
 		return;
