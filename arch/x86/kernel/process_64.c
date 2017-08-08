@@ -111,6 +111,9 @@ void __show_regs(struct pt_regs *regs, int all)
 	get_debugreg(d6, 6);
 	get_debugreg(d7, 7);
 	printk(KERN_DEFAULT "DR3: %016lx DR6: %016lx DR7: %016lx\n", d3, d6, d7);
+
+	if (boot_cpu_has(X86_FEATURE_OSPKE))
+		printk(KERN_DEFAULT "PKRU: %08x\n", read_pkru());
 }
 
 void release_thread(struct task_struct *dead_task)
