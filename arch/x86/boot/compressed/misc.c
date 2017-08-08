@@ -331,7 +331,6 @@ asmlinkage void *extract_kernel(void *rmode, memptr heap,
 {
 	const unsigned long kernel_total_size = VO__end - VO__text;
 	unsigned long virt_addr = (unsigned long)output;
-	unsigned char *output_orig = output;
 
 	/* Retain x86 boot parameters pointer passed from startup_32/64. */
 	boot_params = rmode;
@@ -398,8 +397,7 @@ asmlinkage void *extract_kernel(void *rmode, memptr heap,
 	__decompress(input_data, input_len, NULL, NULL, output, output_len,
 			NULL, error);
 	parse_elf(output);
-	if (!IS_ENABLED(CONFIG_X86_64) || output != output_orig)
-		handle_relocations(output, output_len, virt_addr);
+	handle_relocations(output, output_len, virt_addr);
 	debug_putstr("done.\nBooting the kernel.\n");
 	return output;
 }
