@@ -866,4 +866,12 @@ asmlinkage long sys_getrandom(char __user *buf, size_t count,
 asmlinkage long sys_copy_file_range(int fd_in, loff_t __user *off_in,
 				    int fd_out, loff_t __user *off_out,
 				    size_t len, unsigned int flags);
+asmlinkage long sys_pkey_mprotect(unsigned long start, size_t len,
+				  unsigned long prot, int pkey);
+asmlinkage long sys_pkey_alloc(unsigned long flags, unsigned long init_val);
+asmlinkage long sys_pkey_free(int pkey);
+//asmlinkage long sys_pkey_get(int pkey, unsigned long flags);
+//asmlinkage long sys_pkey_set(int pkey, unsigned long access_rights,
+//			     unsigned long flags);
+
 #endif
