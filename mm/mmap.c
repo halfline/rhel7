@@ -1397,14 +1397,13 @@ static inline unsigned long round_hint_to_min(unsigned long hint)
  * The caller must hold down_write(&current->mm->mmap_sem).
  */
 
-unsigned long do_mmap_pgoff(struct file *file, unsigned long addr,
+unsigned long do_mmap(struct file *file, unsigned long addr,
 			unsigned long len, unsigned long prot,
-			unsigned long flags, unsigned long pgoff,
-			unsigned long *populate,
+			unsigned long flags, vm_flags_t vm_flags,
+			unsigned long pgoff, unsigned long *populate,
 			struct list_head *uf)
 {
 	struct mm_struct * mm = current->mm;
-	vm_flags_t vm_flags;
 
 	*populate = 0;
 
@@ -1448,7 +1447,7 @@ unsigned long do_mmap_pgoff(struct file *file, unsigned long addr,
 	 * to. we assume access permissions have been handled by the open
 	 * of the memory object, so we don't do any here.
 	 */
-	vm_flags = calc_vm_prot_bits(prot) | calc_vm_flag_bits(flags) |
+	vm_flags |= calc_vm_prot_bits(prot) | calc_vm_flag_bits(flags) |
 			mm->def_flags | VM_MAYREAD | VM_MAYWRITE | VM_MAYEXEC;
 
 	if (flags & MAP_LOCKED)
