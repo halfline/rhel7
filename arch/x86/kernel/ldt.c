@@ -102,7 +102,7 @@ static inline int copy_ldt(mm_context_t *new, mm_context_t *old)
  * we do not have to muck with descriptors here, that is
  * done in switch_mm() as needed.
  */
-int init_new_context(struct task_struct *tsk, struct mm_struct *mm)
+int init_new_context_ldt(struct task_struct *tsk, struct mm_struct *mm)
 {
 	struct mm_struct *old_mm;
 	int retval = 0;
@@ -123,7 +123,7 @@ int init_new_context(struct task_struct *tsk, struct mm_struct *mm)
  *
  * 64bit: Don't touch the LDT register - we're already in the next thread.
  */
-void destroy_context(struct mm_struct *mm)
+void destroy_context_ldt(struct mm_struct *mm)
 {
 	if (mm->context.size) {
 #ifdef CONFIG_X86_32
