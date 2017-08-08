@@ -1,2 +1,2 @@
 #1-
-0xf432dd3d __init_waitqueue_head vmlinux EXPORT_SYMBOL
+0xf432dd3d	__init_waitqueue_head	vmlinux	EXPORT_SYMBOL

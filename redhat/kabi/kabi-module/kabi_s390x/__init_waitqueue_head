@@ -1,2 +1,2 @@
 #1-
-0xac213e3a __init_waitqueue_head vmlinux EXPORT_SYMBOL
+0xac213e3a	__init_waitqueue_head	vmlinux	EXPORT_SYMBOL
