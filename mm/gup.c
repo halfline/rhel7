@@ -7,6 +7,7 @@
 #include <linux/writeback.h>
 #include <linux/mmu_notifier.h>
 #include <linux/swapops.h>
+#include <asm/mmu_context.h>
 #include <asm/tlbflush.h>
 
 #include "internal.h"
@@ -414,6 +415,9 @@ long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 		    !(vm_flags & vma->vm_flags))
 			return i ? : -EFAULT;
 
+		if (!arch_vma_access_permitted(vma, (gup_flags & FOLL_WRITE)))
+			return i ? : -EFAULT;
+
 		if (is_vm_hugetlb_page(vma)) {
 			i = follow_hugetlb_page(mm, vma, pages, vmas,
 					&start, &nr_pages, i,
@@ -537,11 +541,17 @@ EXPORT_SYMBOL(__get_user_pages);
 
 bool vma_permits_fault(struct vm_area_struct *vma, unsigned int fault_flags)
 {
-	vm_flags_t vm_flags;
-
-	vm_flags = (fault_flags & FAULT_FLAG_WRITE) ? VM_WRITE : VM_READ;
+	bool write = !!(fault_flags & FAULT_FLAG_WRITE);
+	vm_flags_t vm_flags = write ? VM_WRITE : VM_READ;
 
 	if (!(vm_flags & vma->vm_flags))
+		return false;
+
+	/*
+	 * The architecture might have a hardware protection
+	 * mechanism other than read/write that can deny access
+	 */
+	if (!arch_vma_access_permitted(vma, write))
 		return false;
 
 	return true;
