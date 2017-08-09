@@ -1347,6 +1347,8 @@ struct task_struct {
 #ifdef CONFIG_PREEMPT_NOTIFIERS
 	/* list of struct preempt_notifier: */
 	struct hlist_head preempt_notifiers;
+#elif defined(CONFIG_S390)
+	RH_KABI_DEPRECATE(struct hlist_head, preempt_notifiers)
 #endif
 
 	/*
