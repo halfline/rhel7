@@ -19,6 +19,7 @@
 #include <linux/migrate.h>
 #include <linux/page_cgroup.h>
 #include <linux/vmalloc.h>
+#include <linux/swap_slots.h>
 
 #include <asm/pgtable.h>
 
