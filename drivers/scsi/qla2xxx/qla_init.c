@@ -3360,6 +3360,64 @@ qla2x00_reg_remote_port(scsi_qla_host_t *vha, fc_port_t *fcport)
 }
 
 /*
+ * qla2x00_fabric_dev_login
+ * 	Login fabric target device and update FC port database.
+ *
+ * Input:
+ * 	ha:             adapter state pointer.
+ *	fcport:         port structure list pointer.
+ *	next_loopid:    contains value of a new loop ID that can be
+ *			used by the next login attempt.
+ *
+ * Returns:
+ *	qla2x00 local function return status code.
+ *
+ * Context:
+ *	Kernel context.
+ */
+static int
+qla2x00_fabric_dev_login(scsi_qla_host_t *vha, fc_port_t *fcport,
+    uint16_t *next_loopid)
+{
+	int     rval;
+	uint8_t opts;
+	struct qla_hw_data *ha = vha->hw;
+
+	rval = QLA_SUCCESS;
+
+	if (IS_ALOGIO_CAPABLE(ha)) {
+		if (fcport->flags & FCF_ASYNC_SENT)
+			return rval;
+		fcport->flags |= FCF_ASYNC_SENT;
+		rval = qla2x00_post_async_login_work(vha, fcport, NULL);
+		if (!rval)
+			return rval;
+	}
+
+	fcport->flags &= ~FCF_ASYNC_SENT;
+	rval = qla2x00_fabric_login(vha, fcport, next_loopid);
+	if (rval == QLA_SUCCESS) {
+		/* Send an ADISC to FCP2 devices.*/
+		opts = 0;
+		if (fcport->flags & FCF_FCP2_DEVICE)
+			opts |= BIT_1;
+		rval = qla2x00_get_port_database(vha, fcport, opts);
+		if (rval != QLA_SUCCESS) {
+			ha->isp_ops->fabric_logout(vha, fcport->loop_id,
+			    fcport->d_id.b.domain, fcport->d_id.b.area,
+			    fcport->d_id.b.al_pa);
+			qla2x00_mark_device_lost(vha, fcport, 1, 0);
+		} else {
+			qla2x00_update_fcport(vha, fcport);
+		}
+	} else {
+		/* Retry Login. */
+		qla2x00_mark_device_lost(vha, fcport, 1, 0);
+	}
+	return rval;
+}
+
+/*
  * qla2x00_update_fcport
  *	Updates device on list.
  *
@@ -3500,20 +3558,43 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
 			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0)
 				continue;
 
-			if (fcport->scan_state == QLA_FCPORT_SCAN &&
-			    atomic_read(&fcport->state) == FCS_ONLINE) {
-				qla2x00_mark_device_lost(vha, fcport,
-				    ql2xplogiabsentdevice, 0);
-				if (fcport->loop_id != FC_NO_LOOP_ID &&
-				    (fcport->flags & FCF_FCP2_DEVICE) == 0 &&
-				    fcport->port_type != FCT_INITIATOR &&
-				    fcport->port_type != FCT_BROADCAST) {
-					ha->isp_ops->fabric_logout(vha,
-					    fcport->loop_id,
-					    fcport->d_id.b.domain,
-					    fcport->d_id.b.area,
-					    fcport->d_id.b.al_pa);
-					qla2x00_clear_loop_id(fcport);
+			if (fcport->scan_state == QLA_FCPORT_SCAN) {
+				if (qla_ini_mode_enabled(base_vha) &&
+				    atomic_read(&fcport->state) == FCS_ONLINE) {
+					qla2x00_mark_device_lost(vha, fcport,
+					    ql2xplogiabsentdevice, 0);
+					if (fcport->loop_id != FC_NO_LOOP_ID &&
+					    (fcport->flags & FCF_FCP2_DEVICE) == 0 &&
+					    fcport->port_type != FCT_INITIATOR &&
+					    fcport->port_type != FCT_BROADCAST) {
+						ha->isp_ops->fabric_logout(vha,
+						    fcport->loop_id,
+						    fcport->d_id.b.domain,
+						    fcport->d_id.b.area,
+						    fcport->d_id.b.al_pa);
+						qla2x00_clear_loop_id(fcport);
+					}
+				} else if (!qla_ini_mode_enabled(base_vha)) {
+					/*
+					 * In target mode, explicitly kill
+					 * sessions and log out of devices
+					 * that are gone, so that we don't
+					 * end up with an initiator using the
+					 * wrong ACL (if the fabric recycles
+					 * an FC address and we have a stale
+					 * session around) and so that we don't
+					 * report initiators that are no longer
+					 * on the fabric.
+					 */
+					ql_dbg(ql_dbg_tgt_mgt, vha, 0xf077,
+					    "port gone, logging out/killing session: "
+					    "%8phC state 0x%x flags 0x%x fc4_type 0x%x "
+					    "scan_state %d\n",
+					    fcport->port_name,
+					    atomic_read(&fcport->state),
+					    fcport->flags, fcport->fc4_type,
+					    fcport->scan_state);
+					qlt_fc_port_deleted(vha, fcport);
 				}
 			}
 		}
@@ -3533,6 +3614,28 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
 			if ((fcport->flags & FCF_FABRIC_DEVICE) == 0 ||
 			    (fcport->flags & FCF_LOGIN_NEEDED) == 0)
 				continue;
+
+			/*
+			 * If we're not an initiator, skip looking for devices
+			 * and logging in.  There's no reason for us to do it,
+			 * and it seems to actively cause problems in target
+			 * mode if we race with the initiator logging into us
+			 * (we might get the "port ID used" status back from
+			 * our login command and log out the initiator, which
+			 * seems to cause havoc).
+			 */
+			if (!qla_ini_mode_enabled(base_vha)) {
+				if (fcport->scan_state == QLA_FCPORT_FOUND) {
+					ql_dbg(ql_dbg_tgt_mgt, vha, 0xf078,
+					    "port %8phC state 0x%x flags 0x%x fc4_type 0x%x "
+					    "scan_state %d (initiator mode disabled; skipping "
+					    "login)\n", fcport->port_name,
+					    atomic_read(&fcport->state),
+					    fcport->flags, fcport->fc4_type,
+					    fcport->scan_state);
+				}
+				continue;
+			}
 
 			if (fcport->loop_id == FC_NO_LOOP_ID) {
 				fcport->loop_id = next_loopid;
@@ -3560,17 +3663,38 @@ qla2x00_configure_fabric(scsi_qla_host_t *vha)
 			    test_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags))
 				break;
 
-			/* Find a new loop ID to use. */
-			fcport->loop_id = next_loopid;
-			rval = qla2x00_find_new_loop_id(base_vha, fcport);
-			if (rval != QLA_SUCCESS) {
-				/* Ran out of IDs to use */
-				break;
+			/*
+			 * If we're not an initiator, skip looking for devices
+			 * and logging in.  There's no reason for us to do it,
+			 * and it seems to actively cause problems in target
+			 * mode if we race with the initiator logging into us
+			 * (we might get the "port ID used" status back from
+			 * our login command and log out the initiator, which
+			 * seems to cause havoc).
+			 */
+			if (qla_ini_mode_enabled(base_vha)) {
+				/* Find a new loop ID to use. */
+				fcport->loop_id = next_loopid;
+				rval = qla2x00_find_new_loop_id(base_vha,
+				    fcport);
+				if (rval != QLA_SUCCESS) {
+					/* Ran out of IDs to use */
+					break;
+				}
+
+				/* Login and update database */
+				qla2x00_fabric_dev_login(vha, fcport,
+				    &next_loopid);
+			} else {
+				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf079,
+					"new port %8phC state 0x%x flags 0x%x fc4_type "
+					"0x%x scan_state %d (initiator mode disabled; "
+					"skipping login)\n",
+					fcport->port_name,
+					atomic_read(&fcport->state),
+					fcport->flags, fcport->fc4_type,
+					fcport->scan_state);
 			}
-
-			/* Login and update database */
-			qla2x00_fabric_dev_login(vha, fcport, &next_loopid);
-
 			list_move_tail(&fcport->list, &vha->vp_fcports);
 		}
 	} while (0);
@@ -3765,11 +3889,12 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
 			fcport->fp_speed = new_fcport->fp_speed;
 
 			/*
-			 * If address the same and state FCS_ONLINE, nothing
-			 * changed.
+			 * If address the same and state FCS_ONLINE
+			 * (or in target mode), nothing changed.
 			 */
 			if (fcport->d_id.b24 == new_fcport->d_id.b24 &&
-			    atomic_read(&fcport->state) == FCS_ONLINE) {
+			    (atomic_read(&fcport->state) == FCS_ONLINE ||
+			     !qla_ini_mode_enabled(base_vha))) {
 				break;
 			}
 
@@ -3789,6 +3914,22 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
 			 * Log it out if still logged in and mark it for
 			 * relogin later.
 			 */
+			if (!qla_ini_mode_enabled(base_vha)) {
+				ql_dbg(ql_dbg_tgt_mgt, vha, 0xf080,
+					 "port changed FC ID, %8phC"
+					 " old %x:%x:%x (loop_id 0x%04x)-> new %x:%x:%x\n",
+					 fcport->port_name,
+					 fcport->d_id.b.domain,
+					 fcport->d_id.b.area,
+					 fcport->d_id.b.al_pa,
+					 fcport->loop_id,
+					 new_fcport->d_id.b.domain,
+					 new_fcport->d_id.b.area,
+					 new_fcport->d_id.b.al_pa);
+				fcport->d_id.b24 = new_fcport->d_id.b24;
+				break;
+			}
+
 			fcport->d_id.b24 = new_fcport->d_id.b24;
 			fcport->flags |= FCF_LOGIN_NEEDED;
 			if (fcport->loop_id != FC_NO_LOOP_ID &&
@@ -3808,6 +3949,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
 		if (found)
 			continue;
 		/* If device was not in our fcports list, then add it. */
+		new_fcport->scan_state = QLA_FCPORT_FOUND;
 		list_add_tail(&new_fcport->list, new_fcports);
 
 		/* Allocate a new replacement fcport. */
@@ -3871,65 +4013,6 @@ qla2x00_find_new_loop_id(scsi_qla_host_t *vha, fc_port_t *dev)
 		ql_log(ql_log_warn, dev->vha, 0x2087,
 		    "No loop_id's available, portid=%x.\n",
 		    dev->d_id.b24);
-
-	return (rval);
-}
-
-/*
- * qla2x00_fabric_dev_login
- *	Login fabric target device and update FC port database.
- *
- * Input:
- *	ha:		adapter state pointer.
- *	fcport:		port structure list pointer.
- *	next_loopid:	contains value of a new loop ID that can be used
- *			by the next login attempt.
- *
- * Returns:
- *	qla2x00 local function return status code.
- *
- * Context:
- *	Kernel context.
- */
-static int
-qla2x00_fabric_dev_login(scsi_qla_host_t *vha, fc_port_t *fcport,
-    uint16_t *next_loopid)
-{
-	int	rval;
-	uint8_t opts;
-	struct qla_hw_data *ha = vha->hw;
-
-	rval = QLA_SUCCESS;
-
-	if (IS_ALOGIO_CAPABLE(ha)) {
-		if (fcport->flags & FCF_ASYNC_SENT)
-			return rval;
-		fcport->flags |= FCF_ASYNC_SENT;
-		rval = qla2x00_post_async_login_work(vha, fcport, NULL);
-		if (!rval)
-			return rval;
-	}
-
-	fcport->flags &= ~FCF_ASYNC_SENT;
-	rval = qla2x00_fabric_login(vha, fcport, next_loopid);
-	if (rval == QLA_SUCCESS) {
-		/* Send an ADISC to FCP2 devices.*/
-		opts = 0;
-		if (fcport->flags & FCF_FCP2_DEVICE)
-			opts |= BIT_1;
-		rval = qla2x00_get_port_database(vha, fcport, opts);
-		if (rval != QLA_SUCCESS) {
-			ha->isp_ops->fabric_logout(vha, fcport->loop_id,
-			    fcport->d_id.b.domain, fcport->d_id.b.area,
-			    fcport->d_id.b.al_pa);
-			qla2x00_mark_device_lost(vha, fcport, 1, 0);
-		} else {
-			qla2x00_update_fcport(vha, fcport);
-		}
-	} else {
-		/* Retry Login. */
-		qla2x00_mark_device_lost(vha, fcport, 1, 0);
-	}
 
 	return (rval);
 }
