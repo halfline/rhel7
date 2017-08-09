@@ -213,6 +213,16 @@ struct swap_cluster_info {
 #define CLUSTER_FLAG_NEXT_NULL 2 /* This cluster has no next cluster */
 
 /*
+ * We assign a cluster to each CPU, so each CPU can allocate swap entry from
+ * its own cluster and swapout sequentially. The purpose is to optimize swapout
+ * throughput.
+ */
+struct percpu_cluster {
+	struct swap_cluster_info index; /* Current cluster index */
+	unsigned int next; /* Likely next allocation offset */
+};
+
+/*
  * The in-memory structure used to track swap areas.
  */
 struct swap_info_struct {
@@ -260,6 +270,7 @@ struct swap_info_struct {
 	RH_KABI_EXTEND(struct work_struct discard_work) /* discard worker */
 	RH_KABI_EXTEND(struct swap_cluster_info discard_cluster_head) /* list head of discard clusters */
 	RH_KABI_EXTEND(struct swap_cluster_info discard_cluster_tail) /* list tail of discard clusters */
+	RH_KABI_EXTEND(struct percpu_cluster __percpu *percpu_cluster) /* per cpu's swap location */
 };
 
 /* linux/mm/workingset.c */
