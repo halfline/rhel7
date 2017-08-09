@@ -222,6 +222,11 @@ struct percpu_cluster {
 	unsigned int next; /* Likely next allocation offset */
 };
 
+struct swap_cluster_list {
+	struct swap_cluster_info head;
+	struct swap_cluster_info tail;
+};
+
 /*
  * The in-memory structure used to track swap areas.
  */
@@ -265,11 +270,9 @@ struct swap_info_struct {
 	RH_KABI_EXTEND(struct plist_node list)		/* entry in swap_active_head */
 	RH_KABI_EXTEND(struct plist_node avail_list)	/* entry in swap_avail_head */
 	RH_KABI_EXTEND(struct swap_cluster_info *cluster_info) /* cluster info. Only for SSD */
-	RH_KABI_EXTEND(struct swap_cluster_info free_cluster_head) /* free cluster list head */
-	RH_KABI_EXTEND(struct swap_cluster_info free_cluster_tail) /* free cluster list tail */
+	RH_KABI_EXTEND(struct swap_cluster_list free_clusters) /* free clusters list */
 	RH_KABI_EXTEND(struct work_struct discard_work) /* discard worker */
-	RH_KABI_EXTEND(struct swap_cluster_info discard_cluster_head) /* list head of discard clusters */
-	RH_KABI_EXTEND(struct swap_cluster_info discard_cluster_tail) /* list tail of discard clusters */
+	RH_KABI_EXTEND(struct swap_cluster_list discard_clusters) /* discard clusters list */
 	RH_KABI_EXTEND(struct percpu_cluster __percpu *percpu_cluster) /* per cpu's swap location */
 };
 
