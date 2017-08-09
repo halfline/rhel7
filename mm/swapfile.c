@@ -2168,6 +2168,8 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
 	spin_unlock(&p->lock);
 	spin_unlock(&swap_lock);
 
+	disable_swap_slots_cache_lock();
+
 	set_current_oom_origin();
 	err = try_to_unuse(p->type, false, 0); /* force unuse all pages */
 	clear_current_oom_origin();
@@ -2175,8 +2177,11 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
 	if (err) {
 		/* re-insert swap space back into swap_list */
 		reinsert_swap_info(p);
+		reenable_swap_slots_cache_unlock();
 		goto out_dput;
 	}
+
+	reenable_swap_slots_cache_unlock();
 
 	flush_work(&p->discard_work);
 
@@ -2857,6 +2862,8 @@ out:
 		putname(name);
 	if (inode && S_ISREG(inode->i_mode))
 		mutex_unlock(&inode->i_mutex);
+	if (!error)
+		enable_swap_slots_cache();
 	return error;
 }
 
