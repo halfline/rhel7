@@ -196,6 +196,23 @@ enum {
 #define SWAP_MAP_SHMEM	0xbf	/* Owned by shmem/tmpfs, in first swap_map */
 
 /*
+ * We use this to track usage of a cluster. A cluster is a block of swap disk
+ * space with SWAPFILE_CLUSTER pages long and naturally aligns in disk. All
+ * free clusters are organized into a list. We fetch an entry from the list to
+ * get a free cluster.
+ *
+ * The data field stores next cluster if the cluster is free or cluster usage
+ * counter otherwise. The flags field determines if a cluster is free. This is
+ * protected by swap_info_struct.lock.
+ */
+struct swap_cluster_info {
+	unsigned int data:24;
+	unsigned int flags:8;
+};
+#define CLUSTER_FLAG_FREE 1 /* This cluster is free */
+#define CLUSTER_FLAG_NEXT_NULL 2 /* This cluster has no next cluster */
+
+/*
  * The in-memory structure used to track swap areas.
  */
 struct swap_info_struct {
@@ -236,6 +253,9 @@ struct swap_info_struct {
 					 */
 	RH_KABI_EXTEND(struct plist_node list)		/* entry in swap_active_head */
 	RH_KABI_EXTEND(struct plist_node avail_list)	/* entry in swap_avail_head */
+	RH_KABI_EXTEND(struct swap_cluster_info *cluster_info) /* cluster info. Only for SSD */
+	RH_KABI_EXTEND(struct swap_cluster_info free_cluster_head) /* free cluster list head */
+	RH_KABI_EXTEND(struct swap_cluster_info free_cluster_tail) /* free cluster list tail */
 };
 
 /* linux/mm/workingset.c */
