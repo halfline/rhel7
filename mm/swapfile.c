@@ -1109,8 +1109,6 @@ void swapcache_free_entries(swp_entry_t *entries, int n)
 		p = swap_info_get_cont(entries[i], prev);
 		if (p)
 			swap_entry_free(p, entries[i]);
-		else
-			break;
 		prev = p;
 	}
 	if (p)
