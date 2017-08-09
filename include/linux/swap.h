@@ -228,8 +228,8 @@ struct swap_info_struct {
 	unsigned int inuse_pages;	/* number of those currently in use */
 	unsigned int cluster_next;	/* likely index for next allocation */
 	unsigned int cluster_nr;	/* countdown to next cluster search */
-	unsigned int lowest_alloc;	/* while preparing discard cluster */
-	unsigned int highest_alloc;	/* while preparing discard cluster */
+	RH_KABI_DEPRECATE(unsigned int, lowest_alloc)
+	RH_KABI_DEPRECATE(unsigned int, highest_alloc)
 	struct swap_extent *curr_swap_extent;
 	struct swap_extent first_swap_extent;
 	struct block_device *bdev;	/* swap device or bdev of swap file */
@@ -243,19 +243,23 @@ struct swap_info_struct {
 					 * protect map scan related fields like
 					 * swap_map, lowest_bit, highest_bit,
 					 * inuse_pages, cluster_next,
-					 * cluster_nr, lowest_alloc and
-					 * highest_alloc. other fields are only
-					 * changed at swapon/swapoff, so are
-					 * protected by swap_lock. changing
-					 * flags need hold this lock and
-					 * swap_lock. If both locks need hold,
-					 * hold swap_lock first.
+					 * cluster_nr, lowest_alloc,
+					 * highest_alloc, free/discard cluster
+					 * list. other fields are only changed
+					 * at swapon/swapoff, so are protected
+					 * by swap_lock. changing flags need
+					 * hold this lock and swap_lock. If
+					 * both locks need hold, hold swap_lock
+					 * first.
 					 */
 	RH_KABI_EXTEND(struct plist_node list)		/* entry in swap_active_head */
 	RH_KABI_EXTEND(struct plist_node avail_list)	/* entry in swap_avail_head */
 	RH_KABI_EXTEND(struct swap_cluster_info *cluster_info) /* cluster info. Only for SSD */
 	RH_KABI_EXTEND(struct swap_cluster_info free_cluster_head) /* free cluster list head */
 	RH_KABI_EXTEND(struct swap_cluster_info free_cluster_tail) /* free cluster list tail */
+	RH_KABI_EXTEND(struct work_struct discard_work) /* discard worker */
+	RH_KABI_EXTEND(struct swap_cluster_info discard_cluster_head) /* list head of discard clusters */
+	RH_KABI_EXTEND(struct swap_cluster_info discard_cluster_tail) /* list tail of discard clusters */
 };
 
 /* linux/mm/workingset.c */
