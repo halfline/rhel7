@@ -1494,8 +1494,7 @@ static void gfs2_evict_inode(struct inode *inode)
 	if (unlikely(error)) {
 		glock_clear_object(ip->i_iopen_gh.gh_gl, ip);
 		ip->i_iopen_gh.gh_flags |= GL_NOCACHE;
-		gfs2_glock_dq_wait(&ip->i_iopen_gh);
-		gfs2_holder_uninit(&ip->i_iopen_gh);
+		gfs2_glock_dq_uninit(&ip->i_iopen_gh);
 		goto out;
 	}
 
@@ -1578,7 +1577,7 @@ out_unlock:
 		glock_clear_object(ip->i_iopen_gh.gh_gl, ip);
 		if (test_bit(HIF_HOLDER, &ip->i_iopen_gh.gh_iflags)) {
 			ip->i_iopen_gh.gh_flags |= GL_NOCACHE;
-			gfs2_glock_dq_wait(&ip->i_iopen_gh);
+			gfs2_glock_dq(&ip->i_iopen_gh);
 		}
 		gfs2_holder_uninit(&ip->i_iopen_gh);
 	}
@@ -1601,8 +1600,7 @@ out:
 	if (gfs2_holder_initialized(&ip->i_iopen_gh)) {
 		glock_clear_object(ip->i_iopen_gh.gh_gl, ip);
 		ip->i_iopen_gh.gh_flags |= GL_NOCACHE;
-		gfs2_glock_dq_wait(&ip->i_iopen_gh);
-		gfs2_holder_uninit(&ip->i_iopen_gh);
+		gfs2_glock_dq_uninit(&ip->i_iopen_gh);
 	}
 }
 
