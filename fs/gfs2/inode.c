@@ -167,6 +167,7 @@ struct inode *gfs2_inode_lookup(struct super_block *sb, unsigned int type,
 					goto fail_put;
 			}
 		}
+		flush_delayed_work(&ip->i_gl->gl_work);
 		glock_set_object(ip->i_gl, ip);
 
 		set_bit(GIF_INVALID, &ip->i_flags);
@@ -662,6 +663,7 @@ static int gfs2_create_inode(struct inode *dir, struct dentry *dentry,
 	error = gfs2_glock_get(sdp, ip->i_no_addr, &gfs2_inode_glops, CREATE, &ip->i_gl);
 	if (error)
 		goto fail_free_inode;
+	flush_delayed_work(&ip->i_gl->gl_work);
 
 	glock_set_object(ip->i_gl, ip);
 	error = gfs2_glock_nq_init(ip->i_gl, LM_ST_EXCLUSIVE, GL_SKIP, ghs + 1);
