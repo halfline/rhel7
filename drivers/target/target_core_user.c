@@ -1458,6 +1458,23 @@ static ssize_t tcmu_dev_store_attr_cmd_time_out(struct se_dev_attrib *da,
 }
 TB_DEV_ATTR(tcmu, cmd_time_out, S_IRUGO | S_IWUSR);
 
+static ssize_t tcmu_dev_show_attr_alua_support(struct se_dev_attrib *da,
+					       char *page)
+{
+	u8 flags = da->da_dev->transport->transport_flags;
+
+	return snprintf(page, PAGE_SIZE, "%d\n",
+			flags & TRANSPORT_FLAG_PASSTHROUGH_ALUA ? 0 : 1);
+}
+TB_DEV_ATTR_RO(tcmu, alua_support);
+
+static ssize_t tcmu_dev_show_attr_pgr_support(struct se_dev_attrib *da,
+					      char *page)
+{
+	return snprintf(page, PAGE_SIZE, "0\n");
+}
+TB_DEV_ATTR_RO(tcmu, pgr_support);
+
 DEF_TB_DEV_ATTRIB_RO(tcmu, hw_pi_prot_type);
 TB_DEV_ATTR_RO(tcmu, hw_pi_prot_type);
 
@@ -1476,6 +1493,8 @@ static struct configfs_attribute *tcmu_backend_dev_attrs[] = {
 	&tcmu_dev_attrib_hw_max_sectors.attr,
 	&tcmu_dev_attrib_hw_queue_depth.attr,
 	&tcmu_dev_attrib_cmd_time_out.attr,
+	&tcmu_dev_attrib_alua_support.attr,
+	&tcmu_dev_attrib_pgr_support.attr,
 	NULL,
 };
 
