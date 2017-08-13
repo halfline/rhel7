@@ -677,11 +677,10 @@ EXPORT_SYMBOL(transport_copy_sense_to_cmd);
 void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
 {
 	struct se_device *dev = cmd->se_dev;
-	int success = scsi_status == GOOD;
+	int success;
 	unsigned long flags;
 
 	cmd->scsi_status = scsi_status;
-
 
 	spin_lock_irqsave(&cmd->t_state_lock, flags);
 	cmd->transport_state &= ~CMD_T_BUSY;
@@ -691,8 +690,17 @@ void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
 				cmd->t_data_sg,
 				transport_get_sense_buffer(cmd));
 	}
-	if (cmd->se_cmd_flags & SCF_TRANSPORT_TASK_SENSE)
+	switch (cmd->scsi_status) {
+	case SAM_STAT_CHECK_CONDITION:
+		if (cmd->se_cmd_flags & SCF_TRANSPORT_TASK_SENSE)
+			success = 1;
+		else
+			success = 0;
+		break;
+	default:
 		success = 1;
+		break;
+	}
 
 	/*
 	 * See if we are waiting to complete for an exception condition.
