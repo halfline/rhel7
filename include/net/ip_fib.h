@@ -240,7 +240,8 @@ struct fib_table {
 	int			tb_default;
 	int			tb_num_default;
 	struct rcu_head		rcu;
-	unsigned long		tb_data[0];
+	unsigned long 		*tb_data;
+	unsigned long		__data[0];
 };
 
 int fib_table_lookup(struct fib_table *tb, const struct flowi4 *flp,
@@ -250,9 +251,8 @@ int fib_table_delete(struct net *, struct fib_table *, struct fib_config *);
 int fib_table_dump(struct fib_table *table, struct sk_buff *skb,
 		   struct netlink_callback *cb);
 int fib_table_flush(struct net *net, struct fib_table *table);
+struct fib_table *fib_trie_unmerge(struct fib_table *main_tb);
 void fib_free_table(struct fib_table *tb);
-
-
 
 #ifndef CONFIG_IP_MULTIPLE_TABLES
 
@@ -286,18 +286,10 @@ static inline int fib_lookup(struct net *net, const struct flowi4 *flp,
 
 	rcu_read_lock();
 
-	tb = fib_get_table(net, RT_TABLE_LOCAL);
-	if (tb)
-		err = fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF);
-
-	if (!err)
-		goto out;
-
 	tb = fib_get_table(net, RT_TABLE_MAIN);
 	if (tb)
 		err = fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF);
 
-out:
 	if (err == -EAGAIN)
 		err = -ENETUNREACH;
 
@@ -327,13 +319,6 @@ static inline int fib_lookup(struct net *net, struct flowi4 *flp,
 	rcu_read_lock();
 
 	res->tclassid = 0;
-
-	tb = rcu_dereference_rtnl(net->ipv4.fib_local);
-	if (tb)
-		err = fib_table_lookup(tb, flp, res, FIB_LOOKUP_NOREF);
-
-	if (!err)
-		goto out;
 
 	tb = rcu_dereference_rtnl(net->ipv4.fib_main);
 	if (tb)
@@ -376,6 +361,7 @@ static inline int fib_num_tclassid_users(struct net *net)
 	return 0;
 }
 #endif
+int fib_unmerge(struct net *net);
 
 /* Exported by fib_semantics.c */
 int ip_fib_check_default(__be32 gw, struct net_device *dev);
@@ -394,7 +380,7 @@ void fib_select_multipath(struct fib_result *res, int hash);
 
 /* Exported by fib_trie.c */
 void fib_trie_init(void);
-struct fib_table *fib_trie_table(u32 id);
+struct fib_table *fib_trie_table(u32 id, struct fib_table *alias);
 
 static inline void fib_combine_itag(u32 *itag, const struct fib_result *res)
 {

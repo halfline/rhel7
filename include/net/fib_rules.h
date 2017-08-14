@@ -57,7 +57,8 @@ struct fib_rules_ops {
 					     struct sk_buff *,
 					     struct fib_rule_hdr *,
 					     struct nlattr **);
-	void			(*delete)(struct fib_rule *);
+	RH_KABI_REPLACE(void	(*delete)(struct fib_rule *),
+			int	(*delete)(struct fib_rule *))
 	int			(*compare)(struct fib_rule *,
 					   struct fib_rule_hdr *,
 					   struct nlattr **);
