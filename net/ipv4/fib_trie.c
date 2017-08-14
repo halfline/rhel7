@@ -265,7 +265,6 @@ struct trie_stat {
 };
 
 struct trie {
-	struct rcu_head	rcu;
 	struct key_vector kv[1];
 #ifdef CONFIG_IP_FIB_TRIE_STATS
 	struct trie_use_stats __percpu *stats;
@@ -1842,11 +1841,10 @@ static void fib_notify(struct net *net, struct notifier_block *nb,
 
 static void __trie_free_rcu(struct rcu_head *head)
 {
-	struct trie *t = container_of(head, struct trie, rcu);
-	unsigned long *tb_data = (unsigned long *)t;
-	struct fib_table *tb = container_of(tb_data, struct fib_table,
-					    tb_data[0]);
+	struct fib_table *tb = container_of(head, struct fib_table, rcu);
 #ifdef CONFIG_IP_FIB_TRIE_STATS
+	struct trie *t = (struct trie *)tb->tb_data;
+
 	free_percpu(t->stats);
 #endif /* CONFIG_IP_FIB_TRIE_STATS */
 	kfree(tb);
@@ -1854,9 +1852,7 @@ static void __trie_free_rcu(struct rcu_head *head)
 
 void fib_free_table(struct fib_table *tb)
 {
-	struct trie *t = (struct trie *)tb->tb_data;
-
-	call_rcu(&t->rcu, __trie_free_rcu);
+	call_rcu(&tb->rcu, __trie_free_rcu);
 }
 
 static int fn_trie_dump_leaf(struct key_vector *l, struct fib_table *tb,
