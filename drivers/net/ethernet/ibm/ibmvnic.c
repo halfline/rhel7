@@ -1029,7 +1029,7 @@ static const struct net_device_ops ibmvnic_netdev_ops = {
 	.ndo_set_rx_mode	= ibmvnic_set_multi,
 	.ndo_set_mac_address	= ibmvnic_set_mac,
 	.ndo_validate_addr	= eth_validate_addr,
-	.ndo_change_mtu		= ibmvnic_change_mtu,
+	.ndo_change_mtu_rh74	= ibmvnic_change_mtu,
 	.ndo_tx_timeout		= ibmvnic_tx_timeout,
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller	= ibmvnic_netpoll_controller,

@@ -1225,8 +1225,9 @@ struct net_device_ops {
 					        struct ifreq *ifr, int cmd);
 	int			(*ndo_set_config)(struct net_device *dev,
 					          struct ifmap *map);
-	int			(*ndo_change_mtu)(struct net_device *dev,
-						  int new_mtu);
+	RH_KABI_RENAME(int	(*ndo_change_mtu),
+		       int	(*ndo_change_mtu_rh74))(struct net_device *dev,
+							int new_mtu);
 	int			(*ndo_neigh_setup)(struct net_device *dev,
 						   struct neigh_parms *);
 	void			(*ndo_tx_timeout) (struct net_device *dev);

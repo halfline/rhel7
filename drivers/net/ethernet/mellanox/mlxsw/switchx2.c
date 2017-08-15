@@ -431,7 +431,7 @@ static const struct net_device_ops mlxsw_sx_port_netdev_ops = {
 	.ndo_open		= mlxsw_sx_port_open,
 	.ndo_stop		= mlxsw_sx_port_stop,
 	.ndo_start_xmit		= mlxsw_sx_port_xmit,
-	.ndo_change_mtu		= mlxsw_sx_port_change_mtu,
+	.ndo_change_mtu_rh74	= mlxsw_sx_port_change_mtu,
 	.ndo_get_stats64	= mlxsw_sx_port_get_stats64,
 	.extended.ndo_get_phys_port_name = mlxsw_sx_port_get_phys_port_name,
 };

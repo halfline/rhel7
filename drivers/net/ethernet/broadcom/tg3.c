@@ -14235,7 +14235,7 @@ static const struct net_device_ops tg3_netdev_ops = {
 	.ndo_set_mac_address	= tg3_set_mac_addr,
 	.ndo_do_ioctl		= tg3_ioctl,
 	.ndo_tx_timeout		= tg3_tx_timeout,
-	.ndo_change_mtu		= tg3_change_mtu,
+	.ndo_change_mtu_rh74	= tg3_change_mtu,
 	.ndo_fix_features	= tg3_fix_features,
 	.ndo_set_features	= tg3_set_features,
 #ifdef CONFIG_NET_POLL_CONTROLLER

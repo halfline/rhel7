@@ -123,7 +123,7 @@ static const struct net_device_ops nlmon_ops = {
 	.ndo_stop = nlmon_close,
 	.ndo_start_xmit = nlmon_xmit,
 	.ndo_get_stats64 = nlmon_get_stats64,
-	.ndo_change_mtu = nlmon_change_mtu,
+	.ndo_change_mtu_rh74 = nlmon_change_mtu,
 };
 
 static void nlmon_setup(struct net_device *dev)

@@ -1804,7 +1804,7 @@ static const struct net_device_ops amd8111e_netdev_ops = {
 	.ndo_validate_addr	= eth_validate_addr,
 	.ndo_set_mac_address	= amd8111e_set_mac_address,
 	.ndo_do_ioctl		= amd8111e_ioctl,
-	.ndo_change_mtu		= amd8111e_change_mtu,
+	.ndo_change_mtu_rh74	= amd8111e_change_mtu,
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller	 = amd8111e_poll,
 #endif

@@ -6539,8 +6539,8 @@ int __dev_set_mtu(struct net_device *dev, int new_mtu)
 	 */
 	if (get_ndo_ext(ops, ndo_change_mtu))
 		return get_ndo_ext(ops, ndo_change_mtu)(dev, new_mtu);
-	else if (ops->ndo_change_mtu)
-		return ops->ndo_change_mtu(dev, new_mtu);
+	else if (ops->ndo_change_mtu_rh74)
+		return ops->ndo_change_mtu_rh74(dev, new_mtu);
 
 	dev->mtu = new_mtu;
 	return 0;
@@ -6564,7 +6564,7 @@ int dev_set_mtu(struct net_device *dev, int new_mtu)
 	/* RHEL - skip min_mtu & max_mtu checks for old drivers that
 	 * implement old .ndo_change_mtu_rh74() handler.
 	 */
-	if (dev->netdev_ops->ndo_change_mtu) {
+	if (dev->netdev_ops->ndo_change_mtu_rh74) {
 		/* Warn if the driver implements both new and old handler */
 		if (get_ndo_ext(dev->netdev_ops, ndo_change_mtu))
 			netdev_WARN(dev, "Only one of ndo_change_mtu_rh74 and extended.ndo_change_mtu should be provided");

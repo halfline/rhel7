@@ -779,7 +779,7 @@ static const struct ethtool_ops vlan_ethtool_ops = {
 
 static const struct net_device_ops vlan_netdev_ops = {
 	.ndo_size		= sizeof(struct net_device_ops),
-	.ndo_change_mtu		= vlan_dev_change_mtu,
+	.ndo_change_mtu_rh74	= vlan_dev_change_mtu,
 	.ndo_init		= vlan_dev_init,
 	.ndo_uninit		= vlan_dev_uninit,
 	.ndo_open		= vlan_dev_open,

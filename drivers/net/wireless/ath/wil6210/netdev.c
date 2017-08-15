@@ -70,7 +70,7 @@ static const struct net_device_ops wil_netdev_ops = {
 	.ndo_start_xmit		= wil_start_xmit,
 	.ndo_set_mac_address	= eth_mac_addr,
 	.ndo_validate_addr	= eth_validate_addr,
-	.ndo_change_mtu		= wil_change_mtu,
+	.ndo_change_mtu_rh74	= wil_change_mtu,
 	.ndo_do_ioctl		= wil_do_ioctl,
 };
 

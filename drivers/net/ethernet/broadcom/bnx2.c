@@ -8542,7 +8542,7 @@ static const struct net_device_ops bnx2_netdev_ops = {
 	.ndo_do_ioctl		= bnx2_ioctl,
 	.ndo_validate_addr	= eth_validate_addr,
 	.ndo_set_mac_address	= bnx2_change_mac_addr,
-	.ndo_change_mtu		= bnx2_change_mtu,
+	.ndo_change_mtu_rh74	= bnx2_change_mtu,
 	.ndo_set_features	= bnx2_set_features,
 	.ndo_tx_timeout		= bnx2_tx_timeout,
 #ifdef CONFIG_NET_POLL_CONTROLLER

@@ -506,7 +506,7 @@ static const struct net_device_ops qede_netdev_ops = {
 	.ndo_set_rx_mode = qede_set_rx_mode,
 	.ndo_set_mac_address = qede_set_mac_addr,
 	.ndo_validate_addr = eth_validate_addr,
-	.ndo_change_mtu = qede_change_mtu,
+	.ndo_change_mtu_rh74 = qede_change_mtu,
 #ifdef CONFIG_QED_SRIOV
 	.ndo_set_vf_mac = qede_set_vf_mac,
 	.extended.ndo_set_vf_vlan = qede_set_vf_vlan,

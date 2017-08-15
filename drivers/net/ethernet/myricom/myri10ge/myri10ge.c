@@ -3965,7 +3965,7 @@ static const struct net_device_ops myri10ge_netdev_ops = {
 	.ndo_start_xmit		= myri10ge_xmit,
 	.ndo_get_stats64	= myri10ge_get_stats,
 	.ndo_validate_addr	= eth_validate_addr,
-	.ndo_change_mtu		= myri10ge_change_mtu,
+	.ndo_change_mtu_rh74	= myri10ge_change_mtu,
 	.ndo_set_rx_mode	= myri10ge_set_multicast_list,
 	.ndo_set_mac_address	= myri10ge_set_mac_address,
 #ifdef CONFIG_NET_RX_BUSY_POLL

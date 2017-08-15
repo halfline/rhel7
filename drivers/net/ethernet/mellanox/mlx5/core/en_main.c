@@ -3146,7 +3146,7 @@ static const struct net_device_ops mlx5e_netdev_ops_basic = {
 	.ndo_vlan_rx_add_vid     = mlx5e_vlan_rx_add_vid,
 	.ndo_vlan_rx_kill_vid    = mlx5e_vlan_rx_kill_vid,
 	.ndo_set_features        = mlx5e_set_features,
-	.ndo_change_mtu          = mlx5e_change_mtu,
+	.ndo_change_mtu_rh74     = mlx5e_change_mtu,
 	.ndo_do_ioctl            = mlx5e_ioctl,
 	.extended.ndo_set_tx_maxrate      = mlx5e_set_tx_maxrate,
 #ifdef CONFIG_RFS_ACCEL
@@ -3171,7 +3171,7 @@ static const struct net_device_ops mlx5e_netdev_ops_sriov = {
 	.ndo_vlan_rx_add_vid     = mlx5e_vlan_rx_add_vid,
 	.ndo_vlan_rx_kill_vid    = mlx5e_vlan_rx_kill_vid,
 	.ndo_set_features        = mlx5e_set_features,
-	.ndo_change_mtu          = mlx5e_change_mtu,
+	.ndo_change_mtu_rh74     = mlx5e_change_mtu,
 	.ndo_do_ioctl            = mlx5e_ioctl,
 	.extended.ndo_udp_tunnel_add	 = mlx5e_add_vxlan_port,
 	.extended.ndo_udp_tunnel_del	 = mlx5e_del_vxlan_port,

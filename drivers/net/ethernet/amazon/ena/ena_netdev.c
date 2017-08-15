@@ -2220,7 +2220,7 @@ static const struct net_device_ops ena_netdev_ops = {
 	.ndo_select_queue	= ena_select_queue,
 	.ndo_get_stats64	= ena_get_stats64,
 	.ndo_tx_timeout		= ena_tx_timeout,
-	.ndo_change_mtu		= ena_change_mtu,
+	.ndo_change_mtu_rh74	= ena_change_mtu,
 	.ndo_set_mac_address	= NULL,
 	.ndo_validate_addr	= eth_validate_addr,
 #ifdef CONFIG_NET_POLL_CONTROLLER

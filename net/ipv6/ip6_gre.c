@@ -970,7 +970,7 @@ static const struct net_device_ops ip6gre_netdev_ops = {
 	.ndo_uninit		= ip6gre_tunnel_uninit,
 	.ndo_start_xmit		= ip6gre_tunnel_xmit,
 	.ndo_do_ioctl		= ip6gre_tunnel_ioctl,
-	.ndo_change_mtu		= ip6_tnl_change_mtu,
+	.ndo_change_mtu_rh74	= ip6_tnl_change_mtu,
 	.ndo_get_stats64	= ip_tunnel_get_stats64,
 	.ndo_get_iflink		= ip6_tnl_get_iflink,
 };
@@ -1269,7 +1269,7 @@ static const struct net_device_ops ip6gre_tap_netdev_ops = {
 	.ndo_start_xmit = ip6gre_tunnel_xmit,
 	.ndo_set_mac_address = eth_mac_addr,
 	.ndo_validate_addr = eth_validate_addr,
-	.ndo_change_mtu = ip6_tnl_change_mtu,
+	.ndo_change_mtu_rh74 = ip6_tnl_change_mtu,
 	.ndo_get_stats64 = ip_tunnel_get_stats64,
 	.ndo_get_iflink = ip6_tnl_get_iflink,
 };

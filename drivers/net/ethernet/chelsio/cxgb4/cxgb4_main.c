@@ -2783,7 +2783,7 @@ static const struct net_device_ops cxgb4_netdev_ops = {
 	.ndo_set_features     = cxgb_set_features,
 	.ndo_validate_addr    = eth_validate_addr,
 	.ndo_do_ioctl         = cxgb_ioctl,
-	.ndo_change_mtu       = cxgb_change_mtu,
+	.ndo_change_mtu_rh74  = cxgb_change_mtu,
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller  = cxgb_netpoll,
 #endif

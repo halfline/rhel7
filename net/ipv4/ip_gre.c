@@ -664,7 +664,7 @@ static const struct net_device_ops ipgre_netdev_ops = {
 #endif
 	.ndo_start_xmit		= ipgre_xmit,
 	.ndo_do_ioctl		= ipgre_tunnel_ioctl,
-	.ndo_change_mtu		= ip_tunnel_change_mtu,
+	.ndo_change_mtu_rh74	= ip_tunnel_change_mtu,
 	.ndo_get_stats64	= ip_tunnel_get_stats64,
 	.ndo_get_iflink		= ip_tunnel_get_iflink,
 };
@@ -922,7 +922,7 @@ static const struct net_device_ops gre_tap_netdev_ops = {
 	.ndo_start_xmit		= gre_tap_xmit,
 	.ndo_set_mac_address 	= eth_mac_addr,
 	.ndo_validate_addr	= eth_validate_addr,
-	.ndo_change_mtu		= ip_tunnel_change_mtu,
+	.ndo_change_mtu_rh74	= ip_tunnel_change_mtu,
 	.ndo_get_stats64	= ip_tunnel_get_stats64,
 	.ndo_get_iflink		= ip_tunnel_get_iflink,
 	.ndo_fill_metadata_dst	= gre_fill_metadata_dst,

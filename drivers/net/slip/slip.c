@@ -645,7 +645,7 @@ static const struct net_device_ops sl_netdev_ops = {
 	.ndo_stop		= sl_close,
 	.ndo_start_xmit		= sl_xmit,
 	.ndo_get_stats64        = sl_get_stats64,
-	.ndo_change_mtu		= sl_change_mtu,
+	.ndo_change_mtu_rh74	= sl_change_mtu,
 	.ndo_tx_timeout		= sl_tx_timeout,
 #ifdef CONFIG_SLIP_SMART
 	.ndo_do_ioctl		= sl_ioctl,

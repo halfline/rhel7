@@ -444,7 +444,7 @@ static const struct net_device_ops teql_netdev_ops = {
 	.ndo_stop	= teql_master_close,
 	.ndo_start_xmit	= teql_master_xmit,
 	.ndo_get_stats64 = teql_master_stats64,
-	.ndo_change_mtu	= teql_master_mtu,
+	.ndo_change_mtu_rh74 = teql_master_mtu,
 };
 
 static __init void teql_master_setup(struct net_device *dev)

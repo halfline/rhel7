@@ -1701,7 +1701,7 @@ static ssize_t i40e_dbg_netdev_ops_write(struct file *filp,
 			dev_info(&pf->pdev->dev, "change_mtu: no netdev for VSI %d\n",
 				 vsi_seid);
 		} else if (rtnl_trylock()) {
-			vsi->netdev->netdev_ops->ndo_change_mtu(vsi->netdev,
+			vsi->netdev->netdev_ops->ndo_change_mtu_rh74(vsi->netdev,
 								mtu);
 			rtnl_unlock();
 			dev_info(&pf->pdev->dev, "change_mtu called\n");

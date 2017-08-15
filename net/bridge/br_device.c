@@ -350,7 +350,7 @@ static const struct net_device_ops br_netdev_ops = {
 	.ndo_set_mac_address	 = br_set_mac_address,
 	.ndo_set_rx_mode	 = br_dev_set_multicast_list,
 	.ndo_change_rx_flags	 = br_dev_change_rx_flags,
-	.ndo_change_mtu		 = br_change_mtu,
+	.ndo_change_mtu_rh74	 = br_change_mtu,
 	.ndo_do_ioctl		 = br_dev_ioctl,
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_netpoll_setup	 = br_netpoll_setup,

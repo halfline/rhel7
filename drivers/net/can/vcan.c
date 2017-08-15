@@ -147,7 +147,7 @@ static int vcan_change_mtu(struct net_device *dev, int new_mtu)
 
 static const struct net_device_ops vcan_netdev_ops = {
 	.ndo_start_xmit = vcan_tx,
-	.ndo_change_mtu = vcan_change_mtu,
+	.ndo_change_mtu_rh74 = vcan_change_mtu,
 };
 
 static void vcan_setup(struct net_device *dev)

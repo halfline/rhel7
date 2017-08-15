@@ -175,7 +175,7 @@ static const struct net_device_ops aq_ndev_ops = {
 	.ndo_stop = aq_ndev_close,
 	.ndo_start_xmit = aq_ndev_start_xmit,
 	.ndo_set_rx_mode = aq_ndev_set_multicast_settings,
-	.ndo_change_mtu = aq_ndev_change_mtu,
+	.ndo_change_mtu_rh74 = aq_ndev_change_mtu,
 	.ndo_set_mac_address = aq_ndev_set_mac_address,
 	.ndo_set_features = aq_ndev_set_features
 };
