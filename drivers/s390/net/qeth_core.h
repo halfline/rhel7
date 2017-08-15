@@ -995,6 +995,7 @@ int qeth_send_setassparms(struct qeth_card *, struct qeth_cmd_buffer *, __u16,
 			  void *);
 int qeth_start_ipa_tx_checksum(struct qeth_card *);
 int qeth_set_rx_csum(struct qeth_card *, int);
+int qeth_vm_request_mac(struct qeth_card *card);
 
 /* exports for OSN */
 int qeth_osn_assist(struct net_device *, void *, int);
