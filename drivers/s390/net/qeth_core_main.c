@@ -3786,11 +3786,11 @@ int qeth_get_elements_for_frags(struct sk_buff *skb)
 EXPORT_SYMBOL_GPL(qeth_get_elements_for_frags);
 
 int qeth_get_elements_no(struct qeth_card *card,
-		     struct sk_buff *skb, int elems)
+		     struct sk_buff *skb, int elems, int data_offset)
 {
 	int dlen = skb->len - skb->data_len;
 	int elements_needed = PFN_UP((unsigned long)skb->data + dlen - 1) -
-		PFN_DOWN((unsigned long)skb->data);
+		PFN_DOWN((unsigned long)skb->data + data_offset);
 
 	elements_needed += qeth_get_elements_for_frags(skb);
 
