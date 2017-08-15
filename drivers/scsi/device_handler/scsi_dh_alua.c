@@ -884,6 +884,11 @@ static int alua_bus_attach(struct scsi_device *sdev)
 	return 0;
 
 failed:
+	/*
+	 * h->buff may be realloc'ed in alua_initialize().
+	 */
+	if (h->buff && h->inq != h->buff)
+		kfree(h->buff);
 	kfree(scsi_dh_data);
 	sdev_printk(KERN_ERR, sdev, "%s: not attached\n", ALUA_DH_NAME);
 	return -EINVAL;
