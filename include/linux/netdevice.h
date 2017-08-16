@@ -1936,6 +1936,8 @@ struct net_device_extended {
 #endif
 	unsigned int		min_mtu;
 	unsigned int		max_mtu;
+	struct list_head	ptype_all;
+	struct list_head	ptype_specific;
 };
 
 #define to_net_dev(d) container_of(d, struct net_device, dev)
