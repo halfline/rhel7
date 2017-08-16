@@ -51,8 +51,8 @@ struct pcpu_dstats {
 	struct u64_stats_sync	syncp;
 };
 
-static struct rtnl_link_stats64 *dummy_get_stats64(struct net_device *dev,
-						   struct rtnl_link_stats64 *stats)
+static void dummy_get_stats64(struct net_device *dev,
+			      struct rtnl_link_stats64 *stats)
 {
 	int i;
 
@@ -70,7 +70,6 @@ static struct rtnl_link_stats64 *dummy_get_stats64(struct net_device *dev,
 		stats->tx_bytes += tbytes;
 		stats->tx_packets += tpackets;
 	}
-	return stats;
 }
 
 static netdev_tx_t dummy_xmit(struct sk_buff *skb, struct net_device *dev)

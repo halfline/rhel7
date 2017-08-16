@@ -908,7 +908,7 @@ static netdev_features_t tun_net_fix_features(struct net_device *dev,
 	return (features & tun->set_features) | (features & ~TUN_USER_FEATURES);
 }
 
-static struct rtnl_link_stats64 *
+static void
 tun_net_get_stats64(struct net_device *dev, struct rtnl_link_stats64 *stats)
 {
 	u32 rx_dropped = 0, tx_dropped = 0, rx_frame_errors = 0;
@@ -942,7 +942,6 @@ tun_net_get_stats64(struct net_device *dev, struct rtnl_link_stats64 *stats)
 	stats->rx_dropped  = rx_dropped;
 	stats->rx_frame_errors = rx_frame_errors;
 	stats->tx_dropped = tx_dropped;
-	return stats;
 }
 
 #ifdef CONFIG_NET_POLL_CONTROLLER

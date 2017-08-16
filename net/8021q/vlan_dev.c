@@ -682,7 +682,8 @@ static void vlan_ethtool_get_drvinfo(struct net_device *dev,
 	strlcpy(info->fw_version, "N/A", sizeof(info->fw_version));
 }
 
-static struct rtnl_link_stats64 *vlan_dev_get_stats64(struct net_device *dev, struct rtnl_link_stats64 *stats)
+static void vlan_dev_get_stats64(struct net_device *dev,
+				 struct rtnl_link_stats64 *stats)
 {
 
 	if (vlan_dev_priv(dev)->vlan_pcpu_stats) {
@@ -716,7 +717,6 @@ static struct rtnl_link_stats64 *vlan_dev_get_stats64(struct net_device *dev, st
 		stats->rx_errors  = rx_errors;
 		stats->tx_dropped = tx_dropped;
 	}
-	return stats;
 }
 
 #ifdef CONFIG_NET_POLL_CONTROLLER

@@ -919,8 +919,8 @@ out:
 	return ret;
 }
 
-static struct rtnl_link_stats64 *netvsc_get_stats64(struct net_device *net,
-						    struct rtnl_link_stats64 *t)
+static void netvsc_get_stats64(struct net_device *net,
+			       struct rtnl_link_stats64 *t)
 {
 	struct net_device_context *ndev_ctx = netdev_priv(net);
 	int cpu;
@@ -958,8 +958,6 @@ static struct rtnl_link_stats64 *netvsc_get_stats64(struct net_device *net,
 
 	t->rx_dropped	= net->stats.rx_dropped;
 	t->rx_errors	= net->stats.rx_errors;
-
-	return t;
 }
 
 static int netvsc_set_mac_addr(struct net_device *ndev, void *p)

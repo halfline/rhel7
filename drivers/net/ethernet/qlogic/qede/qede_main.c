@@ -425,9 +425,8 @@ void qede_fill_by_demand_stats(struct qede_dev *edev)
 	}
 }
 
-static
-struct rtnl_link_stats64 *qede_get_stats64(struct net_device *dev,
-					   struct rtnl_link_stats64 *stats)
+static void qede_get_stats64(struct net_device *dev,
+			     struct rtnl_link_stats64 *stats)
 {
 	struct qede_dev *edev = netdev_priv(dev);
 	struct qede_stats_common *p_common;
@@ -454,8 +453,6 @@ struct rtnl_link_stats64 *qede_get_stats64(struct net_device *dev,
 		stats->collisions = edev->stats.bb.tx_total_collisions;
 	stats->rx_crc_errors = p_common->rx_crc_errors;
 	stats->rx_frame_errors = p_common->rx_align_errors;
-
-	return stats;
 }
 
 #ifdef CONFIG_QED_SRIOV

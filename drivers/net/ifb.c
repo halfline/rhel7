@@ -129,8 +129,8 @@ resched:
 
 }
 
-static struct rtnl_link_stats64 *ifb_stats64(struct net_device *dev,
-					     struct rtnl_link_stats64 *stats)
+static void ifb_stats64(struct net_device *dev,
+			struct rtnl_link_stats64 *stats)
 {
 	struct ifb_private *dp = netdev_priv(dev);
 	unsigned int start;
@@ -151,8 +151,6 @@ static struct rtnl_link_stats64 *ifb_stats64(struct net_device *dev,
 
 	stats->rx_dropped = dev->stats.rx_dropped;
 	stats->tx_dropped = dev->stats.tx_dropped;
-
-	return stats;
 }
 
 
