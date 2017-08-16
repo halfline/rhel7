@@ -396,10 +396,10 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
 
 	cmd->cmd_in_wq = 0;
 
-	WARN_ON(cmd->cmd_flags &  BIT_16);
+	WARN_ON(cmd->trc_flags & TRC_CMD_FREE);
 
 	cmd->vha->tgt_counters.qla_core_ret_sta_ctio++;
-	cmd->cmd_flags |= BIT_16;
+	cmd->trc_flags |= TRC_CMD_FREE;
 	transport_generic_free_cmd(&cmd->se_cmd, 0);
 }
 
@@ -413,8 +413,8 @@ static void tcm_qla2xxx_free_cmd(struct qla_tgt_cmd *cmd)
 	cmd->vha->tgt_counters.core_qla_free_cmd++;
 	cmd->cmd_in_wq = 1;
 
-	BUG_ON(cmd->cmd_flags & BIT_20);
-	cmd->cmd_flags |= BIT_20;
+	WARN_ON(cmd->trc_flags & TRC_CMD_DONE);
+	cmd->trc_flags |= TRC_CMD_DONE;
 
 	INIT_WORK(&cmd->work, tcm_qla2xxx_complete_free);
 	queue_work(tcm_qla2xxx_free_wq, &cmd->work);
@@ -429,7 +429,7 @@ static int tcm_qla2xxx_check_stop_free(struct se_cmd *se_cmd)
 
 	if ((se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB) == 0) {
 		cmd = container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
-		cmd->cmd_flags |= BIT_14;
+		cmd->trc_flags |= TRC_CMD_CHK_STOP;
 	}
 
 	return target_put_sess_cmd(se_cmd);
@@ -531,7 +531,7 @@ static int tcm_qla2xxx_write_pending(struct se_cmd *se_cmd)
 			cmd->se_cmd.se_cmd_flags);
 		return 0;
 	}
-	cmd->cmd_flags |= BIT_3;
+	cmd->trc_flags |= TRC_XFR_RDY;
 	cmd->bufflen = se_cmd->data_length;
 	cmd->dma_data_direction = tcm_qla2xxx_mapping_dir(se_cmd);
 
@@ -652,9 +652,9 @@ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
 	cmd->cmd_in_wq = 0;
 
 	spin_lock_irqsave(&cmd->cmd_lock, flags);
-	cmd->cmd_flags |= CMD_FLAG_DATA_WORK;
+	cmd->data_work = 1;
 	if (cmd->aborted) {
-		cmd->cmd_flags |= CMD_FLAG_DATA_WORK_FREE;
+		cmd->data_work_free = 1;
 		spin_unlock_irqrestore(&cmd->cmd_lock, flags);
 
 		tcm_qla2xxx_free_cmd(cmd);
@@ -691,7 +691,7 @@ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
  */
 static void tcm_qla2xxx_handle_data(struct qla_tgt_cmd *cmd)
 {
-	cmd->cmd_flags |= BIT_10;
+	cmd->trc_flags |= TRC_DATA_IN;
 	cmd->cmd_in_wq = 1;
 	INIT_WORK(&cmd->work, tcm_qla2xxx_handle_data_work);
 	queue_work(tcm_qla2xxx_free_wq, &cmd->work);
@@ -786,7 +786,7 @@ static int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
 		return 0;
 	}
 
-	cmd->cmd_flags |= BIT_4;
+	cmd->trc_flags |= TRC_XMIT_DATA;
 	cmd->bufflen = se_cmd->data_length;
 	cmd->dma_data_direction = tcm_qla2xxx_mapping_dir(se_cmd);
 
@@ -817,11 +817,11 @@ static int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
 	cmd->sg_cnt = 0;
 	cmd->offset = 0;
 	cmd->dma_data_direction = tcm_qla2xxx_mapping_dir(se_cmd);
-	if (cmd->cmd_flags & BIT_5) {
-		pr_crit("Bit_5 already set for cmd = %p.\n", cmd);
+	if (cmd->trc_flags & TRC_XMIT_STATUS) {
+		pr_crit("Multiple calls for status = %p.\n", cmd);
 		dump_stack();
 	}
-	cmd->cmd_flags |= BIT_5;
+	cmd->trc_flags |= TRC_XMIT_STATUS;
 
 	if (se_cmd->data_direction == DMA_FROM_DEVICE) {
 		/*
@@ -878,9 +878,7 @@ static void tcm_qla2xxx_queue_tm_rsp(struct se_cmd *se_cmd)
 }
 
 
-#define DATA_WORK_NOT_FREE(_flags) \
-	(( _flags & (CMD_FLAG_DATA_WORK|CMD_FLAG_DATA_WORK_FREE)) == \
-	 CMD_FLAG_DATA_WORK)
+#define DATA_WORK_NOT_FREE(_cmd) (_cmd->data_work && !_cmd->data_work_free)
 static void tcm_qla2xxx_aborted_task(struct se_cmd *se_cmd)
 {
 	struct qla_tgt_cmd *cmd = container_of(se_cmd,
@@ -892,13 +890,13 @@ static void tcm_qla2xxx_aborted_task(struct se_cmd *se_cmd)
 
 	spin_lock_irqsave(&cmd->cmd_lock, flags);
 	if ((cmd->state == QLA_TGT_STATE_NEW)||
-		((cmd->state == QLA_TGT_STATE_DATA_IN) &&
-		 DATA_WORK_NOT_FREE(cmd->cmd_flags)) ) {
-
-		cmd->cmd_flags |= CMD_FLAG_DATA_WORK_FREE;
+	    ((cmd->state == QLA_TGT_STATE_DATA_IN) &&
+		DATA_WORK_NOT_FREE(cmd))) {
+		cmd->data_work_free = 1;
 		spin_unlock_irqrestore(&cmd->cmd_lock, flags);
-		/* Cmd have not reached firmware.
-		 * Use this trigger to free it. */
+		/*
+		 * cmd has not reached fw, Use this trigger to free it.
+		 */
 		tcm_qla2xxx_free_cmd(cmd);
 		return;
 	}
