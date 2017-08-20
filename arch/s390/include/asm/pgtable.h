@@ -618,6 +618,16 @@ static inline int pmd_write(pmd_t pmd)
 	return (pmd_val(pmd) & _SEGMENT_ENTRY_PROTECT) == 0;
 }
 
+static inline int pmd_dirty(pmd_t pmd)
+{
+	/*
+	 * RHEL-only, for smaps_pmd_entry(), until we backport 152125b7a882
+	 * "s390/mm: implement dirty bits for large segment table entries".
+	 * Matches pmd_mkdirty() we currently have.
+	 */
+	return 0;
+}
+
 static inline int pmd_young(pmd_t pmd)
 {
 	int young = 0;
