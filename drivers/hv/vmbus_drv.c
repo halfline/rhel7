@@ -54,7 +54,6 @@ struct vmbus_dynid {
 static struct acpi_device  *hv_acpi_dev;
 
 static struct completion probe_event;
-static int irq;
 
 
 static int hyperv_panic_event(struct notifier_block *nb, unsigned long val,
@@ -996,10 +995,9 @@ static struct notifier_block hv_cpuhp_notifier __refdata = {
  * Here, we
  *	- initialize the vmbus driver context
  *	- invoke the vmbus hv main init routine
- *	- get the irq resource
  *	- retrieve the channel offers
  */
-static int vmbus_bus_init(int irq)
+static int vmbus_bus_init(void)
 {
 	int ret, cpu;
 
@@ -1202,9 +1200,6 @@ static acpi_status vmbus_walk_resources(struct acpi_resource *res, void *ctx)
 	struct resource **prev_res = NULL;
 
 	switch (res->type) {
-	case ACPI_RESOURCE_TYPE_IRQ:
-		irq = res->data.irq.interrupts[0];
-		return AE_OK;
 
 	/*
 	 * "Address" descriptors are for bus windows. Ignore
@@ -1549,7 +1544,7 @@ static int __init hv_acpi_init(void)
 	init_completion(&probe_event);
 
 	/*
-	 * Get irq resources first.
+	 * Get ACPI resources first.
 	 */
 	ret = acpi_bus_register_driver(&vmbus_acpi_driver);
 
@@ -1562,12 +1557,7 @@ static int __init hv_acpi_init(void)
 		goto cleanup;
 	}
 
-	if (irq <= 0) {
-		ret = -ENODEV;
-		goto cleanup;
-	}
-
-	ret = vmbus_bus_init(irq);
+	ret = vmbus_bus_init();
 	if (ret)
 		goto cleanup;
 
