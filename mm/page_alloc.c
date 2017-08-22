@@ -531,6 +531,7 @@ static inline void prep_zero_page(struct page *page, int order, gfp_t gfp_flags)
 unsigned int _debug_guardpage_minorder;
 bool _debug_pagealloc_enabled __read_mostly
 			= IS_ENABLED(CONFIG_DEBUG_PAGEALLOC_ENABLE_DEFAULT);
+EXPORT_SYMBOL(_debug_pagealloc_enabled);
 bool _debug_guardpage_enabled __read_mostly;
 
 static int __init early_debug_pagealloc(char *buf)
