@@ -850,6 +850,13 @@ struct vmbus_channel {
 	 * link up channels based on their CPU affinity.
 	 */
 	struct list_head percpu_list;
+
+	/*
+	 * Defer freeing channel until after all cpu's have
+	 * gone through grace period.
+	 */
+	struct rcu_head rcu;
+
 	/*
 	 * Host signaling policy: The default policy will be
 	 * based on the ring buffer state. We will also support
