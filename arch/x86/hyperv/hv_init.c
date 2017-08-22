@@ -21,6 +21,7 @@
 #include <asm/hypervisor.h>
 #include <asm/hyperv.h>
 #include <asm/mshyperv.h>
+#include <asm/fixmap.h>
 #include <linux/version.h>
 #include <linux/vmalloc.h>
 #include <linux/mm.h>
@@ -132,6 +133,14 @@ void hyperv_init(void)
 		tsc_msr.guest_physical_address = vmalloc_to_pfn(tsc_pg);
 
 		wrmsrl(HV_X64_MSR_REFERENCE_TSC, tsc_msr.as_uint64);
+
+		__set_fixmap(HVCLOCK_TSC_PAGE,
+			     tsc_msr.guest_physical_address << PAGE_SHIFT,
+			     PAGE_KERNEL_VVAR);
+		/* set fixmap before switching vclock mode */
+		wmb();
+		hyperv_cs_tsc.archdata.vclock_mode = VCLOCK_HVCLOCK;
+
 		clocksource_register_hz(&hyperv_cs_tsc, NSEC_PER_SEC/100);
 		return;
 	}

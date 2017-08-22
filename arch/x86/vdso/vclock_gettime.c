@@ -23,9 +23,26 @@
 #include <asm/unistd.h>
 #include <asm/io.h>
 #include <asm/pvclock.h>
+#include <asm/mshyperv.h>
 #include <asm/msr.h>
 
 #define gtod (&VVAR(vsyscall_gtod_data))
+
+#ifdef CONFIG_HYPERV_TSCPAGE
+static notrace u64 vread_hvclock(int *mode)
+{
+	const struct ms_hyperv_tsc_page *tsc_pg =
+		(const struct ms_hyperv_tsc_page *)
+		__fix_to_virt(HVCLOCK_TSC_PAGE);
+	u64 current_tick = hv_read_tsc_page(tsc_pg);
+
+	if (current_tick != U64_MAX)
+		return current_tick;
+
+	*mode = VCLOCK_NONE;
+	return 0;
+}
+#endif
 
 notrace static u64 vread_tsc(void)
 {
@@ -152,6 +169,10 @@ notrace static inline u64 vgetsns(int *mode)
 #ifdef CONFIG_PARAVIRT_CLOCK
 	else if (gtod->clock.vclock_mode == VCLOCK_PVCLOCK)
 		cycles = vread_pvclock(mode);
+#endif
+#ifdef CONFIG_HYPERV_TSCPAGE
+	else if (gtod->clock.vclock_mode == VCLOCK_HVCLOCK)
+		cycles = vread_hvclock(mode);
 #endif
 	else
 		return 0;
