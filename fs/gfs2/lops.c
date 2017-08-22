@@ -210,7 +210,9 @@ static void gfs2_end_log_write(struct bio *bio, int error)
 
 	if (error) {
 		sdp->sd_log_error = error;
-		fs_err(sdp, "Error %d writing to log\n", error);
+		fs_err(sdp, "Error %d writing to journal, jid=%u\n", error,
+		       sdp->sd_jdesc->jd_jid);
+		wake_up(&sdp->sd_logd_waitq);
 	}
 
 	bio_for_each_segment_all(bvec, bio, i) {
