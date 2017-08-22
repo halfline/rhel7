@@ -79,6 +79,7 @@ void __init page_cgroup_init_flatmem(void)
 	printk(KERN_INFO "allocated %ld bytes of page_cgroup\n", total_usage);
 	printk(KERN_INFO "please try 'cgroup_disable=memory' option if you"
 	" don't want memory cgroups\n");
+	invoke_page_ext_init_callbacks();
 	return;
 fail:
 	printk(KERN_CRIT "allocation of page_cgroup failed.\n");
@@ -307,6 +308,7 @@ void __init page_cgroup_init(void)
 	printk(KERN_INFO "allocated %ld bytes of page_cgroup\n", total_usage);
 	printk(KERN_INFO "please try 'cgroup_disable=memory' option if you "
 			 "don't want memory cgroups\n");
+	invoke_page_ext_init_callbacks();
 	return;
 oom:
 	printk(KERN_CRIT "try 'cgroup_disable=memory' boot option\n");
