@@ -13,7 +13,6 @@ struct ms_hyperv_info {
 };
 
 extern struct ms_hyperv_info ms_hyperv;
-extern struct clocksource *hyperv_cs;
 
 /*
  * Declare the MSR used to setup pages used to communicate with the hypervisor.
@@ -25,6 +24,18 @@ union hv_x64_msr_hypercall_contents {
 		u64 reserved:11;
 		u64 guest_physical_address:52;
 	};
+};
+
+/*
+ * TSC page layout.
+ */
+
+struct ms_hyperv_tsc_page {
+	volatile u32 tsc_sequence;
+	u32 reserved1;
+	volatile u64 tsc_scale;
+	volatile s64 tsc_offset;
+	u64 reserved2[509];
 };
 
 /*
