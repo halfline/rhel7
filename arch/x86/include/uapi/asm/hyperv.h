@@ -149,6 +149,10 @@
  * HV_VP_SET available
  */
 #define HV_X64_EX_PROCESSOR_MASKS_RECOMMENDED	(1 << 11)
+/*
+ * Virtual APIC support
+ */
+#define HV_X64_DEPRECATING_AEOI_RECOMMENDED	(1 << 9)
 
 /*
  * Crash notification flag.
