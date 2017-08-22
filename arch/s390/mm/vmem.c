@@ -108,9 +108,10 @@ static int vmem_add_mem(unsigned long start, unsigned long size)
 			pgd_populate(&init_mm, pg_dir, pu_dir);
 		}
 		pu_dir = pud_offset(pg_dir, address);
-#if defined(CONFIG_64BIT) && !defined(CONFIG_DEBUG_PAGEALLOC)
+#ifdef CONFIG_64BIT
 		if (MACHINE_HAS_EDAT2 && pud_none(*pu_dir) && address &&
-		    !(address & ~PUD_MASK) && (address + PUD_SIZE <= end)) {
+		    !(address & ~PUD_MASK) && (address + PUD_SIZE <= end) &&
+		    !debug_pagealloc_enabled()) {
 			pud_val(*pu_dir) = address | r3_prot;
 			address += PUD_SIZE;
 			continue;
@@ -123,9 +124,10 @@ static int vmem_add_mem(unsigned long start, unsigned long size)
 			pud_populate(&init_mm, pu_dir, pm_dir);
 		}
 		pm_dir = pmd_offset(pu_dir, address);
-#if defined(CONFIG_64BIT) && !defined(CONFIG_DEBUG_PAGEALLOC)
+#ifdef CONFIG_64BIT
 		if (MACHINE_HAS_EDAT1 && pmd_none(*pm_dir) && address &&
-		    !(address & ~PMD_MASK) && (address + PMD_SIZE <= end)) {
+		    !(address & ~PMD_MASK) && (address + PMD_SIZE <= end) &&
+		    !debug_pagealloc_enabled()) {
 			pmd_val(*pm_dir) = address | sgt_prot;
 			address += PMD_SIZE;
 			continue;
