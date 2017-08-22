@@ -890,6 +890,56 @@ msg_handled:
 	vmbus_signal_eom(msg, message_type);
 }
 
+
+/*
+ * Schedule all channels with events pending
+ */
+static void vmbus_chan_sched(struct hv_per_cpu_context *hv_cpu)
+{
+	unsigned long *recv_int_page;
+	u32 maxbits, relid;
+
+	if (vmbus_proto_version < VERSION_WIN8) {
+		maxbits = MAX_NUM_CHANNELS_SUPPORTED;
+		recv_int_page = vmbus_connection.recv_int_page;
+	} else {
+		/*
+		 * When the host is win8 and beyond, the event page
+		 * can be directly checked to get the id of the channel
+		 * that has the interrupt pending.
+		 */
+		void *page_addr = hv_cpu->synic_event_page;
+		union hv_synic_event_flags *event
+			= (union hv_synic_event_flags *)page_addr +
+						 VMBUS_MESSAGE_SINT;
+
+		maxbits = HV_EVENT_FLAGS_COUNT;
+		recv_int_page = event->flags;
+	}
+
+	if (unlikely(!recv_int_page))
+		return;
+
+	for_each_set_bit(relid, recv_int_page, maxbits) {
+		struct vmbus_channel *channel;
+
+		if (!sync_test_and_clear_bit(relid, recv_int_page))
+			continue;
+
+		/* Special case - vmbus channel protocol msg */
+		if (relid == 0)
+			continue;
+
+		/* Find channel based on relid */
+		list_for_each_entry(channel, &hv_cpu->chan_list, percpu_list) {
+			if (channel->offermsg.child_relid == relid) {
+				tasklet_schedule(&channel->callback_event);
+				break;
+			}
+		}
+	}
+}
+
 static void vmbus_isr(void)
 {
 	struct hv_per_cpu_context *hv_cpu
@@ -927,8 +977,7 @@ static void vmbus_isr(void)
 	}
 
 	if (handled)
-		tasklet_schedule(&hv_cpu->event_dpc);
-
+		vmbus_chan_sched(hv_cpu);
 
 	page_addr = hv_cpu->synic_message_page;
 	msg = (struct hv_message *)page_addr + VMBUS_MESSAGE_SINT;
@@ -1597,13 +1646,10 @@ static void __exit vmbus_exit(void)
 	bus_unregister(&hv_bus);
 	cpu_notifier_register_begin();
 	__unregister_hotcpu_notifier(&hv_cpuhp_notifier);
-	for_each_online_cpu(cpu) {
-		struct hv_per_cpu_context *hv_cpu
-			= per_cpu_ptr(hv_context.cpu_context, cpu);
 
+	for_each_online_cpu(cpu)
 		smp_call_function_single(cpu, hv_synic_cleanup_oncpu, NULL, 1);
-		tasklet_kill(&hv_cpu->event_dpc);
-	}
+
 	cpu_notifier_register_done();
 	hv_synic_free();
 	acpi_bus_unregister_driver(&vmbus_acpi_driver);
