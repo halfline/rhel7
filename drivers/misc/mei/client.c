@@ -546,7 +546,6 @@ int mei_cl_flush_queues(struct mei_cl *cl, const struct file *fp)
 	mei_io_list_free(&cl->dev->write_waiting_list, cl);
 	mei_io_list_flush(&cl->dev->ctrl_wr_list, cl);
 	mei_io_list_flush(&cl->dev->ctrl_rd_list, cl);
-	mei_io_list_flush(&cl->dev->amthif_cmd_list, cl);
 
 	mei_cl_read_cb_flush(cl, fp);
 
@@ -560,7 +559,7 @@ int mei_cl_flush_queues(struct mei_cl *cl, const struct file *fp)
  * @cl: host client to be initialized
  * @dev: mei device
  */
-void mei_cl_init(struct mei_cl *cl, struct mei_device *dev)
+static void mei_cl_init(struct mei_cl *cl, struct mei_device *dev)
 {
 	memset(cl, 0, sizeof(struct mei_cl));
 	init_waitqueue_head(&cl->wait);
@@ -606,7 +605,6 @@ struct mei_cl *mei_cl_allocate(struct mei_device *dev)
 int mei_cl_link(struct mei_cl *cl)
 {
 	struct mei_device *dev;
-	long open_handle_count;
 	int id;
 
 	if (WARN_ON(!cl || !cl->dev))
@@ -620,8 +618,7 @@ int mei_cl_link(struct mei_cl *cl)
 		return -EMFILE;
 	}
 
-	open_handle_count = dev->open_handle_count + dev->iamthif_open_count;
-	if (open_handle_count >= MEI_MAX_OPEN_HANDLE_COUNT) {
+	if (dev->open_handle_count >= MEI_MAX_OPEN_HANDLE_COUNT) {
 		dev_err(dev->dev, "open_handle_count exceeded %d",
 			MEI_MAX_OPEN_HANDLE_COUNT);
 		return -EMFILE;
@@ -655,8 +652,7 @@ int mei_cl_unlink(struct mei_cl *cl)
 	if (!cl)
 		return 0;
 
-	/* amthif might not be initialized */
-	if (!cl->dev)
+	if (WARN_ON(!cl->dev))
 		return 0;
 
 	dev = cl->dev;
@@ -1464,7 +1460,7 @@ int mei_cl_read_start(struct mei_cl *cl, size_t length, const struct file *fp)
 		return  -ENOTTY;
 	}
 
-	if (mei_cl_is_fixed_address(cl) || cl == &dev->iamthif_cl)
+	if (mei_cl_is_fixed_address(cl))
 		return 0;
 
 	/* HW currently supports only one pending read */
