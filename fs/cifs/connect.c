@@ -647,6 +647,21 @@ cifs_read_from_socket(struct TCP_Server_Info *server, char *buf,
 	return cifs_readv_from_socket(server, &iov, 1, to_read);
 }
 
+int
+cifs_read_page_from_socket(struct TCP_Server_Info *server, struct page *page,
+                      unsigned int to_read)
+{
+	struct kvec iov;
+	int length;
+
+	iov.iov_base = kmap(page);
+	iov.iov_len = to_read;
+	length = cifs_readv_from_socket(server, &iov, 1, iov.iov_len);
+	kunmap(page);
+
+	return length;
+}
+
 static bool
 is_smb_response(struct TCP_Server_Info *server, unsigned char type)
 {
