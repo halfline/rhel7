@@ -2015,13 +2015,13 @@ handle_read_data(struct TCP_Server_Info *server, struct mid_q_entry *mid,
 			dequeue_mid(mid, rdata->result);
 			return 0;
 		}
-
-		iov_iter_bvec(&iter, WRITE | ITER_BVEC, bvec, npages, data_len);
+		length = page_data_size;
 	} else if (buf_len >= data_offset + data_len) {
 		/* read response payload is in buf */
 		WARN_ONCE(npages > 0, "read data can be either in buf or in pages");
 		iov.iov_base = buf + data_offset;
 		iov.iov_len = data_len;
+		length = data_len;
 	} else {
 		/* read response payload cannot be in both buf and pages */
 		WARN_ONCE(1, "buf can not contain only a part of read data");
@@ -2038,7 +2038,12 @@ handle_read_data(struct TCP_Server_Info *server, struct mid_q_entry *mid,
 	cifs_dbg(FYI, "0: iov_base=%p iov_len=%zu\n",
 		 rdata->iov[0].iov_base, server->vals->read_rsp_size);
 
-	length = rdata->copy_into_pages(server, rdata, &iov);
+	if (bvec)
+		length = rdata->copy_into_pages(server, rdata, NULL, bvec,
+						length);
+	else
+		length = rdata->copy_into_pages(server, rdata, &iov, NULL,
+						length);
 
 	kfree(bvec);
 

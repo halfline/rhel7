@@ -2936,13 +2936,21 @@ cifs_uncached_readv_complete(struct work_struct *work)
 static int
 uncached_fill_pages(struct TCP_Server_Info *server,
 		    struct cifs_readdata *rdata, struct kvec *kvec,
-		    unsigned int len)
+		    struct bio_vec *bvec, unsigned int len)
 {
 	int result = 0;
 	unsigned int i;
 	unsigned int nr_pages = rdata->nr_pages;
 	struct kvec iov;
 	size_t kvec_offset = 0;
+	unsigned int bvec_idx = 0;
+	unsigned int bvec_offset = 0;
+	void *bvec_ptr;
+	size_t cp_size;
+	size_t to_copy;
+
+	if (bvec)
+		bvec_offset = bvec[0].bv_offset;
 
 	rdata->got_bytes = 0;
 	rdata->tailsz = PAGE_SIZE;
@@ -2972,7 +2980,29 @@ uncached_fill_pages(struct TCP_Server_Info *server,
 			put_page(page);
 			continue;
 		}
-		if (kvec){
+
+		if (bvec) {
+			to_copy = iov.iov_len;
+bvec_copy:
+			cp_size = min_t(size_t,
+					bvec[bvec_idx].bv_len - bvec_offset,
+					to_copy);
+			bvec_ptr = kmap(bvec[bvec_idx].bv_page) + bvec_offset;
+			memcpy(iov.iov_base, bvec_ptr, cp_size);
+			kunmap(bvec[bvec_idx].bv_page);
+
+			bvec_offset += cp_size;
+			if (bvec_offset == bvec[bvec_idx].bv_len) {
+				bvec_idx++;
+				bvec_offset = 0;
+			}
+
+                        to_copy -= cp_size;
+                        if (to_copy)
+                                goto bvec_copy;
+
+                        result = iov.iov_len;
+		} else if (kvec){
 			memcpy(iov.iov_base, kvec->iov_base + kvec_offset,
 				iov.iov_len);
 			kvec_offset += iov.iov_len;
@@ -2994,15 +3024,16 @@ static int
 cifs_uncached_read_into_pages(struct TCP_Server_Info *server,
 			      struct cifs_readdata *rdata, unsigned int len)
 {
-	return uncached_fill_pages(server, rdata, NULL, len);
+	return uncached_fill_pages(server, rdata, NULL, NULL, len);
 }
 
 static int
 cifs_uncached_copy_into_pages(struct TCP_Server_Info *server,
 			      struct cifs_readdata *rdata,
-			      struct kvec *kvec)
+			      struct kvec *kvec, struct bio_vec *bvec,
+                              unsigned int data_len)
 {
-	return uncached_fill_pages(server, rdata, kvec, kvec->iov_len);
+	return uncached_fill_pages(server, rdata, kvec, bvec, data_len);
 }
 
 static int
@@ -3416,7 +3447,7 @@ cifs_readv_complete(struct work_struct *work)
 static int
 readpages_fill_pages(struct TCP_Server_Info *server,
 		     struct cifs_readdata *rdata, struct kvec *kvec,
-		     unsigned int len)
+		     struct bio_vec *bvec, unsigned int len)
 {
 	int result = 0;
 	unsigned int i;
@@ -3425,6 +3456,14 @@ readpages_fill_pages(struct TCP_Server_Info *server,
 	unsigned int nr_pages = rdata->nr_pages;
 	struct kvec iov;
 	size_t kvec_offset = 0;
+	int bvec_idx = 0;
+	unsigned int bvec_offset = 0;
+	void *bvec_ptr;
+	size_t cp_size;
+	size_t to_copy;
+
+	if (bvec)
+		bvec_offset = bvec[0].bv_offset;
 
 	/* determine the eof that the server (probably) has */
 	eof = CIFS_I(rdata->mapping->host)->server_eof;
@@ -3481,7 +3520,28 @@ readpages_fill_pages(struct TCP_Server_Info *server,
 			continue;
 		}
 
-		if (kvec) {
+		if (bvec) {
+			to_copy = iov.iov_len;
+bvec_copy:
+			cp_size = min_t(size_t,
+					bvec[bvec_idx].bv_len - bvec_offset,
+					to_copy);
+			bvec_ptr = kmap(bvec[bvec_idx].bv_page) + bvec_offset;
+			memcpy(iov.iov_base, bvec_ptr, cp_size);
+			kunmap(bvec[bvec_idx].bv_page);
+
+			bvec_offset += cp_size;
+			if (bvec_offset == bvec[bvec_idx].bv_len) {
+				bvec_idx++;
+				bvec_offset = 0;
+			}
+
+			to_copy -= cp_size;
+			if (to_copy)
+				goto bvec_copy;
+
+			result = iov.iov_len;
+		} else if (kvec) {
 			memcpy(iov.iov_base, kvec->iov_base + kvec_offset,
 				iov.iov_len);
 			kvec_offset += iov.iov_len;
@@ -3503,15 +3563,16 @@ static int
 cifs_readpages_read_into_pages(struct TCP_Server_Info *server,
 			       struct cifs_readdata *rdata, unsigned int len)
 {
-	return readpages_fill_pages(server, rdata, NULL, len);
+	return readpages_fill_pages(server, rdata, NULL, NULL, len);
 }
 
 static int
 cifs_readpages_copy_into_pages(struct TCP_Server_Info *server,
 			       struct cifs_readdata *rdata,
-			       struct kvec *kvec)
+			       struct kvec *kvec, struct bio_vec *bvec,
+                               unsigned int data_len)
 {
-	return readpages_fill_pages(server, rdata, kvec, kvec->iov_len);
+	return readpages_fill_pages(server, rdata, kvec, bvec, data_len);
 }
 
 static int
