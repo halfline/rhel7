@@ -105,6 +105,7 @@ void nf_send_reset(struct sk_buff *oldskb, int hook)
 	struct iphdr *niph;
 	const struct tcphdr *oth;
 	struct tcphdr _oth;
+	struct net *net = dev_net(oldskb->dev);
 
 	oth = nf_reject_ip_tcphdr_get(oldskb, &_oth, hook);
 	if (!oth)
@@ -122,6 +123,8 @@ void nf_send_reset(struct sk_buff *oldskb, int hook)
 
 	/* ip_route_me_harder expects skb->dst to be set */
 	skb_dst_set_noref(nskb, skb_dst(oldskb));
+
+	nskb->mark = IP4_REPLY_MARK(net, oldskb->mark);
 
 	skb_reserve(nskb, LL_MAX_HEADER);
 	niph = nf_reject_iphdr_put(nskb, oldskb, IPPROTO_TCP,
