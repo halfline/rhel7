@@ -1572,28 +1572,46 @@ fill_transform_hdr(struct smb2_transform_hdr *tr_hdr, struct smb_rqst *old_rq)
 	inc_rfc1001_len(tr_hdr, orig_len);
 }
 
+/* RHEL 7 specific function to provide a sg with associate data */
+static struct scatterlist *
+init_assoc_sg(struct smb_rqst *rqst)
+{
+	struct scatterlist *assoc;
+	unsigned int assoc_data_len = sizeof(struct smb2_transform_hdr) - 24;
+
+	assoc = kmalloc(sizeof(struct scatterlist), GFP_KERNEL);
+	if (!assoc)
+		return NULL;
+
+	sg_init_table(assoc, 1);
+	sg_set_buf(assoc, rqst->rq_iov[0].iov_base + 24, assoc_data_len);
+
+	return assoc;
+}
+
+/* Modified for RHEL 7 to remove assoc data from sg */
 static struct scatterlist *
 init_sg(struct smb_rqst *rqst, u8 *sign)
 {
-	unsigned int sg_len = rqst->rq_nvec + rqst->rq_npages + 1;
-	unsigned int assoc_data_len = sizeof(struct smb2_transform_hdr) - 24;
+	/* Skip first kvec which contains smb2_transform_hdr */
+	unsigned int sg_len = rqst->rq_nvec - 1 + rqst->rq_npages + 1;
 	struct scatterlist *sg;
 	unsigned int i;
 	unsigned int j;
+	unsigned int sg_i = 0;
 
 	sg = kmalloc_array(sg_len, sizeof(struct scatterlist), GFP_KERNEL);
 	if (!sg)
 		return NULL;
 
 	sg_init_table(sg, sg_len);
-	sg_set_buf(&sg[0], rqst->rq_iov[0].iov_base + 24, assoc_data_len);
-	for (i = 1; i < rqst->rq_nvec; i++)
-		sg_set_buf(&sg[i], rqst->rq_iov[i].iov_base,
+	for (i = 1; i < rqst->rq_nvec; i++, sg_i++)
+		sg_set_buf(&sg[sg_i], rqst->rq_iov[i].iov_base,
 						rqst->rq_iov[i].iov_len);
-	for (j = 0; i < sg_len - 1; i++, j++) {
+	for (j = 0; sg_i < sg_len - 1; sg_i++, j++) {
 		unsigned int len = (j < rqst->rq_npages - 1) ? rqst->rq_pagesz
 							: rqst->rq_tailsz;
-		sg_set_page(&sg[i], rqst->rq_pages[j], len, 0);
+		sg_set_page(&sg[sg_i], rqst->rq_pages[j], len, 0);
 	}
 	sg_set_buf(&sg[sg_len - 1], sign, SMB2_SIGNATURE_SIZE);
 	return sg;
@@ -1630,7 +1648,7 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
 	unsigned int assoc_data_len = sizeof(struct smb2_transform_hdr) - 24;
 	struct cifs_ses *ses;
 	int rc = 0;
-	struct scatterlist *sg;
+	struct scatterlist *sg, *assoc;
 	u8 sign[SMB2_SIGNATURE_SIZE] = {};
 	struct aead_request *req;
 	char *iv;
@@ -1679,10 +1697,16 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
 		crypt_len += SMB2_SIGNATURE_SIZE;
 	}
 
+	assoc = init_assoc_sg(rqst);
+	if (!assoc) {
+		cifs_dbg(VFS, "%s: Failed to init assoc sg %d", __func__, rc);
+		goto free_req;
+	}
+
 	sg = init_sg(rqst, sign);
 	if (!sg) {
 		cifs_dbg(VFS, "%s: Failed to init sg %d", __func__, rc);
-		goto free_req;
+		goto free_assoc;
 	}
 
 	iv_len = crypto_aead_ivsize(tfm);
@@ -1695,7 +1719,7 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
 	memcpy(iv + 1, (char *)tr_hdr->Nonce, SMB3_AES128CMM_NONCE);
 
 	aead_request_set_crypt(req, sg, sg, crypt_len, iv);
-	aead_request_set_ad(req, assoc_data_len);
+	aead_request_set_assoc(req, assoc, assoc_data_len);
 
 	aead_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
 				  cifs_crypt_complete, &result);
@@ -1713,6 +1737,8 @@ crypt_message(struct TCP_Server_Info *server, struct smb_rqst *rqst, int enc)
 	kfree(iv);
 free_sg:
 	kfree(sg);
+free_assoc:
+	kfree(assoc);
 free_req:
 	kfree(req);
 	return rc;
