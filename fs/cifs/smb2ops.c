@@ -1885,7 +1885,6 @@ handle_read_data(struct TCP_Server_Info *server, struct mid_q_entry *mid,
 	struct cifs_readdata *rdata = mid->callback_data;
 	struct smb2_sync_hdr *shdr = get_sync_hdr(buf);
 	struct bio_vec *bvec = NULL;
-	struct iov_iter iter;
 	struct kvec iov;
 	int length;
 
@@ -1935,7 +1934,6 @@ handle_read_data(struct TCP_Server_Info *server, struct mid_q_entry *mid,
 		WARN_ONCE(npages > 0, "read data can be either in buf or in pages");
 		iov.iov_base = buf + data_offset;
 		iov.iov_len = data_len;
-		iov_iter_kvec(&iter, WRITE | ITER_KVEC, &iov, 1, data_len);
 	} else {
 		/* read response payload cannot be in both buf and pages */
 		WARN_ONCE(1, "buf can not contain only a part of read data");
@@ -1952,7 +1950,7 @@ handle_read_data(struct TCP_Server_Info *server, struct mid_q_entry *mid,
 	cifs_dbg(FYI, "0: iov_base=%p iov_len=%zu\n",
 		 rdata->iov[0].iov_base, server->vals->read_rsp_size);
 
-	length = rdata->copy_into_pages(server, rdata, &iter);
+	length = rdata->copy_into_pages(server, rdata, &iov);
 
 	kfree(bvec);
 

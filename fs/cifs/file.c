@@ -2935,13 +2935,14 @@ cifs_uncached_readv_complete(struct work_struct *work)
 
 static int
 uncached_fill_pages(struct TCP_Server_Info *server,
-		    struct cifs_readdata *rdata, struct iov_iter *iter,
+		    struct cifs_readdata *rdata, struct kvec *kvec,
 		    unsigned int len)
 {
 	int result = 0;
 	unsigned int i;
 	unsigned int nr_pages = rdata->nr_pages;
 	struct kvec iov;
+	size_t kvec_offset = 0;
 
 	rdata->got_bytes = 0;
 	rdata->tailsz = PAGE_SIZE;
@@ -2971,9 +2972,12 @@ uncached_fill_pages(struct TCP_Server_Info *server,
 			put_page(page);
 			continue;
 		}
-		if (iter)
-			result = copy_page_from_iter(page, 0, iov.iov_len, iter);
-		else
+		if (kvec){
+			memcpy(iov.iov_base, kvec->iov_base + kvec_offset,
+				iov.iov_len);
+			kvec_offset += iov.iov_len;
+			result = iov.iov_len;
+		} else
 			result = cifs_readv_from_socket(server, &iov, 1, iov.iov_len);
 		kunmap(page);
 		if (result < 0)
@@ -2996,9 +3000,9 @@ cifs_uncached_read_into_pages(struct TCP_Server_Info *server,
 static int
 cifs_uncached_copy_into_pages(struct TCP_Server_Info *server,
 			      struct cifs_readdata *rdata,
-			      struct iov_iter *iter)
+			      struct kvec *kvec)
 {
-	return uncached_fill_pages(server, rdata, iter, iter->count);
+	return uncached_fill_pages(server, rdata, kvec, kvec->iov_len);
 }
 
 static int
@@ -3411,7 +3415,7 @@ cifs_readv_complete(struct work_struct *work)
 
 static int
 readpages_fill_pages(struct TCP_Server_Info *server,
-		     struct cifs_readdata *rdata, struct iov_iter *iter,
+		     struct cifs_readdata *rdata, struct kvec *kvec,
 		     unsigned int len)
 {
 	int result = 0;
@@ -3420,6 +3424,7 @@ readpages_fill_pages(struct TCP_Server_Info *server,
 	pgoff_t eof_index;
 	unsigned int nr_pages = rdata->nr_pages;
 	struct kvec iov;
+	size_t kvec_offset = 0;
 
 	/* determine the eof that the server (probably) has */
 	eof = CIFS_I(rdata->mapping->host)->server_eof;
@@ -3476,9 +3481,12 @@ readpages_fill_pages(struct TCP_Server_Info *server,
 			continue;
 		}
 
-		if (iter)
-			result = copy_page_from_iter(page, 0, iov.iov_len, iter);
-		else
+		if (kvec) {
+			memcpy(iov.iov_base, kvec->iov_base + kvec_offset,
+				iov.iov_len);
+			kvec_offset += iov.iov_len;
+			result = iov.iov_len;
+		} else
 			result = cifs_readv_from_socket(server, &iov, 1, iov.iov_len);
 		kunmap(page);
 		if (result < 0)
@@ -3501,9 +3509,9 @@ cifs_readpages_read_into_pages(struct TCP_Server_Info *server,
 static int
 cifs_readpages_copy_into_pages(struct TCP_Server_Info *server,
 			       struct cifs_readdata *rdata,
-			       struct iov_iter *iter)
+			       struct kvec *kvec)
 {
-	return readpages_fill_pages(server, rdata, iter, iter->count);
+	return readpages_fill_pages(server, rdata, kvec, kvec->iov_len);
 }
 
 static int
