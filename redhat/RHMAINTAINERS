@@ -366,7 +366,7 @@ S:	Maintained
 F:	drivers/net/ethernet/intel/ixgbevf/
 
 INTEL MANAGEMENT ENGINE (mei)
-M:	Jerry Snitselaar <jsnitsel@redhat.com>
+M:	Don Zickus <dzickus@redhat.com>
 S:	Maintained
 F:	include/uapi/mei.h
 F:	include/linux/mei_cl_bus.h
