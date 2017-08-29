@@ -26,7 +26,14 @@ struct fdtable {
 	struct file __rcu **fd;      /* current fd array */
 	unsigned long *close_on_exec;
 	unsigned long *open_fds;
+#ifdef __GENKSYMS__
 	struct rcu_head rcu;
+#else
+	union {
+		struct rcu_head rcu;
+		unsigned long *full_fds_bits;
+	};
+#endif
 };
 
 static inline bool close_on_exec(int fd, const struct fdtable *fdt)
@@ -58,6 +65,7 @@ struct files_struct {
 	unsigned long close_on_exec_init[1];
 	unsigned long open_fds_init[1];
 	struct file __rcu * fd_array[NR_OPEN_DEFAULT];
+	RH_KABI_EXTEND(unsigned long full_fds_bits_init[1])
 	RH_KABI_EXTEND(wait_queue_head_t resize_wait)
 };
 
