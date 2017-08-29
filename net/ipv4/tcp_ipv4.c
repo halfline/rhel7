@@ -2500,6 +2500,9 @@ static int __net_init tcp_sk_init(struct net *net)
 		*per_cpu_ptr(net->ipv4_tcp_sk, cpu) = sk;
 	}
 	net->ipv4.sysctl_tcp_ecn = 2;
+
+	net->ipv4_sysctl_tcp_keepalive_time = TCP_KEEPALIVE_TIME;
+
 	return 0;
 
 fail:
