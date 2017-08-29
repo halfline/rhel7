@@ -179,6 +179,7 @@ struct net {
 	RH_KABI_EXTEND(int ipv4_sysctl_fwmark_reflect)
 	RH_KABI_EXTEND(int ipv6_sysctl_fwmark_reflect)
 	RH_KABI_EXTEND(int ipv4_sysctl_tcp_keepalive_time)
+	RH_KABI_EXTEND(int ipv4_sysctl_tcp_keepalive_probes)
 };
 
 /*
