@@ -466,10 +466,6 @@ static int xen_cpu_up(unsigned int cpu, struct task_struct *idle)
 	return 0;
 }
 
-static void xen_smp_cpus_done(unsigned int max_cpus)
-{
-}
-
 #ifdef CONFIG_HOTPLUG_CPU
 static int xen_cpu_disable(void)
 {
@@ -543,6 +539,36 @@ static void stop_self(void *v)
 static void xen_stop_other_cpus(int wait)
 {
 	smp_call_function(stop_self, NULL, wait);
+}
+
+static void __init xen_smp_cpus_done(unsigned int max_cpus)
+{
+	int cpu, rc, count = 0;
+
+	if (xen_hvm_domain())
+		native_smp_cpus_done(max_cpus);
+
+	if (xen_have_vcpu_info_placement)
+		return;
+
+	for_each_online_cpu(cpu) {
+		if (xen_vcpu_nr(cpu) < MAX_VIRT_CPUS)
+			continue;
+
+		rc = cpu_down(cpu);
+
+		if (rc == 0) {
+			/*
+			 * Reset vcpu_info so this cpu cannot be onlined again.
+			 */
+			xen_vcpu_info_reset(cpu);
+			count++;
+		} else {
+			pr_warn("%s: failed to bring CPU %d down, error %d\n",
+				__func__, cpu, rc);
+		}
+	}
+	WARN(count, "%s: brought %d CPUs offline\n", __func__, count);
 }
 
 static void xen_smp_send_reschedule(int cpu)
@@ -766,4 +792,5 @@ void __init xen_hvm_smp_init(void)
 	smp_ops.send_call_func_ipi = xen_smp_send_call_function_ipi;
 	smp_ops.send_call_func_single_ipi = xen_smp_send_call_function_single_ipi;
 	smp_ops.smp_prepare_boot_cpu = xen_smp_prepare_boot_cpu;
+	smp_ops.smp_cpus_done = xen_smp_cpus_done;
 }
