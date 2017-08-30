@@ -1053,6 +1053,8 @@ static const struct x86_cpu_id intel_pstate_cpu_ee_disable_ids[] = {
 	{}
 };
 
+static void intel_pstate_set_itmt_prio(int cpu);
+
 static int intel_pstate_init_cpu(unsigned int cpunum)
 {
 	struct cpudata *cpu;
@@ -1075,6 +1077,7 @@ static int intel_pstate_init_cpu(unsigned int cpunum)
 			intel_pstate_disable_ee(cpunum);
 
 		intel_pstate_hwp_enable(cpu);
+		intel_pstate_set_itmt_prio(cpu->cpu);
 	}
 
 	intel_pstate_get_cpu_pstates(cpu);
@@ -1264,6 +1267,7 @@ static void copy_cpu_funcs(struct pstate_funcs *funcs)
 
 #if IS_ENABLED(CONFIG_ACPI)
 #include <acpi/processor.h>
+#include <acpi/cppc_acpi.h>
 
 static bool intel_pstate_no_acpi_pss(void)
 {
@@ -1374,6 +1378,58 @@ static bool intel_pstate_platform_pwr_mgmt_exists(void)
 
 	return false;
 }
+
+#ifdef CONFIG_ACPI_CPPC_LIB
+
+/* The work item is needed to avoid CPU hotplug locking issues */
+static void intel_pstste_sched_itmt_work_fn(struct work_struct *work)
+{
+	sched_set_itmt_support();
+}
+
+static DECLARE_WORK(sched_itmt_work, intel_pstste_sched_itmt_work_fn);
+
+static void intel_pstate_set_itmt_prio(int cpu)
+{
+	struct cppc_perf_caps cppc_perf;
+	static u32 max_highest_perf = 0, min_highest_perf = U32_MAX;
+	int ret;
+
+	ret = cppc_get_perf_caps(cpu, &cppc_perf);
+	if (ret)
+		return;
+
+	/*
+	 * The priorities can be set regardless of whether or not
+	 * sched_set_itmt_support(true) has been called and it is valid to
+	 * update them at any time after it has been called.
+	 */
+	sched_set_itmt_core_prio(cppc_perf.highest_perf, cpu);
+
+	if (max_highest_perf <= min_highest_perf) {
+		if (cppc_perf.highest_perf > max_highest_perf)
+			max_highest_perf = cppc_perf.highest_perf;
+
+		if (cppc_perf.highest_perf < min_highest_perf)
+			min_highest_perf = cppc_perf.highest_perf;
+
+		if (max_highest_perf > min_highest_perf) {
+			/*
+			 * This code can be run during CPU online under the
+			 * CPU hotplug locks, so sched_set_itmt_support()
+			 * cannot be called from here.  Queue up a work item
+			 * to invoke it.
+			 */
+			schedule_work(&sched_itmt_work);
+		}
+	}
+}
+#else
+static void intel_pstate_set_itmt_prio(int cpu)
+{
+}
+#endif
+
 #else /* CONFIG_ACPI not enabled */
 static inline bool intel_pstate_platform_pwr_mgmt_exists(void) { return false; }
 static inline bool intel_pstate_has_acpi_ppc(void) { return false; }
