@@ -944,6 +944,13 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus,
 
 	cpumask_and(new_cpus, cs->cpus_allowed, parent->effective_cpus);
 
+	/*
+	 * If it becomes empty, inherit the effective mask of the
+	 * parent, which is guaranteed to have some CPUs.
+	 */
+	if (cpumask_empty(new_cpus))
+		cpumask_copy(new_cpus, parent->effective_cpus);
+
 	/* skip the whole subtree if the cpumask remains the same. */
 	if (cpumask_equal(new_cpus, cs->effective_cpus))
 		return;
@@ -961,6 +968,13 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus,
 	cpuset_for_each_descendant_pre(cp, pos_cgrp, cs) {
 		parent = parent_cs(cp);
 		cpumask_and(new_cpus, cp->cpus_allowed, parent->effective_cpus);
+
+		/*
+		 * If it becomes empty, inherit the effective mask of the
+		 * parent, which is guaranteed to have some CPUs.
+		 */
+		if (cpumask_empty(new_cpus))
+			cpumask_copy(new_cpus, parent->effective_cpus);
 
 		/* skip the whole subtree if the cpumask remains the same. */
 		if (cpumask_equal(new_cpus, cp->effective_cpus)) {
@@ -1228,6 +1242,13 @@ static void update_nodemasks_hier(struct cpuset *cs, nodemask_t *new_mems,
 
 	nodes_and(*new_mems, cs->mems_allowed, parent->effective_mems);
 
+	/*
+	 * If it becomes empty, inherit the effective mask of the
+	 * parent, which is guaranteed to have some MEMs.
+	 */
+	if (nodes_empty(*new_mems))
+		*new_mems = parent->effective_mems;
+
 	/* Skip the whole subtree if the nodemask remains the same. */
 	if (nodes_equal(*new_mems, cs->effective_mems))
 		return;
@@ -1245,6 +1266,13 @@ static void update_nodemasks_hier(struct cpuset *cs, nodemask_t *new_mems,
 	cpuset_for_each_descendant_pre(cp, pos_cgrp, cs) {
 		parent = parent_cs(cp);
 		nodes_and(*new_mems, cp->mems_allowed, parent->effective_mems);
+
+		/*
+		 * If it becomes empty, inherit the effective mask of the
+		 * parent, which is guaranteed to have some MEMs.
+		 */
+		if (nodes_empty(*new_mems))
+			*new_mems = parent->effective_mems;
 
 		/* skip the whole subtree if @cp have some CPU */
 		if (!nodes_empty(cp->mems_allowed)) {
@@ -2275,7 +2303,11 @@ retry:
 
 	mutex_lock(&callback_mutex);
 	cpumask_andnot(cs->cpus_allowed, cs->cpus_allowed, &off_cpus);
+
+	/* Inherit the effective mask of the parent, if it becomes empty. */
 	cpumask_andnot(cs->effective_cpus, cs->effective_cpus, &off_cpus);
+	if (on_dfl && cpumask_empty(cs->effective_cpus))
+		cpumask_copy(cs->effective_cpus, parent_cs(cs)->effective_cpus);
 	mutex_unlock(&callback_mutex);
 
 	/*
@@ -2290,7 +2322,11 @@ retry:
 
 	mutex_lock(&callback_mutex);
 	nodes_andnot(cs->mems_allowed, cs->mems_allowed, off_mems);
+
+	/* Inherit the effective mask of the parent, if it becomes empty */
 	nodes_andnot(cs->effective_mems, cs->effective_mems, off_mems);
+	if (on_dfl && nodes_empty(cs->effective_mems))
+		cs->effective_mems = parent_cs(cs)->effective_mems;
 	mutex_unlock(&callback_mutex);
 
 	/*
