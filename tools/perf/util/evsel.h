@@ -129,6 +129,9 @@ struct perf_evsel {
 	bool			cmdline_group_boundary;
 	struct list_head	config_terms;
 	bool			merged_stat;
+	const char *		metric_expr;
+	struct perf_evsel	**metric_events;
+	bool			collect_stat;
 };
 
 union u64_swap {
