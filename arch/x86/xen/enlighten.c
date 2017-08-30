@@ -175,8 +175,10 @@ static DEFINE_PER_CPU(struct tls_descs, shadow_tls_desc);
 
 #define XEN_HVM_CPUID_VCPU_ID_PRESENT  (1u << 3)
 
-static void xen_vcpu_setup_restore(int cpu)
+static int xen_vcpu_setup_restore(int cpu)
 {
+	int rc = 0;
+
 	/* Any per_cpu(xen_vcpu) is stale, so reset it */
 	xen_vcpu_info_reset(cpu);
 
@@ -186,8 +188,10 @@ static void xen_vcpu_setup_restore(int cpu)
 	 */
 	if (xen_pv_domain() ||
 	    (xen_hvm_domain() && cpu_online(cpu))) {
-		xen_vcpu_setup(cpu);
+		rc = xen_vcpu_setup(cpu);
 	}
+
+	return rc;
 }
 
 /*
@@ -197,7 +201,7 @@ static void xen_vcpu_setup_restore(int cpu)
  */
 void xen_vcpu_restore(void)
 {
-	int cpu;
+	int cpu, rc;
 
 	for_each_possible_cpu(cpu) {
 		bool other_cpu = (cpu != smp_processor_id());
@@ -217,20 +221,23 @@ void xen_vcpu_restore(void)
 		if (xen_pv_domain() || xen_feature(XENFEAT_hvm_safe_pvclock))
 			xen_setup_runstate_info(cpu);
 
-		xen_vcpu_setup_restore(cpu);
-
-		if (other_cpu && is_up &&
+		rc = xen_vcpu_setup_restore(cpu);
+		if (rc)
+			pr_emerg_once("vcpu restore failed for cpu=%d err=%d. "
+					"System will hang.\n", cpu, rc);
+		/*
+		 * In case xen_vcpu_setup_restore() fails, do not bring up the
+		 * VCPU. This helps us avoid the resulting OOPS when the VCPU
+		 * accesses pvclock_vcpu_time via xen_vcpu (which is NULL.)
+		 * Note that this does not improve the situation much -- now the
+		 * VM hangs instead of OOPSing -- with the VCPUs that did not
+		 * fail, spinning in stop_machine(), waiting for the failed
+		 * VCPUs to come up.
+		 */
+		if (other_cpu && is_up && (rc == 0) &&
 		    HYPERVISOR_vcpu_op(VCPUOP_up, xen_vcpu_nr(cpu), NULL))
 			BUG();
 	}
-}
-
-static void clamp_max_cpus(void)
-{
-#ifdef CONFIG_SMP
-	if (setup_max_cpus > MAX_VIRT_CPUS)
-		setup_max_cpus = MAX_VIRT_CPUS;
-#endif
 }
 
 void xen_vcpu_info_reset(int cpu)
@@ -244,7 +251,7 @@ void xen_vcpu_info_reset(int cpu)
 	}
 }
 
-void xen_vcpu_setup(int cpu)
+int xen_vcpu_setup(int cpu)
 {
 	struct vcpu_register_vcpu_info info;
 	int err;
@@ -265,7 +272,7 @@ void xen_vcpu_setup(int cpu)
 	 */
 	if (xen_hvm_domain()) {
 		if (per_cpu(xen_vcpu, cpu) == &per_cpu(xen_vcpu_info, cpu))
-			return;
+			return 0;
 	}
 
 	if (xen_have_vcpu_info_placement) {
@@ -299,11 +306,10 @@ void xen_vcpu_setup(int cpu)
 		}
 	}
 
-	if (!xen_have_vcpu_info_placement) {
-		if (cpu >= MAX_VIRT_CPUS)
-			clamp_max_cpus();
+	if (!xen_have_vcpu_info_placement)
 		xen_vcpu_info_reset(cpu);
-	}
+
+	return ((per_cpu(xen_vcpu, cpu) == NULL) ? -ENODEV : 0);
 }
 
 static void __init xen_banner(void)
@@ -1188,7 +1194,16 @@ void xen_setup_vcpu_info_placement(void)
 	for_each_possible_cpu(cpu) {
 		/* Set up direct vCPU id mapping for PV guests. */
 		per_cpu(xen_vcpu_id, cpu) = cpu;
-		xen_vcpu_setup(cpu);
+
+		/*
+		 * xen_vcpu_setup(cpu) can fail  -- in which case it
+		 * falls back to the shared_info version for cpus
+		 * where xen_vcpu_nr(cpu) < MAX_VIRT_CPUS.
+		 *
+		 * xen_cpu_up_prepare_pv() handles the rest by failing
+		 * them in hotplug.
+		 */
+		(void) xen_vcpu_setup(cpu);
 	}
 
 	/*
@@ -1742,7 +1757,10 @@ static int xen_hvm_cpu_notify(struct notifier_block *self, unsigned long action,
 			per_cpu(xen_vcpu_id, cpu) = cpu_acpi_id(cpu);
 		else
 			per_cpu(xen_vcpu_id, cpu) = cpu;
-		xen_vcpu_setup(cpu);
+
+		if (xen_vcpu_setup(cpu))
+			return NOTIFY_BAD;
+
 		if (xen_have_vector_callback) {
 			if (xen_feature(XENFEAT_hvm_safe_pvclock))
 				xen_setup_timer(cpu);

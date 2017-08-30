@@ -419,6 +419,9 @@ static int xen_cpu_up(unsigned int cpu, struct task_struct *idle)
 {
 	int rc;
 
+	if (per_cpu(xen_vcpu, cpu) == NULL)
+		return -ENODEV;
+
 	per_cpu(current_task, cpu) = idle;
 #ifdef CONFIG_X86_32
 	irq_ctx_init(cpu);
