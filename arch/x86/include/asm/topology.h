@@ -181,4 +181,5 @@ static inline void sched_clear_itmt_support(void)
 #define smt_capable()			(smp_num_siblings > 1)
 #endif
 
+extern bool x86_topology_update;
 #endif /* _ASM_X86_TOPOLOGY_H */

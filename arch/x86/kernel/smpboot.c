@@ -116,6 +116,17 @@ unsigned int __max_logical_packages __read_mostly;
 EXPORT_SYMBOL(__max_logical_packages);
 static unsigned int logical_packages __read_mostly;
 
+/* Flag to indicate if a complete sched domain rebuild is required */
+bool x86_topology_update;
+
+int arch_update_cpu_topology(void)
+{
+	int retval = x86_topology_update;
+
+	x86_topology_update = false;
+	return retval;
+}
+
 /*
  * Report back to the Boot Processor during boot time or to the caller processor
  * during CPU online.
