@@ -61,8 +61,7 @@ static inline bool has_target(void)
 static DECLARE_RWSEM(cpufreq_rwsem);
 
 /* internal prototypes */
-static int __cpufreq_governor(struct cpufreq_policy *policy,
-		unsigned int event);
+static int cpufreq_governor(struct cpufreq_policy *policy, unsigned int event);
 static unsigned int __cpufreq_get(unsigned int cpu);
 static void handle_update(struct work_struct *work);
 
@@ -965,7 +964,7 @@ static int cpufreq_add_policy_cpu(struct cpufreq_policy *policy,
 	unsigned long flags;
 
 	if (has_target()) {
-		ret = __cpufreq_governor(policy, CPUFREQ_GOV_STOP);
+		ret = cpufreq_governor(policy, CPUFREQ_GOV_STOP);
 		if (ret) {
 			pr_err("%s: Failed to stop governor\n", __func__);
 			return ret;
@@ -983,9 +982,9 @@ static int cpufreq_add_policy_cpu(struct cpufreq_policy *policy,
 	up_write(&policy->rwsem);
 
 	if (has_target()) {
-		ret = __cpufreq_governor(policy, CPUFREQ_GOV_START);
+		ret = cpufreq_governor(policy, CPUFREQ_GOV_START);
 		if (!ret)
-			ret = __cpufreq_governor(policy, CPUFREQ_GOV_LIMITS);
+			ret = cpufreq_governor(policy, CPUFREQ_GOV_LIMITS);
 
 		if (ret) {
 			pr_err("%s: Failed to start governor\n", __func__);
@@ -1364,7 +1363,7 @@ static int __cpufreq_remove_dev_prepare(struct device *dev,
 	}
 
 	if (has_target()) {
-		ret = __cpufreq_governor(policy, CPUFREQ_GOV_STOP);
+		ret = cpufreq_governor(policy, CPUFREQ_GOV_STOP);
 		if (ret) {
 			pr_err("%s: Failed to stop governor\n", __func__);
 			return ret;
@@ -1434,7 +1433,7 @@ static int __cpufreq_remove_dev_finish(struct device *dev,
 	/* If cpu is last user of policy, free policy */
 	if (cpus == 1) {
 		if (has_target()) {
-			ret = __cpufreq_governor(policy,
+			ret = cpufreq_governor(policy,
 					CPUFREQ_GOV_POLICY_EXIT);
 			if (ret) {
 				pr_err("%s: Failed to exit governor\n",
@@ -1462,9 +1461,9 @@ static int __cpufreq_remove_dev_finish(struct device *dev,
 		if (!cpufreq_suspended)
 			cpufreq_policy_free(policy);
 	} else if (has_target()) {
-		ret = __cpufreq_governor(policy, CPUFREQ_GOV_START);
+		ret = cpufreq_governor(policy, CPUFREQ_GOV_START);
 		if (!ret)
-			ret = __cpufreq_governor(policy, CPUFREQ_GOV_LIMITS);
+			ret = cpufreq_governor(policy, CPUFREQ_GOV_LIMITS);
 
 		if (ret) {
 			pr_err("%s: Failed to start governor\n", __func__);
@@ -1679,7 +1678,7 @@ void cpufreq_suspend(void)
 	pr_debug("%s: Suspending Governors\n", __func__);
 
 	list_for_each_entry(policy, &cpufreq_policy_list, policy_list) {
-		if (__cpufreq_governor(policy, CPUFREQ_GOV_STOP))
+		if (cpufreq_governor(policy, CPUFREQ_GOV_STOP))
 			pr_err("%s: Failed to stop governor for policy: %p\n",
 				__func__, policy);
 		else if (cpufreq_driver->suspend
@@ -1715,8 +1714,8 @@ void cpufreq_resume(void)
 		if (cpufreq_driver->resume && cpufreq_driver->resume(policy))
 			pr_err("%s: Failed to resume driver: %p\n", __func__,
 				policy);
-		else if (__cpufreq_governor(policy, CPUFREQ_GOV_START)
-		    || __cpufreq_governor(policy, CPUFREQ_GOV_LIMITS))
+		else if (cpufreq_governor(policy, CPUFREQ_GOV_START)
+		    || cpufreq_governor(policy, CPUFREQ_GOV_LIMITS))
 			pr_err("%s: Failed to start governor for policy: %p\n",
 				__func__, policy);
 
@@ -1990,8 +1989,7 @@ EXPORT_SYMBOL_GPL(cpufreq_driver_target);
  * when "event" is CPUFREQ_GOV_LIMITS
  */
 
-static int __cpufreq_governor(struct cpufreq_policy *policy,
-					unsigned int event)
+static int cpufreq_governor(struct cpufreq_policy *policy, unsigned int event)
 {
 	int ret;
 
@@ -2025,7 +2023,7 @@ static int __cpufreq_governor(struct cpufreq_policy *policy,
 		if (!try_module_get(policy->governor->owner))
 			return -EINVAL;
 
-	pr_debug("__cpufreq_governor for CPU %u, event %u\n",
+	pr_debug("cpufreq_governor for CPU %u, event %u\n",
 		 policy->cpu, event);
 
 	mutex_lock(&cpufreq_governor_lock);
@@ -2208,32 +2206,32 @@ static int cpufreq_set_policy(struct cpufreq_policy *policy,
 	old_gov = policy->governor;
 	/* end old governor */
 	if (old_gov) {
-		__cpufreq_governor(policy, CPUFREQ_GOV_STOP);
-		__cpufreq_governor(policy, CPUFREQ_GOV_POLICY_EXIT);
+		cpufreq_governor(policy, CPUFREQ_GOV_STOP);
+		cpufreq_governor(policy, CPUFREQ_GOV_POLICY_EXIT);
 	}
 
 	/* start new governor */
 	policy->governor = new_policy->governor;
-	if (!__cpufreq_governor(policy, CPUFREQ_GOV_POLICY_INIT)) {
-		if (!__cpufreq_governor(policy, CPUFREQ_GOV_START))
+	if (!cpufreq_governor(policy, CPUFREQ_GOV_POLICY_INIT)) {
+		if (!cpufreq_governor(policy, CPUFREQ_GOV_START))
 			goto out;
 
-		__cpufreq_governor(policy, CPUFREQ_GOV_POLICY_EXIT);
+		cpufreq_governor(policy, CPUFREQ_GOV_POLICY_EXIT);
 	}
 
 	/* new governor failed, so re-start old one */
 	pr_debug("starting governor %s failed\n", policy->governor->name);
 	if (old_gov) {
 		policy->governor = old_gov;
-		__cpufreq_governor(policy, CPUFREQ_GOV_POLICY_INIT);
-		__cpufreq_governor(policy, CPUFREQ_GOV_START);
+		cpufreq_governor(policy, CPUFREQ_GOV_POLICY_INIT);
+		cpufreq_governor(policy, CPUFREQ_GOV_START);
 	}
 
 	return -EINVAL;
 
  out:
 	pr_debug("governor: change or update limits\n");
-	return __cpufreq_governor(policy, CPUFREQ_GOV_LIMITS);
+	return cpufreq_governor(policy, CPUFREQ_GOV_LIMITS);
 }
 
 /**
@@ -2345,7 +2343,7 @@ static int cpufreq_boost_set_sw(int state)
 				break;
 			}
 			policy->user_policy.max = policy->max;
-			__cpufreq_governor(policy, CPUFREQ_GOV_LIMITS);
+			cpufreq_governor(policy, CPUFREQ_GOV_LIMITS);
 		}
 	}
 
