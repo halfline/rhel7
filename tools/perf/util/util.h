@@ -119,21 +119,6 @@ struct parse_tag {
 
 unsigned long parse_tag_value(const char *str, struct parse_tag *tags);
 
-static inline int path__join(char *bf, size_t size,
-			     const char *path1, const char *path2)
-{
-	return scnprintf(bf, size, "%s%s%s", path1, path1[0] ? "/" : "", path2);
-}
-
-static inline int path__join3(char *bf, size_t size,
-			      const char *path1, const char *path2,
-			      const char *path3)
-{
-	return scnprintf(bf, size, "%s%s%s%s%s",
-			 path1, path1[0] ? "/" : "",
-			 path2, path2[0] ? "/" : "", path3);
-}
-
 int perf_event_paranoid(void);
 
 void mem_bswap_64(void *src, int byte_size);
@@ -153,7 +138,6 @@ int lzma_decompress_to_file(const char *input, int output_fd);
 int get_stack_size(const char *str, unsigned long *_size);
 
 const char *perf_tip(const char *dirpath);
-bool is_regular_file(const char *file);
 int fetch_current_timestamp(char *buf, size_t sz);
 
 #ifndef HAVE_SCHED_GETCPU_SUPPORT
