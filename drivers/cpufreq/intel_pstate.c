@@ -96,7 +96,6 @@ static inline u64 div_ext_fp(u64 x, u64 y)
  *			read from MPERF MSR between last and current sample
  * @tsc:		Difference of time stamp counter between last and
  *			current sample
- * @freq:		Effective frequency calculated from APERF/MPERF
  * @time:		Current time from scheduler
  *
  * This structure is used in the cpudata structure to store performance sample
@@ -108,7 +107,6 @@ struct sample {
 	u64 aperf;
 	u64 mperf;
 	u64 tsc;
-	int freq;
 	u64 time;
 };
 
