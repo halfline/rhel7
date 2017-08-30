@@ -153,13 +153,6 @@ static inline int arch_phys_wc_index(int handle)
 #endif
 }
 
-#ifdef CONFIG_X86
-static inline void __iomem *acpi_os_ioremap(u64 phys, u32 size)
-{
-	return ioremap_cache(phys, size);
-}
-#endif
-
 /*
  * avoiding/emulating 87521e16a7abbf3fa337f56cb4d1e18247f15e8a upstream:
  */
