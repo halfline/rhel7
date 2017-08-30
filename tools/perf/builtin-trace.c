@@ -36,6 +36,7 @@
 #include "util/parse-events.h"
 #include "callchain.h"
 #include "print_binary.h"
+#include "string2.h"
 #include "syscalltbl.h"
 #include "rb_resort.h"
 
