@@ -502,6 +502,11 @@ struct dl_rq {
 
 #ifdef CONFIG_SMP
 
+static inline bool sched_asym_prefer(int a, int b)
+{
+	return arch_asym_cpu_priority(a) > arch_asym_cpu_priority(b);
+}
+
 /*
  * We add the notion of a root-domain which will be used to define per-domain
  * variables. Each exclusive cpuset essentially defines an island domain by
@@ -815,6 +820,8 @@ struct sched_group {
 	 * depending on how many CPUs the kernel has booted up with)
 	 */
 	unsigned long cpumask[0];
+	/* cpu of highest priority in group */
+	RH_KABI_EXTEND(int asym_prefer_cpu)
 };
 
 static inline struct cpumask *sched_group_cpus(struct sched_group *sg)
