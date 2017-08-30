@@ -16,6 +16,7 @@
 #include "util/parse-events.h"
 #include <subcmd/parse-options.h>
 #include "util/debug.h"
+#include "util/event.h"
 #include <api/fs/fs.h>
 #include <api/fs/tracing_path.h>
 #include <errno.h>
