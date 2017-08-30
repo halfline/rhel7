@@ -1526,14 +1526,6 @@ static struct cpu_defaults core_params = {
 };
 
 static struct cpu_defaults atom_params = {
-	.pid_policy = {
-		.sample_rate_ms = 10,
-		.deadband = 0,
-		.setpoint = 60,
-		.p_gain_pct = 14,
-		.d_gain_pct = 0,
-		.i_gain_pct = 4,
-	},
 	.funcs = {
 		.get_max = atom_get_max_pstate,
 		.get_max_physical = atom_get_max_pstate,
@@ -2566,9 +2558,9 @@ static int __init intel_pstate_init(void)
 			return -ENODEV;
 
 		cpu_def = (struct cpu_defaults *)id->driver_data;
-
-		copy_pid_params(&cpu_def->pid_policy);
 		copy_cpu_funcs(&cpu_def->funcs);
+		if (pstate_funcs.get_target_pstate == get_target_pstate_use_performance)
+			copy_pid_params(&cpu_def->pid_policy);
 	}
 
 	if (intel_pstate_msrs_not_valid())
