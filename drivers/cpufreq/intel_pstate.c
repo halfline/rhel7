@@ -1854,11 +1854,11 @@ static int intel_pstate_init_cpu(unsigned int cpunum)
 			intel_pstate_disable_ee(cpunum);
 
 		intel_pstate_hwp_enable(cpu);
+	} else if (pstate_funcs.get_target_pstate == get_target_pstate_use_performance) {
+		intel_pstate_pid_reset(cpu);
 	}
 
 	intel_pstate_get_cpu_pstates(cpu);
-
-	intel_pstate_pid_reset(cpu);
 
 	cpu->update_util.func = intel_pstate_update_util;
 
