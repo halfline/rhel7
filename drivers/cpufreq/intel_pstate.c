@@ -1511,12 +1511,11 @@ static int intel_pstate_set_policy(struct cpufreq_policy *policy)
 	intel_pstate_clear_update_util_hook(policy->cpu);
 
 	cpu = all_cpu_data[0];
-	if (cpu->pstate.max_pstate_physical > cpu->pstate.max_pstate) {
-		if (policy->max < policy->cpuinfo.max_freq &&
-		    policy->max > cpu->pstate.max_pstate * cpu->pstate.scaling) {
-			pr_debug("policy->max > max non turbo frequency\n");
-			policy->max = policy->cpuinfo.max_freq;
-		}
+	if (cpu->pstate.max_pstate_physical > cpu->pstate.max_pstate &&
+	    policy->max < policy->cpuinfo.max_freq &&
+	    policy->max > cpu->pstate.max_pstate * cpu->pstate.scaling) {
+		pr_debug("policy->max > max non turbo frequency\n");
+		policy->max = policy->cpuinfo.max_freq;
 	}
 
 	pr_debug("set_policy cpuinfo.max %u policy->max %u\n",
