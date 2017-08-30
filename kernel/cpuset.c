@@ -283,6 +283,17 @@ static DECLARE_WORK(cpuset_hotplug_work, cpuset_hotplug_workfn);
 
 static DECLARE_WAIT_QUEUE_HEAD(cpuset_attach_wq);
 
+/**
+ * cgroup_on_dfl - test whether a cgroup is on the default hierarchy
+ * @cgrp: the cgroup of interest
+ *
+ * For RHEL7, this is equivalent to cgroup_sane_behavior().
+ */
+static inline bool cgroup_on_dfl(const struct cgroup *cgrp)
+{
+	return cgroup_sane_behavior(cgrp);
+}
+
 /*
  * This is ugly, but preserves the userspace API for existing cpuset
  * users. If someone tries to mount the "cpuset" filesystem, we
@@ -1495,12 +1506,9 @@ static int cpuset_can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
 
 	mutex_lock(&cpuset_mutex);
 
-	/*
-	 * We allow to move tasks into an empty cpuset if sane_behavior
-	 * flag is set.
-	 */
+	/* allow moving tasks into an empty cpuset if on default hierarchy */
 	ret = -ENOSPC;
-	if (!cgroup_sane_behavior(cgrp) &&
+	if (!cgroup_on_dfl(cgrp) &&
 	    (cpumask_empty(cs->cpus_allowed) || nodes_empty(cs->mems_allowed)))
 		goto out_unlock;
 
@@ -2158,7 +2166,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs)
 	static cpumask_t off_cpus;
 	static nodemask_t off_mems;
 	bool is_empty;
-	bool sane = cgroup_sane_behavior(cs->css.cgroup);
+	bool on_dfl = cgroup_on_dfl(cs->css.cgroup);
 
 retry:
 	wait_event(cpuset_attach_wq, cs->attach_in_progress == 0);
@@ -2182,12 +2190,12 @@ retry:
 	mutex_unlock(&callback_mutex);
 
 	/*
-	 * If sane_behavior flag is set, we need to update tasks' cpumask
-	 * for empty cpuset to take on ancestor's cpumask. Otherwise, don't
-	 * call update_tasks_cpumask() if the cpuset becomes empty, as
-	 * the tasks in it will be migrated to an ancestor.
+	 * If on_dfl, we need to update tasks' cpumask for empty cpuset to
+	 * take on ancestor's cpumask. Otherwise, don't call
+	 * update_tasks_cpumask() if the cpuset becomes empty, as the tasks
+	 * in it will be migrated to an ancestor.
 	 */
-	if ((sane && cpumask_empty(cs->cpus_allowed)) ||
+	if ((on_dfl && cpumask_empty(cs->cpus_allowed)) ||
 	    (!cpumask_empty(&off_cpus) && !cpumask_empty(cs->cpus_allowed)))
 		update_tasks_cpumask(cs, NULL);
 
@@ -2196,12 +2204,12 @@ retry:
 	mutex_unlock(&callback_mutex);
 
 	/*
-	 * If sane_behavior flag is set, we need to update tasks' nodemask
-	 * for empty cpuset to take on ancestor's nodemask. Otherwise, don't
-	 * call update_tasks_nodemask() if the cpuset becomes empty, as
-	 * the tasks in it will be migratd to an ancestor.
+	 * If on_dfl, we need to update tasks' nodemask for empty cpuset to
+	 * take on ancestor's nodemask. Otherwise, don't call
+	 * update_tasks_nodemask() if the cpuset becomes empty, as the
+	 * tasks in it will be migratd to an ancestor.
 	 */
-	if ((sane && nodes_empty(cs->mems_allowed)) ||
+	if ((on_dfl && nodes_empty(cs->mems_allowed)) ||
 	    (!nodes_empty(off_mems) && !nodes_empty(cs->mems_allowed)))
 		update_tasks_nodemask(cs, NULL);
 
@@ -2211,13 +2219,13 @@ retry:
 	mutex_unlock(&cpuset_mutex);
 
 	/*
-	 * If sane_behavior flag is set, we'll keep tasks in empty cpusets.
+	 * If on_dfl, we'll keep tasks in empty cpusets.
 	 *
 	 * Otherwise move tasks to the nearest ancestor with execution
 	 * resources.  This is full cgroup operation which will
 	 * also call back into cpuset.  Should be done outside any lock.
 	 */
-	if (!sane && is_empty)
+	if (!on_dfl && is_empty)
 		remove_tasks_in_empty_cpuset(cs);
 }
 
