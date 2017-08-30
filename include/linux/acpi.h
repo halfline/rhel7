@@ -374,6 +374,7 @@ acpi_status acpi_run_osc(acpi_handle handle, struct acpi_osc_context *context);
 #define OSC_SB_HOTPLUG_OST_SUPPORT		0x00000008
 #define OSC_SB_APEI_SUPPORT			0x00000010
 #define OSC_SB_CPC_SUPPORT			0x00000020
+#define OSC_SB_CPC_DIVERSE_HIGH_SUPPORT		0x00001000
 
 extern bool osc_sb_apei_support_acked;
 
