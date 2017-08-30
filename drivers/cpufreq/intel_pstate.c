@@ -323,14 +323,6 @@ struct pstate_funcs {
 	int32_t (*get_target_pstate)(struct cpudata *);
 };
 
-/**
- * struct cpu_defaults- Per CPU model default config data
- * @funcs:		Callback function data
- */
-struct cpu_defaults {
-	struct pstate_funcs funcs;
-};
-
 static inline int32_t get_target_pstate_use_performance(struct cpudata *cpu);
 static inline int32_t get_target_pstate_use_cpu_load(struct cpudata *cpu);
 
@@ -1493,41 +1485,35 @@ static int knl_get_turbo_pstate(void)
 	return ret;
 }
 
-static struct cpu_defaults core_params = {
-	.funcs = {
-		.get_max = core_get_max_pstate,
-		.get_max_physical = core_get_max_pstate_physical,
-		.get_min = core_get_min_pstate,
-		.get_turbo = core_get_turbo_pstate,
-		.get_scaling = core_get_scaling,
-		.get_val = core_get_val,
-		.get_target_pstate = get_target_pstate_use_performance,
-	},
+static struct pstate_funcs core_funcs = {
+	.get_max = core_get_max_pstate,
+	.get_max_physical = core_get_max_pstate_physical,
+	.get_min = core_get_min_pstate,
+	.get_turbo = core_get_turbo_pstate,
+	.get_scaling = core_get_scaling,
+	.get_val = core_get_val,
+	.get_target_pstate = get_target_pstate_use_performance,
 };
 
-static struct cpu_defaults atom_params = {
-	.funcs = {
-		.get_max = atom_get_max_pstate,
-		.get_max_physical = atom_get_max_pstate,
-		.get_min = atom_get_min_pstate,
-		.get_turbo = atom_get_turbo_pstate,
-		.get_val = atom_get_val,
-		.get_scaling = atom_get_scaling,
-		.get_vid = atom_get_vid,
-		.get_target_pstate = get_target_pstate_use_cpu_load,
-	},
+static const struct pstate_funcs atom_funcs = {
+	.get_max = atom_get_max_pstate,
+	.get_max_physical = atom_get_max_pstate,
+	.get_min = atom_get_min_pstate,
+	.get_turbo = atom_get_turbo_pstate,
+	.get_val = atom_get_val,
+	.get_scaling = atom_get_scaling,
+	.get_vid = atom_get_vid,
+	.get_target_pstate = get_target_pstate_use_cpu_load,
 };
 
-static struct cpu_defaults knl_params = {
-	.funcs = {
-		.get_max = core_get_max_pstate,
-		.get_max_physical = core_get_max_pstate_physical,
-		.get_min = core_get_min_pstate,
-		.get_turbo = knl_get_turbo_pstate,
-		.get_scaling = core_get_scaling,
-		.get_val = core_get_val,
-		.get_target_pstate = get_target_pstate_use_performance,
-	},
+static const struct pstate_funcs knl_funcs = {
+	.get_max = core_get_max_pstate,
+	.get_max_physical = core_get_max_pstate_physical,
+	.get_min = core_get_min_pstate,
+	.get_turbo = knl_get_turbo_pstate,
+	.get_scaling = core_get_scaling,
+	.get_val = core_get_val,
+	.get_target_pstate = get_target_pstate_use_performance,
 };
 
 static void intel_pstate_get_min_max(struct cpudata *cpu, int *min, int *max)
@@ -1791,36 +1777,36 @@ static void intel_pstate_update_util(struct update_util_data *data, u64 time,
 			(unsigned long)&policy }
 
 static const struct x86_cpu_id intel_pstate_cpu_ids[] = {
-	ICPU(INTEL_FAM6_SANDYBRIDGE, 		core_params),
-	ICPU(INTEL_FAM6_SANDYBRIDGE_X,		core_params),
-	ICPU(INTEL_FAM6_ATOM_SILVERMONT1,	atom_params),
-	ICPU(INTEL_FAM6_IVYBRIDGE,		core_params),
-	ICPU(INTEL_FAM6_HASWELL_CORE,		core_params),
-	ICPU(INTEL_FAM6_BROADWELL_CORE,		core_params),
-	ICPU(INTEL_FAM6_IVYBRIDGE_X,		core_params),
-	ICPU(INTEL_FAM6_HASWELL_X,		core_params),
-	ICPU(INTEL_FAM6_HASWELL_ULT,		core_params),
-	ICPU(INTEL_FAM6_HASWELL_GT3E,		core_params),
-	ICPU(INTEL_FAM6_BROADWELL_GT3E,		core_params),
-	ICPU(INTEL_FAM6_SKYLAKE_MOBILE,		core_params),
-	ICPU(INTEL_FAM6_BROADWELL_X,		core_params),
-	ICPU(INTEL_FAM6_SKYLAKE_DESKTOP,	core_params),
-	ICPU(INTEL_FAM6_BROADWELL_XEON_D,	core_params),
-	ICPU(INTEL_FAM6_XEON_PHI_KNL,		knl_params),
-	ICPU(INTEL_FAM6_XEON_PHI_KNM,		knl_params),
+	ICPU(INTEL_FAM6_SANDYBRIDGE, 		core_funcs),
+	ICPU(INTEL_FAM6_SANDYBRIDGE_X,		core_funcs),
+	ICPU(INTEL_FAM6_ATOM_SILVERMONT1,	atom_funcs),
+	ICPU(INTEL_FAM6_IVYBRIDGE,		core_funcs),
+	ICPU(INTEL_FAM6_HASWELL_CORE,		core_funcs),
+	ICPU(INTEL_FAM6_BROADWELL_CORE,		core_funcs),
+	ICPU(INTEL_FAM6_IVYBRIDGE_X,		core_funcs),
+	ICPU(INTEL_FAM6_HASWELL_X,		core_funcs),
+	ICPU(INTEL_FAM6_HASWELL_ULT,		core_funcs),
+	ICPU(INTEL_FAM6_HASWELL_GT3E,		core_funcs),
+	ICPU(INTEL_FAM6_BROADWELL_GT3E,		core_funcs),
+	ICPU(INTEL_FAM6_SKYLAKE_MOBILE,		core_funcs),
+	ICPU(INTEL_FAM6_BROADWELL_X,		core_funcs),
+	ICPU(INTEL_FAM6_SKYLAKE_DESKTOP,	core_funcs),
+	ICPU(INTEL_FAM6_BROADWELL_XEON_D,	core_funcs),
+	ICPU(INTEL_FAM6_XEON_PHI_KNL,		knl_funcs),
+	ICPU(INTEL_FAM6_XEON_PHI_KNM,		knl_funcs),
 	{}
 };
 MODULE_DEVICE_TABLE(x86cpu, intel_pstate_cpu_ids);
 
 static const struct x86_cpu_id intel_pstate_cpu_oob_ids[] = {
-	ICPU(INTEL_FAM6_BROADWELL_XEON_D, core_params),
-	ICPU(INTEL_FAM6_BROADWELL_X, core_params),
-	ICPU(INTEL_FAM6_SKYLAKE_X, core_params),
+	ICPU(INTEL_FAM6_BROADWELL_XEON_D, core_funcs),
+	ICPU(INTEL_FAM6_BROADWELL_X, core_funcs),
+	ICPU(INTEL_FAM6_SKYLAKE_X, core_funcs),
 	{}
 };
 
 static const struct x86_cpu_id intel_pstate_cpu_ee_disable_ids[] = {
-	ICPU(INTEL_FAM6_KABYLAKE_DESKTOP, core_params),
+	ICPU(INTEL_FAM6_KABYLAKE_DESKTOP, core_funcs),
 	{}
 };
 
@@ -2492,7 +2478,7 @@ static int __init intel_pstate_init(void)
 		return -ENODEV;
 
 	if (x86_match_cpu(hwp_support_ids)) {
-		copy_cpu_funcs(&core_params.funcs);
+		copy_cpu_funcs(&core_funcs);
 		if (no_hwp) {
 			pstate_funcs.get_target_pstate = get_target_pstate_use_cpu_load;
 		} else {
@@ -2503,14 +2489,12 @@ static int __init intel_pstate_init(void)
 		}
 	} else {
 		const struct x86_cpu_id *id;
-		struct cpu_defaults *cpu_def;
 
 		id = x86_match_cpu(intel_pstate_cpu_ids);
 		if (!id)
 			return -ENODEV;
 
-		cpu_def = (struct cpu_defaults *)id->driver_data;
-		copy_cpu_funcs(&cpu_def->funcs);
+		copy_cpu_funcs((struct pstate_funcs *)id->driver_data);
 	}
 
 	if (intel_pstate_msrs_not_valid())
