@@ -36,6 +36,7 @@
 #include "util/parse-regs-options.h"
 #include "util/trigger.h"
 #include "util/perf-hooks.h"
+#include "util/units.h"
 #include "asm/bug.h"
 
 #include <errno.h>
