@@ -191,6 +191,8 @@ perf_callchain(struct perf_event *event, struct pt_regs *regs)
 		}
 
 		if (regs) {
+			mm_segment_t fs;
+
 			/*
 			 * Disallow cross-task user callchains.
 			 */
@@ -198,7 +200,11 @@ perf_callchain(struct perf_event *event, struct pt_regs *regs)
 				goto exit_put;
 
 			perf_callchain_store(entry, PERF_CONTEXT_USER);
+
+			fs = get_fs();
+			set_fs(USER_DS);
 			perf_callchain_user(entry, regs);
+			set_fs(fs);
 		}
 	}
 
