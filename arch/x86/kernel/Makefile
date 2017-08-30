@@ -106,6 +106,7 @@ obj-$(CONFIG_UPROBES)			+= uprobes.o
 
 obj-$(CONFIG_PERF_EVENTS)		+= perf_regs.o
 obj-$(CONFIG_TRACING)			+= tracepoint.o
+obj-$(CONFIG_SCHED_ITMT)		+= itmt.o
 obj-$(CONFIG_IOSF_MBI)			+= iosf_mbi.o
 
 ###
