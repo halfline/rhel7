@@ -683,6 +683,8 @@ struct rq {
 	/* try_to_wake_up() stats */
 	unsigned int ttwu_count;
 	unsigned int ttwu_local;
+
+	unsigned long cpu_capacity_orig;
 #endif /* __GENKSYMS__ */
 };
 

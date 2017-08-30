@@ -4067,6 +4067,11 @@ static unsigned long power_of(int cpu)
 	return cpu_rq(cpu)->cpu_power;
 }
 
+static unsigned long capacity_orig_of(int cpu)
+{
+	return cpu_rq(cpu)->cpu_capacity_orig;
+}
+
 static unsigned long cpu_avg_load_per_task(int cpu)
 {
 	struct rq *rq = cpu_rq(cpu);
@@ -5621,6 +5626,8 @@ static void update_cpu_power(struct sched_domain *sd, int cpu)
 
 	power >>= SCHED_POWER_SHIFT;
 
+	cpu_rq(cpu)->cpu_capacity_orig = power;
+
 	power *= scale_rt_power(cpu);
 	power >>= SCHED_POWER_SHIFT;
 
@@ -5673,7 +5680,7 @@ void update_group_power(struct sched_domain *sd, int cpu)
 			 * Runtime updates will correct power_orig.
 			 */
 			if (unlikely(!rq->sd)) {
-				power_orig += power_of(cpu);
+				power_orig += capacity_orig_of(cpu);
 				power += power_of(cpu);
 				continue;
 			}
@@ -6380,6 +6387,13 @@ static struct rq *find_busiest_queue(struct lb_env *env,
 
 /* Working cpumask for load_balance and load_balance_newidle. */
 DEFINE_PER_CPU(cpumask_var_t, load_balance_mask);
+
+static inline int
+check_cpu_capacity(struct rq *rq, struct sched_domain *sd)
+{
+	return ((rq->cpu_power * sd->imbalance_pct) <
+				(rq->cpu_capacity_orig * 100));
+}
 
 static int need_active_balance(struct lb_env *env)
 {
