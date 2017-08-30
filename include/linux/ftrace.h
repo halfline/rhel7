@@ -62,7 +62,7 @@ typedef void (*ftrace_func_t)(unsigned long ip, unsigned long parent_ip,
  * CONTROL, SAVE_REGS, SAVE_REGS_IF_SUPPORTED, RECURSION_SAFE, STUB and
  * IPMODIFY are a kind of attribute flags which can be set only before
  * registering the ftrace_ops, and can not be modified while registered.
- * Changing those attribute flags after regsitering ftrace_ops will
+ * Changing those attribute flags after registering ftrace_ops will
  * cause unexpected results.
  *
  * ENABLED - set/unset when ftrace_ops is registered/unregistered
