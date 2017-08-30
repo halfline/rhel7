@@ -20,10 +20,7 @@
 #include <limits.h>
 #include <sys/param.h>
 #include <sys/types.h>
-#include <sys/time.h>
-#include <time.h>
 #include <assert.h>
-#include <utime.h>
 #include <sys/wait.h>
 #include <poll.h>
 #include <sys/socket.h>
@@ -116,12 +113,9 @@ int lzma_decompress_to_file(const char *input, int output_fd);
 int get_stack_size(const char *str, unsigned long *_size);
 
 const char *perf_tip(const char *dirpath);
-int fetch_current_timestamp(char *buf, size_t sz);
 
 #ifndef HAVE_SCHED_GETCPU_SUPPORT
 int sched_getcpu(void);
 #endif
-
-int timestamp__scnprintf_usec(u64 timestamp, char *buf, size_t sz);
 
 #endif /* GIT_COMPAT_UTIL_H */
