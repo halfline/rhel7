@@ -130,6 +130,7 @@ struct perf_evsel {
 	struct list_head	config_terms;
 	bool			merged_stat;
 	const char *		metric_expr;
+	const char *		metric_name;
 	struct perf_evsel	**metric_events;
 	bool			collect_stat;
 };
