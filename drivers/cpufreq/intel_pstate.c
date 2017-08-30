@@ -1779,6 +1779,19 @@ static void copy_pid_params(struct pstate_adjust_policy *policy)
 	pid_params.setpoint = policy->setpoint;
 }
 
+#ifdef CONFIG_ACPI
+static void intel_pstate_use_acpi_profile(void)
+{
+	if (acpi_gbl_FADT.preferred_profile == PM_MOBILE)
+		pstate_funcs.get_target_pstate =
+				get_target_pstate_use_cpu_load;
+}
+#else
+static void intel_pstate_use_acpi_profile(void)
+{
+}
+#endif
+
 static void copy_cpu_funcs(struct pstate_funcs *funcs)
 {
 	pstate_funcs.get_max   = funcs->get_max;
@@ -1790,6 +1803,7 @@ static void copy_cpu_funcs(struct pstate_funcs *funcs)
 	pstate_funcs.get_vid   = funcs->get_vid;
 	pstate_funcs.get_target_pstate = funcs->get_target_pstate;
 
+	intel_pstate_use_acpi_profile();
 }
 
 #ifdef CONFIG_ACPI
