@@ -175,73 +175,6 @@ static DEFINE_PER_CPU(struct tls_descs, shadow_tls_desc);
 
 #define XEN_HVM_CPUID_VCPU_ID_PRESENT  (1u << 3)
 
-static void clamp_max_cpus(void)
-{
-#ifdef CONFIG_SMP
-	if (setup_max_cpus > MAX_VIRT_CPUS)
-		setup_max_cpus = MAX_VIRT_CPUS;
-#endif
-}
-
-void xen_vcpu_setup(int cpu)
-{
-	struct vcpu_register_vcpu_info info;
-	int err;
-	struct vcpu_info *vcpup;
-
-	BUG_ON(HYPERVISOR_shared_info == &xen_dummy_shared_info);
-
-	/*
-	 * This path is called twice on PVHVM - first during bootup via
-	 * smp_init -> xen_hvm_cpu_notify, and then if the VCPU is being
-	 * hotplugged: cpu_up -> xen_hvm_cpu_notify.
-	 * As we can only do the VCPUOP_register_vcpu_info once lets
-	 * not over-write its result.
-	 *
-	 * For PV it is called during restore (xen_vcpu_restore) and bootup
-	 * (xen_setup_vcpu_info_placement). The hotplug mechanism does not
-	 * use this function.
-	 */
-	if (xen_hvm_domain()) {
-		if (per_cpu(xen_vcpu, cpu) == &per_cpu(xen_vcpu_info, cpu))
-			return;
-	}
-	if (xen_vcpu_nr(cpu) < MAX_VIRT_CPUS)
-		per_cpu(xen_vcpu, cpu) =
-			&HYPERVISOR_shared_info->vcpu_info[xen_vcpu_nr(cpu)];
-
-	if (!xen_have_vcpu_info_placement) {
-		if (cpu >= MAX_VIRT_CPUS)
-			clamp_max_cpus();
-		return;
-	}
-
-	vcpup = &per_cpu(xen_vcpu_info, cpu);
-	info.mfn = arbitrary_virt_to_mfn(vcpup);
-	info.offset = offset_in_page(vcpup);
-
-	/* Check to see if the hypervisor will put the vcpu_info
-	   structure where we want it, which allows direct access via
-	   a percpu-variable.
-	   N.B. This hypercall can _only_ be called once per CPU. Subsequent
-	   calls will error out with -EINVAL. This is due to the fact that
-	   hypervisor has no unregister variant and this hypercall does not
-	   allow to over-write info.mfn and info.offset.
-	 */
-	err = HYPERVISOR_vcpu_op(VCPUOP_register_vcpu_info, xen_vcpu_nr(cpu),
-				 &info);
-
-	if (err) {
-		printk(KERN_DEBUG "register_vcpu_info failed: err=%d\n", err);
-		xen_have_vcpu_info_placement = 0;
-		clamp_max_cpus();
-	} else {
-		/* This cpu is using the registered vcpu info, even if
-		   later ones fail to. */
-		per_cpu(xen_vcpu, cpu) = vcpup;
-	}
-}
-
 /*
  * On restore, set the vcpu placement up again.
  * If it fails, then we're in a bad state, since
@@ -268,6 +201,89 @@ void xen_vcpu_restore(void)
 		if (other_cpu && is_up &&
 		    HYPERVISOR_vcpu_op(VCPUOP_up, xen_vcpu_nr(cpu), NULL))
 			BUG();
+	}
+}
+
+static void clamp_max_cpus(void)
+{
+#ifdef CONFIG_SMP
+	if (setup_max_cpus > MAX_VIRT_CPUS)
+		setup_max_cpus = MAX_VIRT_CPUS;
+#endif
+}
+
+void xen_vcpu_info_reset(int cpu)
+{
+	if (xen_vcpu_nr(cpu) < MAX_VIRT_CPUS) {
+		per_cpu(xen_vcpu, cpu) =
+			&HYPERVISOR_shared_info->vcpu_info[xen_vcpu_nr(cpu)];
+	} else {
+		/* Set to NULL so that if somebody accesses it we get an OOPS */
+		per_cpu(xen_vcpu, cpu) = NULL;
+	}
+}
+
+void xen_vcpu_setup(int cpu)
+{
+	struct vcpu_register_vcpu_info info;
+	int err;
+	struct vcpu_info *vcpup;
+
+	BUG_ON(HYPERVISOR_shared_info == &xen_dummy_shared_info);
+
+	/*
+	 * This path is called twice on PVHVM - first during bootup via
+	 * smp_init -> xen_hvm_cpu_notify, and then if the VCPU is being
+	 * hotplugged: cpu_up -> xen_hvm_cpu_notify.
+	 * As we can only do the VCPUOP_register_vcpu_info once lets
+	 * not over-write its result.
+	 *
+	 * For PV it is called during restore (xen_vcpu_restore) and bootup
+	 * (xen_setup_vcpu_info_placement). The hotplug mechanism does not
+	 * use this function.
+	 */
+	if (xen_hvm_domain()) {
+		if (per_cpu(xen_vcpu, cpu) == &per_cpu(xen_vcpu_info, cpu))
+			return;
+	}
+
+	xen_vcpu_info_reset(cpu);
+
+	if (xen_have_vcpu_info_placement) {
+		vcpup = &per_cpu(xen_vcpu_info, cpu);
+		info.mfn = arbitrary_virt_to_mfn(vcpup);
+		info.offset = offset_in_page(vcpup);
+
+		/*
+		 * Check to see if the hypervisor will put the vcpu_info
+		 * structure where we want it, which allows direct access via
+		 * a percpu-variable.
+		 * N.B. This hypercall can _only_ be called once per CPU.
+		 * Subsequent calls will error out with -EINVAL. This is due to
+		 * the fact that hypervisor has no unregister variant and this
+		 * hypercall does not allow to over-write info.mfn and
+		 * info.offset.
+		 */
+		err = HYPERVISOR_vcpu_op(VCPUOP_register_vcpu_info,
+					 xen_vcpu_nr(cpu), &info);
+
+		if (err) {
+			pr_warn_once("register_vcpu_info failed: cpu=%d err=%d\n",
+				     cpu, err);
+			xen_have_vcpu_info_placement = 0;
+		} else {
+			/*
+			 * This cpu is using the registered vcpu info, even if
+			 * later ones fail to.
+			 */
+			per_cpu(xen_vcpu, cpu) = vcpup;
+		}
+	}
+
+	if (!xen_have_vcpu_info_placement) {
+		if (cpu >= MAX_VIRT_CPUS)
+			clamp_max_cpus();
+		return;
 	}
 }
 
@@ -1537,9 +1553,17 @@ asmlinkage void __init xen_start_kernel(void)
 	 */
 	pat_enabled = 0;
 #endif
-	/* Don't do the full vcpu_info placement stuff until we have a
-	   possible map and a non-dummy shared_info. */
-	per_cpu(xen_vcpu, 0) = &HYPERVISOR_shared_info->vcpu_info[0];
+	/* Let's presume PV guests always boot on vCPU with id 0. */
+	per_cpu(xen_vcpu_id, 0) = 0;
+
+	/*
+	 * Setup xen_vcpu early because start_kernel needs it for
+	 * local_irq_disable(), irqs_disabled().
+	 *
+	 * Don't do the full vcpu_info placement stuff until we have
+	 * the cpu_possible_mask and a non-dummy shared_info.
+	 */
+	xen_vcpu_info_reset(0);
 
 	local_irq_disable();
 	early_boot_irqs_disabled = true;
@@ -1628,9 +1652,7 @@ asmlinkage void __init xen_start_kernel(void)
 #endif
 	xen_raw_console_write("about to get started...\n");
 
-	/* Let's presume PV guests always boot on vCPU with id 0. */
-	per_cpu(xen_vcpu_id, 0) = 0;
-
+	/* We need this for printk timestamps */
 	xen_setup_runstate_info(0);
 
 	/* Start the world */
@@ -1668,11 +1690,7 @@ void __ref xen_hvm_init_shared_info(void)
 	 * online but xen_hvm_init_shared_info is run at resume time too and
 	 * in that case multiple vcpus might be online. */
 	for_each_online_cpu(cpu) {
-		/* Leave it to be NULL. */
-		if (xen_vcpu_nr(cpu) >= MAX_VIRT_CPUS)
-			continue;
-		per_cpu(xen_vcpu, cpu) =
-			&HYPERVISOR_shared_info->vcpu_info[xen_vcpu_nr(cpu)];
+		xen_vcpu_info_reset(cpu);
 	}
 }
 
