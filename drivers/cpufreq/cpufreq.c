@@ -1673,7 +1673,7 @@ void cpufreq_suspend(void)
 	if (!cpufreq_driver)
 		return;
 
-	if (!has_target())
+	if (!has_target() && !cpufreq_driver->suspend)
 		return;
 
 	pr_debug("%s: Suspending Governors\n", __func__);
@@ -1704,7 +1704,7 @@ void cpufreq_resume(void)
 	if (!cpufreq_driver)
 		return;
 
-	if (!has_target())
+	if (!has_target() && !cpufreq_driver->resume)
 		return;
 
 	pr_debug("%s: Resuming Governors\n", __func__);
