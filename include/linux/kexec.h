@@ -205,8 +205,6 @@ extern void __crash_kexec(struct pt_regs *);
 extern void crash_kexec(struct pt_regs *);
 int kexec_should_crash(struct task_struct *);
 void crash_save_cpu(struct pt_regs *regs, int cpu);
-void crash_map_reserved_pages(void);
-void crash_unmap_reserved_pages(void);
 
 extern struct kimage *kexec_image;
 extern struct kimage *kexec_crash_image;
