@@ -52,6 +52,7 @@ int test__python_use(int subtest);
 int test__bp_signal(int subtest);
 int test__bp_signal_overflow(int subtest);
 int test__task_exit(int subtest);
+int test__mem(int subtest);
 int test__sw_clock_freq(int subtest);
 int test__code_reading(int subtest);
 int test__sample_parsing(int subtest);
