@@ -886,6 +886,12 @@ struct tc_to_netdev {
  *	void *attr_data)
  *	Get statistics for offload operations by attr_id. Write it into the
  *	attr_data pointer.
+ *
+ * int (*ndo_change_mtu)(struct net_device *dev, int new_mtu);
+ *	Called when a user wants to change the Maximum Transfer Unit
+ *	of a device.
+ *	RHEL: This is an entry point for network device drivers that
+ *	      use central MTU range checking provided by network core.
  */
 struct net_device_ops_extended {
 	int			(*ndo_set_vf_trust)(struct net_device *dev,
@@ -931,6 +937,8 @@ struct net_device_ops_extended {
 	int			(*ndo_get_offload_stats)(int attr_id,
 							 const struct net_device *dev,
 							 void *attr_data);
+	int			(*ndo_change_mtu)(struct net_device *dev,
+						  int new_mtu);
 };
 
 /*
@@ -1915,11 +1923,18 @@ struct net_device {
  *	@ndisc_ops:	Includes callbacks for different IPv6 neighbour
  *			discovery handling. Necessary for e.g. 6LoWPAN.
  *
+ *	@min_mtu:	Interface Minimum MTU value
+ *	@max_mtu:	Interface Maximum MTU value
+ *	RHEL note: These bounds are only checked when the old
+ *		.ndo_change_mtu_rh74 handler is *not* provided.
+ *		See dev_set_mtu() in net/core/dev.c
  */
 struct net_device_extended {
 #if IS_ENABLED(CONFIG_IPV6)
 	const struct ndisc_ops *ndisc_ops;
 #endif
+	unsigned int		min_mtu;
+	unsigned int		max_mtu;
 };
 
 #define to_net_dev(d) container_of(d, struct net_device, dev)

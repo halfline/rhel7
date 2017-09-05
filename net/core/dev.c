@@ -6534,7 +6534,12 @@ int __dev_set_mtu(struct net_device *dev, int new_mtu)
 {
 	const struct net_device_ops *ops = dev->netdev_ops;
 
-	if (ops->ndo_change_mtu)
+	/* RHEL - prefer new handler if it is provided by the driver
+	 * the old one is supported for backward compatibility
+	 */
+	if (get_ndo_ext(ops, ndo_change_mtu))
+		return get_ndo_ext(ops, ndo_change_mtu)(dev, new_mtu);
+	else if (ops->ndo_change_mtu)
 		return ops->ndo_change_mtu(dev, new_mtu);
 
 	dev->mtu = new_mtu;
@@ -6556,10 +6561,33 @@ int dev_set_mtu(struct net_device *dev, int new_mtu)
 	if (new_mtu == dev->mtu)
 		return 0;
 
-	/*	MTU must be positive.	 */
-	if (new_mtu < 0)
-		return -EINVAL;
+	/* RHEL - skip min_mtu & max_mtu checks for old drivers that
+	 * implement old .ndo_change_mtu_rh74() handler.
+	 */
+	if (dev->netdev_ops->ndo_change_mtu) {
+		/* Warn if the driver implements both new and old handler */
+		if (get_ndo_ext(dev->netdev_ops, ndo_change_mtu))
+			netdev_WARN(dev, "Only one of ndo_change_mtu_rh74 and extended.ndo_change_mtu should be provided");
 
+		if (new_mtu < 0)
+			return -EINVAL;
+		goto skip_check;
+	}
+
+	/* MTU must be positive, and in range */
+	if (new_mtu < 0 || new_mtu < dev->extended->min_mtu) {
+		net_err_ratelimited("%s: Invalid MTU %d requested, hw min %d\n",
+				    dev->name, new_mtu, dev->extended->min_mtu);
+		return -EINVAL;
+	}
+
+	if (dev->extended->max_mtu > 0 && new_mtu > dev->extended->max_mtu) {
+		net_err_ratelimited("%s: Invalid MTU %d requested, hw max %d\n",
+				    dev->name, new_mtu, dev->extended->min_mtu);
+		return -EINVAL;
+	}
+
+skip_check:
 	if (!netif_device_present(dev))
 		return -ENODEV;
 
