@@ -62,7 +62,8 @@
  * DNV (SOC)			0x19df	32	hard	yes	yes	yes
  * Lewisburg (PCH)       	0xa1a3	32	hard	yes	yes	yes
  * Lewisburg Supersku (PCH)   	0xa223	32	hard	yes	yes	yes
- * 
+ * Kaby Lake PCH-H (PCH)	0xa2a3	32	hard	yes	yes	yes
+ *
  * Features supported by this driver:
  * Software PEC				no
  * Hardware PEC				yes
@@ -206,7 +207,7 @@
 #define PCI_DEVICE_ID_INTEL_DNV_SMBUS			0x19df
 #define PCI_DEVICE_ID_INTEL_LEWISBURG_SMBUS		0xa1a3
 #define PCI_DEVICE_ID_INTEL_LEWISBURG_SSKU_SMBUS	0xa223
-#define PCI_DEVICE_ID_INTEL_KABYPOINT_H_SMBUS		0xa2a3
+#define PCI_DEVICE_ID_INTEL_KABYLAKE_PCH_H_SMBUS	0xa2a3
 
 struct i801_mux_config {
 	char *gpio_chip;
@@ -895,7 +896,7 @@ static const struct pci_device_id i801_ids[] = {
 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_DNV_SMBUS) },
 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_LEWISBURG_SMBUS) },
 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_LEWISBURG_SSKU_SMBUS) },
-	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_KABYPOINT_H_SMBUS) },
+	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_KABYLAKE_PCH_H_SMBUS) },
 	{ 0, }
 };
 
@@ -1374,7 +1375,7 @@ static int i801_probe(struct pci_dev *dev, const struct pci_device_id *id)
 	case PCI_DEVICE_ID_INTEL_LEWISBURG_SMBUS:
 	case PCI_DEVICE_ID_INTEL_LEWISBURG_SSKU_SMBUS:
 	case PCI_DEVICE_ID_INTEL_DNV_SMBUS:
-	case PCI_DEVICE_ID_INTEL_KABYPOINT_H_SMBUS:
+	case PCI_DEVICE_ID_INTEL_KABYLAKE_PCH_H_SMBUS:
 		priv->features |= FEATURE_I2C_BLOCK_READ;
 		priv->features |= FEATURE_IRQ;
 		priv->features |= FEATURE_SMBUS_PEC;
