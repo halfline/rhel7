@@ -448,8 +448,12 @@ struct sock {
 	RH_KABI_USE2_P(1, __u32	sk_txhash, u32 sk_max_pacing_rate)
 	RH_KABI_USE2_P(2, u16 sk_tsflags, __u32 sk_dst_pending_confirm)
 	RH_KABI_USE_P(3, struct sock_reuseport __rcu	*sk_reuseport_cb)
-	RH_KABI_RESERVE_P(4)
-	RH_KABI_RESERVE_P(5)
+#ifndef __GENKSYMS__
+	struct rcu_head		sk_rcu;
+#else
+	RH_KABI_USE_P(4, sk_rcu.next)
+	RH_KABI_USE_P(5, sk_rcu.func)
+#endif
 	RH_KABI_RESERVE_P(6)
 	RH_KABI_RESERVE_P(7)
 	RH_KABI_RESERVE_P(8)
@@ -749,6 +753,7 @@ enum sock_flags {
 		     */
 	SOCK_FILTER_LOCKED, /* Filter cannot be changed anymore */
 	SOCK_SELECT_ERR_QUEUE, /* Wake select on error queue */
+	SOCK_RCU_FREE, /* wait rcu grace period in sk_destruct() */
 };
 
 #define SK_FLAGS_TIMESTAMP ((1UL << SOCK_TIMESTAMP) | (1UL << SOCK_TIMESTAMPING_RX_SOFTWARE))
