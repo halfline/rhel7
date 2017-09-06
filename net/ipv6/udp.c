@@ -252,6 +252,7 @@ static struct sock *udp6_lib_lookup2(struct net *net,
 	struct sock *sk, *result;
 	struct hlist_nulls_node *node;
 	int score, badness, matches = 0, reuseport = 0;
+	bool select_ok = true;
 	u32 hash = 0;
 
 begin:
@@ -265,13 +266,17 @@ begin:
 			badness = score;
 			reuseport = sk->sk_reuseport;
 			if (reuseport) {
-				struct sock *sk2;
 				hash = udp6_ehashfn(net, daddr, hnum,
 						    saddr, sport);
-				sk2 = reuseport_select_sock(sk, hash);
-				if (sk2) {
-					result = sk2;
-					goto found;
+				if (select_ok) {
+					struct sock *sk2;
+
+					sk2 = reuseport_select_sock(sk, hash);
+					if (sk2) {
+						result = sk2;
+						select_ok = false;
+						goto found;
+					}
 				}
 				matches = 1;
 			}
@@ -314,6 +319,7 @@ struct sock *__udp6_lib_lookup(struct net *net,
 	unsigned int hash2, slot2, slot = udp_hashfn(net, hnum, udptable->mask);
 	struct udp_hslot *hslot2, *hslot = &udptable->hash[slot];
 	int score, badness, matches = 0, reuseport = 0;
+	bool select_ok = true;
 	u32 hash = 0;
 
 	rcu_read_lock();
@@ -351,13 +357,17 @@ begin:
 			badness = score;
 			reuseport = sk->sk_reuseport;
 			if (reuseport) {
-				struct sock *sk2;
 				hash = udp6_ehashfn(net, daddr, hnum,
 						    saddr, sport);
-				sk2 = reuseport_select_sock(sk, hash);
-				if (sk2) {
-					result = sk2;
-					goto found;
+				if (select_ok) {
+					struct sock *sk2;
+
+					sk2 = reuseport_select_sock(sk, hash);
+					if (sk2) {
+						result = sk2;
+						select_ok = false;
+						goto found;
+					}
 				}
 				matches = 1;
 			}
