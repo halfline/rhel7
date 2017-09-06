@@ -83,7 +83,11 @@
 	((struct acpi_generic_status *)				\
 	 ((struct ghes_estatus_node *)(estatus_node) + 1))
 
-bool ghes_disable;
+/*
+ * RHEL only: we don't want to swap from other EDAC drivers into GHES during
+ * the same release.
+ */
+bool ghes_disable = 1;
 module_param_named(disable, ghes_disable, bool, 0);
 
 static int ghes_panic_timeout	__read_mostly = 30;
