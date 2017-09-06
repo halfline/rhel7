@@ -298,6 +298,7 @@ struct cg_proto;
   *	@sk_error_report: callback to indicate errors (e.g. %MSG_ERRQUEUE)
   *	@sk_backlog_rcv: callback to process the backlog
   *	@sk_destruct: called at sock freeing time, i.e. when all refcnt == 0
+  *	@sk_reuseport_cb: reuseport group container
  */
 struct sock {
 	/*
@@ -446,7 +447,7 @@ struct sock {
 	 */
 	RH_KABI_USE2_P(1, __u32	sk_txhash, u32 sk_max_pacing_rate)
 	RH_KABI_USE2_P(2, u16 sk_tsflags, __u32 sk_dst_pending_confirm)
-	RH_KABI_RESERVE_P(3)
+	RH_KABI_USE_P(3, struct sock_reuseport __rcu	*sk_reuseport_cb)
 	RH_KABI_RESERVE_P(4)
 	RH_KABI_RESERVE_P(5)
 	RH_KABI_RESERVE_P(6)
