@@ -23,6 +23,10 @@
 #ifndef _OCTEON_MAIN_H_
 #define  _OCTEON_MAIN_H_
 
+#ifndef KBUILD_MODNAME
+#define KBUILD_MODNAME KBUILD_BASENAME
+#endif
+
 #if BITS_PER_LONG == 32
 #define CVM_CAST64(v) ((long long)(v))
 #elif BITS_PER_LONG == 64
