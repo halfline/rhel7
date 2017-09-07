@@ -26,4 +26,16 @@ config LIQUIDIO
 	  To compile this driver as a module, choose M here: the module
 	  will be called liquidio.  This is recommended.
 
+config LIQUIDIO_VF
+	tristate "Cavium LiquidIO VF support"
+	depends on 64BIT && PCI_MSI
+	select PTP_1588_CLOCK
+	---help---
+	  This driver supports Cavium LiquidIO Intelligent Server Adapter
+	  based on CN23XX chips.
+
+	  To compile this driver as a module, choose M here: The module
+	  will be called liquidio_vf. MSI-X interrupt support is required
+	  for this driver to work correctly
+
 endif # NET_VENDOR_CAVIUM
