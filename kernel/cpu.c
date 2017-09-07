@@ -126,6 +126,35 @@ void put_online_cpus(void)
 }
 EXPORT_SYMBOL_GPL(put_online_cpus);
 
+#ifdef CONFIG_PROVE_LOCKING
+/*
+ * The cpu_hotplug structure actually has 2 separate lockdep allocation
+ * debug structures. One is the core dep_map in the structure itself and
+ * the other one is in the cpu_hotplug.lock mutex. The core dep_map is
+ * tracked as a rwlock with get_online_cpus() treated as a read lock and
+ * cpu_hotplug_begin() as a write lock.
+ *
+ * The try_get_online_cpus() can work around potential recursive lock
+ * taking issue reported by lockdep. However, the lockdep structure in
+ * the mutex will still report lockdep error because of the mutex_lock()
+ * in put_online_cpus(). It is actually not a real problem as the success
+ * of try_get_online_cpus() means other cpus cannot start a hotplug event
+ * sequence before put_onlines_cpus(). Other mutex lock holders can only
+ * increment and decrement the reference count which is pretty quick.
+ *
+ * To avoid false positive of this kind, the lockdep tracking in the mutex
+ * itself is turned off. Lockdep tracking will still be done in the core
+ * dep_map structure as a rwlock.
+ */
+static int __init disable_cpu_hotplug_mutex_lockdep(void)
+{
+	lockdep_set_novalidate_class(&cpu_hotplug.lock);
+	return 0;
+}
+pure_initcall(disable_cpu_hotplug_mutex_lockdep);
+
+#endif
+
 /*
  * This ensures that the hotplug operation can begin only when the
  * refcount goes to zero.
