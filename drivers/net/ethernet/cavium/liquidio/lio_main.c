@@ -2868,17 +2868,6 @@ static int liquidio_change_mtu(struct net_device *netdev, int new_mtu)
 	struct octnic_ctrl_pkt nctrl;
 	int ret = 0;
 
-	/* Limit the MTU to make sure the ethernet packets are between 68 bytes
-	 * and 16000 bytes
-	 */
-	if ((new_mtu < LIO_MIN_MTU_SIZE) ||
-	    (new_mtu > LIO_MAX_MTU_SIZE)) {
-		dev_err(&oct->pci_dev->dev, "Invalid MTU: %d\n", new_mtu);
-		dev_err(&oct->pci_dev->dev, "Valid range %d and %d\n",
-			LIO_MIN_MTU_SIZE, LIO_MAX_MTU_SIZE);
-		return -EINVAL;
-	}
-
 	memset(&nctrl, 0, sizeof(struct octnic_ctrl_pkt));
 
 	nctrl.ncmd.u64 = 0;
@@ -3579,7 +3568,7 @@ static struct net_device_ops lionetdevops = {
 
 	.ndo_vlan_rx_add_vid    = liquidio_vlan_rx_add_vid,
 	.ndo_vlan_rx_kill_vid   = liquidio_vlan_rx_kill_vid,
-	.ndo_change_mtu		= liquidio_change_mtu,
+	.extended.ndo_change_mtu	= liquidio_change_mtu,
 	.ndo_do_ioctl		= liquidio_ioctl,
 	.ndo_fix_features	= liquidio_fix_features,
 	.ndo_set_features	= liquidio_set_features,
@@ -3891,6 +3880,10 @@ static int setup_nic_devices(struct octeon_device *octeon_dev)
 		/*HW_VLAN_RX and HW_VLAN_FILTER is always on*/
 		netdev->hw_features = netdev->hw_features &
 			~NETIF_F_HW_VLAN_CTAG_RX;
+
+		/* MTU range: 68 - 16000 */
+		netdev->extended->min_mtu = LIO_MIN_MTU_SIZE;
+		netdev->extended->max_mtu = LIO_MAX_MTU_SIZE;
 
 		/* Point to the  properties for octeon device to which this
 		 * interface belongs.
