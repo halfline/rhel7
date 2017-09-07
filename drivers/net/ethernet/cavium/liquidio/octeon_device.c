@@ -1285,9 +1285,6 @@ int octeon_wait_for_ddr_init(struct octeon_device *oct, u32 *timeout)
 	if (!timeout)
 		return ret;
 
-	while (*timeout == 0)
-		schedule_timeout_uninterruptible(HZ / 10);
-
 	for (ms = 0; (ret != 0) && ((*timeout == 0) || (ms <= *timeout));
 	     ms += HZ / 10) {
 		ret = octeon_mem_access_ok(oct);
