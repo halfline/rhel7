@@ -209,6 +209,11 @@ S:	Maintained
 F:	drivers/net/bonding/
 F:	include/linux/if_bonding.h
 
+CAVIUM LIQUIDIO NETWORK DRIVER
+M:	Felix Manlunas <fmanluna@redhat.com>
+S:	Supported
+F:	drivers/net/ethernet/cavium/liquidio/
+
 CIFS FILESYSTEM
 M:	Red Hat NFS Team <nfs-team@redhat.com>
 S:	Maintained
