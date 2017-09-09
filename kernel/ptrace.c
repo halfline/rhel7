@@ -370,6 +370,12 @@ unlock_creds:
 	mutex_unlock(&task->signal->cred_guard_mutex);
 out:
 	if (!retval) {
+		int trapping_bit = JOBCTL_TRAPPING_BIT;
+#ifdef __BIG_ENDIAN
+		/* See the comment in task_clear_jobctl_trapping() */
+		trapping_bit += (sizeof(long) - sizeof(task->jobctl))
+				* BITS_PER_BYTE;
+#endif
 		/*
 		 * We do not bother to change retval or clear JOBCTL_TRAPPING
 		 * if wait_on_bit() was interrupted by SIGKILL. The tracer will
@@ -377,7 +383,7 @@ out:
 		 * __ptrace_unlink() if it wasn't already cleared by the tracee;
 		 * and until then nobody can ptrace this task.
 		 */
-		wait_on_bit(&task->jobctl, JOBCTL_TRAPPING_BIT, TASK_KILLABLE);
+		wait_on_bit(&task->jobctl, trapping_bit, TASK_KILLABLE);
 		proc_ptrace_connector(task, PTRACE_ATTACH);
 	}
 

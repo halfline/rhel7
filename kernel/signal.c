@@ -276,9 +276,25 @@ bool task_set_jobctl_pending(struct task_struct *task, unsigned int mask)
 void task_clear_jobctl_trapping(struct task_struct *task)
 {
 	if (unlikely(task->jobctl & JOBCTL_TRAPPING)) {
+		int trapping_bit = JOBCTL_TRAPPING_BIT;
+#ifdef __BIG_ENDIAN
+		/*
+		 * RHEL-only. task->jobctl is "unsigned int" but wait_on_bit()
+		 * uses test_bit() which takes "unsigned long *", this means
+		 * that bit-nr becomes wrong and should be adjusted.
+		 *
+		 * This was accidentally fixed by e7cc41731153 ("signals,ptrace
+		 * sched: Fix a misaligned load inside ptrace_attach()") which
+		 * simply turns ->jobctl into "unsigned long", but we want to
+		 * avoid the KABI problems and unaligned access is fine on rhel
+		 * supported hardware.
+		 */
+		trapping_bit += (sizeof(long) - sizeof(task->jobctl))
+				* BITS_PER_BYTE;
+#endif
 		task->jobctl &= ~JOBCTL_TRAPPING;
 		smp_mb();	/* advised by wake_up_bit() */
-		wake_up_bit(&task->jobctl, JOBCTL_TRAPPING_BIT);
+		wake_up_bit(&task->jobctl, trapping_bit);
 	}
 }
 
