@@ -3854,6 +3854,8 @@ struct sk_buff *skb_checksum_trimmed(struct sk_buff *skb,
 				     unsigned int transport_len,
 				     __sum16(*skb_chkf)(struct sk_buff *skb));
 
+int skb_checksum_setup(struct sk_buff *skb, bool recalculate);
+
 /**
  * skb_head_is_locked - Determine if the skb->head is locked down
  * @skb: skb to check
