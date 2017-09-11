@@ -907,6 +907,7 @@ static int handle_incoming_queue(struct netfront_queue *queue,
 
 		/* Ethernet work: Delayed to here as it peeks the header. */
 		skb->protocol = eth_type_trans(skb, queue->info->netdev);
+		skb_reset_network_header(skb);
 
 		if (checksum_setup(queue->info->netdev, skb)) {
 			kfree_skb(skb);
