@@ -2935,6 +2935,8 @@ static void pqi_free_irqs(struct pqi_ctrl_info *ctrl_info)
 	for (i = 0; i < ctrl_info->num_msix_vectors_initialized; i++)
 		free_irq(ctrl_info->msix_vectors[i],
 			ctrl_info->intr_data[i]);
+
+	ctrl_info->num_msix_vectors_initialized = 0;
 }
 
 static int pqi_enable_msix_interrupts(struct pqi_ctrl_info *ctrl_info)
@@ -2964,6 +2966,7 @@ static int pqi_enable_msix_interrupts(struct pqi_ctrl_info *ctrl_info)
 		ctrl_info->msix_vectors[i] = msix_entries[i].vector;
 		ctrl_info->intr_data[i] = &ctrl_info->queue_groups[i];
 	}
+
 
 	return 0;
 }
