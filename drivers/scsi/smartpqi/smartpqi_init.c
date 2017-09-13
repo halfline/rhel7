@@ -1198,18 +1198,6 @@ no_buffer:
 	device->volume_offline = volume_offline;
 }
 
-static void sanitize_inquiry_string(unsigned char *s, int len)
-{
-	bool terminated = false;
-
-	for (; len > 0; (--len, ++s)) {
-		if (*s == 0)
-			terminated = true;
-		if (terminated || *s < 0x20 || *s > 0x7e)
-			*s = ' ';
-	}
-}
-
 static int pqi_get_device_info(struct pqi_ctrl_info *ctrl_info,
 	struct pqi_scsi_dev *device)
 {
@@ -1225,8 +1213,8 @@ static int pqi_get_device_info(struct pqi_ctrl_info *ctrl_info,
 	if (rc)
 		goto out;
 
-	sanitize_inquiry_string(&buffer[8], 8);
-	sanitize_inquiry_string(&buffer[16], 16);
+	scsi_sanitize_inquiry_string(&buffer[8], 8);
+	scsi_sanitize_inquiry_string(&buffer[16], 16);
 
 	device->devtype = buffer[0] & 0x1f;
 	memcpy(device->vendor, &buffer[8], sizeof(device->vendor));
