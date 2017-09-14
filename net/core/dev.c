@@ -4801,14 +4801,13 @@ bool napi_complete_done(struct napi_struct *n, int work_done)
 		else
 			napi_gro_flush(n, false);
 	}
-	if (likely(list_empty(&n->poll_list))) {
-		WARN_ON_ONCE(!test_and_clear_bit(NAPI_STATE_SCHED, &n->state));
-	} else {
+	if (unlikely(!list_empty(&n->poll_list))) {
 		/* If n->poll_list is not empty, we need to mask irqs */
 		local_irq_save(flags);
-		__napi_complete(n);
+		list_del_init(&n->poll_list);
 		local_irq_restore(flags);
 	}
+	WARN_ON_ONCE(!test_and_clear_bit(NAPI_STATE_SCHED, &n->state));
 	return true;
 }
 EXPORT_SYMBOL(napi_complete_done);
