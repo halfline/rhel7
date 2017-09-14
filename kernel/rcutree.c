@@ -1000,6 +1000,8 @@ static void print_cpu_stall(struct rcu_state *rsp)
 				     3 * rcu_jiffies_till_stall_check() + 3;
 	raw_spin_unlock_irqrestore(&rnp->lock, flags);
 
+	panic_on_rcu_stall();
+
 	set_need_resched();  /* kick ourselves to get things going. */
 }
 
@@ -1015,8 +1017,6 @@ static void check_cpu_stall(struct rcu_state *rsp, struct rcu_data *rdp)
 	if (rcu_cpu_stall_suppress || !rcu_gp_in_progress(rsp))
 		return;
 	j = ACCESS_ONCE(jiffies);
-
-	panic_on_rcu_stall();
 
 	/*
 	 * Lots of memory barriers to reject false positives.
