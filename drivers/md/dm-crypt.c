@@ -1721,7 +1721,7 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 	const char *opt_string;
 	char dummy;
 
-	static struct dm_arg _args[] = {
+	static const struct dm_arg _args[] = {
 		{0, 3, "Invalid number of feature args"},
 	};
 
