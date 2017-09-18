@@ -616,14 +616,12 @@ static void cxgb4_shutdown_uld_adapter(struct adapter *adap, enum cxgb4_uld type
 
 void t4_uld_clean_up(struct adapter *adap)
 {
-	struct sge_uld_rxq_info *rxq_info;
 	unsigned int i;
 
 	mutex_lock(&uld_mutex);
 	for (i = 0; i < CXGB4_ULD_MAX; i++) {
 		if (!adap->uld[i].handle)
 			continue;
-		rxq_info = adap->sge.uld_rxq_info[i];
 
 		cxgb4_shutdown_uld_adapter(adap, i);
 	}
