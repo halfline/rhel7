@@ -1158,6 +1158,21 @@ struct cpl_rx_pkt {
 #define RX_IPHDR_LEN_V(x) ((x) << RX_IPHDR_LEN_S)
 #define RX_IPHDR_LEN_G(x) (((x) >> RX_IPHDR_LEN_S) & RX_IPHDR_LEN_M)
 
+#define T6_COMPR_RXERR_LEN_S    1
+#define T6_COMPR_RXERR_LEN_V(x) ((x) << T6_COMPR_RXERR_LEN_S)
+#define T6_COMPR_RXERR_LEN_F    T6_COMPR_RXERR_LEN_V(1U)
+
+#define T6_COMPR_RXERR_VEC_S    0
+#define T6_COMPR_RXERR_VEC_M    0x3F
+#define T6_COMPR_RXERR_VEC_V(x) ((x) << T6_COMPR_RXERR_LEN_S)
+#define T6_COMPR_RXERR_VEC_G(x) \
+		(((x) >> T6_COMPR_RXERR_VEC_S) & T6_COMPR_RXERR_VEC_M)
+
+/* Logical OR of RX_ERROR_CSUM, RX_ERROR_CSIP */
+#define T6_COMPR_RXERR_SUM_S    4
+#define T6_COMPR_RXERR_SUM_V(x) ((x) << T6_COMPR_RXERR_SUM_S)
+#define T6_COMPR_RXERR_SUM_F    T6_COMPR_RXERR_SUM_V(1U)
+
 struct cpl_trace_pkt {
 	u8 opcode;
 	u8 intf;
