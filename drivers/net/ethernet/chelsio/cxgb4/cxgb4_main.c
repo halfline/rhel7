@@ -4784,6 +4784,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 	spin_lock_init(&adapter->stats_lock);
 	spin_lock_init(&adapter->tid_release_lock);
 	spin_lock_init(&adapter->mbox_lock);
+	spin_lock_init(&adapter->win0_lock);
 
 	INIT_LIST_HEAD(&adapter->mlist.list);
 
