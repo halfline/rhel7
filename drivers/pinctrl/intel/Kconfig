@@ -22,6 +22,14 @@ config PINCTRL_INTEL
 	select GPIOLIB
 	select GPIOLIB_IRQCHIP
 
+config PINCTRL_CANNONLAKE
+	tristate "Intel Cannon Lake PCH pinctrl and GPIO driver"
+	depends on ACPI
+	select PINCTRL_INTEL
+	help
+	  This pinctrl driver provides an interface that allows configuring
+	  of Intel Cannon Lake PCH pins and using them as GPIOs.
+
 config PINCTRL_SUNRISEPOINT
 	tristate "Intel Sunrisepoint pinctrl and GPIO driver"
 	depends on ACPI
