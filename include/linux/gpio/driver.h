@@ -7,6 +7,8 @@
 #include <linux/irq.h>
 #include <linux/irqchip/chained_irq.h>
 #include <linux/irqdomain.h>
+#include <linux/pinctrl/pinctrl.h>
+#include <linux/pinctrl/pinconf-generic.h>
 
 struct gpio_desc;
 struct of_phandle_args;
@@ -31,8 +33,8 @@ struct gpio_device;
  * @get: returns value for signal "offset"; for output signals this
  *	returns either the value actually sensed, or zero
  * @set: assigns output value for signal "offset"
- * @set_debounce: optional hook for setting debounce time for specified gpio in
- *      interrupt triggered gpio chips
+ * @set_config: optional hook for all kinds of settings. Uses the same
+ *	packed config format as generic pinconf.
  * @to_irq: optional hook supporting non-static gpio_to_irq() mappings;
  *	implementation may not sleep
  * @dbg_show: optional routine to show contents in debugfs; default code
@@ -87,10 +89,9 @@ struct gpio_chip {
 						unsigned offset);
 	void			(*set)(struct gpio_chip *chip,
 						unsigned offset, int value);
-	int			(*set_debounce)(struct gpio_chip *chip,
-						unsigned offset,
-						unsigned debounce);
-
+	int			(*set_config)(struct gpio_chip *chip,
+					      unsigned offset,
+					      unsigned long config);
 	int			(*to_irq)(struct gpio_chip *chip,
 						unsigned offset);
 
@@ -228,5 +229,8 @@ int gpiochip_irqchip_add(struct gpio_chip *gpiochip,
 		unsigned int type);
 
 #endif /* CONFIG_GPIO_IRQCHIP */
+
+int gpiochip_generic_config(struct gpio_chip *chip, unsigned offset,
+			    unsigned long config);
 
 #endif
