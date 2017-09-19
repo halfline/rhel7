@@ -5171,6 +5171,9 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 		mutex_unlock(&uld_mutex);
 	}
 
+	if (!is_t4(adapter->params.chip))
+		cxgb4_ptp_init(adapter);
+
 	print_adapter_info(adapter);
 	setup_fw_sge_queues(adapter);
 	return 0;
@@ -5281,6 +5284,9 @@ static void remove_one(struct pci_dev *pdev)
 				unregister_netdev(adapter->port[i]);
 
 		debugfs_remove_recursive(adapter->debugfs_root);
+
+		if (!is_t4(adapter->params.chip))
+			cxgb4_ptp_stop(adapter);
 
 		/* If we allocated filters, free up state associated with any
 		 * valid filters ...
