@@ -3340,6 +3340,8 @@ static int create_server6(struct c4iw_dev *dev, struct c4iw_listen_ep *ep)
 		err = c4iw_wait_for_reply(&ep->com.dev->rdev,
 					  &ep->com.wr_wait,
 					  0, 0, __func__);
+	else if (err > 0)
+		err = net_xmit_errno(err);
 	if (err) {
 		cxgb4_clip_release(ep->com.dev->rdev.lldi.ports[0],
 				   (const u32 *)&sin6->sin6_addr.s6_addr, 1);
@@ -3380,6 +3382,8 @@ static int create_server4(struct c4iw_dev *dev, struct c4iw_listen_ep *ep)
 			err = c4iw_wait_for_reply(&ep->com.dev->rdev,
 						  &ep->com.wr_wait,
 						  0, 0, __func__);
+		else if (err > 0)
+			err = net_xmit_errno(err);
 	}
 	if (err)
 		pr_err("cxgb4_create_server/filter failed err %d stid %d laddr %pI4 lport %d\n"
