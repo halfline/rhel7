@@ -593,6 +593,8 @@ static int __add_to_page_cache_locked(struct page *page,
 	VM_BUG_ON(!PageLocked(page));
 	VM_BUG_ON(PageSwapBacked(page));
 
+	gfp_mask = mapping_gfp_constraint(mapping, gfp_mask);
+
 	error = mem_cgroup_cache_charge(page, current->mm,
 					gfp_mask & GFP_RECLAIM_MASK);
 	if (error)
