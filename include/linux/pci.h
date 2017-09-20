@@ -182,6 +182,8 @@ enum pci_dev_flags {
 	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
 	/* Do not use FLR even if device advertises PCI_AF_CAP */
 	PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 10),
+	/* Don't use Relaxed Ordering for TLPs directed at this device */
+	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 12),
 };
 
 enum pci_irq_reroute_variant {
@@ -1109,6 +1111,7 @@ bool pci_check_pme_status(struct pci_dev *dev);
 void pci_pme_wakeup_bus(struct pci_bus *bus);
 void pci_d3cold_enable(struct pci_dev *dev);
 void pci_d3cold_disable(struct pci_dev *dev);
+bool pcie_relaxed_ordering_enabled(struct pci_dev *dev);
 
 int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable);
 
