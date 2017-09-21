@@ -289,6 +289,16 @@
 /* Number 351 is reserved for sys_bpf */
 #define __NR_s390_pci_mmio_write	352
 #define __NR_s390_pci_mmio_read		353
+#define __NR_socket		359
+#define __NR_bind		361
+#define __NR_connect		362
+#define __NR_getsockopt		365
+#define __NR_setsockopt		366
+#define __NR_sendto		369
+#define __NR_sendmsg		370
+#define __NR_recvfrom		371
+#define __NR_recvmsg		372
+#define __NR_shutdown		373
 #define __NR_copy_file_range	375
 #define NR_syscalls 376
 
