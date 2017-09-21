@@ -3813,6 +3813,10 @@ void skb_tstamp_tx(struct sk_buff *orig_skb,
 	if (!sk)
 		return;
 
+	if (!hwtstamps && !(sk->sk_tsflags & SOF_TIMESTAMPING_OPT_TX_SWHW) &&
+	    skb_shinfo(orig_skb)->tx_flags & SKBTX_IN_PROGRESS)
+		return;
+
 	if (hwtstamps) {
 		*skb_hwtstamps(orig_skb) =
 			*hwtstamps;
@@ -3828,6 +3832,9 @@ void skb_tstamp_tx(struct sk_buff *orig_skb,
 	skb = skb_clone(orig_skb, GFP_ATOMIC);
 	if (!skb)
 		return;
+
+	if (hwtstamps)
+		skb->tstamp.tv64 = 0;
 
 	serr = SKB_EXT_ERR(skb);
 	memset(serr, 0, sizeof(*serr));

@@ -61,6 +61,14 @@ SOF_TIMESTAMPING_OPT_PKTINFO:
   enabled and the driver is using NAPI. The struct contains also two
   other fields, but they are reserved and undefined.
 
+SOF_TIMESTAMPING_OPT_TX_SWHW:
+
+  Request both hardware and software timestamps for outgoing packets
+  when SOF_TIMESTAMPING_TX_HARDWARE and SOF_TIMESTAMPING_TX_SOFTWARE
+  are enabled at the same time. If both timestamps are generated,
+  two separate messages will be looped to the socket's error queue,
+  each containing just one timestamp.
+
 It is worth noting that timestamps may be collected for reasons other
 than being requested by a particular socket with
 SOF_TIMESTAMPING_[TR]X_(HARD|SOFT)WARE.  For example, most drivers that
