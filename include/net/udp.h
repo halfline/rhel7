@@ -270,17 +270,21 @@ extern int udp_lib_getsockopt(struct sock *sk, int level, int optname,
 extern int udp_lib_setsockopt(struct sock *sk, int level, int optname,
 			      char __user *optval, unsigned int optlen,
 			      int (*push_pending_frames)(struct sock *));
+RH_KABI_FORCE_CHANGE(1)
 extern struct sock *udp4_lib_lookup(struct net *net, __be32 saddr, __be16 sport,
 				    __be32 daddr, __be16 dport,
 				    int dif);
+RH_KABI_FORCE_CHANGE(1)
 extern struct sock *__udp4_lib_lookup(struct net *net, __be32 saddr, __be16 sport,
 				    __be32 daddr, __be16 dport,
 				    int dif, struct udp_table *tbl);
 struct sock *udp4_lib_lookup_skb(struct sk_buff *skb,
 				 __be16 sport, __be16 dport);
+RH_KABI_FORCE_CHANGE(1)
 extern struct sock *udp6_lib_lookup(struct net *net, const struct in6_addr *saddr, __be16 sport,
 				    const struct in6_addr *daddr, __be16 dport,
 				    int dif);
+RH_KABI_FORCE_CHANGE(1)
 extern struct sock *__udp6_lib_lookup(struct net *net, const struct in6_addr *saddr, __be16 sport,
 				    const struct in6_addr *daddr, __be16 dport,
 				    int dif, struct udp_table *tbl);

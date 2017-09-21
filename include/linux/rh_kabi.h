@@ -45,6 +45,18 @@
  * the kabi checker (mainly for RH_KABI_EXTEND, but applied to all macros for
  * uniformity).
  * NOTE NOTE NOTE
+ *
+ * This macro does the opposite: it changes the symbol checksum without
+ * actually changing anything about the exported symbol. It is useful for
+ * symbols that are not whitelisted, we're changing them in an incompatible
+ * way and want to prevent 3rd party modules to silently corrupt memory.
+ * Instead, by changing the symbol checksum, such modules won't be loaded by
+ * the kernel. This macro should only be used as a last resort when all other
+ * KABI workarounds have failed.
+ *
+ * RH_KABI_FORCE_CHANGE - Force change of the symbol checksum. The argument
+ *			  of the macro is a version for cases we need to do
+ *			  this more than once.
  */
 #ifdef __GENKSYMS__
 
@@ -56,6 +68,8 @@
 # define RH_KABI_EXTEND(_new)
 # define RH_KABI_FILL_HOLE(_new)
 # define RH_KABI_RENAME(_orig, _new)		_orig
+
+# define RH_KABI_FORCE_CHANGE(ver)		__attribute__((rh_kabi_change ## ver))
 
 #else
 
@@ -93,6 +107,8 @@
 /* Warning, only use if a hole exists for _all_ arches. Use pahole to verify */
 # define RH_KABI_FILL_HOLE(_new)       	_new;
 # define RH_KABI_RENAME(_orig, _new)		_new
+
+# define RH_KABI_FORCE_CHANGE(ver)
 
 #endif /* __GENKSYMS__ */
 
