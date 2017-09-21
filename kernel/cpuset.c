@@ -321,6 +321,16 @@ static inline bool cgroup_on_dfl(const struct cgroup *cgrp)
 }
 
 /*
+ * Cgroup v2 behavior is used when on default hierarchy or the
+ * cgroup_v2_mode flag is set.
+ */
+static inline bool is_in_v2_mode(void)
+{
+	return cgroup_on_dfl(top_cpuset.css.cgroup) ||
+	      (top_cpuset.css.cgroup->root->flags & CGRP_ROOT_CPUSET_V2_MODE);
+}
+
+/*
  * This is ugly, but preserves the userspace API for existing cpuset
  * users. If someone tries to mount the "cpuset" filesystem, we
  * silently switch it to mount "cgroup" instead
@@ -499,7 +509,7 @@ static int validate_change(const struct cpuset *cur, const struct cpuset *trial)
 
 	/* On legacy hiearchy, we must be a subset of our parent cpuset. */
 	ret = -EACCES;
-	if (!cgroup_on_dfl(cur->css.cgroup) && !is_cpuset_subset(trial, par))
+	if (!is_in_v2_mode() && !is_cpuset_subset(trial, par))
 		goto out;
 
 	/*
@@ -941,7 +951,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus,
 	cpumask_copy(cs->effective_cpus, new_cpus);
 	mutex_unlock(&callback_mutex);
 
-	WARN_ON(!cgroup_on_dfl(cs->css.cgroup) &&
+	WARN_ON(!is_in_v2_mode() &&
 		!cpumask_equal(cs->cpus_allowed, cs->effective_cpus));
 
 	update_tasks_cpumask(cs, heap);
@@ -980,7 +990,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct cpumask *new_cpus,
 		cpumask_copy(cp->effective_cpus, new_cpus);
 		mutex_unlock(&callback_mutex);
 
-		WARN_ON(!cgroup_on_dfl(cp->css.cgroup) &&
+		WARN_ON(!is_in_v2_mode() &&
 			!cpumask_equal(cp->cpus_allowed, cp->effective_cpus));
 
 		update_tasks_cpumask(cp, heap);
@@ -1251,7 +1261,7 @@ static void update_nodemasks_hier(struct cpuset *cs, nodemask_t *new_mems,
 	cs->effective_mems = *new_mems;
 	mutex_unlock(&callback_mutex);
 
-	WARN_ON(!cgroup_on_dfl(cs->css.cgroup) &&
+	WARN_ON(!is_in_v2_mode() &&
 		!nodes_equal(cs->mems_allowed, cs->effective_mems));
 
 	update_tasks_nodemask(cs, heap);
@@ -1282,7 +1292,7 @@ static void update_nodemasks_hier(struct cpuset *cs, nodemask_t *new_mems,
 		cp->effective_mems = *new_mems;
 		mutex_unlock(&callback_mutex);
 
-		WARN_ON(!cgroup_on_dfl(cp->css.cgroup) &&
+		WARN_ON(!is_in_v2_mode() &&
 			!nodes_equal(cp->mems_allowed, cp->effective_mems));
 
 		update_tasks_nodemask(cp, heap);
@@ -1598,7 +1608,7 @@ static int cpuset_can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
 
 	/* allow moving tasks into an empty cpuset if on default hierarchy */
 	ret = -ENOSPC;
-	if (!cgroup_on_dfl(cgrp) &&
+	if (!is_in_v2_mode() &&
 	    (cpumask_empty(cs->cpus_allowed) || nodes_empty(cs->mems_allowed)))
 		goto out_unlock;
 
@@ -2132,7 +2142,7 @@ static int cpuset_css_online(struct cgroup *cgrp)
 	number_of_cpusets++;
 
 	mutex_lock(&callback_mutex);
-	if (cgroup_on_dfl(cs->css.cgroup)) {
+	if (is_in_v2_mode()) {
 		cpumask_copy(cs->effective_cpus, parent->effective_cpus);
 		cs->effective_mems = parent->effective_mems;
 	}
@@ -2207,7 +2217,7 @@ static void cpuset_bind(struct cgroup *cgrp)
 	mutex_lock(&cpuset_mutex);
 	mutex_lock(&callback_mutex);
 
-	if (cgroup_on_dfl(cgrp)) {
+	if (is_in_v2_mode()) {
 		cpumask_copy(top_cpuset.cpus_allowed, cpu_possible_mask);
 		top_cpuset.mems_allowed = node_possible_map;
 	} else {
@@ -2391,7 +2401,7 @@ retry:
 	cpus_updated = !cpumask_equal(&new_cpus, cs->effective_cpus);
 	mems_updated = !nodes_equal(new_mems, cs->effective_mems);
 
-	if (cgroup_on_dfl(cs->css.cgroup))
+	if (is_in_v2_mode())
 		hotplug_update_tasks(cs, &new_cpus, &new_mems,
 				     cpus_updated, mems_updated);
 	else
@@ -2422,7 +2432,7 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
 	static cpumask_t new_cpus;
 	static nodemask_t new_mems;
 	bool cpus_updated, mems_updated;
-	bool on_dfl = cgroup_on_dfl(top_cpuset.css.cgroup);
+	bool on_dfl = is_in_v2_mode();
 
 	mutex_lock(&cpuset_mutex);
 
