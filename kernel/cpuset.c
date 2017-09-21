@@ -1252,7 +1252,7 @@ static void update_nodemasks_hier(struct cpuset *cs, nodemask_t *new_mems,
 	mutex_unlock(&callback_mutex);
 
 	WARN_ON(!cgroup_on_dfl(cs->css.cgroup) &&
-		nodes_equal(cs->mems_allowed, cs->effective_mems));
+		!nodes_equal(cs->mems_allowed, cs->effective_mems));
 
 	update_tasks_nodemask(cs, heap);
 
@@ -1283,7 +1283,7 @@ static void update_nodemasks_hier(struct cpuset *cs, nodemask_t *new_mems,
 		mutex_unlock(&callback_mutex);
 
 		WARN_ON(!cgroup_on_dfl(cp->css.cgroup) &&
-			nodes_equal(cp->mems_allowed, cp->effective_mems));
+			!nodes_equal(cp->mems_allowed, cp->effective_mems));
 
 		update_tasks_nodemask(cp, heap);
 
