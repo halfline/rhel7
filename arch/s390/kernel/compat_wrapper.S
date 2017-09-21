@@ -1450,3 +1450,8 @@ ENTRY(sys_getrandom_wrapper)
 	llgfr	%r3,%r3		# size_t
 	llgfr	%r4,%r4		# unsigned int
 	jg	sys_getrandom
+
+ENTRY(sys_memfd_create_wrapper)
+	llgtr	%r2,%r2		# const char __user *
+	llgfr	%r3,%r3		# unsigned int
+	jg	sys_memfd_create
