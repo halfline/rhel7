@@ -256,8 +256,7 @@ ssize_t cifs_getxattr(struct dentry *direntry, const char *ea_name,
 		ea_name += XATTR_USER_PREFIX_LEN; /* skip past user. prefix */
 		if (pTcon->ses->server->ops->query_all_EAs)
 			rc = pTcon->ses->server->ops->query_all_EAs(xid, pTcon,
-				full_path, ea_name, ea_value, buf_size,
-				cifs_sb->local_nls, cifs_remap(cifs_sb));
+				full_path, ea_name, ea_value, buf_size, cifs_sb);
 	} else if (strncmp(ea_name, XATTR_OS2_PREFIX, XATTR_OS2_PREFIX_LEN) == 0) {
 		if (cifs_sb->mnt_cifs_flags & CIFS_MOUNT_NO_XATTR)
 			goto get_ea_exit;
@@ -265,8 +264,7 @@ ssize_t cifs_getxattr(struct dentry *direntry, const char *ea_name,
 		ea_name += XATTR_OS2_PREFIX_LEN; /* skip past os2. prefix */
 		if (pTcon->ses->server->ops->query_all_EAs)
 			rc = pTcon->ses->server->ops->query_all_EAs(xid, pTcon,
-				full_path, ea_name, ea_value, buf_size,
-				cifs_sb->local_nls, cifs_remap(cifs_sb));
+				full_path, ea_name, ea_value, buf_size, cifs_sb);
 	} else if (strcmp(ea_name, XATTR_NAME_POSIX_ACL_ACCESS) == 0) {
 #ifdef CONFIG_CIFS_POSIX
 		if (sb->s_flags & MS_POSIXACL)
@@ -375,8 +373,7 @@ ssize_t cifs_listxattr(struct dentry *direntry, char *data, size_t buf_size)
 
 	if (pTcon->ses->server->ops->query_all_EAs)
 		rc = pTcon->ses->server->ops->query_all_EAs(xid, pTcon,
-				full_path, NULL, data, buf_size,
-				cifs_sb->local_nls, cifs_remap(cifs_sb));
+				full_path, NULL, data, buf_size, cifs_sb);
 list_ea_exit:
 	kfree(full_path);
 	free_xid(xid);
