@@ -125,7 +125,7 @@ static inline bool cache_alloc_hsw_probe(void)
 
 		r->num_closid = 4;
 		r->cbm_len = 20;
-		r->max_cbm = max_cbm;
+		r->default_ctrl = max_cbm;
 		r->min_cbm_bits = 2;
 		r->capable = true;
 		r->enabled = true;
@@ -136,16 +136,16 @@ static inline bool cache_alloc_hsw_probe(void)
 	return false;
 }
 
-static void rdt_get_config(int idx, struct rdt_resource *r)
+static void rdt_get_cache_config(int idx, struct rdt_resource *r)
 {
 	union cpuid_0x10_1_eax eax;
-	union cpuid_0x10_1_edx edx;
+	union cpuid_0x10_x_edx edx;
 	u32 ebx, ecx;
 
 	cpuid_count(0x00000010, idx, &eax.full, &ebx, &ecx, &edx.full);
 	r->num_closid = edx.split.cos_max + 1;
 	r->cbm_len = eax.split.cbm_len + 1;
-	r->max_cbm = BIT_MASK(eax.split.cbm_len + 1) - 1;
+	r->default_ctrl = BIT_MASK(eax.split.cbm_len + 1) - 1;
 	r->data_width = (r->cbm_len + 3) / 4;
 	r->capable = true;
 	r->enabled = true;
@@ -158,7 +158,7 @@ static void rdt_get_cdp_l3_config(int type)
 
 	r->num_closid = r_l3->num_closid / 2;
 	r->cbm_len = r_l3->cbm_len;
-	r->max_cbm = r_l3->max_cbm;
+	r->default_ctrl = r_l3->default_ctrl;
 	r->data_width = (r->cbm_len + 3) / 4;
 	r->capable = true;
 	/*
@@ -173,7 +173,7 @@ static int get_cache_id(int cpu, int level)
 	return get_cpu_cache_id(cpu, level);
 }
 
-void rdt_cbm_update(void *arg)
+void rdt_ctrl_update(void *arg)
 {
 	struct msr_param *m = (struct msr_param *)arg;
 	struct rdt_resource *r = m->res;
@@ -194,7 +194,7 @@ found:
 	for (i = m->low; i < m->high; i++) {
 		int idx = cbm_idx(r, i);
 
-		wrmsrl(r->msr_base + idx, d->cbm[i]);
+		wrmsrl(r->msr_base + idx, d->ctrl_val[i]);
 	}
 }
 
@@ -267,8 +267,8 @@ static void domain_add_cpu(int cpu, struct rdt_resource *r, bool notifier)
 
 	d->id = id;
 
-	d->cbm = kmalloc_array(r->num_closid, sizeof(*d->cbm), GFP_KERNEL);
-	if (!d->cbm) {
+	d->ctrl_val = kmalloc_array(r->num_closid, sizeof(*d->ctrl_val), GFP_KERNEL);
+	if (!d->ctrl_val) {
 		kfree(d);
 		return;
 	}
@@ -276,9 +276,9 @@ static void domain_add_cpu(int cpu, struct rdt_resource *r, bool notifier)
 	for (i = 0; i < r->num_closid; i++) {
 		int idx = cbm_idx(r, i);
 
-		d->cbm[i] = r->max_cbm;
+		d->ctrl_val[i] = r->default_ctrl;
 		if (notifier)
-			wrmsrl(r->msr_base + idx, d->cbm[i]);
+			wrmsrl(r->msr_base + idx, d->ctrl_val[i]);
 	}
 
 	cpumask_set_cpu(cpu, &d->cpu_mask);
@@ -298,7 +298,7 @@ static void domain_remove_cpu(int cpu, struct rdt_resource *r)
 
 	cpumask_clear_cpu(cpu, &d->cpu_mask);
 	if (cpumask_empty(&d->cpu_mask)) {
-		kfree(d->cbm);
+		kfree(d->ctrl_val);
 		list_del(&d->list);
 		kfree(d);
 	}
@@ -383,7 +383,7 @@ static void __init rdt_cpu_setup(void *dummy)
 		for (i = 0; i < r->num_closid; i++) {
 			int idx = cbm_idx(r, i);
 
-			wrmsrl(r->msr_base + idx, r->max_cbm);
+			wrmsrl(r->msr_base + idx, r->default_ctrl);
 		}
 	}
 }
@@ -443,7 +443,7 @@ static __init bool get_rdt_resources(void)
 		return false;
 
 	if (boot_cpu_has(X86_FEATURE_CAT_L3)) {
-		rdt_get_config(1, &rdt_resources_all[RDT_RESOURCE_L3]);
+		rdt_get_cache_config(1, &rdt_resources_all[RDT_RESOURCE_L3]);
 		if (boot_cpu_has(X86_FEATURE_CDP_L3)) {
 			rdt_get_cdp_l3_config(RDT_RESOURCE_L3DATA);
 			rdt_get_cdp_l3_config(RDT_RESOURCE_L3CODE);
@@ -452,7 +452,7 @@ static __init bool get_rdt_resources(void)
 	}
 	if (boot_cpu_has(X86_FEATURE_CAT_L2)) {
 		/* CPUID 0x10.2 fields are same format at 0x10.1 */
-		rdt_get_config(2, &rdt_resources_all[RDT_RESOURCE_L2]);
+		rdt_get_cache_config(2, &rdt_resources_all[RDT_RESOURCE_L2]);
 		ret = true;
 	}
 	return ret;
