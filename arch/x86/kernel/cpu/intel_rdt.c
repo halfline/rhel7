@@ -212,8 +212,6 @@ static inline bool get_rdt_resources(void)
 		ret = true;
 	}
 
-	rdt_init_padding();
-
 	return ret;
 }
 
@@ -469,6 +467,8 @@ static int __init intel_rdt_late_init(void)
 
 	if (!get_rdt_resources())
 		return -ENODEV;
+
+	rdt_init_padding();
 
 	cpu_notifier_register_begin();
 	state = rdt_notifier_init();
