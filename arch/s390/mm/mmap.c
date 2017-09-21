@@ -93,20 +93,20 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 	struct vm_area_struct *vma;
 	struct vm_unmapped_area_info info;
 	int do_color_align;
+	int rc;
 
-	if (len > mm->context.asce_limit - mmap_min_addr)
+	if (len > TASK_SIZE - mmap_min_addr)
 		return -ENOMEM;
 
 	if (flags & MAP_FIXED)
-		return addr;
+		goto check_asce_limit;
 
 	if (addr) {
 		addr = PAGE_ALIGN(addr);
 		vma = find_vma(mm, addr);
-		if (mm->context.asce_limit - len >= addr &&
-		    addr >= mmap_min_addr &&
+		if (TASK_SIZE - len >= addr && addr >= mmap_min_addr &&
 		    (!vma || addr + len <= vm_start_gap(vma)))
-			return addr;
+			goto check_asce_limit;
 	}
 
 	do_color_align = 0;
@@ -116,10 +116,21 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 	info.flags = 0;
 	info.length = len;
 	info.low_limit = mm->mmap_base;
-	info.high_limit = mm->context.asce_limit;
+	info.high_limit = TASK_SIZE;
 	info.align_mask = do_color_align ? (mmap_align_mask << PAGE_SHIFT) : 0;
 	info.align_offset = pgoff << PAGE_SHIFT;
-	return vm_unmapped_area(&info);
+	addr = vm_unmapped_area(&info);
+	if (addr & ~PAGE_MASK)
+		return addr;
+
+check_asce_limit:
+	if (addr + len > current->mm->context.asce_limit) {
+		rc = crst_table_upgrade(mm);
+		if (rc)
+			return (unsigned long) rc;
+	}
+
+	return addr;
 }
 
 unsigned long
@@ -132,22 +143,22 @@ arch_get_unmapped_area_topdown(struct file *filp, const unsigned long addr0,
 	unsigned long addr = addr0;
 	struct vm_unmapped_area_info info;
 	int do_color_align;
+	int rc;
 
 	/* requested length too big for entire address space */
-	if (len > mm->context.asce_limit - mmap_min_addr)
+	if (len > TASK_SIZE - mmap_min_addr)
 		return -ENOMEM;
 
 	if (flags & MAP_FIXED)
-		return addr;
+		goto check_asce_limit;
 
 	/* requesting a specific address */
 	if (addr) {
 		addr = PAGE_ALIGN(addr);
 		vma = find_vma(mm, addr);
-		if (mm->context.asce_limit - len >= addr &&
-		    addr >= mmap_min_addr &&
+		if (TASK_SIZE - len >= addr && addr >= mmap_min_addr &&
 				(!vma || addr + len <= vma->vm_start))
-			return addr;
+			goto check_asce_limit;
 	}
 
 	do_color_align = 0;
@@ -172,14 +183,20 @@ arch_get_unmapped_area_topdown(struct file *filp, const unsigned long addr0,
 		VM_BUG_ON(addr != -ENOMEM);
 		info.flags = 0;
 		info.low_limit = TASK_UNMAPPED_BASE;
-		info.high_limit = mm->context.asce_limit;
+		info.high_limit = TASK_SIZE;
 		addr = vm_unmapped_area(&info);
+		if (addr & ~PAGE_MASK)
+			return addr;
 	}
 
+check_asce_limit:
+	if (addr + len > current->mm->context.asce_limit) {
+		rc = crst_table_upgrade(mm);
+		if (rc)
+			return (unsigned long) rc;
+	}
 	return addr;
 }
-
-#ifndef CONFIG_64BIT
 
 /*
  * This function, called very early during the creation of a new
@@ -203,79 +220,6 @@ void arch_pick_mmap_layout(struct mm_struct *mm)
 	} else {
 		mm->mmap_base = mmap_base(random_factor);
 		mm->get_unmapped_area = arch_get_unmapped_area_topdown;
-		mm->unmap_area = arch_unmap_area_topdown;
-	}
-}
-
-#else
-
-static unsigned long
-s390_get_unmapped_area(struct file *filp, unsigned long addr,
-		unsigned long len, unsigned long pgoff, unsigned long flags)
-{
-	struct mm_struct *mm = current->mm;
-	unsigned long area;
-	int rc;
-
-	area = arch_get_unmapped_area(filp, addr, len, pgoff, flags);
-	if (!(area & ~PAGE_MASK))
-		return area;
-	if (area == -ENOMEM && !is_compat_task() &&
-	    current->mm->context.asce_limit < TASK_SIZE_MAX) {
-		/* Upgrade the page table to 4 levels and retry. */
-		rc = crst_table_upgrade(mm);
-		if (rc)
-			return (unsigned long) rc;
-		area = arch_get_unmapped_area(filp, addr, len, pgoff, flags);
-	}
-	return area;
-}
-
-static unsigned long
-s390_get_unmapped_area_topdown(struct file *filp, const unsigned long addr,
-			  const unsigned long len, const unsigned long pgoff,
-			  const unsigned long flags)
-{
-	struct mm_struct *mm = current->mm;
-	unsigned long area;
-	int rc;
-
-	area = arch_get_unmapped_area_topdown(filp, addr, len, pgoff, flags);
-	if (!(area & ~PAGE_MASK))
-		return area;
-	if (area == -ENOMEM && !is_compat_task() &&
-	    current->mm->context.asce_limit < TASK_SIZE_MAX) {
-		/* Upgrade the page table to 4 levels and retry. */
-		rc = crst_table_upgrade(mm);
-		if (rc)
-			return (unsigned long) rc;
-		area = arch_get_unmapped_area_topdown(filp, addr, len,
-						      pgoff, flags);
-	}
-	return area;
-}
-/*
- * This function, called very early during the creation of a new
- * process VM image, sets up which VM layout function to use:
- */
-void arch_pick_mmap_layout(struct mm_struct *mm)
-{
-	unsigned long random_factor = 0UL;
-
-	if (current->flags & PF_RANDOMIZE)
-		random_factor = arch_mmap_rnd();
-
-	/*
-	 * Fall back to the standard layout if the personality
-	 * bit is set, or if the expected stack growth is unlimited:
-	 */
-	if (mmap_is_legacy()) {
-		mm->mmap_base = mmap_base_legacy(random_factor);
-		mm->get_unmapped_area = s390_get_unmapped_area;
-		mm->unmap_area = arch_unmap_area;
-	} else {
-		mm->mmap_base = mmap_base(random_factor);
-		mm->get_unmapped_area = s390_get_unmapped_area_topdown;
 		mm->unmap_area = arch_unmap_area_topdown;
 	}
 }
@@ -311,5 +255,3 @@ static int __init setup_mmap_rnd(void)
 	return 0;
 }
 early_initcall(setup_mmap_rnd);
-
-#endif
