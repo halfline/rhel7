@@ -3240,7 +3240,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
 	node = dev_to_node(&dev->dev);
 
 	list_for_each_entry(msidesc, &dev->msi_list, list) {
-		irq = irq_alloc_hwirq(node);
+		irq = irq_alloc_hwirq_affinity(node, msidesc->affinity);
 		if (!irq)
 			return -ENOSPC;
 
