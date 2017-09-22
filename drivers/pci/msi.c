@@ -1372,7 +1372,8 @@ const struct cpumask *pci_irq_get_affinity(struct pci_dev *dev, int nr)
 		struct msi_desc *entry = list_first_entry(&dev->msi_list,
 							  struct msi_desc,
 							  list);
-		if (WARN_ON_ONCE(!entry || nr >= entry->nvec_used))
+		if (WARN_ON_ONCE(!entry || !entry->affinity ||
+				 nr >= entry->nvec_used))
 			return NULL;
 
 		return &entry->affinity[nr];
