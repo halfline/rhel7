@@ -233,6 +233,18 @@ static inline void resume_device_irqs(void) { };
 static inline int check_wakeup_irqs(void) { return 0; }
 #endif
 
+/**
+ * struct irq_affinity - Description for automatic irq affinity assignements
+ * @pre_vectors:	Don't apply affinity to @pre_vectors at beginning of
+ *			the MSI(-X) vector space
+ * @post_vectors:	Don't apply affinity to @post_vectors at end of
+ *			the MSI(-X) vector space
+ */
+struct irq_affinity {
+	int	pre_vectors;
+	int	post_vectors;
+};
+
 #if defined(CONFIG_SMP) && defined(CONFIG_GENERIC_HARDIRQS)
 
 extern cpumask_var_t irq_default_affinity;
