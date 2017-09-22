@@ -71,10 +71,13 @@ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
 	return 0;
 }
 
-static void desc_smp_init(struct irq_desc *desc, int node)
+static void desc_smp_init(struct irq_desc *desc, int node,
+			  const struct cpumask *affinity)
 {
 	desc->irq_data.node = node;
-	cpumask_copy(desc->irq_data.affinity, irq_default_affinity);
+	if (!affinity)
+		affinity = irq_default_affinity;
+	cpumask_copy(desc->irq_data.affinity, affinity);
 #ifdef CONFIG_GENERIC_PENDING_IRQ
 	cpumask_clear(desc->pending_mask);
 #endif
@@ -88,12 +91,13 @@ static inline int desc_node(struct irq_desc *desc)
 #else
 static inline int
 alloc_masks(struct irq_desc *desc, gfp_t gfp, int node) { return 0; }
-static inline void desc_smp_init(struct irq_desc *desc, int node) { }
+static inline void
+desc_smp_init(struct irq_desc *desc, int node, const struct cpumask *affinity) { }
 static inline int desc_node(struct irq_desc *desc) { return 0; }
 #endif
 
 static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
-		struct module *owner)
+			      const struct cpumask *affinity, struct module *owner)
 {
 	int cpu;
 
@@ -112,7 +116,7 @@ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
 	desc->owner = owner;
 	for_each_possible_cpu(cpu)
 		*per_cpu_ptr(desc->kstat_irqs, cpu) = 0;
-	desc_smp_init(desc, node);
+	desc_smp_init(desc, node, affinity);
 }
 
 int nr_irqs = NR_IRQS;
@@ -153,7 +157,9 @@ static void free_masks(struct irq_desc *desc)
 static inline void free_masks(struct irq_desc *desc) { }
 #endif
 
-static struct irq_desc *alloc_desc(int irq, int node, struct module *owner)
+static struct irq_desc *alloc_desc(int irq, int node, unsigned int flags,
+				   const struct cpumask *affinity,
+				   struct module *owner)
 {
 	struct irq_desc *desc;
 	gfp_t gfp = GFP_KERNEL;
@@ -172,7 +178,8 @@ static struct irq_desc *alloc_desc(int irq, int node, struct module *owner)
 	raw_spin_lock_init(&desc->lock);
 	lockdep_set_class(&desc->lock, &irq_desc_lock_class);
 
-	desc_set_defaults(irq, desc, node, owner);
+	desc_set_defaults(irq, desc, node, affinity, owner);
+	irqd_set(&desc->irq_data, flags);
 
 	return desc;
 
@@ -201,11 +208,30 @@ static void free_desc(unsigned int irq)
 static int alloc_descs(unsigned int start, unsigned int cnt, int node,
 		       const struct cpumask *affinity, struct module *owner)
 {
+	const struct cpumask *mask = NULL;
 	struct irq_desc *desc;
-	int i;
+	unsigned int flags;
+	int i, cpu = -1;
+
+	if (affinity && cpumask_empty(affinity))
+		return -EINVAL;
+
+	flags = affinity ? IRQD_AFFINITY_MANAGED : 0;
 
 	for (i = 0; i < cnt; i++) {
-		desc = alloc_desc(start + i, node, owner);
+		if (affinity) {
+			cpu = cpumask_next(cpu, affinity);
+			if (cpu >= nr_cpu_ids)
+				cpu = cpumask_first(affinity);
+			node = cpu_to_node(cpu);
+
+			/*
+			 * For single allocations we use the caller provided
+			 * mask otherwise we use the mask of the target cpu
+			 */
+			mask = cnt == 1 ? affinity : cpumask_of(cpu);
+		}
+		desc = alloc_desc(start + i, node, flags, mask, owner);
 		if (!desc)
 			goto err;
 		mutex_lock(&sparse_irq_lock);
@@ -253,7 +279,7 @@ int __init early_irq_init(void)
 		nr_irqs = initcnt;
 
 	for (i = 0; i < initcnt; i++) {
-		desc = alloc_desc(i, node, NULL);
+		desc = alloc_desc(i, node, 0, NULL, NULL);
 		set_bit(i, allocated_irqs);
 		irq_insert_desc(i, desc);
 	}
@@ -287,7 +313,7 @@ int __init early_irq_init(void)
 		alloc_masks(&desc[i], GFP_KERNEL, node);
 		raw_spin_lock_init(&desc[i].lock);
 		lockdep_set_class(&desc[i].lock, &irq_desc_lock_class);
-		desc_set_defaults(i, &desc[i], node, NULL);
+		desc_set_defaults(i, &desc[i], node, NULL, NULL);
 	}
 	return arch_early_irq_init();
 }
@@ -422,7 +448,7 @@ err:
 EXPORT_SYMBOL_GPL(__irq_alloc_descs);
 
 #ifdef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-/**
+/*
  * irq_alloc_hwirqs - Allocate an irq descriptor and initialize the hardware
  * @cnt:	number of interrupts to allocate
  * @node:	node on which to allocate
@@ -568,7 +594,7 @@ void dynamic_irq_cleanup(unsigned int irq)
 	unsigned long flags;
 
 	raw_spin_lock_irqsave(&desc->lock, flags);
-	desc_set_defaults(irq, desc, desc_node(desc), NULL);
+	desc_set_defaults(irq, desc, desc_node(desc), NULL, NULL);
 	raw_spin_unlock_irqrestore(&desc->lock, flags);
 }
 
