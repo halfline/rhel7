@@ -108,13 +108,6 @@ static int ena_change_mtu(struct net_device *dev, int new_mtu)
 	struct ena_adapter *adapter = netdev_priv(dev);
 	int ret;
 
-	if ((new_mtu > adapter->max_mtu) || (new_mtu < ENA_MIN_MTU)) {
-		netif_err(adapter, drv, dev,
-			  "Invalid MTU setting. new_mtu: %d\n", new_mtu);
-
-		return -EINVAL;
-	}
-
 	ret = ena_com_set_dev_mtu(adapter->ena_dev, new_mtu);
 	if (!ret) {
 		netif_dbg(adapter, drv, dev, "set MTU to %d\n", new_mtu);
@@ -2346,13 +2339,14 @@ static void ena_get_stats64(struct net_device *netdev,
 }
 
 static const struct net_device_ops ena_netdev_ops = {
+	.ndo_size		= sizeof(struct net_device_ops),
 	.ndo_open		= ena_open,
 	.ndo_stop		= ena_close,
 	.ndo_start_xmit		= ena_start_xmit,
 	.ndo_select_queue	= ena_select_queue,
 	.ndo_get_stats64	= ena_get_stats64,
 	.ndo_tx_timeout		= ena_tx_timeout,
-	.ndo_change_mtu_rh74	= ena_change_mtu,
+	.extended.ndo_change_mtu		= ena_change_mtu,
 	.ndo_set_mac_address	= NULL,
 	.ndo_validate_addr	= eth_validate_addr,
 #ifdef CONFIG_NET_POLL_CONTROLLER
@@ -3007,6 +3001,8 @@ static void ena_set_conf_feat_params(struct ena_adapter *adapter,
 	ena_set_dev_offloads(feat, netdev);
 
 	adapter->max_mtu = feat->dev_attr.max_mtu;
+	netdev->extended->max_mtu = adapter->max_mtu;
+	netdev->extended->min_mtu = ENA_MIN_MTU;
 }
 
 static int ena_rss_init_default(struct ena_adapter *adapter)
