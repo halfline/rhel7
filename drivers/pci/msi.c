@@ -362,6 +362,7 @@ static void free_msi_irqs(struct pci_dev *dev)
 		}
 
 		list_del(&entry->list);
+		kfree(entry->affinity);
 		kfree(entry);
 	}
 
@@ -382,14 +383,35 @@ static void free_msi_irqs(struct pci_dev *dev)
 	}
 }
 
-static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
+/**
+ * alloc_msi_entry - Allocate an initialize msi_entry
+ * @dev:	Pointer to the device for which this is allocated
+ * @nvec:	The number of vectors used in this entry
+ * @affinity:	Optional pointer to an affinity mask array size of @nvec
+ *
+ * If @affinity is not NULL then a an affinity array[@nvec] is allocated
+ * and the affinity masks from @affinity are copied.
+ */
+static struct msi_desc *alloc_msi_entry(struct pci_dev *dev, int nvec,
+				 const struct cpumask *affinity)
 {
-	struct msi_desc *desc = kzalloc(sizeof(*desc), GFP_KERNEL);
+	struct msi_desc *desc;
+
+	desc = kzalloc(sizeof(*desc), GFP_KERNEL);
 	if (!desc)
 		return NULL;
 
 	INIT_LIST_HEAD(&desc->list);
 	desc->dev = dev;
+	desc->nvec_used = nvec;
+	if (affinity) {
+		desc->affinity = kmemdup(affinity,
+			nvec * sizeof(*desc->affinity), GFP_KERNEL);
+		if (!desc->affinity) {
+			kfree(desc);
+			return NULL;
+		}
+	}
 
 	return desc;
 }
@@ -551,7 +573,7 @@ static struct msi_desc *msi_setup_entry(struct pci_dev *dev, int nvec)
 	struct msi_desc *entry;
 
 	/* MSI Entry Initialization */
-	entry = alloc_msi_entry(dev);
+	entry = alloc_msi_entry(dev, nvec, NULL);
 	if (!entry)
 		return NULL;
 
@@ -565,7 +587,6 @@ static struct msi_desc *msi_setup_entry(struct pci_dev *dev, int nvec)
 	entry->msi_attrib.pos		= dev->msi_cap;
 	entry->multi_cap		= (control & PCI_MSI_FLAGS_QMASK) >> 1;
 	entry->msi_attrib.multiple	= ilog2(__roundup_pow_of_two(nvec));
-	entry->nvec_used		= nvec;
 	entry->affinity			= dev->irq_affinity;
 
 	if (control & PCI_MSI_FLAGS_64BIT)
@@ -690,7 +711,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
 			mask = cpumask_of(cpu);
 		}
 
-		entry = alloc_msi_entry(dev);
+		entry = alloc_msi_entry(dev, 1, NULL);
 		if (!entry) {
 			if (!i)
 				iounmap(base);
@@ -708,7 +729,6 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
 			entry->msi_attrib.entry_nr = i;
 		entry->msi_attrib.default_irq	= dev->irq;
 		entry->mask_base		= base;
-		entry->nvec_used		= 1;
 		entry->affinity			= mask;
 
 		list_add_tail(&entry->list, &dev->msi_list);

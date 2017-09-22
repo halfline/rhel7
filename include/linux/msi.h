@@ -62,7 +62,7 @@ struct msi_desc {
 	 * isn't accessed by 3rd party drivers.  Therefore it is safe
 	 * to extend.
 	 */
-	RH_KABI_EXTEND(const struct cpumask *affinity)
+	RH_KABI_EXTEND(struct cpumask *affinity)
 };
 
 /*
