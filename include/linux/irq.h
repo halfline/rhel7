@@ -625,10 +625,23 @@ static inline int irq_reserve_irq(unsigned int irq)
 }
 
 #ifdef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
-unsigned int irq_alloc_hwirqs(int cnt, int node);
+unsigned int __irq_alloc_hwirqs(int cnt, int node, const struct cpumask *affinity);
+static inline unsigned int irq_alloc_hwirqs(int cnt, int node)
+{
+	return __irq_alloc_hwirqs(cnt, node, NULL);
+}
 static inline unsigned int irq_alloc_hwirq(int node)
 {
 	return irq_alloc_hwirqs(1, node);
+}
+static inline unsigned int irq_alloc_hwirq_affinity(int node, const struct cpumask *affinity)
+{
+	return __irq_alloc_hwirqs(1, node, affinity);
+}
+static inline unsigned int irq_alloc_hwirqs_affinity(int cnt, int node,
+		const struct cpumask *affinity)
+{
+	return __irq_alloc_hwirqs(cnt, node, affinity);
 }
 void irq_free_hwirqs(unsigned int from, int cnt);
 static inline void irq_free_hwirq(unsigned int irq)

@@ -449,15 +449,16 @@ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
 
 #ifdef CONFIG_GENERIC_IRQ_LEGACY_ALLOC_HWIRQ
 /*
- * irq_alloc_hwirqs - Allocate an irq descriptor and initialize the hardware
+ * __irq_alloc_hwirqs - Allocate an irq descriptor and initialize the hardware
  * @cnt:	number of interrupts to allocate
  * @node:	node on which to allocate
  *
  * Returns an interrupt number > 0 or 0, if the allocation fails.
  */
-unsigned int irq_alloc_hwirqs(int cnt, int node)
+unsigned int __irq_alloc_hwirqs(int cnt, int node,
+				const struct cpumask *affinity)
 {
-	int i, irq = __irq_alloc_descs(-1, 0, cnt, node, NULL, NULL);
+	int i, irq = __irq_alloc_descs(-1, 0, cnt, node, NULL, affinity);
 
 	if (irq < 0)
 		return 0;
@@ -477,7 +478,7 @@ err:
 	irq_free_descs(irq, cnt);
 	return 0;
 }
-EXPORT_SYMBOL_GPL(irq_alloc_hwirqs);
+EXPORT_SYMBOL_GPL(__irq_alloc_hwirqs);
 
 /**
  * irq_free_hwirqs - Free irq descriptor and cleanup the hardware
