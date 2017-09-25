@@ -10,8 +10,10 @@
 
 /**
  * struct intel_pqr_state - State cache for the PQR MSR
- * @rmid:		The cached Resource Monitoring ID
- * @closid:		The cached Class Of Service ID
+ * @cur_rmid:		The cached Resource Monitoring ID
+ * @cur_closid:	The cached Class Of Service ID
+ * @default_rmid:	The user assigned Resource Monitoring ID
+ * @default_closid:	The user assigned cached Class Of Service ID
  *
  * The upper 32 bits of IA32_PQR_ASSOC contain closid and the
  * lower 10 bits rmid. The update to IA32_PQR_ASSOC always
@@ -22,12 +24,13 @@
  * not change.
  */
 struct intel_pqr_state {
-	u32			rmid;
-	u32			closid;
+	u32			cur_rmid;
+	u32			cur_closid;
+	u32			default_rmid;
+	u32			default_closid;
 };
 
 DECLARE_PER_CPU(struct intel_pqr_state, pqr_state);
-DECLARE_PER_CPU_READ_MOSTLY(struct intel_pqr_state, rdt_cpu_default);
 extern struct static_key rdt_enable_key;
 extern struct static_key rdt_alloc_enable_key;
 extern struct static_key rdt_mon_enable_key;
@@ -48,8 +51,9 @@ extern struct static_key rdt_mon_enable_key;
  */
 static void __intel_rdt_sched_in(void)
 {
-	struct intel_pqr_state newstate = this_cpu_read(rdt_cpu_default);
-	struct intel_pqr_state *curstate = this_cpu_ptr(&pqr_state);
+	struct intel_pqr_state *state = this_cpu_ptr(&pqr_state);
+	u32 closid = state->default_closid;
+	u32 rmid = state->default_rmid;
 
 	/*
 	 * If this task has a closid/rmid assigned, use it.
@@ -57,18 +61,18 @@ static void __intel_rdt_sched_in(void)
 	 */
 	if (static_key_false(&rdt_alloc_enable_key)) {
 		if (current->closid)
-			newstate.closid = current->closid;
+			closid = current->closid;
 	}
 
 	if (static_key_false(&rdt_mon_enable_key)) {
 		if (current->rmid)
-			newstate.rmid = current->rmid;
+			rmid = current->rmid;
 	}
 
-	if (newstate.closid != curstate->closid ||
-	    newstate.rmid != curstate->rmid) {
-		*curstate = newstate;
-		wrmsr(IA32_PQR_ASSOC, newstate.rmid, newstate.closid);
+	if (closid != state->cur_closid || rmid != state->cur_rmid) {
+		state->cur_closid = closid;
+		state->cur_rmid = rmid;
+		wrmsr(IA32_PQR_ASSOC, rmid, closid);
 	}
 }
 
