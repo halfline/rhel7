@@ -336,6 +336,9 @@ config INTERVAL_TREE
 config GENERIC_PAGE_TABLE
 	bool
 
+config RADIX_TREE_MULTIORDER
+	bool
+
 config ASSOCIATIVE_ARRAY
 	bool
 	help
