@@ -1768,7 +1768,7 @@ struct task_struct {
 	/* This would be in rss_stat[MM_SHMEMPAGES] if not for kABI */
 	RH_KABI_USE(4, int mm_shmempages)
 #ifdef CONFIG_INTEL_RDT
-	RH_KABI_USE(5, int closid)
+	RH_KABI_USE(5, u32 closid)
 #else
 	RH_KABI_RESERVE(5)
 #endif
