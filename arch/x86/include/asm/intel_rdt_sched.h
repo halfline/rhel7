@@ -27,10 +27,11 @@ struct intel_pqr_state {
 
 DECLARE_PER_CPU(struct intel_pqr_state, pqr_state);
 DECLARE_PER_CPU_READ_MOSTLY(struct intel_pqr_state, rdt_cpu_default);
+extern struct static_key rdt_enable_key;
 extern struct static_key rdt_alloc_enable_key;
 
 /*
- * intel_rdt_sched_in() - Writes the task's CLOSid to IA32_PQR_MSR
+ * __intel_rdt_sched_in() - Writes the task's CLOSid to IA32_PQR_MSR
  *
  * Following considerations are made so that this has minimal impact
  * on scheduler hot path:
@@ -42,7 +43,7 @@ extern struct static_key rdt_alloc_enable_key;
  *
  * Must be called with preemption disabled.
  */
-static inline void intel_rdt_sched_in(void)
+static inline void __intel_rdt_sched_in(void)
 {
 	if (static_key_false(&rdt_alloc_enable_key)) {
 		struct intel_pqr_state *state = this_cpu_ptr(&pqr_state);
@@ -61,6 +62,12 @@ static inline void intel_rdt_sched_in(void)
 			wrmsr(IA32_PQR_ASSOC, state->rmid, closid);
 		}
 	}
+}
+
+static inline void intel_rdt_sched_in(void)
+{
+	if (static_key_false(&rdt_enable_key))
+		__intel_rdt_sched_in();
 }
 
 #else
