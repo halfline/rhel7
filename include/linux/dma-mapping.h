@@ -97,6 +97,13 @@ static inline int is_device_dma_capable(struct device *dev)
 
 #ifdef CONFIG_HAS_DMA
 #include <asm/dma-mapping.h>
+static inline void set_dma_ops(struct device *dev,
+			       struct dma_map_ops *dma_ops)
+{
+	/* Catch any new, backported missed dma_ops setting */
+	BUG_ON(dev->device_rh == NULL);
+	dev->device_rh->dma_ops = dma_ops;
+}
 #else
 /*
  * Define the dma api to allow compilation but not linking of
