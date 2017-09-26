@@ -122,6 +122,9 @@ static inline void set_dma_offset(struct device *dev, dma_addr_t off)
 /* this will be removed soon */
 #define flush_write_buffers()
 
+#define HAVE_ARCH_DMA_SET_MASK 1
+extern int dma_set_mask(struct device *dev, u64 dma_mask);
+
 #include <asm-generic/dma-mapping-common.h>
 
 /* To remove this inline and replace with common one
@@ -141,7 +144,6 @@ static inline int dma_supported(struct device *dev, u64 mask)
 }
 #endif
 
-extern int dma_set_mask(struct device *dev, u64 dma_mask);
 extern int __dma_set_mask(struct device *dev, u64 dma_mask);
 extern u64 __dma_get_required_mask(struct device *dev);
 
