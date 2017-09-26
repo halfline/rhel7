@@ -2150,14 +2150,14 @@ static void ehca_dma_sync_single_for_cpu(struct ib_device *dev, u64 addr,
 					 size_t size,
 					 enum dma_data_direction dir)
 {
-	dma_sync_single_for_cpu(dev->dma_device, addr, size, dir);
+	dma_sync_single_for_cpu(dev->dev.parent, addr, size, dir);
 }
 
 static void ehca_dma_sync_single_for_device(struct ib_device *dev, u64 addr,
 					    size_t size,
 					    enum dma_data_direction dir)
 {
-	dma_sync_single_for_device(dev->dma_device, addr, size, dir);
+	dma_sync_single_for_device(dev->dev.parent, addr, size, dir);
 }
 
 static void *ehca_dma_alloc_coherent(struct ib_device *dev, size_t size,
