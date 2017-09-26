@@ -237,8 +237,6 @@ int rxe_srq_from_attr(struct rxe_dev *rxe, struct rxe_srq *srq,
 		      struct ib_srq_attr *attr, enum ib_srq_attr_mask mask,
 		      struct ib_udata *udata);
 
-extern struct ib_dma_mapping_ops rxe_dma_mapping_ops;
-
 void rxe_release(struct kref *kref);
 
 int rxe_completer(void *arg);

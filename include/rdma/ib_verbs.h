@@ -3125,9 +3125,6 @@ static inline int ib_dma_map_sg_attrs(struct ib_device *dev,
 				      enum dma_data_direction direction,
 				      struct dma_attrs *attrs)
 {
-	if (dev->dma_ops)
-		return dev->dma_ops->map_sg_attrs(dev, sg, nents, direction,
-						  attrs);
 	return dma_map_sg_attrs(&dev->dev, sg, nents, direction, attrs);
 }
 
@@ -3136,11 +3133,7 @@ static inline void ib_dma_unmap_sg_attrs(struct ib_device *dev,
 					 enum dma_data_direction direction,
 					 struct dma_attrs *attrs)
 {
-	if (dev->dma_ops)
-		return dev->dma_ops->unmap_sg_attrs(dev, sg, nents, direction,
-						    attrs);
-	else
-		dma_unmap_sg_attrs(&dev->dev, sg, nents, direction, attrs);
+	dma_unmap_sg_attrs(&dev->dev, sg, nents, direction, attrs);
 }
 /**
  * ib_sg_dma_address - Return the DMA address from a scatter/gather entry
