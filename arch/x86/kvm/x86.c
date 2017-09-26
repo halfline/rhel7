@@ -3154,7 +3154,12 @@ static void fill_xsave(u8 *dest, struct kvm_vcpu *vcpu)
 			u32 size, offset, ecx, edx;
 			cpuid_count(XSTATE_CPUID, index,
 				    &size, &offset, &ecx, &edx);
-			memcpy(dest + offset, src, size);
+			if (feature == XSTATE_PKRU)
+				memcpy(dest + offset, &vcpu->arch.pkru,
+				       sizeof(vcpu->arch.pkru));
+			else
+				memcpy(dest + offset, src, size);
+
 		}
 
 		valid -= feature;
@@ -3192,7 +3197,11 @@ static void load_xsave(struct kvm_vcpu *vcpu, u8 *src)
 			u32 size, offset, ecx, edx;
 			cpuid_count(XSTATE_CPUID, index,
 				    &size, &offset, &ecx, &edx);
-			memcpy(dest, src + offset, size);
+			if (feature == XSTATE_PKRU)
+				memcpy(&vcpu->arch.pkru, src + offset,
+				       sizeof(vcpu->arch.pkru));
+			else
+				memcpy(dest, src + offset, size);
 		}
 
 		valid -= feature;
@@ -7405,7 +7414,10 @@ void kvm_load_guest_fpu(struct kvm_vcpu *vcpu)
 	 */
 	vcpu->guest_fpu_loaded = 1;
 	__kernel_fpu_begin();
-	fpu_restore_checking(&vcpu->arch.guest_fpu);
+	if (use_xsave())
+		xrstor_state(&vcpu->arch.guest_fpu.state->xsave, ~XSTATE_PKRU);
+	else
+		fpu_restore_checking(&vcpu->arch.guest_fpu);
 	trace_kvm_fpu(1);
 }
 
