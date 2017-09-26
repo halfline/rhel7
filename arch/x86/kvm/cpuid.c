@@ -95,6 +95,16 @@ int kvm_update_cpuid(struct kvm_vcpu *vcpu)
 			apic->lapic_timer.timer_mode_mask = 1 << 17;
 	}
 
+	best = kvm_find_cpuid_entry(vcpu, 7, 0);
+	if (best) {
+		/* Update OSPKE bit */
+		if (boot_cpu_has(X86_FEATURE_PKU) && best->function == 0x7) {
+			best->ecx &= ~F(OSPKE);
+			if (kvm_read_cr4_bits(vcpu, X86_CR4_PKE))
+				best->ecx |= F(OSPKE);
+		}
+	}
+
 	best = kvm_find_cpuid_entry(vcpu, 0xD, 0);
 	if (!best) {
 		vcpu->arch.guest_supported_xcr0 = 0;
@@ -371,7 +381,7 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
 
 	/* cpuid 7.0.ecx*/
 	const u32 kvm_cpuid_7_0_ecx_x86_features =
-		F(AVX512VBMI) | F(AVX512_VPOPCNTDQ);
+		F(PKU) | 0 /*OSPKE*/ | F(AVX512VBMI) | F(AVX512_VPOPCNTDQ);
 
 	/* cpuid 7.0.edx*/
 	const u32 kvm_cpuid_7_0_edx_x86_features =
@@ -456,6 +466,8 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
 			entry->ebx |= F(TSC_ADJUST);
 			entry->ecx &= kvm_cpuid_7_0_ecx_x86_features;
 			cpuid_mask(&entry->ecx, CPUID_7_ECX);
+			if (!tdp_enabled)
+				entry->ecx &= ~F(PKU);
 			entry->edx &= kvm_cpuid_7_0_edx_x86_features;
 			entry->edx &= get_scattered_cpuid_leaf(7, 0, CPUID_EDX);
 		} else {
