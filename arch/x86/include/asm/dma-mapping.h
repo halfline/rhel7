@@ -49,8 +49,6 @@ extern int dma_supported(struct device *hwdev, u64 mask);
 #define HAVE_ARCH_DMA_SET_MASK 1
 extern int dma_set_mask(struct device *dev, u64 mask);
 
-#include <asm-generic/dma-mapping-common.h>
-
 
 extern void *dma_generic_alloc_coherent(struct device *dev, size_t size,
 					dma_addr_t *dma_addr, gfp_t flag,

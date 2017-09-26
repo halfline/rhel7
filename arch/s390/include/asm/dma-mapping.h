@@ -28,8 +28,6 @@ static inline void dma_cache_sync(struct device *dev, void *vaddr, size_t size,
 {
 }
 
-#include <asm-generic/dma-mapping-common.h>
-
 /* To remove this inline and replace with common one
  * in asm-generic/linux/dma-mapping.h, need to wrap in GENKSYM.
  * Valid since common version is the same functionality as this one.

@@ -125,8 +125,6 @@ static inline void set_dma_offset(struct device *dev, dma_addr_t off)
 #define HAVE_ARCH_DMA_SET_MASK 1
 extern int dma_set_mask(struct device *dev, u64 dma_mask);
 
-#include <asm-generic/dma-mapping-common.h>
-
 /* To remove this inline and replace with common one
  * in asm-generic/linux/dma-mapping.h, need to wrap in GENKSYM.
  * Valid since common version is the same functionality as this one.
