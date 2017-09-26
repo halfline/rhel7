@@ -447,7 +447,7 @@ static void iommu_uninit_device(struct device *dev)
 	dev_data->alias_data = NULL;
 
 	/* Remove dma-ops */
-	dev->archdata.dma_ops = NULL;
+	dev->device_rh->dma_ops = NULL;
 
 	/*
 	 * We keep dev_data around for unplugged devices and reuse it when the
@@ -2266,7 +2266,7 @@ static int amd_iommu_add_device(struct device *dev)
 				dev_name(dev));
 
 		iommu_ignore_device(dev);
-		dev->archdata.dma_ops = &nommu_dma_ops;
+		dev->device_rh->dma_ops = &nommu_dma_ops;
 		goto out;
 	}
 	init_iommu_group(dev);
@@ -2283,7 +2283,7 @@ static int amd_iommu_add_device(struct device *dev)
 	if (domain->type == IOMMU_DOMAIN_IDENTITY)
 		dev_data->passthrough = true;
 	else
-		dev->archdata.dma_ops = &amd_iommu_dma_ops;
+		dev->device_rh->dma_ops = &amd_iommu_dma_ops;
 
 out:
 	iommu_completion_wait(iommu);

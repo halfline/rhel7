@@ -89,12 +89,12 @@ static inline struct dma_map_ops *get_dma_ops(struct device *dev)
 	if (unlikely(dev == NULL))
 		return NULL;
 
-	return dev->archdata.dma_ops;
+	return dev->device_rh->dma_ops;
 }
 
 static inline void set_dma_ops(struct device *dev, struct dma_map_ops *ops)
 {
-	dev->archdata.dma_ops = ops;
+	dev->device_rh->dma_ops = ops;
 }
 
 /*
