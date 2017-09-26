@@ -274,6 +274,11 @@ M:	Aristeu Rozanski <aris@redhat.com>
 S:	Maintained
 F:	drivers/edac/
 
+EMULEX FC DRIVER
+M:	Dick Kennedy <dkennedy@redhat.com>
+S:	Maintained
+F:	drivers/scsi/lpfc
+
 ETHERNET BRIDGE
 M:	Ivan Vecera <cera@redhat.com>
 S:	Maintained
