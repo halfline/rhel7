@@ -750,6 +750,12 @@ static void klist_children_put(struct klist_node *n)
  */
 void device_initialize(struct device *dev)
 {
+	/* many platform-like devices or abstracted devices that don't
+	 * use acpi, of, or pci invoke device_initialize()
+	 * and not device_register() or device_add().
+	 */
+	if (!dev->device_rh)
+		device_rh_alloc(dev);
 	dev->kobj.kset = devices_kset;
 	kobject_init(&dev->kobj, &device_ktype);
 	INIT_LIST_HEAD(&dev->dma_pools);
