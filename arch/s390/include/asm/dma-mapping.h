@@ -29,6 +29,11 @@ static inline void dma_cache_sync(struct device *dev, void *vaddr, size_t size,
 
 #include <asm-generic/dma-mapping-common.h>
 
+/* To remove this inline and replace with common one
+ * in asm-generic/linux/dma-mapping.h, need to wrap in GENKSYM.
+ * Valid since common version is the same functionality as this one.
+ */
+#ifdef __GENKSYMS__
 static inline int dma_supported(struct device *dev, u64 mask)
 {
 	struct dma_map_ops *dma_ops = get_dma_ops(dev);
@@ -37,6 +42,7 @@ static inline int dma_supported(struct device *dev, u64 mask)
 		return 1;
 	return dma_ops->dma_supported(dev, mask);
 }
+#endif
 
 static inline bool dma_capable(struct device *dev, dma_addr_t addr, size_t size)
 {
