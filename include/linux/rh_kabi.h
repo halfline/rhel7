@@ -141,4 +141,10 @@
 #define RH_KABI_USE2(n, _new1, _new2)	RH_KABI_REPLACE(_RH_KABI_RESERVE(n), struct{ _new1; _new2; })
 #define RH_KABI_USE2_P(n, _new1, _new2)	RH_KABI_REPLACE(_RH_KABI_RESERVE_P(n), struct{ _new1; _new2;})
 
+/*
+ * Macro for breaking up a random element into two smaller chunks using an anonymous
+ * struct inside an anonymous union.
+ */
+#define RH_KABI_REPLACE2(orig, _new1, _new2)	RH_KABI_REPLACE(orig, struct{ _new1; _new2;})
+
 #endif /* _LINUX_RH_KABI_H */

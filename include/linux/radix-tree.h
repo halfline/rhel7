@@ -84,9 +84,19 @@ static inline bool radix_tree_is_internal_node(void *ptr)
 #define RADIX_TREE_COUNT_SHIFT	(RADIX_TREE_MAP_SHIFT + 1)
 #define RADIX_TREE_COUNT_MASK	((1UL << RADIX_TREE_COUNT_SHIFT) - 1)
 
+/*
+ * The radix_tree_node structure is never embedded in other data structures.
+ * As a result, there's no need to preserve the size.  Because the structure
+ * is reachable via others, though, we need to preserve the original contents
+ * for the kabi checker.
+ */
+
 struct radix_tree_node {
-	unsigned char	shift;	/* Bits remaining in each slot */
-	unsigned char	offset;	/* Slot offset in parent */
+	RH_KABI_REPLACE2(	/* shift & offset replaces path */
+		unsigned int 	path, 	/* Offset in parent & height from the bottom */
+		unsigned char 	shift, 	/* Bits remaining in each slot */
+		unsigned char 	offset	/* Slot offset in parent */
+	)
 	unsigned int	count;
 	union {
 		struct {
@@ -106,6 +116,7 @@ struct radix_tree_node {
 
 /* root tags are stored in gfp_mask, shifted by __GFP_BITS_SHIFT */
 struct radix_tree_root {
+	RH_KABI_DEPRECATE(unsigned int, height)
 	gfp_t			gfp_mask;
 	struct radix_tree_node	__rcu *rnode;
 };
