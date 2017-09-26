@@ -69,6 +69,12 @@ struct dma_map_ops {
 	u64 (*get_required_mask)(struct device *dev);
 #endif
 	int is_phys;
+	RH_KABI_EXTEND(dma_addr_t (*map_resource)(struct device *dev, phys_addr_t phys_addr,
+			       size_t size, enum dma_data_direction dir,
+			       struct dma_attrs *attrs))
+	RH_KABI_EXTEND(void (*unmap_resource)(struct device *dev, dma_addr_t dma_handle,
+			   size_t size, enum dma_data_direction dir,
+			   struct dma_attrs *attrs))
 };
 
 extern struct dma_map_ops dma_noop_ops;
