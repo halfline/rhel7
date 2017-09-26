@@ -617,8 +617,6 @@ struct vcpu_vmx {
 	u64 msr_ia32_feature_control;
 	u64 msr_ia32_feature_control_valid_bits;
 
-	bool guest_pkru_valid;
-	u32 guest_pkru;
 	u32 host_pkru;
 };
 
@@ -2241,11 +2239,6 @@ static void vmx_set_rflags(struct kvm_vcpu *vcpu, unsigned long rflags)
 		rflags |= X86_EFLAGS_IOPL | X86_EFLAGS_VM;
 	}
 	vmcs_writel(GUEST_RFLAGS, rflags);
-}
-
-static u32 vmx_get_pkru(struct kvm_vcpu *vcpu)
-{
-	return to_vmx(vcpu)->guest_pkru;
 }
 
 static u32 vmx_get_interrupt_shadow(struct kvm_vcpu *vcpu)
@@ -8564,8 +8557,10 @@ static void __noclone vmx_vcpu_run(struct kvm_vcpu *vcpu)
 	if (vcpu->guest_debug & KVM_GUESTDBG_SINGLESTEP)
 		vmx_set_interrupt_shadow(vcpu, 0);
 
-	if (vmx->guest_pkru_valid)
-		__write_pkru(vmx->guest_pkru);
+	if (static_cpu_has(X86_FEATURE_PKU) &&
+	    kvm_read_cr4_bits(vcpu, X86_CR4_PKE) &&
+	    vcpu->arch.pkru != vmx->host_pkru)
+		__write_pkru(vcpu->arch.pkru);
 
 	atomic_switch_perf_msrs(vmx);
 	debugctlmsr = get_debugctlmsr();
@@ -8711,13 +8706,11 @@ static void __noclone vmx_vcpu_run(struct kvm_vcpu *vcpu)
 	 * back on host, so it is safe to read guest PKRU from current
 	 * XSAVE.
 	 */
-	if (boot_cpu_has(X86_FEATURE_OSPKE)) {
-		vmx->guest_pkru = __read_pkru();
-		if (vmx->guest_pkru != vmx->host_pkru) {
-			vmx->guest_pkru_valid = true;
+	if (static_cpu_has(X86_FEATURE_PKU) &&
+	    kvm_read_cr4_bits(vcpu, X86_CR4_PKE)) {
+		vcpu->arch.pkru = __read_pkru();
+		if (vcpu->arch.pkru != vmx->host_pkru)
 			__write_pkru(vmx->host_pkru);
-		} else
-			vmx->guest_pkru_valid = false;
 	}
 
 	/*
@@ -10930,8 +10923,6 @@ static struct kvm_x86_ops vmx_x86_ops = {
 	.cache_reg = vmx_cache_reg,
 	.get_rflags = vmx_get_rflags,
 	.set_rflags = vmx_set_rflags,
-
-	.get_pkru = vmx_get_pkru,
 
 	.fpu_activate = vmx_fpu_activate,
 	.fpu_deactivate = vmx_fpu_deactivate,
