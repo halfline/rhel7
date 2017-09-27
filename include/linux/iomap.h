@@ -6,6 +6,7 @@
 #include <linux/aio.h>
 #endif
 
+struct fiemap_extent_info;
 struct inode;
 struct kiocb;
 struct vm_area_struct;
@@ -67,5 +68,7 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
 		struct iomap_ops *ops);
 int iomap_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
 		struct iomap_ops *ops);
+int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+		loff_t start, loff_t len, struct iomap_ops *ops);
 
 #endif /* LINUX_IOMAP_H */
