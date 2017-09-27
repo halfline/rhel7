@@ -1216,6 +1216,10 @@ static bool netvsc_napi_complete_done(struct napi_struct *n, int work_done)
 	return true;
 }
 
+/* Network processing softirq
+ * Process data in incoming ring buffer from host
+ * Stops when ring is empty or budget is met or exceeded.
+ */
 int netvsc_poll(struct napi_struct *napi, int budget)
 {
 	struct netvsc_channel *nvchan
@@ -1245,7 +1249,11 @@ int netvsc_poll(struct napi_struct *napi, int budget)
 	}
 	hv_pkt_iter_close(channel);
 
-	/* If ring is empty and NAPI is not doing polling */
+	/* If budget was not exhausted and
+	 * not doing busy poll
+	 * then re-enable host interrupts
+	 *  and reschedule if ring is not empty.
+	 */
 	if (work_done < budget &&
 	    netvsc_napi_complete_done(napi, work_done) &&
 	    hv_end_read(&channel->inbound) != 0)
@@ -1255,6 +1263,9 @@ int netvsc_poll(struct napi_struct *napi, int budget)
 	return work_done;
 }
 
+/* Call back when data is available in host ring buffer.
+ * Processing is deferred until network softirq (NAPI)
+ */
 void netvsc_channel_cb(void *context)
 {
 	struct netvsc_channel *nvchan = context;
