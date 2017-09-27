@@ -65,6 +65,20 @@ char *strcat(char *dest, const char *src);
 int strcmp(const char *cs, const char *ct);
 
 extern struct static_key mcsafe_key;
+
+/**
+ * memcpy_mcsafe - copy memory with indication if a machine check happened
+ *
+ * @dst:	destination address
+ * @src:	source address
+ * @cnt:	number of bytes to copy
+ *
+ * Low level memory copy function that catches machine checks
+ *
+ * Return true for success, false for fail
+ */
+bool memcpy_mcsafe(void *dst, const void *src, size_t cnt);
+
 #endif /* __KERNEL__ */
 
 #endif /* _ASM_X86_STRING_64_H */
