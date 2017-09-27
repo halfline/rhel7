@@ -92,6 +92,63 @@ ext4_unaligned_aio(struct inode *inode, const struct iovec *iov,
 	return 0;
 }
 
+/* Is IO overwriting allocated and initialized blocks? */
+static bool ext4_overwrite_io(struct inode *inode, loff_t pos, loff_t len)
+{
+	struct ext4_map_blocks map;
+	unsigned int blkbits = inode->i_blkbits;
+	int err, blklen;
+
+	if (pos + len > i_size_read(inode))
+		return false;
+
+	map.m_lblk = pos >> blkbits;
+	map.m_len = (EXT4_BLOCK_ALIGN(pos + len, blkbits) >> blkbits)
+		- map.m_lblk;
+	blklen = map.m_len;
+
+	err = ext4_map_blocks(NULL, inode, &map, 0);
+	/*
+	 * 'err==len' means that all of the blocks have been preallocated,
+	 * regardless of whether they have been initialized or not. To exclude
+	 * unwritten extents, we need to check m_flags.
+	 */
+	return err == blklen && (map.m_flags & EXT4_MAP_MAPPED);
+}
+
+static ssize_t ext4_write_checks(struct kiocb *iocb, const struct iovec *iov,
+				 unsigned long nr_segs, loff_t *pos)
+{
+	struct file *file = iocb->ki_filp;
+	struct inode *inode = file_inode(iocb->ki_filp);
+	size_t length = iov_length(iov, nr_segs);
+	ssize_t ret;
+
+	ret = generic_write_checks(file, pos, &length, S_ISBLK(inode->i_mode));
+	if (ret < 0)
+		return ret;
+
+	iocb->ki_pos = *pos;
+
+	/*
+	 * If we have encountered a bitmap-format file, the size limit
+	 * is smaller than s_maxbytes, which is for extent-mapped files.
+	 */
+	if (!(ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS))) {
+		struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
+
+		if ((*pos > sbi->s_bitmap_maxbytes ||
+		    (*pos == sbi->s_bitmap_maxbytes && length > 0)))
+			return -EFBIG;
+
+		if (*pos + length > sbi->s_bitmap_maxbytes) {
+			nr_segs = iov_shorten((struct iovec *)iov, nr_segs,
+					      sbi->s_bitmap_maxbytes - *pos);
+		}
+	}
+	return iov_length(iov, nr_segs);
+}
+
 static ssize_t
 ext4_file_dio_write(struct kiocb *iocb, const struct iovec *iov,
 		    unsigned long nr_segs, loff_t pos)
@@ -102,7 +159,6 @@ ext4_file_dio_write(struct kiocb *iocb, const struct iovec *iov,
 	int unaligned_aio = 0;
 	ssize_t ret;
 	int overwrite = 0;
-	size_t length = iov_length(iov, nr_segs);
 
 	if (ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS) &&
 	    !is_sync_kiocb(iocb))
@@ -121,31 +177,10 @@ ext4_file_dio_write(struct kiocb *iocb, const struct iovec *iov,
 
 	iocb->private = &overwrite;
 
-	/* check whether we do a DIO overwrite or not */
+	/* Check whether we do a DIO overwrite or not */
 	if (ext4_should_dioread_nolock(inode) && !unaligned_aio &&
-	    !file->f_mapping->nrpages && pos + length <= i_size_read(inode)) {
-		struct ext4_map_blocks map;
-		unsigned int blkbits = inode->i_blkbits;
-		int err, len;
-
-		map.m_lblk = pos >> blkbits;
-		map.m_len = (EXT4_BLOCK_ALIGN(pos + length, blkbits) >> blkbits)
-			- map.m_lblk;
-		len = map.m_len;
-
-		err = ext4_map_blocks(NULL, inode, &map, 0);
-		/*
-		 * 'err==len' means that all of blocks has been preallocated no
-		 * matter they are initialized or not.  For excluding
-		 * unwritten extents, we need to check m_flags.  There are
-		 * two conditions that indicate for initialized extents.
-		 * 1) If we hit extent cache, EXT4_MAP_MAPPED flag is returned;
-		 * 2) If we do a real lookup, non-flags are returned.
-		 * So we should check these two conditions.
-		 */
-		if (err == len && (map.m_flags & EXT4_MAP_MAPPED))
-			overwrite = 1;
-	}
+	    ext4_overwrite_io(inode, iocb->ki_pos, iov_length(iov, nr_segs)))
+		overwrite = 1;
 
 	ret = __generic_file_aio_write(iocb, iov, nr_segs, &iocb->ki_pos);
 	mutex_unlock(&inode->i_mutex);
@@ -169,28 +204,12 @@ static ssize_t
 ext4_file_write(struct kiocb *iocb, const struct iovec *iov,
 		unsigned long nr_segs, loff_t pos)
 {
-	struct inode *inode = file_inode(iocb->ki_filp);
 	ssize_t ret;
 	int overwrite = 0;
 
-	/*
-	 * If we have encountered a bitmap-format file, the size limit
-	 * is smaller than s_maxbytes, which is for extent-mapped files.
-	 */
-
-	if (!(ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS))) {
-		struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
-		size_t length = iov_length(iov, nr_segs);
-
-		if ((pos > sbi->s_bitmap_maxbytes ||
-		    (pos == sbi->s_bitmap_maxbytes && length > 0)))
-			return -EFBIG;
-
-		if (pos + length > sbi->s_bitmap_maxbytes) {
-			nr_segs = iov_shorten((struct iovec *)iov, nr_segs,
-					      sbi->s_bitmap_maxbytes - pos);
-		}
-	}
+	ret = ext4_write_checks(iocb, iov, nr_segs, &pos);
+	if (ret <= 0)
+		return ret;
 
 	iocb->private = &overwrite; /* RHEL7 only - prevent DIO race */
 	if (unlikely(io_is_direct(iocb->ki_filp)))
