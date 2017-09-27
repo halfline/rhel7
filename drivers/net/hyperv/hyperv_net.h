@@ -639,7 +639,7 @@ typedef atomic_t refcount_t;
 
 #define NETVSC_PACKET_SIZE                      4096
 
-#define VRSS_SEND_TAB_SIZE 16
+#define VRSS_SEND_TAB_SIZE 16  /* must be power of 2 */
 #define VRSS_CHANNEL_MAX 64
 #define VRSS_CHANNEL_DEFAULT 8
 
