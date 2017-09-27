@@ -198,7 +198,7 @@ xfs_setfilesize_trans_alloc(
  * Update on-disk file size now that data has been written to disk.
  */
 STATIC int
-xfs_setfilesize(
+__xfs_setfilesize(
 	struct xfs_inode	*ip,
 	struct xfs_trans	*tp,
 	xfs_off_t		offset,
@@ -221,6 +221,23 @@ xfs_setfilesize(
 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 
 	return xfs_trans_commit(tp);
+}
+
+int
+xfs_setfilesize(
+	struct xfs_inode	*ip,
+	xfs_off_t		offset,
+	size_t			size)
+{
+	struct xfs_mount	*mp = ip->i_mount;
+	struct xfs_trans	*tp;
+	int			error;
+
+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
+	if (error)
+		return error;
+
+	return __xfs_setfilesize(ip, tp, offset, size);
 }
 
 STATIC int
@@ -246,7 +263,7 @@ xfs_setfilesize_ioend(
 		return error;
 	}
 
-	return xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
+	return __xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
 }
 
 /*
