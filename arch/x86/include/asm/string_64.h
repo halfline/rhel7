@@ -2,6 +2,7 @@
 #define _ASM_X86_STRING_64_H
 
 #ifdef __KERNEL__
+#include <linux/jump_label.h>
 
 /* Written 2002 by Andi Kleen */
 
@@ -63,6 +64,7 @@ char *strcpy(char *dest, const char *src);
 char *strcat(char *dest, const char *src);
 int strcmp(const char *cs, const char *ct);
 
+extern struct static_key mcsafe_key;
 #endif /* __KERNEL__ */
 
 #endif /* _ASM_X86_STRING_64_H */
