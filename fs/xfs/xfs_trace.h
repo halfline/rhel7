@@ -1298,6 +1298,9 @@ DEFINE_IOMAP_EVENT(xfs_gbmap_direct_new);
 DEFINE_IOMAP_EVENT(xfs_gbmap_direct_update);
 DEFINE_IOMAP_EVENT(xfs_gbmap_direct_none);
 DEFINE_IOMAP_EVENT(xfs_gbmap_direct_endio);
+DEFINE_IOMAP_EVENT(xfs_iomap_alloc);
+DEFINE_IOMAP_EVENT(xfs_iomap_found);
+DEFINE_IOMAP_EVENT(xfs_iomap_not_found);
 
 DECLARE_EVENT_CLASS(xfs_simple_io_class,
 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count),
