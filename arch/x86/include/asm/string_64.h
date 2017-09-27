@@ -75,9 +75,9 @@ extern struct static_key mcsafe_key;
  *
  * Low level memory copy function that catches machine checks
  *
- * Return true for success, false for fail
+ * Return 0 for success, -EFAULT for fail
  */
-bool memcpy_mcsafe(void *dst, const void *src, size_t cnt);
+int memcpy_mcsafe(void *dst, const void *src, size_t cnt);
 
 #endif /* __KERNEL__ */
 

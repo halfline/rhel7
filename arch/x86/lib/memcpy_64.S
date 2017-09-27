@@ -295,16 +295,16 @@ ENTRY(memcpy_mcsafe)
 	decl %ecx
 	jnz .L_copy_trailing_bytes
 
-	/* Copy successful. Return true */
+	/* Copy successful. Return zero */
 .L_done_memcpy_trap:
 	xorq %rax, %rax
 	ret
 ENDPROC(memcpy_mcsafe)
 
 	.section .fixup, "ax"
-	/* Return false for any failure */
+	/* Return -EFAULT for any failure */
 .L_memcpy_mcsafe_fail:
-	mov	$1, %rax
+	mov	$-EFAULT, %rax
 	ret
 
 	.previous
