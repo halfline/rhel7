@@ -620,6 +620,11 @@ struct nvsp_message {
 } __packed;
 
 
+/* RHEL-only: no refcount_t type */
+typedef atomic_t refcount_t;
+#define refcount_set atomic_set
+#define refcount_dec_and_test atomic_dec_and_test
+
 #define NETVSC_MTU 65536
 #define NETVSC_MTU_MIN 68
 
@@ -762,8 +767,8 @@ struct netvsc_device {
 
 	u32 max_chn;
 	u32 num_chn;
-	spinlock_t sc_lock; /* Protects num_sc_offered variable */
-	u32 num_sc_offered;
+
+	refcount_t sc_offered;
 
 	/* Holds rndis device info */
 	void *extension;
