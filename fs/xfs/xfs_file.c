@@ -81,34 +81,6 @@ xfs_rw_ilock_demote(
 		mutex_unlock(&VFS_I(ip)->i_mutex);
 }
 
-static int
-xfs_dax_zero_range(
-	struct inode		*inode,
-	loff_t			pos,
-	size_t			count)
-{
-	int			status = 0;
-
-	do {
-		unsigned offset, bytes;
-
-		offset = (pos & (PAGE_CACHE_SIZE -1)); /* Within page */
-		bytes = PAGE_CACHE_SIZE - offset;
-		if (bytes > count)
-			bytes = count;
-
-		status = dax_zero_page_range(inode, pos, bytes,
-					     xfs_get_blocks_direct);
-		if (status)
-			break;
-
-		pos += bytes;
-		count -= bytes;
-	} while (count);
-
-	return status;
-}
-
 /*
  * Clear the specified ranges to zero through either the pagecache or DAX.
  * Holes and unwritten extents will be left as-is as they already are zeroed.
@@ -119,12 +91,7 @@ xfs_iozero(
 	loff_t			pos,
 	size_t			count)
 {
-	struct inode		*inode = VFS_I(ip);
-
-	if (IS_DAX(VFS_I(ip)))
-		return xfs_dax_zero_range(inode, pos, count);
-	else
-		return iomap_zero_range(inode, pos, count, NULL, &xfs_iomap_ops);
+	return iomap_zero_range(VFS_I(ip), pos, count, NULL, &xfs_iomap_ops);
 }
 
 int
