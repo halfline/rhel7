@@ -68,6 +68,8 @@ ssize_t
 iomap_file_buffered_write(struct kiocb *iocb, const struct iovec *iov,
 		unsigned long nr_segs, loff_t pos, loff_t *ppos,
 		size_t ocount, struct iomap_ops *ops);
+int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
+		struct iomap_ops *ops);
 int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
 		bool *did_zero, struct iomap_ops *ops);
 int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
