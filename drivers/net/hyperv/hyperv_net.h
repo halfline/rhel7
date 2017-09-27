@@ -1428,9 +1428,6 @@ struct rndis_message {
 	((void *) rndis_msg)
 
 
-#define __struct_bcount(x)
-
-
 
 #define RNDIS_HEADER_SIZE	(sizeof(struct rndis_message) - \
 				 sizeof(union rndis_message_container))
