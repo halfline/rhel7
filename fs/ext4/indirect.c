@@ -671,6 +671,10 @@ ssize_t ext4_ind_direct_IO(int rw, struct kiocb *iocb,
 	size_t count = iov_length(iov, nr_segs);
 	int retries = 0;
 
+	/* DAX uses iomap path now */
+	if (WARN_ON_ONCE(IS_DAX(inode)))
+		return 0;
+
 	if (rw == WRITE) {
 		loff_t final_size = offset + count;
 
@@ -706,38 +710,14 @@ retry:
 			inode_dio_end(inode);
 			goto locked;
 		}
-		if (IS_DAX(inode))
-			ret = dax_do_io(rw, iocb, inode, iov, offset, nr_segs,
-					ext4_get_block, NULL, 0);
-		else
-			ret = __blockdev_direct_IO(rw, iocb, inode,
+		ret = __blockdev_direct_IO(rw, iocb, inode,
 					inode->i_sb->s_bdev, iov,
 					offset, nr_segs,
 					ext4_get_block, NULL, NULL, 0);
 		inode_dio_end(inode);
 	} else {
 locked:
-		if (IS_DAX(inode)) {
-			get_block_t *get_block_func = NULL;
-
-			/*
-			 * We can avoid zeroing for aligned DAX writes beyond
-			 * EOF. Other writes need zeroing either because they
-			 * can race with page faults or because they use partial
-			 * blocks.
-			 */
-			if (rw == READ)
-				get_block_func = ext4_get_block;
-			else if (round_down(offset, 1<<inode->i_blkbits) >=
-								inode->i_size &&
-			    ext4_aligned_io(inode, offset, count))
-				get_block_func = ext4_get_block;
-			else
-				get_block_func = ext4_dax_get_block;
-			ret = dax_do_io(rw, iocb, inode, iov, offset, nr_segs,
-					get_block_func, NULL, DIO_LOCKING);
-		} else
-			ret = blockdev_direct_IO(rw, iocb, inode, iov,
+		ret = blockdev_direct_IO(rw, iocb, inode, iov,
 					offset, nr_segs, ext4_get_block);
 
 		if (unlikely((rw & WRITE) && ret < 0)) {

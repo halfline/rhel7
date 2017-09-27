@@ -3045,64 +3045,6 @@ static int ext4_get_block_overwrite(struct inode *inode, sector_t iblock,
 }
 
 #ifdef CONFIG_FS_DAX
-/*
- * Get block function for DAX IO and mmap faults. It takes care of converting
- * unwritten extents to written ones and initializes new / converted blocks
- * to zeros.
- */
-int ext4_dax_get_block(struct inode *inode, sector_t iblock,
-		       struct buffer_head *bh_result, int create)
-{
-	int ret, err;
-	int credits;
-	struct ext4_map_blocks map;
-	handle_t *handle = NULL;
-	int retries = 0;
-	int flags = 0;
-
-	ext4_debug("inode %lu, create flag %d\n", inode->i_ino, create);
-	map.m_lblk = iblock;
-	map.m_len = bh_result->b_size >> inode->i_blkbits;
-	credits = ext4_chunk_trans_blocks(inode, map.m_len);
-retry:
-	if (create) {
-		flags |= EXT4_GET_BLOCKS_CREATE_ZERO;
-		handle = ext4_journal_start(inode, EXT4_HT_MAP_BLOCKS, credits);
-		if (IS_ERR(handle)) {
-			ret = PTR_ERR(handle);
-			return ret;
-		}
-	}
-
-	ret = ext4_map_blocks(handle, inode, &map, flags);
-	if (create) {
-		err = ext4_journal_stop(handle);
-		if (ret == -ENOSPC && ext4_should_retry_alloc(inode->i_sb, &retries))
-			goto retry;
-		if (ret >= 0 && err < 0)
-			ret = err;
-	}
-	if (ret <= 0)
-		goto out;
-out:
-	WARN_ON_ONCE(ret == 0 && create);
-	if (ret > 0) {
-		map_bh(bh_result, inode->i_sb, map.m_pblk);
-		/*
-		 * At least for now we have to clear BH_New so that DAX code
-		 * doesn't attempt to zero blocks again in a racy way.
-		 */
-		map.m_flags &= ~EXT4_MAP_NEW;
-		ext4_update_bh_state(bh_result, map.m_flags);
-		bh_result->b_size = map.m_len << inode->i_blkbits;
-		ret = 0;
-	} else if (ret == 0) {
-		/* hole case, need to fill in bh->b_size */
-		bh_result->b_size = map.m_len << inode->i_blkbits;
-	}
-	return ret;
-}
-
 static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
 			    unsigned flags, struct iomap *iomap)
 {
@@ -3256,14 +3198,6 @@ struct iomap_ops ext4_iomap_ops = {
 	.iomap_end		= ext4_iomap_end,
 };
 
-#else
-/* Just define empty function, it will never get called. */
-int ext4_dax_get_block(struct inode *inode, sector_t iblock,
-		       struct buffer_head *bh_result, int create)
-{
-	BUG();
-	return 0;
-}
 #endif
 
 static void ext4_end_io_dio(struct kiocb *iocb, loff_t offset,
@@ -3383,30 +3317,14 @@ static ssize_t ext4_ext_direct_IO(int rw, struct kiocb *iocb,
 
 	if (overwrite) {
 		get_block_func = ext4_get_block_overwrite;
-	} else if (IS_DAX(inode)) {
-		/*
-		 * We can avoid zeroing for aligned DAX writes beyond EOF. Other
-		 * writes need zeroing either because they can race with page
-		 * faults or because they use partial blocks.
-		 */
-		if (round_down(offset, 1<<inode->i_blkbits) >= inode->i_size &&
-		    ext4_aligned_io(inode, offset, count))
-			get_block_func = ext4_get_block;
-		else
-			get_block_func = ext4_dax_get_block;
-		dio_flags = DIO_LOCKING;
 	} else {
 		get_block_func = ext4_get_block_write;
 		dio_flags = DIO_LOCKING;
 	}
-	if (IS_DAX(inode))
-		ret = dax_do_io(rw, iocb, inode, iov, offset, nr_segs,
-				get_block_func, ext4_end_io_dio, dio_flags);
-	else
-		ret = __blockdev_direct_IO(rw, iocb, inode,
-					   inode->i_sb->s_bdev, iov, offset,
-					   nr_segs, get_block_func,
-					   ext4_end_io_dio, NULL, dio_flags);
+	ret = __blockdev_direct_IO(rw, iocb, inode,
+				   inode->i_sb->s_bdev, iov, offset,
+				   nr_segs, get_block_func,
+				   ext4_end_io_dio, NULL, dio_flags);
 
 	/*
 	 * Put our reference to io_end. This can free the io_end structure e.g.
@@ -3469,6 +3387,10 @@ static ssize_t ext4_direct_IO(int rw, struct kiocb *iocb,
 
 	/* Let buffer I/O handle the inline data case. */
 	if (ext4_has_inline_data(inode))
+		return 0;
+
+	/* DAX uses iomap path now */
+	if (WARN_ON_ONCE(IS_DAX(inode)))
 		return 0;
 
 	trace_ext4_direct_IO_enter(inode, offset, iov_length(iov, nr_segs), rw);
