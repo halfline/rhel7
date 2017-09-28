@@ -2282,11 +2282,13 @@ static void qlt_unmap_sg(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd)
 			cmd->dma_data_direction);
 
 	ha = vha->hw;
-	if (cmd->ctx_dsd_alloced)
-		qla2x00_clean_dsd_pool(ha, NULL, cmd);
+	if (!cmd->ctx)
+		return;
 
-	if (cmd->ctx)
-		dma_pool_free(ha->dl_dma_pool, cmd->ctx, cmd->ctx->crc_ctx_dma);
+	if (cmd->ctx_dsd_alloced)
+		qla2x00_clean_dsd_pool(ha, cmd->ctx);
+
+	dma_pool_free(ha->dl_dma_pool, cmd->ctx, cmd->ctx->crc_ctx_dma);
 }
 
 static int qlt_check_reserve_free_req(struct qla_qpair *qpair,
