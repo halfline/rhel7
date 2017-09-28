@@ -832,7 +832,7 @@ skip_rio:
 					fc_host_port_name(vha->host) =
 					    wwn_to_u64(vha->port_name);
 					ql_dbg(ql_dbg_init + ql_dbg_verbose,
-					    vha, 0x0144, "LOOP DOWN detected,"
+					    vha, 0x00d8, "LOOP DOWN detected,"
 					    "restore WWPN %016llx\n",
 					    wwn_to_u64(vha->port_name));
 				}
@@ -1715,7 +1715,7 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
 	case LSC_SCODE_NOXCB:
 		vha->hw->exch_starvation++;
 		if (vha->hw->exch_starvation > 5) {
-			ql_log(ql_log_warn, vha, 0xffff,
+			ql_log(ql_log_warn, vha, 0xd046,
 			    "Exchange starvation. Resetting RISC\n");
 
 			vha->hw->exch_starvation = 0;
@@ -2384,8 +2384,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
 			    ((unsigned)(scsi_bufflen(cp) - resid) <
 			     cp->underflow)) {
 				ql_dbg(ql_dbg_io, fcport->vha, 0x301a,
-				    "Mid-layer underflow "
-				    "detected (0x%x of 0x%x bytes).\n",
+				    "Mid-layer underflow detected (0x%x of 0x%x bytes).\n",
 				    resid, scsi_bufflen(cp));
 
 				res = DID_ERROR << 16;
@@ -2418,8 +2417,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
 		if (scsi_status & SS_RESIDUAL_UNDER) {
 			if (IS_FWI2_CAPABLE(ha) && fw_resid_len != resid_len) {
 				ql_dbg(ql_dbg_io, fcport->vha, 0x301d,
-				    "Dropped frame(s) detected "
-				    "(0x%x of 0x%x bytes).\n",
+				    "Dropped frame(s) detected (0x%x of 0x%x bytes).\n",
 				    resid, scsi_bufflen(cp));
 
 				res = DID_ERROR << 16 | lscsi_status;
@@ -2430,8 +2428,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
 			    ((unsigned)(scsi_bufflen(cp) - resid) <
 			    cp->underflow)) {
 				ql_dbg(ql_dbg_io, fcport->vha, 0x301e,
-				    "Mid-layer underflow "
-				    "detected (0x%x of 0x%x bytes).\n",
+				    "Mid-layer underflow detected (0x%x of 0x%x bytes).\n",
 				    resid, scsi_bufflen(cp));
 
 				res = DID_ERROR << 16;
@@ -2445,9 +2442,8 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
 			 */
 
 			ql_dbg(ql_dbg_io, fcport->vha, 0x301f,
-			    "Dropped frame(s) detected (0x%x "
-			    "of 0x%x bytes).\n", resid,
-			    scsi_bufflen(cp));
+			    "Dropped frame(s) detected (0x%x of 0x%x bytes).\n",
+			    resid, scsi_bufflen(cp));
 
 			res = DID_ERROR << 16 | lscsi_status;
 			goto check_scsi_status;
