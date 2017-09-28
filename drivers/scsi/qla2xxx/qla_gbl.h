@@ -135,6 +135,7 @@ extern int ql2xdontresethba;
 extern unsigned int ql2xmaxlun;
 extern int ql2xmdcapmask;
 extern int ql2xmdenable;
+extern int ql2xiniexchg;
 extern int ql2xfwholdabts;
 extern int ql2xmvasynctoatio;
 extern int ql2xexlogins;
@@ -840,7 +841,7 @@ extern int qla_get_exlogin_status(scsi_qla_host_t *, uint16_t *,
 	uint16_t *);
 extern int qla_set_exlogin_mem_cfg(scsi_qla_host_t *vha, dma_addr_t phys_addr);
 extern int qla_get_exchoffld_status(scsi_qla_host_t *, uint16_t *, uint16_t *);
-extern int qla_set_exchoffld_mem_cfg(scsi_qla_host_t *, dma_addr_t);
+extern int qla_set_exchoffld_mem_cfg(scsi_qla_host_t *);
 
 int qla24xx_async_notify_ack(scsi_qla_host_t *, fc_port_t *,
 	struct imm_ntfy_from_isp *, int);
