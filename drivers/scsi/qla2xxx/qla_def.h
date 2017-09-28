@@ -3317,6 +3317,7 @@ struct qlt_hw_data {
 	uint8_t tgt_node_name[WWN_SIZE];
 	int rspq_vector_cpuid;
 	struct dentry *dfs_tgt_sess;
+	struct dentry *dfs_tgt_port_database;
 
 	spinlock_t atio_lock ____cacheline_aligned;
 	struct list_head q_full_list;
