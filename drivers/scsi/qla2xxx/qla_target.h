@@ -882,6 +882,7 @@ struct qla_tgt_cmd {
 	struct se_cmd se_cmd;
 	struct fc_port *sess;
 	struct qla_qpair *qpair;
+	uint32_t reset_count;
 	int state;
 	struct work_struct work;
 	/* Sense buffer that will be mapped into outgoing status */
@@ -908,7 +909,6 @@ struct qla_tgt_cmd {
 	uint32_t tag;
 	u64 unpacked_lun;
 	enum dma_data_direction dma_data_direction;
-	uint32_t reset_count;
 
 	uint16_t loop_id;	/* to save extra sess dereferences */
 	struct qla_tgt *tgt;	/* to save extra sess dereferences */
@@ -981,7 +981,6 @@ struct qla_tgt_prm {
 	int seg_cnt;
 	int req_cnt;
 	uint16_t rq_result;
-	uint16_t scsi_status;
 	unsigned char *sense_buffer;
 	int sense_buffer_len;
 	int residual;
