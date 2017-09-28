@@ -1797,7 +1797,7 @@ static int abort_cmd_for_tag(struct scsi_qla_host *vha, uint32_t tag)
  *     for the same lun)
  */
 static void abort_cmds_for_lun(struct scsi_qla_host *vha,
-				uint32_t lun, uint8_t *s_id)
+			        u64 lun, uint8_t *s_id)
 {
 	struct qla_tgt_sess_op *op;
 	struct qla_tgt_cmd *cmd;
@@ -1808,7 +1808,7 @@ static void abort_cmds_for_lun(struct scsi_qla_host *vha,
 	spin_lock_irqsave(&vha->cmd_list_lock, flags);
 	list_for_each_entry(op, &vha->qla_sess_op_cmd_list, cmd_list) {
 		uint32_t op_key;
-		uint32_t op_lun;
+		u64 op_lun;
 
 		op_key = sid_to_key(op->atio.u.isp24.fcp_hdr.s_id);
 		op_lun = scsilun_to_int(
@@ -1830,7 +1830,7 @@ static void abort_cmds_for_lun(struct scsi_qla_host *vha,
 
 	list_for_each_entry(cmd, &vha->qla_cmd_list, cmd_list) {
 		uint32_t cmd_key;
-		uint32_t cmd_lun;
+		u64 cmd_lun;
 
 		cmd_key = sid_to_key(cmd->atio.u.isp24.fcp_hdr.s_id);
 		cmd_lun = scsilun_to_int(
@@ -1849,7 +1849,7 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
 	struct se_session *se_sess = sess->se_sess;
 	struct qla_tgt_mgmt_cmd *mcmd;
 	struct se_cmd *se_cmd;
-	u32 lun = 0;
+	u64 lun = 0;
 	int rc;
 	bool found_lun = false;
 	unsigned long flags;
@@ -4319,13 +4319,12 @@ static int qlt_handle_task_mgmt(struct scsi_qla_host *vha, void *iocb)
 	struct qla_hw_data *ha = vha->hw;
 	struct qla_tgt *tgt;
 	struct fc_port *sess;
-	uint32_t lun, unpacked_lun;
+	u64 unpacked_lun;
 	int fn;
 	unsigned long flags;
 
 	tgt = vha->vha_tgt.qla_tgt;
 
-	lun = a->u.isp24.fcp_cmnd.lun;
 	fn = a->u.isp24.fcp_cmnd.task_mgmt_flags;
 
 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
@@ -4333,7 +4332,8 @@ static int qlt_handle_task_mgmt(struct scsi_qla_host *vha, void *iocb)
 	    a->u.isp24.fcp_hdr.s_id);
 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
 
-	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
+	unpacked_lun =
+	    scsilun_to_int((struct scsi_lun *)&a->u.isp24.fcp_cmnd.lun);
 
 	if (!sess) {
 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf024,
@@ -4356,7 +4356,7 @@ static int __qlt_abort_task(struct scsi_qla_host *vha,
 	struct atio_from_isp *a = (struct atio_from_isp *)iocb;
 	struct qla_hw_data *ha = vha->hw;
 	struct qla_tgt_mgmt_cmd *mcmd;
-	uint32_t lun, unpacked_lun;
+	u64 unpacked_lun;
 	int rc;
 
 	mcmd = mempool_alloc(qla_tgt_mgmt_cmd_mempool, GFP_ATOMIC);
@@ -4372,8 +4372,8 @@ static int __qlt_abort_task(struct scsi_qla_host *vha,
 	memcpy(&mcmd->orig_iocb.imm_ntfy, iocb,
 	    sizeof(mcmd->orig_iocb.imm_ntfy));
 
-	lun = a->u.isp24.fcp_cmnd.lun;
-	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
+	unpacked_lun =
+	    scsilun_to_int((struct scsi_lun *)&a->u.isp24.fcp_cmnd.lun);
 	mcmd->reset_count = vha->hw->chip_reset;
 	mcmd->tmr_func = QLA_TGT_2G_ABORT_TASK;
 
@@ -5862,7 +5862,7 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
 	unsigned long flags;
 	uint8_t *s_id = NULL; /* to hide compiler warnings */
 	int rc;
-	uint32_t lun, unpacked_lun;
+	u64 unpacked_lun;
 	int fn;
 	void *iocb;
 
@@ -5898,9 +5898,9 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
 	}
 
 	iocb = a;
-	lun = a->u.isp24.fcp_cmnd.lun;
 	fn = a->u.isp24.fcp_cmnd.task_mgmt_flags;
-	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
+	unpacked_lun =
+	    scsilun_to_int((struct scsi_lun *)&a->u.isp24.fcp_cmnd.lun);
 
 	rc = qlt_issue_task_mgmt(sess, unpacked_lun, fn, iocb, 0);
 	ha->tgt.tgt_ops->put_sess(sess);
