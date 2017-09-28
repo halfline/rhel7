@@ -890,7 +890,7 @@ qla24xx_get_one_block_sg(uint32_t blk_sz, struct qla2_sgx *sgx,
 
 int
 qla24xx_walk_and_build_sglist_no_difb(struct qla_hw_data *ha, srb_t *sp,
-	uint32_t *dsd, uint16_t tot_dsds, struct qla_tgt_cmd *tc)
+	uint32_t *dsd, uint16_t tot_dsds, struct qla_tc_param *tc)
 {
 	void *next_dsd;
 	uint8_t avail_dsds = 0;
@@ -899,7 +899,6 @@ qla24xx_walk_and_build_sglist_no_difb(struct qla_hw_data *ha, srb_t *sp,
 	struct scatterlist *sg_prot;
 	uint32_t *cur_dsd = dsd;
 	uint16_t	used_dsds = tot_dsds;
-
 	uint32_t	prot_int; /* protection interval */
 	uint32_t	partial;
 	struct qla2_sgx sgx;
@@ -970,7 +969,7 @@ alloc_and_fill:
 			} else {
 				list_add_tail(&dsd_ptr->list,
 				    &(tc->ctx->dsd_list));
-				tc->ctx_dsd_alloced = 1;
+				*tc->ctx_dsd_alloced = 1;
 			}
 
 			/* add new list to cmd iocb or last list */
@@ -1008,7 +1007,7 @@ alloc_and_fill:
 
 int
 qla24xx_walk_and_build_sglist(struct qla_hw_data *ha, srb_t *sp, uint32_t *dsd,
-	uint16_t tot_dsds, struct qla_tgt_cmd *tc)
+	uint16_t tot_dsds, struct qla_tc_param *tc)
 {
 	void *next_dsd;
 	uint8_t avail_dsds = 0;
@@ -1072,7 +1071,7 @@ qla24xx_walk_and_build_sglist(struct qla_hw_data *ha, srb_t *sp, uint32_t *dsd,
 			} else {
 				list_add_tail(&dsd_ptr->list,
 				    &(tc->ctx->dsd_list));
-				tc->ctx_dsd_alloced = 1;
+				*tc->ctx_dsd_alloced = 1;
 			}
 
 
@@ -1099,7 +1098,7 @@ qla24xx_walk_and_build_sglist(struct qla_hw_data *ha, srb_t *sp, uint32_t *dsd,
 
 int
 qla24xx_walk_and_build_prot_sglist(struct qla_hw_data *ha, srb_t *sp,
-	uint32_t *dsd, uint16_t tot_dsds, struct qla_tgt_cmd *tc)
+	uint32_t *dsd, uint16_t tot_dsds, struct qla_tc_param *tc)
 {
 	void *next_dsd;
 	uint8_t avail_dsds = 0;
@@ -1165,7 +1164,7 @@ qla24xx_walk_and_build_prot_sglist(struct qla_hw_data *ha, srb_t *sp,
 			} else {
 				list_add_tail(&dsd_ptr->list,
 				    &(tc->ctx->dsd_list));
-				tc->ctx_dsd_alloced = 1;
+				*tc->ctx_dsd_alloced = 1;
 			}
 
 			/* add new list to cmd iocb or last list */
