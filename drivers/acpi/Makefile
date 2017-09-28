@@ -54,6 +54,7 @@ acpi-$(CONFIG_ACPI_PROCFS_POWER) += cm_sbs.o
 ifdef CONFIG_ACPI_VIDEO
 acpi-y				+= video_detect.o
 endif
+obj-y				+= dptf/
 
 # These are (potentially) separate modules
 
