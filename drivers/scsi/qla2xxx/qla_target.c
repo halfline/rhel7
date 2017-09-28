@@ -3082,7 +3082,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
 	else
 		vha->tgt_counters.core_qla_que_buf++;
 
-	if (!ha->flags.fw_started || cmd->reset_count != ha->chip_reset) {
+	if (!qpair->fw_started || cmd->reset_count != vha->hw->chip_reset) {
 		/*
 		 * Either the port is not online or this request was from
 		 * previous life, just abort the processing.
@@ -3092,7 +3092,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
 		ql_dbg(ql_dbg_async, vha, 0xe101,
 			"RESET-RSP online/active/old-count/new-count = %d/%d/%d/%d.\n",
 			vha->flags.online, qla2x00_reset_active(vha),
-			cmd->reset_count, ha->chip_reset);
+			cmd->reset_count, vha->hw->chip_reset);
 		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
 		return 0;
 	}
@@ -3202,7 +3202,6 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
 {
 	struct ctio7_to_24xx *pkt;
 	struct scsi_qla_host *vha = cmd->vha;
-	struct qla_hw_data *ha = vha->hw;
 	struct qla_tgt *tgt = cmd->tgt;
 	struct qla_tgt_prm prm;
 	unsigned long flags = 0;
@@ -3219,7 +3218,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
 	if (qlt_pci_map_calc_cnt(&prm) != 0)
 		return -EAGAIN;
 
-	if (!ha->flags.fw_started || (cmd->reset_count != ha->chip_reset) ||
+	if (!qpair->fw_started || (cmd->reset_count != vha->hw->chip_reset) ||
 	    (cmd->sess && cmd->sess->deleted)) {
 		/*
 		 * Either the port is not online or this request was from
@@ -3230,7 +3229,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
 		ql_dbg(ql_dbg_async, vha, 0xe102,
 			"RESET-XFR online/active/old-count/new-count = %d/%d/%d/%d.\n",
 			vha->flags.online, qla2x00_reset_active(vha),
-			cmd->reset_count, ha->chip_reset);
+			cmd->reset_count, vha->hw->chip_reset);
 		return 0;
 	}
 
