@@ -3276,6 +3276,7 @@ struct qla_qpair {
 	uint32_t fw_started:1;
 	uint32_t enable_class_2:1;
 	uint32_t enable_explicit_conf:1;
+	uint32_t use_shadow_reg:1;
 
 	uint16_t id;			/* qp number used with FW */
 	cpumask_t cpu_mask; /* CPU mask for cpu affinity operation */

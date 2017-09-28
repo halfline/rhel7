@@ -7650,6 +7650,7 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha,
 		qpair->vha = vha;
 		qpair->qp_lock_ptr = &qpair->qp_lock;
 		spin_lock_init(&qpair->qp_lock);
+		qpair->use_shadow_reg = IS_SHADOW_REG_CAPABLE(ha) ? 1 : 0;
 
 		/* Assign available que pair id */
 		mutex_lock(&ha->mq_lock);
