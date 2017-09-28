@@ -104,6 +104,7 @@ int qla24xx_async_notify_ack(scsi_qla_host_t *, fc_port_t *,
 int qla24xx_post_newsess_work(struct scsi_qla_host *, port_id_t *, u8 *,
     void *);
 int qla24xx_fcport_handle_login(struct scsi_qla_host *, fc_port_t *);
+int qla24xx_detect_sfp(scsi_qla_host_t *vha);
 
 /*
  * Global Data in qla_os.c source file.
@@ -139,6 +140,7 @@ extern int ql2xfwholdabts;
 extern int ql2xmvasynctoatio;
 extern int ql2xexlogins;
 extern int ql2xexchoffld;
+extern int ql2xautodetectsfp;
 
 extern int qla2x00_loop_reset(scsi_qla_host_t *);
 extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
@@ -789,6 +791,7 @@ extern char *qdev_state(uint32_t);
 extern void qla82xx_clear_pending_mbx(scsi_qla_host_t *);
 extern int qla82xx_read_temperature(scsi_qla_host_t *);
 extern int qla8044_read_temperature(scsi_qla_host_t *);
+extern int qla2x00_read_sfp_dev(struct scsi_qla_host *, char *, int);
 
 /* BSG related functions */
 extern int qla24xx_bsg_request(struct fc_bsg_job *);
