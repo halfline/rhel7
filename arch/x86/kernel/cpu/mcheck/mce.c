@@ -42,6 +42,7 @@
 #include <linux/irq_work.h>
 #include <linux/export.h>
 
+#include <asm/intel-family.h>
 #include <asm/processor.h>
 #include <asm/mce.h>
 #include <asm/msr.h>
@@ -133,6 +134,9 @@ void mce_setup(struct mce *m)
 	m->socketid = cpu_data(m->extcpu).phys_proc_id;
 	m->apicid = cpu_data(m->extcpu).initial_apicid;
 	rdmsrl(MSR_IA32_MCG_CAP, m->mcgcap);
+
+	if (this_cpu_has(X86_FEATURE_INTEL_PPIN))
+		rdmsrl(MSR_PPIN, m->ppin);
 }
 
 DEFINE_PER_CPU(struct mce, injectm);
