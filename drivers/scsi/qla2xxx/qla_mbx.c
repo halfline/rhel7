@@ -3635,12 +3635,18 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
 	scsi_qla_host_t *vp = NULL;
 	unsigned long   flags;
 	int found;
+	port_id_t id;
 
 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10b6,
 	    "Entered %s.\n", __func__);
 
 	if (rptid_entry->entry_status != 0)
 		return;
+
+	id.b.domain = rptid_entry->port_id[2];
+	id.b.area   = rptid_entry->port_id[1];
+	id.b.al_pa  = rptid_entry->port_id[0];
+	id.b.rsvd_1 = 0;
 
 	if (rptid_entry->format == 0) {
 		/* loop */
@@ -3653,13 +3659,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
 		    rptid_entry->port_id[2], rptid_entry->port_id[1],
 		    rptid_entry->port_id[0]);
 
-		vha->d_id.b.domain = rptid_entry->port_id[2];
-		vha->d_id.b.area = rptid_entry->port_id[1];
-		vha->d_id.b.al_pa = rptid_entry->port_id[0];
-
-		spin_lock_irqsave(&ha->vport_slock, flags);
-		qlt_update_vp_map(vha, SET_AL_PA);
-		spin_unlock_irqrestore(&ha->vport_slock, flags);
+		qlt_update_host_map(vha, id);
 
 	} else if (rptid_entry->format == 1) {
 		/* fabric */
@@ -3685,12 +3685,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
 					    WWN_SIZE);
 				}
 
-				vha->d_id.b.domain = rptid_entry->port_id[2];
-				vha->d_id.b.area = rptid_entry->port_id[1];
-				vha->d_id.b.al_pa = rptid_entry->port_id[0];
-				spin_lock_irqsave(&ha->vport_slock, flags);
-				qlt_update_vp_map(vha, SET_AL_PA);
-				spin_unlock_irqrestore(&ha->vport_slock, flags);
+				qlt_update_host_map(vha, id);
 			}
 
 			set_bit(REGISTER_FC4_NEEDED, &vha->dpc_flags);
@@ -3717,12 +3712,7 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
 			if (!found)
 				return;
 
-			vp->d_id.b.domain = rptid_entry->port_id[2];
-			vp->d_id.b.area =  rptid_entry->port_id[1];
-			vp->d_id.b.al_pa = rptid_entry->port_id[0];
-			spin_lock_irqsave(&ha->vport_slock, flags);
-			qlt_update_vp_map(vp, SET_AL_PA);
-			spin_unlock_irqrestore(&ha->vport_slock, flags);
+			qlt_update_host_map(vp, id);
 
 			/*
 			 * Cannot configure here as we are still sitting on the

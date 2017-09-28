@@ -25,6 +25,7 @@
 #include <linux/firmware.h>
 #include <linux/aer.h>
 #include <linux/mutex.h>
+#include <linux/btree.h>
 
 #include <scsi/scsi.h>
 #include <scsi/scsi_host.h>
@@ -3329,6 +3330,7 @@ struct qlt_hw_data {
 	spinlock_t q_full_lock;
 	uint32_t leak_exchg_thresh_hold;
 	spinlock_t sess_lock;
+	struct btree_head32 host_map;
 };
 
 #define MAX_QFULL_CMDS_ALLOC	8192
