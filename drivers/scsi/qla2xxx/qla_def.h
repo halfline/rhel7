@@ -3255,7 +3255,7 @@ struct req_que {
 struct qla_qpair {
 	spinlock_t qp_lock;
 	atomic_t ref_count;
-
+	uint32_t lun_cnt;
 	/*
 	 * For qpair 0, qp_lock_ptr will point at hardware_lock due to
 	 * legacy code. For other Qpair(s), it will point at qp_lock.
@@ -3286,14 +3286,8 @@ struct qla_qpair {
 	struct qla_hw_data *hw;
 	struct work_struct q_work;
 	struct list_head qp_list_elem; /* vha->qp_list */
+	struct list_head hints_list;
 	uint16_t cpuid;
-};
-
-struct qla_percpu_qp_hint {
-	int change_in_progress;
-	struct qla_qpair *qp;
-	int redirect_to_cpuid;
-	struct qla_qpair *alternate_qp;
 };
 
 /* Place holder for FW buffer parameters */
@@ -4142,7 +4136,6 @@ typedef struct scsi_qla_host {
 	struct qla_hw_data *hw;
 	struct scsi_qlt_host vha_tgt;
 	struct req_que *req;
-	struct qla_percpu_qp_hint *qps_hint;
 	int		fw_heartbeat_counter;
 	int		seconds_since_last_heartbeat;
 	struct fc_host_statistics fc_host_stat;

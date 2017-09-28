@@ -7620,12 +7620,10 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha,
 	int rsp_id = 0;
 	int  req_id = 0;
 	int i;
-	int cpu_id;
 	struct qla_hw_data *ha = vha->hw;
 	uint16_t qpair_id = 0;
 	struct qla_qpair *qpair = NULL;
 	struct qla_msix_entry *msix;
-	struct qla_percpu_qp_hint *hint;
 
 	if (!(ha->fw_attributes & BIT_6) || !ha->flags.msix_enabled) {
 		ql_log(ql_log_warn, vha, 0x00181,
@@ -7662,6 +7660,7 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha,
 		ha->queue_pair_map[qpair_id] = qpair;
 		qpair->id = qpair_id;
 		qpair->vp_idx = vp_idx;
+		INIT_LIST_HEAD(&qpair->hints_list);
 
 		for (i = 0; i < ha->msix_count; i++) {
 			msix = &ha->msix_entries[i];
@@ -7705,6 +7704,8 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha,
 		qpair->req = ha->req_q_map[req_id];
 		qpair->rsp->req = qpair->req;
 		qpair->rsp->qpair = qpair;
+		/* init qpair to this cpu. Will adjust at run time. */
+		qla_cpu_update(qpair, smp_processor_id());
 
 		if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif) {
 			if (ha->fw_attributes & BIT_4)
@@ -7723,15 +7724,6 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha,
 		if (cpu_mask)
 			qla2xxx_set_affinity_hint(qpair, cpu_mask);
 
-		if (cpu_mask) {
-			cpumask_copy(&qpair->cpu_mask, cpu_mask);
-			for_each_cpu(cpu_id, cpu_mask) {
-				hint = per_cpu_ptr(vha->qps_hint, cpu_id);
-				hint->change_in_progress = 1;
-				hint->qp = qpair;
-				hint->change_in_progress = 0;
-			}
-		}
 		/* Mark as online */
 		qpair->online = 1;
 
@@ -7756,14 +7748,6 @@ fail_rsp:
 	list_del(&qpair->qp_list_elem);
 	if (list_empty(&vha->qp_list))
 		vha->flags.qpairs_available = 0;
-	if (cpu_mask) {
-		for_each_cpu(cpu_id, cpu_mask) {
-			hint = per_cpu_ptr(vha->qps_hint, cpu_id);
-			hint->change_in_progress = 1;
-			hint->qp = NULL;
-			hint->change_in_progress = 0;
-		}
-	}
 fail_msix:
 	ha->queue_pair_map[qpair_id] = NULL;
 	clear_bit(qpair_id, ha->qpair_qid_map);
@@ -7776,9 +7760,8 @@ fail_qid_map:
 
 int qla2xxx_delete_qpair(struct scsi_qla_host *vha, struct qla_qpair *qpair)
 {
-	int ret, cpu_id;
+	int ret;
 	struct qla_hw_data *ha = qpair->hw;
-	struct qla_percpu_qp_hint *hint;
 
 	qpair->delete_in_progress = 1;
 	while (atomic_read(&qpair->ref_count))
@@ -7796,12 +7779,6 @@ int qla2xxx_delete_qpair(struct scsi_qla_host *vha, struct qla_qpair *qpair)
 	clear_bit(qpair->id, ha->qpair_qid_map);
 	ha->num_qpairs--;
 	list_del(&qpair->qp_list_elem);
-	for_each_cpu(cpu_id, &qpair->cpu_mask) {
-		hint = per_cpu_ptr(vha->qps_hint, cpu_id);
-		hint->change_in_progress = 1;
-		hint->qp = NULL;
-		hint->change_in_progress = 0;
-	}
 	if (list_empty(&vha->qp_list))
 		vha->flags.qpairs_available = 0;
 	mempool_destroy(qpair->srb_mempool);

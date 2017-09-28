@@ -2988,7 +2988,6 @@ __qla24xx_issue_tmf(char *name, uint32_t type, struct fc_port *fcport,
 	struct req_que *req;
 	struct rsp_que *rsp;
 	struct qla_qpair *qpair;
-	struct qla_percpu_qp_hint *hint;
 
 	vha = fcport->vha;
 	ha = vha->hw;
@@ -2998,24 +2997,14 @@ __qla24xx_issue_tmf(char *name, uint32_t type, struct fc_port *fcport,
 	    "Entered %s.\n", __func__);
 
 	if (vha->flags.qpairs_available) {
-		hint = (struct qla_percpu_qp_hint *)this_cpu_ptr(vha->qps_hint);
-		if (hint->qp) {
-			qpair = hint->qp;
-		} else if (vha->vp_idx && vha->qpair) {
-			/* NPIV port */
-			qpair = vha->qpair;
-		} else {
-			/* should not happen */
-			rsp = req->rsp;
-			goto qpair_out;
-		}
+		/* NPIV port */
+		qpair = vha->qpair;
 		rsp = qpair->rsp;
 		req = qpair->req;
 	} else {
 		rsp = req->rsp;
 	}
 
-qpair_out:
 	tsk = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &tsk_dma);
 	if (tsk == NULL) {
 		ql_log(ql_log_warn, vha, 0x1093,

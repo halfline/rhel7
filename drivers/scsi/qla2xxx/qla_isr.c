@@ -9,6 +9,7 @@
 
 #include <linux/delay.h>
 #include <linux/slab.h>
+#include <linux/cpu.h>
 #include <scsi/scsi_tcq.h>
 #include <scsi/scsi_bsg_fc.h>
 #include <scsi/scsi_eh.h>
@@ -2754,13 +2755,8 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
 	if (!ha->flags.fw_started)
 		return;
 
-	if (rsp->msix && rsp->msix->cpuid != smp_processor_id()) {
-		/* if kernel does not notify qla of IRQ's CPU change,
-		 * then set it here.
-		 */
-		rsp->msix->cpuid = smp_processor_id();
-		ha->tgt.rspq_vector_cpuid = rsp->msix->cpuid;
-	}
+	if (rsp->qpair->cpuid != smp_processor_id())
+		qla_cpu_update(rsp->qpair, smp_processor_id());
 
 	while (rsp->ring_ptr->signature != RESPONSE_PROCESSED) {
 		pkt = (struct sts_entry_24xx *)rsp->ring_ptr;
@@ -3197,10 +3193,10 @@ struct qla_init_msix_entry {
 };
 
 static const struct qla_init_msix_entry msix_entries[] = {
-	{ "qla2xxx (default)", qla24xx_msix_default },
-	{ "qla2xxx (rsp_q)", qla24xx_msix_rsp_q },
-	{ "qla2xxx (atio_q)", qla83xx_msix_atio_q },
-	{ "qla2xxx (qpair_multiq)", qla2xxx_msix_rsp_q },
+	{ "default", qla24xx_msix_default },
+	{ "rsp_q", qla24xx_msix_rsp_q },
+	{ "atio_q", qla83xx_msix_atio_q },
+	{ "qpair_multiq", qla2xxx_msix_rsp_q },
 };
 
 static const struct qla_init_msix_entry qla82xx_msix_entries[] = {
@@ -3309,7 +3305,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
 		qentry->handle = rsp;
 		rsp->msix = qentry;
 		scnprintf(qentry->name, sizeof(qentry->name),
-		    "%s", msix_entries[i].name);
+		    "qla2xxx%lu_%s", vha->host_no, msix_entries[i].name);
 		if (IS_P3P_TYPE(ha))
 			ret = request_irq(qentry->vector,
 				qla82xx_msix_entries[i].handler,
@@ -3317,7 +3313,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
 		else
 			ret = request_irq(qentry->vector,
 				msix_entries[i].handler,
-				0, msix_entries[i].name, rsp);
+				0, qentry->name, rsp);
 		if (ret)
 			goto msix_register_fail;
 		qentry->have_irq = 1;
@@ -3333,11 +3329,12 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
 		rsp->msix = qentry;
 		qentry->handle = rsp;
 		scnprintf(qentry->name, sizeof(qentry->name),
-		    "%s", msix_entries[QLA_ATIO_VECTOR].name);
+		    "qla2xxx%lu_%s", vha->host_no,
+		    msix_entries[QLA_ATIO_VECTOR].name);
 		qentry->in_use = 1;
 		ret = request_irq(qentry->vector,
 			msix_entries[QLA_ATIO_VECTOR].handler,
-			0, msix_entries[QLA_ATIO_VECTOR].name, rsp);
+			0, qentry->name, rsp);
 		qentry->have_irq = 1;
 
 		/* Register for CPU affinity notification. */
