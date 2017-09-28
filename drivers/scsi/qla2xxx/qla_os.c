@@ -721,7 +721,7 @@ qla2x00_sp_compl(void *ptr, int res)
 	if (!atomic_dec_and_test(&sp->ref_count))
 		return;
 
-	qla2x00_sp_free_dma(sp);
+	sp->free(sp);
 	cmd->scsi_done(cmd);
 }
 
@@ -793,7 +793,7 @@ qla2xxx_qpair_sp_compl(void *ptr, int res)
 	if (!atomic_dec_and_test(&sp->ref_count))
 		return;
 
-	qla2xxx_qpair_sp_free_dma(sp);
+	sp->free(sp);
 	cmd->scsi_done(cmd);
 }
 
@@ -914,7 +914,7 @@ qla2xxx_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
 	return 0;
 
 qc24_host_busy_free_sp:
-	qla2x00_sp_free_dma(sp);
+	sp->free(sp);
 
 qc24_host_busy:
 	return SCSI_MLQUEUE_HOST_BUSY;
@@ -1003,7 +1003,7 @@ qla2xxx_mqueuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd,
 	return 0;
 
 qc24_host_busy_free_sp:
-	qla2xxx_qpair_sp_free_dma(sp);
+	sp->free(sp);
 
 qc24_host_busy:
 	return SCSI_MLQUEUE_HOST_BUSY;
