@@ -611,11 +611,11 @@ qla24xx_fw_version_str(struct scsi_qla_host *vha, char *str, size_t size)
 }
 
 void
-qla2x00_sp_free_dma(void *vha, void *ptr)
+qla2x00_sp_free_dma(void *ptr)
 {
-	srb_t *sp = (srb_t *)ptr;
+	srb_t *sp = ptr;
+	struct qla_hw_data *ha = sp->vha->hw;
 	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
-	struct qla_hw_data *ha = sp->fcport->vha->hw;
 	void *ctx = GET_CMD_CTX_SP(sp);
 
 	if (sp->flags & SRB_DMA_VALID) {
@@ -654,20 +654,19 @@ qla2x00_sp_free_dma(void *vha, void *ptr)
 	}
 
 	CMD_SP(cmd) = NULL;
-	qla2x00_rel_sp(sp->fcport->vha, sp);
+	qla2x00_rel_sp(sp);
 }
 
 void
-qla2x00_sp_compl(void *data, void *ptr, int res)
+qla2x00_sp_compl(void *ptr, int res)
 {
-	struct qla_hw_data *ha = (struct qla_hw_data *)data;
-	srb_t *sp = (srb_t *)ptr;
+	srb_t *sp = ptr;
 	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
 
 	cmd->result = res;
 
 	if (atomic_read(&sp->ref_count) == 0) {
-		ql_dbg(ql_dbg_io, sp->fcport->vha, 0x3015,
+		ql_dbg(ql_dbg_io, sp->vha, 0x3015,
 		    "SP reference-count to ZERO -- sp=%p cmd=%p.\n",
 		    sp, GET_CMD_SP(sp));
 		if (ql2xextended_error_logging & ql_dbg_io)
@@ -677,12 +676,12 @@ qla2x00_sp_compl(void *data, void *ptr, int res)
 	if (!atomic_dec_and_test(&sp->ref_count))
 		return;
 
-	qla2x00_sp_free_dma(ha, sp);
+	qla2x00_sp_free_dma(sp);
 	cmd->scsi_done(cmd);
 }
 
 void
-qla2xxx_qpair_sp_free_dma(void *vha, void *ptr)
+qla2xxx_qpair_sp_free_dma(void *ptr)
 {
 	srb_t *sp = (srb_t *)ptr;
 	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
@@ -728,9 +727,9 @@ qla2xxx_qpair_sp_free_dma(void *vha, void *ptr)
 }
 
 void
-qla2xxx_qpair_sp_compl(void *data, void *ptr, int res)
+qla2xxx_qpair_sp_compl(void *ptr, int res)
 {
-	srb_t *sp = (srb_t *)ptr;
+	srb_t *sp = ptr;
 	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
 
 	cmd->result = res;
@@ -746,7 +745,7 @@ qla2xxx_qpair_sp_compl(void *data, void *ptr, int res)
 	if (!atomic_dec_and_test(&sp->ref_count))
 		return;
 
-	qla2xxx_qpair_sp_free_dma(sp->fcport->vha, sp);
+	qla2xxx_qpair_sp_free_dma(sp);
 	cmd->scsi_done(cmd);
 }
 
@@ -867,7 +866,7 @@ qla2xxx_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
 	return 0;
 
 qc24_host_busy_free_sp:
-	qla2x00_sp_free_dma(ha, sp);
+	qla2x00_sp_free_dma(sp);
 
 qc24_host_busy:
 	return SCSI_MLQUEUE_HOST_BUSY;
@@ -956,7 +955,7 @@ qla2xxx_mqueuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd,
 	return 0;
 
 qc24_host_busy_free_sp:
-	qla2xxx_qpair_sp_free_dma(vha, sp);
+	qla2xxx_qpair_sp_free_dma(sp);
 
 qc24_host_busy:
 	return SCSI_MLQUEUE_HOST_BUSY;
@@ -1240,7 +1239,7 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
 	}
 
 	spin_lock_irqsave(&ha->hardware_lock, flags);
-	sp->done(vha, sp, 0);
+	sp->done(sp, 0);
 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
 
 	/* Did the command return during mailbox execution? */
@@ -1285,7 +1284,7 @@ qla2x00_eh_wait_for_pending_commands(scsi_qla_host_t *vha, unsigned int t,
 			continue;
 		if (sp->type != SRB_SCSI_CMD)
 			continue;
-		if (vha->vp_idx != sp->fcport->vha->vp_idx)
+		if (vha->vp_idx != sp->vha->vp_idx)
 			continue;
 		match = 0;
 		cmd = GET_CMD_SP(sp);
@@ -1668,7 +1667,7 @@ qla2x00_abort_all_cmds(scsi_qla_host_t *vha, int res)
 						atomic_dec(&sp->ref_count);
 				}
 				req->outstanding_cmds[cnt] = NULL;
-				sp->done(vha, sp, res);
+				sp->done(sp, res);
 			}
 		}
 	}
