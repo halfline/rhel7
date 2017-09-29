@@ -4265,7 +4265,7 @@ xfs_btree_calc_size(
 	return rval;
 }
 
-int
+static int
 xfs_btree_count_blocks_helper(
 	struct xfs_btree_cur	*cur,
 	int			level,
