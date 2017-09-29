@@ -29,6 +29,7 @@
 #include <linux/slab.h>
 #include <linux/netdevice.h>
 #include <linux/if_ether.h>
+#include <linux/rtnetlink.h>
 #include <asm/sync_bitops.h>
 
 #include "hyperv_net.h"
@@ -41,7 +42,7 @@ void netvsc_switch_datapath(struct net_device *ndev, bool vf)
 {
 	struct net_device_context *net_device_ctx = netdev_priv(ndev);
 	struct hv_device *dev = net_device_ctx->device_ctx;
-	struct netvsc_device *nv_dev = net_device_ctx->nvdev;
+	struct netvsc_device *nv_dev = rtnl_dereference(net_device_ctx->nvdev);
 	struct nvsp_message *init_pkt = &nv_dev->channel_init_pkt;
 
 	memset(init_pkt, 0, sizeof(struct nvsp_message));
@@ -550,7 +551,8 @@ void netvsc_device_remove(struct hv_device *device)
 {
 	struct net_device *ndev = hv_get_drvdata(device);
 	struct net_device_context *net_device_ctx = netdev_priv(ndev);
-	struct netvsc_device *net_device = net_device_ctx->nvdev;
+	struct netvsc_device *net_device
+		= rtnl_dereference(net_device_ctx->nvdev);
 	int i;
 
 	netvsc_disconnect_vsp(device);
