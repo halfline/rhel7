@@ -77,9 +77,6 @@ static struct netvsc_device *alloc_net_device(void)
 	net_device->max_pkt = RNDIS_MAX_PKT_DEFAULT;
 	net_device->pkt_align = RNDIS_PKT_ALIGN_DEFAULT;
 
-	net_device->recv_section_size = NETVSC_RECV_SECTION_SIZE;
-	net_device->send_section_size = NETVSC_SEND_SECTION_SIZE;
-
 	init_completion(&net_device->channel_init_wait);
 	init_waitqueue_head(&net_device->subchan_open);
 	INIT_WORK(&net_device->subchan_work, rndis_set_subchannel);
@@ -263,7 +260,7 @@ static int netvsc_init_buf(struct hv_device *device,
 	int ret = 0;
 
 	/* Get receive buffer area. */
-	buf_size = device_info->recv_sections * net_device->recv_section_size;
+	buf_size = device_info->recv_sections * device_info->recv_section_size;
 	buf_size = roundup(buf_size, PAGE_SIZE);
 
 	net_device->recv_buf = vzalloc(buf_size);
@@ -345,7 +342,7 @@ static int netvsc_init_buf(struct hv_device *device,
 		goto cleanup;
 
 	/* Now setup the send buffer. */
-	buf_size = device_info->send_sections * net_device->send_section_size;
+	buf_size = device_info->send_sections * device_info->send_section_size;
 	buf_size = round_up(buf_size, PAGE_SIZE);
 
 	net_device->send_buf = vzalloc(buf_size);
