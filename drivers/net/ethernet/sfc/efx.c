@@ -2223,18 +2223,6 @@ static int efx_change_mtu(struct net_device *net_dev, int new_mtu)
 	rc = efx_check_disabled(efx);
 	if (rc)
 		return rc;
-	if (new_mtu > EFX_MAX_MTU) {
-		netif_err(efx, drv, efx->net_dev,
-			  "Requested MTU of %d too big (max: %d)\n",
-			  new_mtu, EFX_MAX_MTU);
-		return -EINVAL;
-	}
-	if (new_mtu < EFX_MIN_MTU) {
-		netif_err(efx, drv, efx->net_dev,
-			  "Requested MTU of %d too small (min: %d)\n",
-			  new_mtu, EFX_MIN_MTU);
-		return -EINVAL;
-	}
 
 	netif_dbg(efx, drv, efx->net_dev, "changing MTU to %d\n", new_mtu);
 
@@ -2414,7 +2402,7 @@ static const struct net_device_ops efx_netdev_ops = {
 	.ndo_start_xmit		= efx_hard_start_xmit,
 	.ndo_validate_addr	= eth_validate_addr,
 	.ndo_do_ioctl		= efx_ioctl,
-	.ndo_change_mtu_rh74	= efx_change_mtu,
+	.extended.ndo_change_mtu	= efx_change_mtu,
 	.ndo_set_mac_address	= efx_set_mac_address,
 	.ndo_set_rx_mode	= efx_set_rx_mode,
 	.ndo_set_features	= efx_set_features,
@@ -2506,6 +2494,8 @@ static int efx_register_netdev(struct efx_nic *efx)
 		net_dev->priv_flags |= IFF_UNICAST_FLT;
 	net_dev->ethtool_ops = &efx_ethtool_ops;
 	net_dev->gso_max_segs = EFX_TSO_MAX_SEGS;
+	net_dev->extended->min_mtu = EFX_MIN_MTU;
+	net_dev->extended->max_mtu = EFX_MAX_MTU;
 
 	rtnl_lock();
 
