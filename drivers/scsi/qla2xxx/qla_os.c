@@ -4561,6 +4561,7 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
 		return NULL;
 	}
 
+	host->use_blk_mq = ql2xmqsupport ? true : false;
 	/* Clear our data area */
 	vha = shost_priv(host);
 	memset(vha, 0, sizeof(scsi_qla_host_t));
