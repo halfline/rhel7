@@ -867,4 +867,6 @@ void qlt_unknown_atio_work_fn(struct work_struct *);
 void qlt_update_host_map(struct scsi_qla_host *, port_id_t);
 void qlt_remove_target_resources(struct qla_hw_data *);
 
+void qla_nvme_cmpl_io(struct srb_iocb *);
+
 #endif /* _QLA_GBL_H */
