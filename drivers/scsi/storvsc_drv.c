@@ -476,6 +476,9 @@ struct storvsc_device {
 	 */
 	u64 node_name;
 	u64 port_name;
+#if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
+	struct fc_rport *rport;
+#endif
 };
 
 struct hv_host_device {
@@ -1820,18 +1823,26 @@ static int storvsc_probe(struct hv_device *device,
 		target = (device->dev_instance.b[5] << 8 |
 			 device->dev_instance.b[4]);
 		ret = scsi_add_device(host, 0, target, 0);
-		if (ret) {
-			scsi_remove_host(host);
-			goto err_out2;
-		}
+		if (ret)
+			goto err_out3;
 	}
 #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
 	if (host->transportt == fc_transport_template) {
+		struct fc_rport_identifiers ids = {
+			.roles = FC_PORT_ROLE_FCP_DUMMY_INITIATOR,
+		};
+
 		fc_host_node_name(host) = stor_device->node_name;
 		fc_host_port_name(host) = stor_device->port_name;
+		stor_device->rport = fc_remote_port_add(host, 0, &ids);
+		if (!stor_device->rport)
+			goto err_out3;
 	}
 #endif
 	return 0;
+
+err_out3:
+	scsi_remove_host(host);
 
 err_out2:
 	/*
@@ -1858,8 +1869,10 @@ static int storvsc_remove(struct hv_device *dev)
 	struct Scsi_Host *host = stor_device->host;
 
 #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
-	if (host->transportt == fc_transport_template)
+	if (host->transportt == fc_transport_template) {
+		fc_remote_port_delete(stor_device->rport);
 		fc_remove_host(host);
+	}
 #endif
 	scsi_remove_host(host);
 	storvsc_dev_remove(dev);
@@ -1908,12 +1921,6 @@ static int __init storvsc_drv_init(void)
 	 * Install Hyper-V specific timeout handler.
 	 */
 	fc_transport_template->eh_timed_out = storvsc_eh_timed_out;
-	/*
-	 * The default user scan function associated with FC (fc_user_scan)
-	 * is not suitable for FC hosts on Hyper-V. Set it to NULL so we can
-	 * support manual scan of FC targets on Hyper-V.x
-	 */
-	fc_transport_template->user_scan = NULL;
 #endif
 
 	ret = vmbus_driver_register(&storvsc_drv);
