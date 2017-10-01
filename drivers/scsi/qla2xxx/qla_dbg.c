@@ -14,7 +14,7 @@
  * | Module Init and Probe        |       0x0193       | 0x0146         |
  * |                              |                    | 0x015b-0x0160	|
  * |                              |                    | 0x016e		|
- * | Mailbox commands             |       0x1199       | 0x1193		|
+ * | Mailbox commands             |       0x1205       | 0x11a2-0x11ff	|
  * |                              |                    | 0x1155-0x1158  |
  * |                              |                    | 0x1018-0x1019  |
  * |                              |                    | 0x1115-0x1116  |
