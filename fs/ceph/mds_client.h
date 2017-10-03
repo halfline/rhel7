@@ -7,6 +7,7 @@
 #include <linux/mutex.h>
 #include <linux/rbtree.h>
 #include <linux/spinlock.h>
+#include <linux/utsname.h>
 
 #include <linux/ceph/types.h>
 #include <linux/ceph/messenger.h>
@@ -364,6 +365,8 @@ struct ceph_mds_client {
 
 	struct rw_semaphore     pool_perm_rwsem;
 	struct rb_root		pool_perm_tree;
+
+	char nodename[__NEW_UTS_LEN + 1];
 };
 
 extern const char *ceph_mds_op_name(int op);
