@@ -239,21 +239,33 @@ static int parse_fsopt_token(char *c, void *private)
 		fsopt->rsize = ALIGN(intval, PAGE_SIZE);
 		break;
 	case Opt_rasize:
-		fsopt->rasize = intval;
+		if (intval < 0)
+			return -EINVAL;
+		fsopt->rasize = ALIGN(intval + PAGE_SIZE - 1, PAGE_SIZE);
 		break;
 	case Opt_caps_wanted_delay_min:
+		if (intval < 1)
+			return -EINVAL;
 		fsopt->caps_wanted_delay_min = intval;
 		break;
 	case Opt_caps_wanted_delay_max:
+		if (intval < 1)
+			return -EINVAL;
 		fsopt->caps_wanted_delay_max = intval;
 		break;
 	case Opt_readdir_max_entries:
+		if (intval < 1)
+			return -EINVAL;
 		fsopt->max_readdir = intval;
 		break;
 	case Opt_readdir_max_bytes:
+		if (intval < PAGE_SIZE && intval != 0)
+			return -EINVAL;
 		fsopt->max_readdir_bytes = intval;
 		break;
 	case Opt_congestion_kb:
+		if (intval < 1024) /* at least 1M */
+			return -EINVAL;
 		fsopt->congestion_kb = intval;
 		break;
 	case Opt_dirstat:
@@ -916,13 +928,7 @@ static int ceph_register_bdi(struct super_block *sb,
 	int err;
 
 	/* set ra_pages based on rasize mount option? */
-	if (fsc->mount_options->rasize >= PAGE_CACHE_SIZE)
-		fsc->backing_dev_info.ra_pages =
-			(fsc->mount_options->rasize + PAGE_CACHE_SIZE - 1)
-			>> PAGE_SHIFT;
-	else
-		fsc->backing_dev_info.ra_pages =
-			default_backing_dev_info.ra_pages;
+	sb->s_bdi->ra_pages = fsc->mount_options->rasize >> PAGE_SHIFT;
 
 	err = bdi_register(&fsc->backing_dev_info, NULL, "ceph-%ld",
 			   atomic_long_inc_return(&bdi_seq));
