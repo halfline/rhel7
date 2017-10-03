@@ -405,7 +405,7 @@ struct ceph_mds_session *__ceph_lookup_mds_session(struct ceph_mds_client *mdsc,
 {
 	struct ceph_mds_session *session;
 
-	if (mds >= mdsc->max_sessions || mdsc->sessions[mds] == NULL)
+	if (mds >= mdsc->max_sessions || !mdsc->sessions[mds])
 		return NULL;
 	session = mdsc->sessions[mds];
 	dout("lookup_mds_session %p %d\n", session,
@@ -480,7 +480,7 @@ static struct ceph_mds_session *register_session(struct ceph_mds_client *mdsc,
 
 		dout("register_session realloc to %d\n", newmax);
 		sa = kcalloc(newmax, sizeof(void *), GFP_NOFS);
-		if (sa == NULL)
+		if (!sa)
 			goto fail_realloc;
 		if (mdsc->sessions) {
 			memcpy(sa, mdsc->sessions,
@@ -890,7 +890,7 @@ static struct ceph_msg *create_session_open_msg(struct ceph_mds_client *mdsc, u6
 
 	/* Calculate serialized length of metadata */
 	metadata_bytes = 4;  /* map length */
-	for (i = 0; metadata[i][0] != NULL; ++i) {
+	for (i = 0; metadata[i][0]; ++i) {
 		metadata_bytes += 8 + strlen(metadata[i][0]) +
 			strlen(metadata[i][1]);
 		metadata_key_count++;
@@ -923,7 +923,7 @@ static struct ceph_msg *create_session_open_msg(struct ceph_mds_client *mdsc, u6
 	ceph_encode_32(&p, metadata_key_count);
 
 	/* Two length-prefixed strings for each entry in the map */
-	for (i = 0; metadata[i][0] != NULL; ++i) {
+	for (i = 0; metadata[i][0]; ++i) {
 		size_t const key_len = strlen(metadata[i][0]);
 		size_t const val_len = strlen(metadata[i][1]);
 
@@ -1126,7 +1126,7 @@ static int iterate_session_caps(struct ceph_mds_session *session,
 
 		spin_lock(&session->s_cap_lock);
 		p = p->next;
-		if (cap->ci == NULL) {
+		if (!cap->ci) {
 			dout("iterate_session_caps  finishing cap %p removal\n",
 			     cap);
 			BUG_ON(cap->session != session);
@@ -1752,7 +1752,7 @@ char *ceph_mdsc_build_path(struct dentry *dentry, int *plen, u64 *base,
 	int len, pos;
 	unsigned seq;
 
-	if (dentry == NULL)
+	if (!dentry)
 		return ERR_PTR(-EINVAL);
 
 retry:
@@ -1775,7 +1775,7 @@ retry:
 		len--;  /* no leading '/' */
 
 	path = kmalloc(len+1, GFP_NOFS);
-	if (path == NULL)
+	if (!path)
 		return ERR_PTR(-ENOMEM);
 	pos = len;
 	path[pos] = 0;	/* trailing null */
@@ -3149,7 +3149,7 @@ static void check_new_map(struct ceph_mds_client *mdsc,
 	     newmap->m_epoch, oldmap->m_epoch);
 
 	for (i = 0; i < oldmap->m_num_mds && i < mdsc->max_sessions; i++) {
-		if (mdsc->sessions[i] == NULL)
+		if (!mdsc->sessions[i])
 			continue;
 		s = mdsc->sessions[i];
 		oldstate = ceph_mdsmap_get_state(oldmap, i);
@@ -3296,7 +3296,7 @@ static void handle_lease(struct ceph_mds_client *mdsc,
 	mutex_lock(&session->s_mutex);
 	session->s_seq++;
 
-	if (inode == NULL) {
+	if (!inode) {
 		dout("handle_lease no inode %llx\n", vino.ino);
 		goto release;
 	}
@@ -3454,7 +3454,7 @@ static void delayed_work(struct work_struct *work)
 
 	for (i = 0; i < mdsc->max_sessions; i++) {
 		struct ceph_mds_session *s = __ceph_lookup_mds_session(mdsc, i);
-		if (s == NULL)
+		if (!s)
 			continue;
 		if (s->s_state == CEPH_MDS_SESSION_CLOSING) {
 			dout("resending session close request for mds%d\n",
@@ -3506,7 +3506,7 @@ int ceph_mdsc_init(struct ceph_fs_client *fsc)
 	fsc->mdsc = mdsc;
 	mutex_init(&mdsc->mutex);
 	mdsc->mdsmap = kzalloc(sizeof(*mdsc->mdsmap), GFP_NOFS);
-	if (mdsc->mdsmap == NULL) {
+	if (!mdsc->mdsmap) {
 		kfree(mdsc);
 		return -ENOMEM;
 	}
