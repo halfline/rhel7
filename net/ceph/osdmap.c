@@ -1547,14 +1547,15 @@ bad:
 void ceph_oid_copy(struct ceph_object_id *dest,
 		   const struct ceph_object_id *src)
 {
-	WARN_ON(!ceph_oid_empty(dest));
+	ceph_oid_destroy(dest);
 
 	if (src->name != src->inline_name) {
 		/* very rare, see ceph_object_id definition */
 		dest->name = kmalloc(src->name_len + 1,
 				     GFP_NOIO | __GFP_NOFAIL);
+	} else {
+		dest->name = dest->inline_name;
 	}
-
 	memcpy(dest->name, src->name, src->name_len + 1);
 	dest->name_len = src->name_len;
 }
