@@ -1375,6 +1375,7 @@ static ssize_t ceph_aio_write(struct kiocb *iocb, const struct iovec *iov,
 	if (!prealloc_cf)
 		return -ENOMEM;
 
+retry_snap:
 	mutex_lock(&inode->i_mutex);
 
 	err = generic_segment_checks(iov, &nr_segs, &count, VERIFY_READ);
@@ -1411,7 +1412,6 @@ static ssize_t ceph_aio_write(struct kiocb *iocb, const struct iovec *iov,
 			goto out;
 	}
 
-retry_snap:
 	/* FIXME: not complete since it doesn't account for being at quota */
 	if (ceph_osdmap_flag(osdc, CEPH_OSDMAP_FULL)) {
 		err = -ENOSPC;
@@ -1461,14 +1461,6 @@ retry_snap:
 		else
 			written = ceph_sync_write(iocb, &i, snapc);
 
-		if (written == -EOLDSNAPC) {
-			dout("aio_write %p %llx.%llx %llu~%u"
-				"got EOLDSNAPC, retrying\n",
-				inode, ceph_vinop(inode),
-				pos, (unsigned)iov->iov_len);
-			mutex_lock(&inode->i_mutex);
-			goto retry_snap;
-		}
 		ceph_put_snap_context(snapc);
 	} else {
 		/*
@@ -1499,6 +1491,12 @@ retry_snap:
 	     inode, ceph_vinop(inode), pos, (unsigned)iov->iov_len,
 	     ceph_cap_string(got));
 	ceph_put_cap_refs(ci, got);
+
+	if (written == -EOLDSNAPC) {
+		dout("aio_write %p %llx.%llx %llu~%u" "got EOLDSNAPC, retrying\n",
+		     inode, ceph_vinop(inode), pos, (unsigned)count);
+		goto retry_snap;
+	}
 
 	if (written >= 0 &&
 	    ((file->f_flags & O_SYNC) || IS_SYNC(file->f_mapping->host) ||
