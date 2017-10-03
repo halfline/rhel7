@@ -146,6 +146,7 @@ static int ceph_set_acl(struct dentry *dentry, struct inode *inode,
 	}
 
 	if (new_mode != old_mode) {
+		newattrs.ia_ctime = current_fs_time(inode->i_sb);
 		newattrs.ia_mode = new_mode;
 		newattrs.ia_valid = ATTR_MODE;
 		ret = __ceph_setattr(dentry, &newattrs);
