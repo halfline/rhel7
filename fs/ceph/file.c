@@ -1044,8 +1044,8 @@ static ssize_t ceph_sync_write(struct kiocb *iocb, struct iov_iter *i,
 	int num_pages;
 	int written = 0;
 	int flags;
-	int check_caps = 0;
 	int ret;
+	bool check_caps = false;
 	struct timespec mtime = current_fs_time(inode->i_sb);
 	loff_t pos = iocb->ki_pos;
 	size_t count = iov_iter_count(i);
