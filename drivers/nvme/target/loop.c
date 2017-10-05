@@ -13,7 +13,6 @@
  */
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 #include <linux/scatterlist.h>
-#include <linux/delay.h>
 #include <linux/blk-mq.h>
 #include <linux/nvme.h>
 #include <linux/module.h>
