@@ -58,7 +58,6 @@ struct nvme_loop_ctrl {
 
 	struct nvmet_ctrl	*target_ctrl;
 	struct work_struct	delete_work;
-	struct work_struct	reset_work;
 };
 
 static inline struct nvme_loop_ctrl *to_loop_ctrl(struct nvme_ctrl *ctrl)
@@ -150,7 +149,7 @@ nvme_loop_timeout(struct request *rq, bool reserved)
 	struct nvme_loop_iod *iod = blk_mq_rq_to_pdu(rq);
 
 	/* queue error recovery */
-	queue_work(nvme_wq, &iod->queue->ctrl->reset_work);
+	nvme_reset_ctrl(&iod->queue->ctrl->ctrl);
 
 	/* fail with DNR on admin cmd timeout */
 	nvme_req(rq)->status = NVME_SC_ABORT_REQ | NVME_SC_DNR;
@@ -500,8 +499,8 @@ static void nvme_loop_delete_ctrl(struct nvmet_ctrl *nctrl)
 
 static void nvme_loop_reset_ctrl_work(struct work_struct *work)
 {
-	struct nvme_loop_ctrl *ctrl = container_of(work,
-					struct nvme_loop_ctrl, reset_work);
+	struct nvme_loop_ctrl *ctrl =
+		container_of(work, struct nvme_loop_ctrl, ctrl.reset_work);
 	bool changed;
 	int ret;
 
@@ -539,21 +538,6 @@ out_disable:
 	nvme_put_ctrl(&ctrl->ctrl);
 }
 
-static int nvme_loop_reset_ctrl(struct nvme_ctrl *nctrl)
-{
-	struct nvme_loop_ctrl *ctrl = to_loop_ctrl(nctrl);
-
-	if (!nvme_change_ctrl_state(&ctrl->ctrl, NVME_CTRL_RESETTING))
-		return -EBUSY;
-
-	if (!queue_work(nvme_wq, &ctrl->reset_work))
-		return -EBUSY;
-
-	flush_work(&ctrl->reset_work);
-
-	return 0;
-}
-
 static const struct nvme_ctrl_ops nvme_loop_ctrl_ops = {
 	.name			= "loop",
 	.module			= THIS_MODULE,
@@ -561,7 +545,6 @@ static const struct nvme_ctrl_ops nvme_loop_ctrl_ops = {
 	.reg_read32		= nvmf_reg_read32,
 	.reg_read64		= nvmf_reg_read64,
 	.reg_write32		= nvmf_reg_write32,
-	.reset_ctrl		= nvme_loop_reset_ctrl,
 	.free_ctrl		= nvme_loop_free_ctrl,
 	.submit_async_event	= nvme_loop_submit_async_event,
 	.delete_ctrl		= nvme_loop_del_ctrl,
@@ -628,7 +611,7 @@ static struct nvme_ctrl *nvme_loop_create_ctrl(struct device *dev,
 	INIT_LIST_HEAD(&ctrl->list);
 
 	INIT_WORK(&ctrl->delete_work, nvme_loop_del_ctrl_work);
-	INIT_WORK(&ctrl->reset_work, nvme_loop_reset_ctrl_work);
+	INIT_WORK(&ctrl->ctrl.reset_work, nvme_loop_reset_ctrl_work);
 
 	ret = nvme_init_ctrl(&ctrl->ctrl, dev, &nvme_loop_ctrl_ops,
 				0 /* no quirks, we're perfect! */);
