@@ -930,8 +930,13 @@ static void __init setup_hwcaps(void)
 	/*
 	 * Vector extension HWCAP_S390_VXRS is bit 11.
 	 */
-	if (test_facility(129))
+	if (test_facility(129)) {
 		elf_hwcap |= HWCAP_S390_VXRS;
+		if (test_facility(134))
+			elf_hwcap |= HWCAP_S390_VXRS_EXT;
+		if (test_facility(135))
+			elf_hwcap |= HWCAP_S390_VXRS_BCD;
+	}
 #endif
 
 	get_cpu_id(&cpu_id);
