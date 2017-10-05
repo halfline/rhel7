@@ -64,6 +64,8 @@ typedef struct xfs_inode {
 	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
 	spinlock_t		i_size_lock;	/* concurrent dio i_size lock */
 
+	struct list_head	i_wblist;	/* RHEL7: for writeback list */
+
 	struct xfs_icdinode	i_d;		/* most of ondisk inode */
 
 	/* VFS inode */
