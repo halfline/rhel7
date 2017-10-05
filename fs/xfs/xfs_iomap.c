@@ -519,15 +519,13 @@ check_writeio:
 	return alloc_blocks;
 }
 
-static int
-xfs_file_iomap_begin_delay(
-	struct inode		*inode,
-	loff_t			offset,
-	loff_t			count,
-	unsigned		flags,
-	struct iomap		*iomap)
+int
+xfs_iomap_write_delay(
+	struct xfs_inode	*ip,
+	xfs_off_t		offset,
+	size_t			count,
+	struct xfs_bmbt_irec	*ret_imap)
 {
-	struct xfs_inode	*ip = XFS_I(inode);
 	struct xfs_mount	*mp = ip->i_mount;
 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
@@ -539,18 +537,16 @@ xfs_file_iomap_begin_delay(
 	struct xfs_bmbt_irec	prev;
 	xfs_extnum_t		idx;
 
+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
 	ASSERT(!xfs_get_extsz_hint(ip));
-
-	xfs_ilock(ip, XFS_ILOCK_EXCL);
 
 	if (unlikely(XFS_TEST_ERROR(
 	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
 	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
 	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-		error = -EFSCORRUPTED;
-		goto out_unlock;
+		return -EFSCORRUPTED;
 	}
 
 	XFS_STATS_INC(mp, xs_blk_mapw);
@@ -558,7 +554,7 @@ xfs_file_iomap_begin_delay(
 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
 		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
 		if (error)
-			goto out_unlock;
+			return error;
 	}
 
 	xfs_bmap_search_extents(ip, offset_fsb, XFS_DATA_FORK, &eof, &idx,
@@ -570,7 +566,7 @@ xfs_file_iomap_begin_delay(
 
 	error = xfs_qm_dqattach_locked(ip, 0);
 	if (error)
-		goto out_unlock;
+		return error;
 
 	/*
 	 * We cap the maximum length we map here to MAX_WRITEBACK_PAGES pages
@@ -624,7 +620,7 @@ retry:
 		}
 		/*FALLTHRU*/
 	default:
-		goto out_unlock;
+		return error;
 	}
 
 	/*
@@ -642,8 +638,30 @@ done:
 	if (!got.br_startblock) {
 		error = xfs_alert_fsblock_zero(ip, &got);
 		if (error)
-			goto out_unlock;
+			return error;
 	}
+
+	*ret_imap = got;
+	return 0;
+}
+
+static int
+xfs_file_iomap_begin_delay(
+	struct inode		*inode,
+	loff_t			offset,
+	loff_t			count,
+	unsigned		flags,
+	struct iomap		*iomap)
+{
+	struct xfs_inode	*ip = XFS_I(inode);
+	int			error;
+	struct xfs_bmbt_irec	got;
+
+	xfs_ilock(ip, XFS_ILOCK_EXCL);
+
+	error = xfs_iomap_write_delay(ip, offset, count, &got);
+	if (error)
+		goto out_unlock;
 
 	xfs_bmbt_to_iomap(ip, iomap, &got);
 
