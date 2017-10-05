@@ -2510,13 +2510,22 @@ static struct nvmf_transport_ops nvme_fc_transport = {
 
 static int __init nvme_fc_init_module(void)
 {
+	int ret;
+
 	mark_tech_preview("NVMe over FC", THIS_MODULE);
 
 	nvme_fc_wq = create_workqueue("nvme_fc_wq");
 	if (!nvme_fc_wq)
 		return -ENOMEM;
 
-	return nvmf_register_transport(&nvme_fc_transport);
+	ret = nvmf_register_transport(&nvme_fc_transport);
+	if (ret)
+		goto err;
+
+	return 0;
+err:
+	destroy_workqueue(nvme_fc_wq);
+	return ret;
 }
 
 static void __exit nvme_fc_exit_module(void)
