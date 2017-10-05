@@ -181,15 +181,15 @@ int nvmet_parse_io_cmd(struct nvmet_req *req)
 	struct nvme_command *cmd = req->cmd;
 
 	if (unlikely(!(req->sq->ctrl->cc & NVME_CC_ENABLE))) {
-		pr_err("nvmet: got io cmd %d while CC.EN == 0\n",
-				cmd->common.opcode);
+		pr_err("got io cmd %d while CC.EN == 0\n",
+		       cmd->common.opcode);
 		req->ns = NULL;
 		return NVME_SC_CMD_SEQ_ERROR | NVME_SC_DNR;
 	}
 
 	if (unlikely(!(req->sq->ctrl->csts & NVME_CSTS_RDY))) {
-		pr_err("nvmet: got io cmd %d while CSTS.RDY == 0\n",
-				cmd->common.opcode);
+		pr_err("got io cmd %d while CSTS.RDY == 0\n",
+		       cmd->common.opcode);
 		req->ns = NULL;
 		return NVME_SC_CMD_SEQ_ERROR | NVME_SC_DNR;
 	}
@@ -214,7 +214,7 @@ int nvmet_parse_io_cmd(struct nvmet_req *req)
 			sizeof(struct nvme_dsm_range);
 		return 0;
 	default:
-		pr_err("nvmet: unhandled cmd %d\n", cmd->common.opcode);
+		pr_err("unhandled cmd %d\n", cmd->common.opcode);
 		return NVME_SC_INVALID_OPCODE | NVME_SC_DNR;
 	}
 }
