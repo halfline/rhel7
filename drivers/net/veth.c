@@ -234,7 +234,6 @@ static int veth_dev_init(struct net_device *dev)
 static void veth_dev_free(struct net_device *dev)
 {
 	free_percpu(dev->vstats);
-	free_netdev(dev);
 }
 
 static int veth_get_iflink(const struct net_device *dev)
@@ -308,7 +307,8 @@ static void veth_setup(struct net_device *dev)
 	dev->features |= VETH_FEATURES;
 	dev->vlan_features = dev->features &
 			     ~(NETIF_F_HW_VLAN_CTAG_TX | NETIF_F_HW_VLAN_STAG_TX);
-	dev->destructor = veth_dev_free;
+	dev->extended->needs_free_netdev = true;
+	dev->extended->priv_destructor = veth_dev_free;
 
 	dev->hw_features = VETH_FEATURES;
 	dev->hw_enc_features = VETH_FEATURES;

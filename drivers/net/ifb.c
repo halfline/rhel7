@@ -170,7 +170,6 @@ static const struct net_device_ops ifb_netdev_ops = {
 static void ifb_setup(struct net_device *dev)
 {
 	/* Initialize the device structure. */
-	dev->destructor = free_netdev;
 	dev->netdev_ops = &ifb_netdev_ops;
 
 	/* Fill in device structure with ethernet-generic values. */
@@ -185,6 +184,7 @@ static void ifb_setup(struct net_device *dev)
 	dev->priv_flags &= ~IFF_TX_SKB_SHARING;
 	netif_keep_dst(dev);
 	eth_hw_addr_random(dev);
+	dev->extended->needs_free_netdev = true;
 }
 
 static netdev_tx_t ifb_xmit(struct sk_buff *skb, struct net_device *dev)

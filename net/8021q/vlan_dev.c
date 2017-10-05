@@ -826,7 +826,7 @@ void vlan_setup(struct net_device *dev)
 	netif_keep_dst(dev);
 
 	dev->netdev_ops		= &vlan_netdev_ops;
-	dev->destructor		= free_netdev;
+	dev->extended->needs_free_netdev	= true;
 	dev->ethtool_ops	= &vlan_ethtool_ops;
 
 	memset(dev->broadcast, 0, ETH_ALEN);

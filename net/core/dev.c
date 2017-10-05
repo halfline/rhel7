@@ -7371,6 +7371,11 @@ int register_netdevice(struct net_device *dev)
 	BUG_ON(dev_boot_phase);
 	ASSERT_RTNL();
 
+	/* RHEL: don't let drivers mix old and new style of destructors */
+	if (dev->destructor &&
+	    (dev->extended->needs_free_netdev || dev->extended->priv_destructor))
+		netdev_WARN(dev, "Only one of destructor and priv_destructor/needs_free_netdev should be used");
+
 	might_sleep();
 
 	/* When net_device's are persistent, this will be fatal. */
@@ -7519,6 +7524,8 @@ out:
 err_uninit:
 	if (dev->netdev_ops->ndo_uninit)
 		dev->netdev_ops->ndo_uninit(dev);
+	if (dev->extended->priv_destructor)
+		dev->extended->priv_destructor(dev);
 	goto out;
 }
 EXPORT_SYMBOL(register_netdevice);
@@ -7726,8 +7733,14 @@ void netdev_run_todo(void)
 		WARN_ON(rcu_access_pointer(dev->ip6_ptr));
 		WARN_ON(dev->dn_ptr);
 
-		if (dev->destructor)
+		if (dev->destructor) {
 			dev->destructor(dev);
+		} else {
+			if (dev->extended->priv_destructor)
+				dev->extended->priv_destructor(dev);
+			if (dev->extended->needs_free_netdev)
+				free_netdev(dev);
+		}
 
 		/* Report a network device has been unregistered */
 		rtnl_lock();

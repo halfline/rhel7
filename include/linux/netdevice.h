@@ -1931,6 +1931,8 @@ struct net_device {
  *	RHEL note: These bounds are only checked when the old
  *		.ndo_change_mtu_rh74 handler is *not* provided.
  *		See dev_set_mtu() in net/core/dev.c
+ *	@needs_free_netdev:	Should unregister perform free_netdev?
+ *	@priv_destructor:	Called from unregister
  */
 struct net_device_extended {
 #if IS_ENABLED(CONFIG_IPV6)
@@ -1940,6 +1942,9 @@ struct net_device_extended {
 	unsigned int		max_mtu;
 	struct list_head	ptype_all;
 	struct list_head	ptype_specific;
+
+	bool needs_free_netdev;
+	void (*priv_destructor)(struct net_device *dev);
 };
 
 #define to_net_dev(d) container_of(d, struct net_device, dev)

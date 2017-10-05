@@ -671,7 +671,8 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
 		if (!ndev)
 			return ERR_PTR(-ENOMEM);
 
-		ndev->destructor = brcmf_cfg80211_free_netdev;
+		ndev->extended->needs_free_netdev = true;
+		ndev->extended->priv_destructor = brcmf_cfg80211_free_netdev;
 		ifp = netdev_priv(ndev);
 		ifp->ndev = ndev;
 		/* store mapping ifidx to bsscfgidx */
