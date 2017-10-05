@@ -32,6 +32,8 @@ extern unsigned char shutdown_timeout;
 #define NVME_DEFAULT_KATO	5
 #define NVME_KATO_GRACE		10
 
+extern struct workqueue_struct *nvme_wq;
+
 /*
  * List of workarounds for devices that required behavior not specified in
  * the standard.
