@@ -2382,6 +2382,7 @@ struct netdev_lag_lower_state_info {
 #define NETDEV_OFFLOAD_PUSH_GENEVE	0x001D
 #define NETDEV_UDP_TUNNEL_PUSH_INFO	0x001E
 #define NETDEV_CHANGE_TX_QUEUE_LEN	0x001F
+#define NETDEV_UDP_TUNNEL_DROP_INFO	0x0020
 
 /* (Un)registration functions for the notifiers that takes
  * 'struct net_device *' as parameter
