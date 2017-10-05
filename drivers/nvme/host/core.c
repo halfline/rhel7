@@ -334,6 +334,11 @@ int nvme_setup_cmd(struct nvme_ns *ns, struct request *req,
 {
 	int ret = BLK_MQ_RQ_QUEUE_OK;
 
+	if (!(req->cmd_flags & REQ_DONTPREP)) {
+		req->retries = 0;
+		req->cmd_flags |= REQ_DONTPREP;
+	}
+
 	if (req->cmd_type == REQ_TYPE_DRV_PRIV)
 		memcpy(cmd, nvme_req(req)->cmd, sizeof(*cmd));
 	else if (req->cmd_flags & REQ_FLUSH)

@@ -324,10 +324,6 @@ static int nvme_init_iod(struct request *rq, unsigned size,
 	iod->nents = 0;
 	iod->length = size;
 
-	if (!(rq->cmd_flags & REQ_DONTPREP)) {
-		rq->retries = 0;
-		rq->cmd_flags |= REQ_DONTPREP;
-	}
 	return BLK_MQ_RQ_QUEUE_OK;
 }
 
