@@ -413,8 +413,6 @@ static int nvme_loop_configure_admin_queue(struct nvme_loop_ctrl *ctrl)
 	if (error)
 		goto out_cleanup_queue;
 
-	nvme_start_keep_alive(&ctrl->ctrl);
-
 	return 0;
 
 out_cleanup_queue:
@@ -428,8 +426,6 @@ out_free_sq:
 
 static void nvme_loop_shutdown_ctrl(struct nvme_loop_ctrl *ctrl)
 {
-	nvme_stop_keep_alive(&ctrl->ctrl);
-
 	if (ctrl->ctrl.queue_count > 1) {
 		nvme_stop_queues(&ctrl->ctrl);
 		blk_mq_tagset_busy_iter(&ctrl->tag_set,
@@ -451,8 +447,10 @@ static void nvme_loop_del_ctrl_work(struct work_struct *work)
 	struct nvme_loop_ctrl *ctrl = container_of(work,
 				struct nvme_loop_ctrl, delete_work);
 
-	nvme_uninit_ctrl(&ctrl->ctrl);
+	nvme_stop_ctrl(&ctrl->ctrl);
+	nvme_remove_namespaces(&ctrl->ctrl);
 	nvme_loop_shutdown_ctrl(ctrl);
+	nvme_uninit_ctrl(&ctrl->ctrl);
 	nvme_put_ctrl(&ctrl->ctrl);
 }
 
@@ -500,6 +498,7 @@ static void nvme_loop_reset_ctrl_work(struct work_struct *work)
 	bool changed;
 	int ret;
 
+	nvme_stop_ctrl(&ctrl->ctrl);
 	nvme_loop_shutdown_ctrl(ctrl);
 
 	ret = nvme_loop_configure_admin_queue(ctrl);
@@ -520,10 +519,7 @@ static void nvme_loop_reset_ctrl_work(struct work_struct *work)
 	changed = nvme_change_ctrl_state(&ctrl->ctrl, NVME_CTRL_LIVE);
 	WARN_ON_ONCE(!changed);
 
-	nvme_queue_scan(&ctrl->ctrl);
-	nvme_queue_async_events(&ctrl->ctrl);
-
-	nvme_start_queues(&ctrl->ctrl);
+	nvme_start_ctrl(&ctrl->ctrl);
 
 	return;
 
@@ -658,10 +654,7 @@ static struct nvme_ctrl *nvme_loop_create_ctrl(struct device *dev,
 	list_add_tail(&ctrl->list, &nvme_loop_ctrl_list);
 	mutex_unlock(&nvme_loop_ctrl_mutex);
 
-	if (opts->nr_io_queues) {
-		nvme_queue_scan(&ctrl->ctrl);
-		nvme_queue_async_events(&ctrl->ctrl);
-	}
+	nvme_start_ctrl(&ctrl->ctrl);
 
 	return &ctrl->ctrl;
 
