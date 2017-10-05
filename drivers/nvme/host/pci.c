@@ -717,33 +717,37 @@ static inline void nvme_handle_cqe(struct nvme_queue *nvmeq,
 	nvme_end_request(req, cqe->status, cqe->result);
 }
 
-static int nvme_process_cq(struct nvme_queue *nvmeq)
+static inline bool nvme_read_cqe(struct nvme_queue *nvmeq,
+		struct nvme_completion *cqe)
 {
-	u16 head, phase;
+	if (nvme_cqe_valid(nvmeq, nvmeq->cq_head, nvmeq->cq_phase)) {
+		*cqe = nvmeq->cqes[nvmeq->cq_head];
 
-	head = nvmeq->cq_head;
-	phase = nvmeq->cq_phase;
-
-	while (nvme_cqe_valid(nvmeq, head, phase)) {
-		struct nvme_completion cqe = nvmeq->cqes[head];
-
-		if (++head == nvmeq->q_depth) {
-			head = 0;
-			phase = !phase;
+		if (++nvmeq->cq_head == nvmeq->q_depth) {
+			nvmeq->cq_head = 0;
+			nvmeq->cq_phase = !nvmeq->cq_phase;
 		}
-
-		nvme_handle_cqe(nvmeq, &cqe);
+		return true;
 	}
 
-	if (head == nvmeq->cq_head && phase == nvmeq->cq_phase)
-		return 0;
+	return false;
+}
 
-	nvmeq->cq_head = head;
-	nvmeq->cq_phase = phase;
+static int nvme_process_cq(struct nvme_queue *nvmeq)
+{
+	struct nvme_completion cqe;
+	int consumed = 0;
 
-	nvme_ring_cq_doorbell(nvmeq);
+	while (nvme_read_cqe(nvmeq, &cqe)) {
+		nvme_handle_cqe(nvmeq, &cqe);
+		consumed++;
+	}
 
-	nvmeq->cqe_seen = 1;
+	if (consumed) {
+		nvme_ring_cq_doorbell(nvmeq);
+		nvmeq->cqe_seen = 1;
+	}
+
 	return 1;
 }
 
