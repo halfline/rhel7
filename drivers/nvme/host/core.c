@@ -67,6 +67,35 @@ static DEFINE_SPINLOCK(dev_list_lock);
 
 static struct class *nvme_class;
 
+static inline bool nvme_req_needs_retry(struct request *req, u16 status)
+{
+	return !(status & NVME_SC_DNR || blk_noretry_request(req)) &&
+		(jiffies - req->start_time) < req->timeout &&
+		req->retries < nvme_max_retries;
+}
+
+void nvme_complete_rq(struct request *req)
+{
+	int error = 0;
+
+	if (unlikely(req->errors)) {
+		if (nvme_req_needs_retry(req, req->errors)) {
+			req->retries++;
+			blk_mq_requeue_request(req,
+					!blk_mq_queue_stopped(req->q));
+			return;
+		}
+
+		if (req->cmd_type == REQ_TYPE_DRV_PRIV)
+			error = req->errors;
+		else
+			error = nvme_error_status(req->errors);
+	}
+
+	blk_mq_end_request(req, error);
+}
+EXPORT_SYMBOL_GPL(nvme_complete_rq);
+
 void nvme_cancel_request(struct request *req, void *data, bool reserved)
 {
 	int status;
@@ -199,18 +228,6 @@ fail:
 	spin_unlock(&dev_list_lock);
 	return NULL;
 }
-
-void nvme_requeue_req(struct request *req)
-{
-	unsigned long flags;
-
-	blk_mq_requeue_request(req, false);
-	spin_lock_irqsave(req->q->queue_lock, flags);
-	if (!blk_queue_stopped(req->q))
-		blk_mq_kick_requeue_list(req->q);
-	spin_unlock_irqrestore(req->q->queue_lock, flags);
-}
-EXPORT_SYMBOL_GPL(nvme_requeue_req);
 
 struct request *nvme_alloc_request(struct request_queue *q,
 		struct nvme_command *cmd, unsigned int flags, int qid)
