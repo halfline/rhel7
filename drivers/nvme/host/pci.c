@@ -73,7 +73,6 @@ struct nvme_dev {
 	struct device *dev;
 	struct dma_pool *prp_page_pool;
 	struct dma_pool *prp_small_pool;
-	unsigned queue_count;
 	unsigned online_queues;
 	unsigned max_qid;
 	int q_depth;
@@ -1006,9 +1005,9 @@ static void nvme_free_queues(struct nvme_dev *dev, int lowest)
 {
 	int i;
 
-	for (i = dev->queue_count - 1; i >= lowest; i--) {
+	for (i = dev->ctrl.queue_count - 1; i >= lowest; i--) {
 		struct nvme_queue *nvmeq = dev->queues[i];
-		dev->queue_count--;
+		dev->ctrl.queue_count--;
 		dev->queues[i] = NULL;
 		nvme_free_queue(nvmeq);
 	}
@@ -1130,7 +1129,7 @@ static struct nvme_queue *nvme_alloc_queue(struct nvme_dev *dev, int qid,
 	nvmeq->qid = qid;
 	nvmeq->cq_vector = -1;
 	dev->queues[qid] = nvmeq;
-	dev->queue_count++;
+	dev->ctrl.queue_count++;
 
 	return nvmeq;
 
@@ -1344,14 +1343,14 @@ static int nvme_create_io_queues(struct nvme_dev *dev)
 	unsigned i, max;
 	int ret = 0;
 
-	for (i = dev->queue_count; i <= dev->max_qid; i++) {
+	for (i = dev->ctrl.queue_count; i <= dev->max_qid; i++) {
 		if (!nvme_alloc_queue(dev, i, dev->q_depth)) {
 			ret = -ENOMEM;
 			break;
 		}
 	}
 
-	max = min(dev->max_qid, dev->queue_count - 1);
+	max = min(dev->max_qid, dev->ctrl.queue_count - 1);
 	for (i = dev->online_queues; i <= max; i++) {
 		ret = nvme_create_queue(dev->queues[i], i);
 		if (ret)
@@ -1902,7 +1901,7 @@ static void nvme_dev_disable(struct nvme_dev *dev, bool shutdown)
 	nvme_stop_queues(&dev->ctrl);
 
 	queues = dev->online_queues - 1;
-	for (i = dev->queue_count - 1; i > 0; i--)
+	for (i = dev->ctrl.queue_count - 1; i > 0; i--)
 		nvme_suspend_queue(dev->queues[i]);
 
 	if (dead) {
@@ -1910,7 +1909,7 @@ static void nvme_dev_disable(struct nvme_dev *dev, bool shutdown)
 		 * probe, before the admin queue is configured. Thus,
 		 * queue_count can be 0 here.
 		 */
-		if (dev->queue_count)
+		if (dev->ctrl.queue_count)
 			nvme_suspend_queue(dev->queues[0]);
 	} else {
 		nvme_disable_io_queues(dev, queues);
