@@ -2279,7 +2279,7 @@ nvme_fc_create_association(struct nvme_fc_ctrl *ctrl)
 	int ret;
 	bool changed;
 
-	++ctrl->ctrl.opts->nr_reconnects;
+	++ctrl->ctrl.nr_reconnects;
 
 	/*
 	 * Create the admin queue
@@ -2376,7 +2376,7 @@ nvme_fc_create_association(struct nvme_fc_ctrl *ctrl)
 	changed = nvme_change_ctrl_state(&ctrl->ctrl, NVME_CTRL_LIVE);
 	WARN_ON_ONCE(!changed);
 
-	ctrl->ctrl.opts->nr_reconnects = 0;
+	ctrl->ctrl.nr_reconnects = 0;
 
 	if (ctrl->queue_count > 1) {
 		nvme_start_queues(&ctrl->ctrl);
@@ -2581,7 +2581,7 @@ nvme_fc_reconnect_or_delete(struct nvme_fc_ctrl *ctrl, int status)
 		dev_warn(ctrl->ctrl.device,
 				"NVME-FC{%d}: Max reconnect attempts (%d) "
 				"reached. Removing controller\n",
-				ctrl->cnum, ctrl->ctrl.opts->nr_reconnects);
+				ctrl->cnum, ctrl->ctrl.nr_reconnects);
 		WARN_ON(__nvme_fc_schedule_delete_work(ctrl));
 	}
 }
