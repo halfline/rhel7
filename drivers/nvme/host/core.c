@@ -943,7 +943,7 @@ static int nvme_revalidate_disk(struct gendisk *disk)
 	if (ns->ctrl->vs >= NVME_VS(1, 1, 0))
 		memcpy(ns->eui, id->eui64, sizeof(ns->eui));
 	if (ns->ctrl->vs >= NVME_VS(1, 2, 0))
-		memcpy(ns->uuid, id->nguid, sizeof(ns->uuid));
+		memcpy(ns->nguid, id->nguid, sizeof(ns->nguid));
 
 	old_ms = ns->ms;
 	lbaf = id->flbas & NVME_NS_FLBAS_LBA_MASK;
@@ -1676,8 +1676,8 @@ static ssize_t wwid_show(struct device *dev, struct device_attribute *attr,
 	int serial_len = sizeof(ctrl->serial);
 	int model_len = sizeof(ctrl->model);
 
-	if (memchr_inv(ns->uuid, 0, sizeof(ns->uuid)))
-		return sprintf(buf, "eui.%16phN\n", ns->uuid);
+	if (memchr_inv(ns->nguid, 0, sizeof(ns->nguid)))
+		return sprintf(buf, "eui.%16phN\n", ns->nguid);
 
 	if (memchr_inv(ns->eui, 0, sizeof(ns->eui)))
 		return sprintf(buf, "eui.%8phN\n", ns->eui);
@@ -1696,7 +1696,7 @@ static ssize_t uuid_show(struct device *dev, struct device_attribute *attr,
 								char *buf)
 {
 	struct nvme_ns *ns = dev_to_disk(dev)->private_data;
-	return sprintf(buf, "%pU\n", ns->uuid);
+	return sprintf(buf, "%pU\n", ns->nguid);
 }
 static DEVICE_ATTR(uuid, S_IRUGO, uuid_show, NULL);
 
@@ -1731,7 +1731,7 @@ static umode_t nvme_ns_attrs_are_visible(struct kobject *kobj,
 	struct nvme_ns *ns = dev_to_disk(dev)->private_data;
 
 	if (a == &dev_attr_uuid.attr) {
-		if (!memchr_inv(ns->uuid, 0, sizeof(ns->uuid)))
+		if (!memchr_inv(ns->nguid, 0, sizeof(ns->nguid)))
 			return 0;
 	}
 	if (a == &dev_attr_eui.attr) {
