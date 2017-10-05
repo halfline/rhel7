@@ -73,7 +73,7 @@ struct msi_map {
 	struct hlist_node msi_chain;
 };
 
-#define ZPCI_MSI_VEC_BITS	11
+#define ZPCI_MSI_VEC_BITS	10
 #define ZPCI_MSI_VEC_MAX	(1 << ZPCI_MSI_VEC_BITS)
 #define ZPCI_MSI_VEC_MASK	(ZPCI_MSI_VEC_MAX - 1)
 
