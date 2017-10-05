@@ -219,7 +219,6 @@ extern unsigned long MODULES_END;
  */
 
 /* Hardware bits in the page table entry */
-#define _PAGE_CO	0x100		/* HW Change-bit override */
 #define _PAGE_PROTECT	0x200		/* HW read-only bit  */
 #define _PAGE_INVALID	0x400		/* HW invalid bit    */
 #define _PAGE_LARGE	0x800		/* Bit to mark a large pte */
@@ -235,8 +234,8 @@ extern unsigned long MODULES_END;
 #define __HAVE_ARCH_PTE_SPECIAL
 
 /* Set of bits not changed in pte_modify */
-#define _PAGE_CHG_MASK		(PAGE_MASK | _PAGE_SPECIAL | _PAGE_CO | \
-				 _PAGE_DIRTY | _PAGE_YOUNG)
+#define _PAGE_CHG_MASK		(PAGE_MASK | _PAGE_SPECIAL | _PAGE_DIRTY | \
+				 _PAGE_YOUNG)
 
 /*
  * handle_pte_fault uses pte_present, pte_none and pte_file to find out the
@@ -357,7 +356,6 @@ extern unsigned long MODULES_END;
 
 #define _REGION3_ENTRY_LARGE	0x400	/* RTTE-format control, large page  */
 #define _REGION3_ENTRY_RO	0x200	/* page protection bit		    */
-#define _REGION3_ENTRY_CO	0x100	/* change-recording override	    */
 
 #define _REGION_ENTRY_BITS	0xfffffffffffff227UL
 #define _REGION_ENTRY_BITS_LARGE 0xffffffff8000fe27UL
@@ -377,7 +375,6 @@ extern unsigned long MODULES_END;
 #define _SEGMENT_ENTRY_YOUNG	0x1000	/* SW segment young bit */
 #define _SEGMENT_ENTRY_SPLIT	0x0800	/* THP splitting bit */
 #define _SEGMENT_ENTRY_LARGE	0x0400	/* STE-format control, large page */
-#define _SEGMENT_ENTRY_CO	0x0100	/* change-recording override   */
 #define _SEGMENT_ENTRY_READ	0x0002	/* SW segment read bit */
 #define _SEGMENT_ENTRY_WRITE	0x0001	/* SW segment write bit */
 
@@ -882,8 +879,6 @@ static inline void set_pte_at(struct mm_struct *mm, unsigned long addr,
 		pgste_set_pte(ptep, entry);
 		pgste_set_unlock(ptep, pgste);
 	} else {
-		if (!(pte_val(entry) & _PAGE_INVALID) && MACHINE_HAS_EDAT1)
-			pte_val(entry) |= _PAGE_CO;
 		*ptep = entry;
 	}
 }
