@@ -677,6 +677,17 @@ static inline bool nvme_cqe_valid(struct nvme_queue *nvmeq, u16 head,
 	return (le16_to_cpu(nvmeq->cqes[head].status) & 1) == phase;
 }
 
+static inline void nvme_ring_cq_doorbell(struct nvme_queue *nvmeq)
+{
+	u16 head = nvmeq->cq_head;
+
+	if (likely(nvmeq->cq_vector >= 0)) {
+		if (nvme_dbbuf_update_and_check_event(head, nvmeq->dbbuf_cq_db,
+						      nvmeq->dbbuf_cq_ei))
+			writel(head, nvmeq->q_db + nvmeq->dev->db_stride);
+	}
+}
+
 static int nvme_process_cq(struct nvme_queue *nvmeq)
 {
 	u16 head, phase;
@@ -721,12 +732,10 @@ static int nvme_process_cq(struct nvme_queue *nvmeq)
 	if (head == nvmeq->cq_head && phase == nvmeq->cq_phase)
 		return 0;
 
-	if (likely(nvmeq->cq_vector >= 0))
-		if (nvme_dbbuf_update_and_check_event(head, nvmeq->dbbuf_cq_db,
-						      nvmeq->dbbuf_cq_ei))
-			writel(head, nvmeq->q_db + nvmeq->dev->db_stride);
 	nvmeq->cq_head = head;
 	nvmeq->cq_phase = phase;
+
+	nvme_ring_cq_doorbell(nvmeq);
 
 	nvmeq->cqe_seen = 1;
 	return 1;
