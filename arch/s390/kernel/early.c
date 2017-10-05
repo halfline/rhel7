@@ -388,6 +388,8 @@ static __init void detect_machine_facilities(void)
 		S390_lowcore.machine_flags |= MACHINE_FLAG_RRBM;
 	if (test_facility(129))
 		S390_lowcore.machine_flags |= MACHINE_FLAG_VX;
+	if (test_facility(133))
+		S390_lowcore.machine_flags |= MACHINE_FLAG_GS;
 #endif
 }
 

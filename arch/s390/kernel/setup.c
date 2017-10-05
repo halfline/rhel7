@@ -345,9 +345,15 @@ static void __init setup_lowcore(void)
 		__ctl_set_bit(14, 29);
 	}
 #else
-	if (MACHINE_HAS_VX)
-		lc->vector_save_area_addr =
-			(unsigned long) &lc->vector_save_area;
+	if (MACHINE_HAS_VX || MACHINE_HAS_GS) {
+		unsigned long bits, size;
+
+		bits = MACHINE_HAS_GS ? 11 : 10;
+		size = 1UL << bits;
+		lc->mcesad = (__u64) __alloc_bootmem_low(size, size, 0);
+		if (MACHINE_HAS_GS)
+			lc->mcesad |= bits;
+	}
 	lc->vdso_per_cpu_data = (unsigned long) &lc->paste[0];
 #endif
 	lc->sync_enter_timer = S390_lowcore.sync_enter_timer;
@@ -938,6 +944,12 @@ static void __init setup_hwcaps(void)
 			elf_hwcap |= HWCAP_S390_VXRS_BCD;
 	}
 #endif
+
+	/*
+	 * Guarded storage support HWCAP_S390_GS is bit 12.
+	 */
+	if (MACHINE_HAS_GS)
+		elf_hwcap |= HWCAP_S390_GS;
 
 	get_cpu_id(&cpu_id);
 	switch (cpu_id.machine) {

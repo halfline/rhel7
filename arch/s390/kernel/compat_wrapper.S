@@ -1451,6 +1451,11 @@ ENTRY(sys_getrandom_wrapper)
 	llgfr	%r4,%r4		# unsigned int
 	jg	sys_getrandom
 
+ENTRY(sys_s390_guarded_storage_wrapper)
+	lgfr	%r2,%r2		# int
+	llgtr	%r3,%r3		# struct gs_cb *
+	jg	sys_s390_guarded_storage
+
 ENTRY(sys_memfd_create_wrapper)
 	llgtr	%r2,%r2		# const char __user *
 	llgfr	%r3,%r3		# unsigned int

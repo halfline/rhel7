@@ -384,3 +384,6 @@ SYSCALL(sys_recvmsg,sys_recvmsg,sys_recvmsg_wrapper)
 SYSCALL(sys_shutdown,sys_shutdown,sys_shutdown)
 NI_SYSCALL					/* 374 sys_mlock2 */
 SYSCALL(sys_copy_file_range,sys_copy_file_range,sys_copy_file_range_wrapper) /* 375 */
+NI_SYSCALL
+NI_SYSCALL
+SYSCALL(sys_s390_guarded_storage,sys_s390_guarded_storage,sys_s390_guarded_storage_wrapper) /* 378 */

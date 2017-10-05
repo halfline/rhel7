@@ -94,6 +94,8 @@ struct thread_struct {
 #ifdef CONFIG_64BIT
 	unsigned char trap_tdb[256];	/* Transaction abort diagnose block */
 	RH_KABI_EXTEND(__vector128 *vxrs) /* Vector register save area */
+	RH_KABI_EXTEND(struct gs_cb *gs_cb) /* Current guarded storage cb */
+	RH_KABI_EXTEND(struct gs_cb *gs_bc_cb) /* Broadcast guarded storage cb */
 #endif
 };
 
@@ -165,6 +167,9 @@ static inline void show_cacheinfo(struct seq_file *m) { }
 
 /* Free all resources held by a thread. */
 extern void release_thread(struct task_struct *);
+
+/* Free guarded storage control block for current */
+void exit_thread_gs(void);
 
 /*
  * Return saved PC of a blocked thread.

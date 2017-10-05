@@ -42,9 +42,10 @@ STACK_SIZE  = 1 << STACK_SHIFT
 STACK_INIT = STACK_SIZE - STACK_FRAME_OVERHEAD - __PT_SIZE
 
 _TIF_WORK_SVC = (_TIF_SIGPENDING | _TIF_NOTIFY_RESUME | _TIF_NEED_RESCHED | \
-		 _TIF_MCCK_PENDING | _TIF_PER_TRAP | _TIF_ASCE | _TIF_UPROBE)
+		 _TIF_MCCK_PENDING | _TIF_PER_TRAP | _TIF_ASCE | \
+		 _TIF_UPROBE | _TIF_GUARDED_STORAGE)
 _TIF_WORK_INT = (_TIF_SIGPENDING | _TIF_NOTIFY_RESUME | _TIF_NEED_RESCHED | \
-		 _TIF_MCCK_PENDING | _TIF_ASCE)
+		 _TIF_MCCK_PENDING | _TIF_ASCE | _TIF_GUARDED_STORAGE)
 _TIF_TRACE    = (_TIF_SYSCALL_TRACE | _TIF_SYSCALL_AUDIT | _TIF_SECCOMP | \
 		 _TIF_SYSCALL_TRACEPOINT)
 
@@ -214,7 +215,7 @@ sysc_vtime:
 	mvc	__PT_PSW(16,%r11),__LC_SVC_OLD_PSW
 	mvc	__PT_INT_CODE(4,%r11),__LC_SVC_ILC
 sysc_do_svc:
-	oi	__TI_flags+7(%r12),_TIF_SYSCALL
+	oi	__TI_flags+6(%r12),_TIF_SYSCALL>>8
 	lg	%r10,__TI_sysc_table(%r12)	# address of system call table
 	llgh	%r8,__PT_INT_CODE+2(%r11)
 	slag	%r8,%r8,2			# shift and test for svc 0
@@ -242,7 +243,7 @@ sysc_tif:
 	jno	sysc_restore
 	tm	__TI_flags+7(%r12),_TIF_WORK_SVC
 	jnz	sysc_work			# check for work
-	ni	__TI_flags+7(%r12),255-_TIF_SYSCALL
+	ni	__TI_flags+6(%r12),255-_TIF_SYSCALL>>8
 sysc_restore:
 	lg	%r14,__LC_VDSO_PER_CPU
 	lmg	%r0,%r10,__PT_R0(%r11)
@@ -265,6 +266,8 @@ sysc_work:
 	tm	__TI_flags+7(%r12),_TIF_UPROBE
 	jo	sysc_uprobe_notify
 #endif
+	tm	__TI_flags+7(%r12),_TIF_GUARDED_STORAGE
+	jo	sysc_guarded_storage
 	tm	__TI_flags+7(%r12),_TIF_PER_TRAP
 	jo	sysc_singlestep
 	tm	__TI_flags+7(%r12),_TIF_SIGPENDING
@@ -303,7 +306,7 @@ sysc_uaccess:
 sysc_sigpending:
 	lgr	%r2,%r11		# pass pointer to pt_regs
 	brasl	%r14,do_signal
-	tm	__TI_flags+7(%r12),_TIF_SYSCALL
+	tm	__TI_flags+6(%r12),_TIF_SYSCALL>>8
 	jno	sysc_return
 	lmg	%r2,%r7,__PT_R2(%r11)	# load svc arguments
 	lg	%r10,__TI_sysc_table(%r12)	# address of system call table
@@ -330,6 +333,14 @@ sysc_uprobe_notify:
 	larl	%r14,sysc_return
 	jg	uprobe_notify_resume
 #endif
+
+#
+# _TIF_GUARDED_STORAGE is set, call guarded_storage_load
+#
+sysc_guarded_storage:
+	lgr	%r2,%r11		# pass pointer to pt_regs
+	larl	%r14,sysc_return
+	jg	gs_load_bc_cb
 
 #
 # _TIF_PER_TRAP is set, call do_per_trap
@@ -561,6 +572,8 @@ io_work_tif:
 	jo	io_sigpending
 	tm	__TI_flags+7(%r12),_TIF_NOTIFY_RESUME
 	jo	io_notify_resume
+	tm	__TI_flags+7(%r12),_TIF_GUARDED_STORAGE
+	jo	io_guarded_storage
 	tm	__TI_flags+7(%r12),_TIF_ASCE
 	jo	io_uaccess
 	j	io_return		# beware of critical section cleanup
@@ -580,6 +593,18 @@ io_mcck_pending:
 io_uaccess:
 	ni	__TI_flags+7(%r12),255-_TIF_ASCE
 	lctlg	%c1,%c1,__LC_USER_ASCE		# load primary asce
+	j	io_return
+
+#
+# _TIF_GUARDED_STORAGE is set, call guarded_storage_load
+#
+io_guarded_storage:
+	# TRACE_IRQS_ON already done at .Lio_return
+	ssm	__LC_SVC_NEW_PSW	# reenable interrupts
+	lgr	%r2,%r11		# pass pointer to pt_regs
+	brasl	%r14,gs_load_bc_cb
+	ssm	__LC_PGM_NEW_PSW	# disable I/O and ext. interrupts
+	TRACE_IRQS_OFF
 	j	io_return
 
 #

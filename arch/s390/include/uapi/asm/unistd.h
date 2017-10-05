@@ -300,7 +300,10 @@
 #define __NR_recvmsg		372
 #define __NR_shutdown		373
 #define __NR_copy_file_range	375
-#define NR_syscalls 376
+/* Number 376 is reserved for sys_preadv2 */
+/* Number 377 is reserved for sys_pwritev2 */
+#define __NR_s390_guarded_storage	378
+#define NR_syscalls 379
 
 /* 
  * There are some system calls that are not present on 64 bit, some
