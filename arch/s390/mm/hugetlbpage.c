@@ -37,6 +37,7 @@ static inline unsigned long __pte_to_rste(pte_t pte)
 		rste |= (pte_val(pte) & _PAGE_PROTECT);
 		rste |= (pte_val(pte) & _PAGE_DIRTY) << 10;
 		rste |= (pte_val(pte) & _PAGE_YOUNG) << 10;
+		rste |= (pte_val(pte) & _PAGE_NOEXEC);
 	} else
 		rste = _SEGMENT_ENTRY_INVALID;
 	return rste;
@@ -78,6 +79,7 @@ static inline pte_t __rste_to_pte(unsigned long rste)
 		pte_val(pte) |= (rste & _SEGMENT_ENTRY_PROTECT);
 		pte_val(pte) |= (rste & _SEGMENT_ENTRY_DIRTY) >> 10;
 		pte_val(pte) |= (rste & _SEGMENT_ENTRY_YOUNG) >> 10;
+		pte_val(pte) |= (rste & _SEGMENT_ENTRY_NOEXEC);
 	} else
 		pte_val(pte) = _PAGE_INVALID;
 	return pte;
@@ -86,7 +88,11 @@ static inline pte_t __rste_to_pte(unsigned long rste)
 void set_huge_pte_at(struct mm_struct *mm, unsigned long addr,
 		     pte_t *ptep, pte_t pte)
 {
-	unsigned long rste = __pte_to_rste(pte);
+	unsigned long rste;
+
+	rste = __pte_to_rste(pte);
+	if (!MACHINE_HAS_NX)
+		rste &= ~_SEGMENT_ENTRY_NOEXEC;
 
 	/* Set correct table type for 2G hugepages */
 	if ((pte_val(*ptep) & _REGION_ENTRY_TYPE_MASK) == _REGION_ENTRY_TYPE_R3)

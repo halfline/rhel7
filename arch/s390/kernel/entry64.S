@@ -308,14 +308,10 @@ sysc_sigpending:
 	brasl	%r14,do_signal
 	tm	__TI_flags+6(%r12),_TIF_SYSCALL>>8
 	jno	sysc_return
+sysc_do_syscall:
 	lmg	%r2,%r7,__PT_R2(%r11)	# load svc arguments
-	lg	%r10,__TI_sysc_table(%r12)	# address of system call table
-	lghi	%r8,0			# svc 0 returns -ENOSYS
-	llgh	%r1,__PT_INT_CODE+2(%r11)	# load new svc number
-	cghi	%r1,NR_syscalls
-	jnl	sysc_nr_ok		# invalid svc number -> do svc 0
-	slag	%r8,%r1,2
-	j	sysc_nr_ok		# restart svc
+	lghi	%r1,0			# svc 0 returns -ENOSYS
+	j	sysc_do_svc
 
 #
 # _TIF_NOTIFY_RESUME is set, call do_notify_resume
@@ -451,6 +447,10 @@ ENTRY(pgm_check_handler)
 	lgf	%r1,0(%r10,%r1)		# load address of handler routine
 	lgr	%r2,%r11		# pass pointer to pt_regs
 	basr	%r14,%r1		# branch to interrupt-handler
+	tm	__PT_PSW+1(%r11),0x01	# returning to user ?
+	jno	sysc_restore
+	tm	__TI_flags+6(%r12),_TIF_SYSCALL>>8
+	jo	sysc_do_syscall
 	j	sysc_return
 
 #
