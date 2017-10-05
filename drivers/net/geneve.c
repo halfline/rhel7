@@ -1155,7 +1155,7 @@ static int geneve_configure(struct net *net, struct net_device *dev,
 
 	/* make enough headroom for basic scenario */
 	encap_len = GENEVE_BASE_HLEN + ETH_HLEN;
-	if (ip_tunnel_info_af(info) == AF_INET) {
+	if (!metadata && ip_tunnel_info_af(info) == AF_INET) {
 		encap_len += sizeof(struct iphdr);
 		dev->extended->max_mtu -= sizeof(struct iphdr);
 	} else {
