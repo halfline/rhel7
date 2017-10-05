@@ -581,7 +581,7 @@ __build_packet_message(struct nfnl_log_net *log,
 			return -1;
 		}
 
-		nla = (struct nlattr *)skb_put(inst->skb, nla_total_size(data_len));
+		nla = skb_put(inst->skb, nla_total_size(data_len));
 		nla->nla_type = NFULA_PAYLOAD;
 		nla->nla_len = size;
 

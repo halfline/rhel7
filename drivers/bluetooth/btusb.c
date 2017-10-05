@@ -1825,7 +1825,7 @@ static int inject_cmd_complete(struct hci_dev *hdev, __u16 opcode)
 	evt->ncmd = 0x01;
 	evt->opcode = cpu_to_le16(opcode);
 
-	*skb_put(skb, 1) = 0x00;
+	*(u8 *)skb_put(skb, 1) = 0x00;
 
 	hci_skb_pkt_type(skb) = HCI_EVENT_PKT;
 
@@ -2696,8 +2696,8 @@ static struct urb *alloc_diag_urb(struct hci_dev *hdev, bool enable)
 		return ERR_PTR(-ENOMEM);
 	}
 
-	*skb_put(skb, 1) = 0xf0;
-	*skb_put(skb, 1) = enable;
+	*(u8 *)skb_put(skb, 1) = 0xf0;
+	*(u8 *)skb_put(skb, 1) = enable;
 
 	pipe = usb_sndbulkpipe(data->udev, data->diag_tx_ep->bEndpointAddress);
 

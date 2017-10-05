@@ -517,7 +517,7 @@ static struct sk_buff *create_monitor_ctrl_open(struct sock *sk)
 	put_unaligned_le16(format, skb_put(skb, 2));
 	memcpy(skb_put(skb, sizeof(ver)), ver, sizeof(ver));
 	put_unaligned_le32(flags, skb_put(skb, 4));
-	*skb_put(skb, 1) = TASK_COMM_LEN;
+	*(u8 *)skb_put(skb, 1) = TASK_COMM_LEN;
 	memcpy(skb_put(skb, TASK_COMM_LEN), hci_pi(sk)->comm, TASK_COMM_LEN);
 
 	__net_timestamp(skb);
@@ -616,7 +616,7 @@ send_monitor_note(struct sock *sk, const char *fmt, ...)
 
 	va_start(args, fmt);
 	vsprintf(skb_put(skb, len), fmt, args);
-	*skb_put(skb, 1) = 0;
+	*(u8 *)skb_put(skb, 1) = 0;
 	va_end(args);
 
 	__net_timestamp(skb);

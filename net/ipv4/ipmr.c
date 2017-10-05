@@ -1002,7 +1002,7 @@ static int ipmr_cache_report(struct mr_table *mrt,
 
 	/* Add our header */
 
-	igmp = (struct igmphdr *)skb_put(skb, sizeof(struct igmphdr));
+	igmp = skb_put(skb, sizeof(struct igmphdr));
 	igmp->type	=
 	msg->im_msgtype = assert;
 	igmp->code	= 0;
