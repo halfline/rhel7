@@ -115,7 +115,7 @@ struct zpci_dev {
 	struct zdev_irq_map *irq_map;
 	struct msi_map *msi_map;
 	struct airq_iv *aibv;		/* adapter interrupt bit vector */
-	unsigned int	aisb;		/* number of the summary bit */
+	unsigned long	aisb;		/* number of the summary bit */
 
 	/* DMA stuff */
 	unsigned long	*dma_table;
