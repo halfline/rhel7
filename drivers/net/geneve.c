@@ -1528,8 +1528,13 @@ static int geneve_netdevice_event(struct notifier_block *unused,
 
 	if (event == NETDEV_OFFLOAD_PUSH_GENEVE ||
 	    event == NETDEV_UDP_TUNNEL_PUSH_INFO ||
-	    event == NETDEV_UDP_TUNNEL_DROP_INFO)
+	    event == NETDEV_UDP_TUNNEL_DROP_INFO) {
 		geneve_offload_rx_ports(dev, event != NETDEV_UDP_TUNNEL_DROP_INFO);
+	} else if (event == NETDEV_UNREGISTER) {
+		geneve_offload_rx_ports(dev, false);
+	} else if (event == NETDEV_REGISTER) {
+		geneve_offload_rx_ports(dev, true);
+	}
 
 	return NOTIFY_DONE;
 }

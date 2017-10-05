@@ -3616,12 +3616,16 @@ static int vxlan_netdevice_event(struct notifier_block *unused,
 	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct vxlan_net *vn = net_generic(dev_net(dev), vxlan_net_id);
 
-	if (event == NETDEV_UNREGISTER)
+	if (event == NETDEV_UNREGISTER) {
+		vxlan_offload_rx_ports(dev, false);
 		vxlan_handle_lowerdev_unregister(vn, dev);
-	else if (event == NETDEV_OFFLOAD_PUSH_VXLAN ||
+	} else if (event == NETDEV_REGISTER) {
+		vxlan_offload_rx_ports(dev, true);
+	} else if (event == NETDEV_OFFLOAD_PUSH_VXLAN ||
 		 event == NETDEV_UDP_TUNNEL_PUSH_INFO ||
-		 event == NETDEV_UDP_TUNNEL_DROP_INFO)
+		 event == NETDEV_UDP_TUNNEL_DROP_INFO) {
 		vxlan_offload_rx_ports(dev, event != NETDEV_UDP_TUNNEL_DROP_INFO);
+	}
 
 	return NOTIFY_DONE;
 }
