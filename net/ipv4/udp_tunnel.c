@@ -81,6 +81,9 @@ EXPORT_SYMBOL_GPL(setup_udp_tunnel_sock);
 static void __udp_tunnel_push_rx_port(struct net_device *dev,
 				      struct udp_tunnel_info *ti)
 {
+	if (!(dev->features & NETIF_F_RX_UDP_TUNNEL_PORT))
+		return;
+
 	if (get_ndo_ext(dev->netdev_ops, ndo_udp_tunnel_add)) {
 		get_ndo_ext(dev->netdev_ops, ndo_udp_tunnel_add)(dev, ti);
 		return;
@@ -144,6 +147,9 @@ EXPORT_SYMBOL_GPL(udp_tunnel_notify_add_rx_port);
 static void __udp_tunnel_pull_rx_port(struct net_device *dev,
 				      struct udp_tunnel_info *ti)
 {
+	if (!(dev->features & NETIF_F_RX_UDP_TUNNEL_PORT))
+		return;
+
 	if (get_ndo_ext(dev->netdev_ops, ndo_udp_tunnel_del)) {
 		get_ndo_ext(dev->netdev_ops, ndo_udp_tunnel_del)(dev, ti);
 		return;
