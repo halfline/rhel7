@@ -165,7 +165,6 @@ struct nvme_fc_ctrl {
 	struct work_struct	delete_work;
 	struct work_struct	reset_work;
 	struct delayed_work	connect_work;
-	int			reconnect_delay;
 	int			connect_attempts;
 
 	struct kref		ref;
@@ -2584,9 +2583,9 @@ nvme_fc_reset_ctrl_work(struct work_struct *work)
 
 		dev_warn(ctrl->ctrl.device,
 			"NVME-FC{%d}: Reconnect attempt in %d seconds.\n",
-			ctrl->cnum, ctrl->reconnect_delay);
+			ctrl->cnum, ctrl->ctrl.opts->reconnect_delay);
 		queue_delayed_work(nvme_fc_wq, &ctrl->connect_work,
-				ctrl->reconnect_delay * HZ);
+				ctrl->ctrl.opts->reconnect_delay * HZ);
 	} else
 		dev_info(ctrl->ctrl.device,
 			"NVME-FC{%d}: controller reset complete\n", ctrl->cnum);
@@ -2664,9 +2663,9 @@ nvme_fc_connect_ctrl_work(struct work_struct *work)
 
 		dev_warn(ctrl->ctrl.device,
 			"NVME-FC{%d}: Reconnect attempt in %d seconds.\n",
-			ctrl->cnum, ctrl->reconnect_delay);
+			ctrl->cnum, ctrl->ctrl.opts->reconnect_delay);
 		queue_delayed_work(nvme_fc_wq, &ctrl->connect_work,
-				ctrl->reconnect_delay * HZ);
+				ctrl->ctrl.opts->reconnect_delay * HZ);
 	} else
 		dev_info(ctrl->ctrl.device,
 			"NVME-FC{%d}: controller reconnect complete\n",
@@ -2724,7 +2723,6 @@ nvme_fc_init_ctrl(struct device *dev, struct nvmf_ctrl_options *opts,
 	INIT_WORK(&ctrl->delete_work, nvme_fc_delete_ctrl_work);
 	INIT_WORK(&ctrl->reset_work, nvme_fc_reset_ctrl_work);
 	INIT_DELAYED_WORK(&ctrl->connect_work, nvme_fc_connect_ctrl_work);
-	ctrl->reconnect_delay = opts->reconnect_delay;
 	spin_lock_init(&ctrl->lock);
 
 	/* io queue count */
