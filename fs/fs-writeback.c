@@ -182,6 +182,47 @@ void inode_io_list_del(struct inode *inode)
 }
 
 /*
+ * mark an inode as under writeback on the sb
+ */
+void sb_mark_inode_writeback(struct inode *inode)
+{
+	struct super_block *sb = inode->i_sb;
+	unsigned long flags;
+	struct list_head *wblist;
+
+	if (!sb_has_wblist(sb))
+		return;
+
+	wblist = sb->s_op->inode_to_wblist(inode);
+	if (list_empty(wblist)) {
+		spin_lock_irqsave(&sb->s_inode_wblist_lock, flags);
+		if (list_empty(wblist))
+			list_add_tail(wblist, &sb->s_inodes_wb);
+		spin_unlock_irqrestore(&sb->s_inode_wblist_lock, flags);
+	}
+}
+
+/*
+ * clear an inode as under writeback on the sb
+ */
+void sb_clear_inode_writeback(struct inode *inode)
+{
+	struct super_block *sb = inode->i_sb;
+	unsigned long flags;
+	struct list_head *wblist;
+
+	if (!sb_has_wblist(sb))
+		return;
+
+	wblist = sb->s_op->inode_to_wblist(inode);
+	if (!list_empty(wblist)) {
+		spin_lock_irqsave(&sb->s_inode_wblist_lock, flags);
+		list_del_init(wblist);
+		spin_unlock_irqrestore(&sb->s_inode_wblist_lock, flags);
+	}
+}
+
+/*
  * Redirty an inode: set its when-it-was dirtied timestamp and move it to the
  * furthest end of its superblock's dirty-inode list.
  *
@@ -1215,6 +1256,86 @@ out_unlock_inode:
 EXPORT_SYMBOL(__mark_inode_dirty);
 
 /*
+ * RHEL7-only implementation of wait_sb_inodes() for supers that support the
+ * writeback list.
+ */
+static void wait_sb_inodes_wblist(struct super_block *sb)
+{
+	LIST_HEAD(sync_list);
+
+	/*
+	 * Splice the writeback list onto a temporary list to avoid waiting on
+	 * inodes that have started writeback after this point.
+	 *
+	 * Use rcu_read_lock() to keep the inodes around until we have a
+	 * reference. s_inode_wblist_lock protects sb->s_inodes_wb as well as
+	 * the local list because inodes can be dropped from either by writeback
+	 * completion.
+	 */
+	rcu_read_lock();
+	spin_lock_irq(&sb->s_inode_wblist_lock);
+	list_splice_init(&sb->s_inodes_wb, &sync_list);
+
+	/*
+	 * Data integrity sync. Must wait for all pages under writeback, because
+	 * there may have been pages dirtied before our sync call, but which had
+	 * writeout started before we write it out.  In which case, the inode
+	 * may not be on the dirty list, but we still have to wait for that
+	 * writeout.
+	 */
+	while (!list_empty(&sync_list)) {
+		struct list_head *pos = sync_list.next;
+		struct inode *inode = sb->s_op->wblist_to_inode(pos);
+		struct address_space *mapping = inode->i_mapping;
+
+		/*
+		 * Move each inode back to the wb list before we drop the lock
+		 * to preserve consistency between i_wb_list and the mapping
+		 * writeback tag. Writeback completion is responsible to remove
+		 * the inode from either list once the writeback tag is cleared.
+		 */
+		list_move_tail(pos, &sb->s_inodes_wb);
+
+		/*
+		 * The mapping can appear untagged while still on-list since we
+		 * do not have the mapping lock. Skip it here, wb completion
+		 * will remove it.
+		 */
+		if (!mapping_tagged(mapping, PAGECACHE_TAG_WRITEBACK))
+			continue;
+
+		spin_unlock_irq(&sb->s_inode_wblist_lock);
+
+		spin_lock(&inode->i_lock);
+		if (inode->i_state & (I_FREEING|I_WILL_FREE|I_NEW)) {
+			spin_unlock(&inode->i_lock);
+
+			spin_lock_irq(&sb->s_inode_wblist_lock);
+			continue;
+		}
+		__iget(inode);
+		spin_unlock(&inode->i_lock);
+		rcu_read_unlock();
+
+		/*
+		 * We keep the error status of individual mapping so that
+		 * applications can catch the writeback error using fsync(2).
+		 * See filemap_fdatawait_keep_errors() for details.
+		 */
+		filemap_fdatawait_keep_errors(mapping);
+
+		cond_resched();
+
+		iput(inode);
+
+		rcu_read_lock();
+		spin_lock_irq(&sb->s_inode_wblist_lock);
+	}
+	spin_unlock_irq(&sb->s_inode_wblist_lock);
+	rcu_read_unlock();
+}
+
+/*
  * The @s_sync_lock is used to serialise concurrent sync operations
  * to avoid lock contention problems with concurrent wait_sb_inodes() calls.
  * Concurrent callers will block on the s_sync_lock rather than doing contending
@@ -1234,6 +1355,17 @@ static void wait_sb_inodes(struct super_block *sb)
 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
 
 	mutex_lock(&sb->s_sync_lock);
+
+	/*
+	 * RHEL7: supers with writeback list support use the writeback list wait
+	 * method.
+	 */
+	if (sb_has_wblist(sb)) {
+		wait_sb_inodes_wblist(sb);
+		mutex_unlock(&sb->s_sync_lock);
+		return;
+	}
+
 	spin_lock(&sb->s_inode_list_lock);
 
 	/*

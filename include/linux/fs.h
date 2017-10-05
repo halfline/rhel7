@@ -1533,6 +1533,9 @@ struct super_block {
 	RH_KABI_EXTEND(spinlock_t s_inode_list_lock)
 
 	RH_KABI_EXTEND(struct mutex s_sync_lock) /* sync serialisation lock */
+
+	RH_KABI_EXTEND(spinlock_t s_inode_wblist_lock)
+	RH_KABI_EXTEND(struct list_head s_inodes_wb)	/* writeback inodes */
 };
 
 extern const unsigned super_block_wrapper_version;
@@ -1895,6 +1898,8 @@ struct super_operations {
 	int (*bdev_try_to_free_page)(struct super_block*, struct page*, gfp_t);
 	int (*nr_cached_objects)(struct super_block *);
 	void (*free_cached_objects)(struct super_block *, int);
+	RH_KABI_EXTEND(struct list_head *(*inode_to_wblist)(struct inode *))
+	RH_KABI_EXTEND(struct inode *(*wblist_to_inode)(struct list_head *))
 };
 
 /*
@@ -2109,6 +2114,7 @@ struct file_system_type {
 dentry_operations_wrapper */
 #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
 #define FS_HAS_FO_EXTEND	65536 	/* fs is using the file_operations_extend struture */
+#define FS_HAS_WBLIST		131072	/* KABI: fs has writeback list super ops */
 	struct dentry *(*mount) (struct file_system_type *, int,
 		       const char *, void *);
 	void (*kill_sb) (struct super_block *);
@@ -2131,6 +2137,7 @@ dentry_operations_wrapper */
 #define sb_has_dops_wrapper(sb)	((sb)->s_type->fs_flags & FS_HAS_DOPS_WRAPPER)
 #define fb_has_fo_extend(fb)	\
 	(file_inode(fp)->i_sb->s_type->fs_flags & FS_HAS_FO_EXTEND)
+#define sb_has_wblist(sb)	((sb)->s_type->fs_flags & FS_HAS_WBLIST)
 
 /*
  * FIXME: These should be in include/linux/dcache.h but there
