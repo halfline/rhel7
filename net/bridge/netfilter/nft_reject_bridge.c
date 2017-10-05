@@ -86,7 +86,7 @@ static void nft_reject_br_send_v4_unreach(struct sk_buff *oldskb,
 	__wsum csum;
 	u8 proto;
 
-	if (oldskb->csum_bad || !nft_bridge_iphdr_validate(oldskb))
+	if (!nft_bridge_iphdr_validate(oldskb))
 		return;
 
 	/* IP header checks: fragment. */
@@ -179,9 +179,6 @@ static bool reject6_br_csum_ok(struct sk_buff *skb, int hook)
 	int thoff;
 	__be16 fo;
 	u8 proto = ip6h->nexthdr;
-
-	if (skb->csum_bad)
-		return false;
 
 	if (skb_csum_unnecessary(skb))
 		return true;

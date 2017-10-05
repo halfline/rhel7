@@ -4364,7 +4364,7 @@ static enum gro_result dev_gro_receive(struct napi_struct *napi, struct sk_buff 
 	if (!(skb->dev->features & NETIF_F_GRO))
 		goto normal;
 
-	if (skb_is_gso(skb) || skb_has_frag_list(skb) || skb->csum_bad)
+	if (skb_is_gso(skb) || skb_has_frag_list(skb))
 		goto normal;
 
 	gro_list_prepare(napi, skb);
