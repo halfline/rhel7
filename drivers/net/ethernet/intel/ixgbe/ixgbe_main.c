@@ -5963,10 +5963,16 @@ static int ixgbe_sw_init(struct ixgbe_adapter *adapter,
 	hw->fc.disable_fc_autoneg = ixgbe_device_supports_autoneg_fc(hw);
 
 #ifdef CONFIG_PCI_IOV
-	/* assign number of SR-IOV VFs */
-	if (hw->mac.type != ixgbe_mac_82598EB)
-		adapter->num_vfs = (max_vfs > IXGBE_MAX_VFS_DRV_LIMIT) ? 0 : max_vfs;
+	if (max_vfs > 0)
+		e_dev_warn("Enabling SR-IOV VFs using the max_vfs module parameter is deprecated - please use the pci sysfs interface instead.\n");
 
+	/* assign number of SR-IOV VFs */
+	if (hw->mac.type != ixgbe_mac_82598EB) {
+		if (max_vfs > IXGBE_MAX_VFS_DRV_LIMIT) {
+			max_vfs = 0;
+			e_dev_warn("max_vfs parameter out of range. Not assigning any SR-IOV VFs\n");
+		}
+	}
 #endif
 	/* enable itr by default in dynamic mode */
 	adapter->rx_itr_setting = 1;
@@ -9809,7 +9815,7 @@ static int ixgbe_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	ixgbe_init_mbx_params_pf(hw);
 	hw->mbx.ops = ii->mbx_ops;
 	pci_sriov_set_totalvfs(pdev, IXGBE_MAX_VFS_DRV_LIMIT);
-	ixgbe_enable_sriov(adapter);
+	ixgbe_enable_sriov(adapter, max_vfs);
 skip_sriov:
 
 #endif
