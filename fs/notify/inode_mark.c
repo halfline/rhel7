@@ -143,17 +143,17 @@ int fsnotify_add_inode_mark(struct fsnotify_mark *mark,
 
 /**
  * fsnotify_unmount_inodes - an sb is unmounting.  handle any watched inodes.
- * @list: list of inodes being unmounted (sb->s_inodes)
+ * @sb: superblock being unmounted.
  *
  * Called during unmount with no locks held, so needs to be safe against
- * concurrent modifiers. We temporarily drop inode_sb_list_lock and CAN block.
+ * concurrent modifiers. We temporarily drop sb->s_inode_list_lock and CAN block.
  */
-void fsnotify_unmount_inodes(struct list_head *list)
+void fsnotify_unmount_inodes(struct super_block *sb)
 {
 	struct inode *inode, *iput_inode = NULL;
 
-	spin_lock(&inode_sb_list_lock);
-	list_for_each_entry(inode, list, i_sb_list) {
+	spin_lock(&sb->s_inode_list_lock);
+	list_for_each_entry(inode, &sb->s_inodes, i_sb_list) {
 		/*
 		 * We cannot __iget() an inode in state I_FREEING,
 		 * I_WILL_FREE, or I_NEW which is fine because by that point
@@ -178,7 +178,7 @@ void fsnotify_unmount_inodes(struct list_head *list)
 
 		__iget(inode);
 		spin_unlock(&inode->i_lock);
-		spin_unlock(&inode_sb_list_lock);
+		spin_unlock(&sb->s_inode_list_lock);
 
 		if (iput_inode)
 			iput(iput_inode);
@@ -190,9 +190,9 @@ void fsnotify_unmount_inodes(struct list_head *list)
 
 		iput_inode = inode;
 
-		spin_lock(&inode_sb_list_lock);
+		spin_lock(&sb->s_inode_list_lock);
 	}
-	spin_unlock(&inode_sb_list_lock);
+	spin_unlock(&sb->s_inode_list_lock);
 
 	if (iput_inode)
 		iput(iput_inode);

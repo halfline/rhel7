@@ -115,7 +115,6 @@ extern int open_check_o_direct(struct file *f);
 /*
  * inode.c
  */
-extern spinlock_t inode_sb_list_lock;
 extern void inode_add_lru(struct inode *inode);
 
 extern bool __atime_needs_update(const struct path *, struct inode *, bool);

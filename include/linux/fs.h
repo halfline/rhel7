@@ -1527,6 +1527,9 @@ struct super_block {
 	RH_KABI_EXTEND(struct workqueue_struct *s_dio_done_wq)
 	RH_KABI_EXTEND(struct rcu_head rcu)
 	RH_KABI_EXTEND(struct hlist_head s_pins)
+
+	/* s_inode_list_lock protects s_inodes */
+	RH_KABI_EXTEND(spinlock_t s_inode_list_lock)
 };
 
 extern const unsigned super_block_wrapper_version;
