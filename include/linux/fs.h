@@ -635,7 +635,8 @@ struct inode {
 	unsigned long		dirtied_when;	/* jiffies of first dirtying */
 
 	struct hlist_node	i_hash;
-	struct list_head	i_wb_list;	/* backing dev IO list */
+	RH_KABI_RENAME(struct list_head i_wb_list,
+		       struct list_head	i_io_list); /* backing dev IO list */
 	struct list_head	i_lru;		/* inode LRU list */
 	struct list_head	i_sb_list;
 	union {

@@ -129,7 +129,7 @@ extern bool atime_needs_update_rcu(const struct path *, struct inode *);
 /*
  * fs-writeback.c
  */
-extern void inode_wb_list_del(struct inode *inode);
+extern void inode_io_list_del(struct inode *inode);
 
 extern int get_nr_dirty_inodes(void);
 extern void evict_inodes(struct super_block *);

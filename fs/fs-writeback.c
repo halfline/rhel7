@@ -68,7 +68,7 @@ EXPORT_SYMBOL(writeback_in_progress);
 
 static inline struct inode *wb_inode(struct list_head *head)
 {
-	return list_entry(head, struct inode, i_wb_list);
+	return list_entry(head, struct inode, i_io_list);
 }
 
 /*
@@ -172,12 +172,12 @@ void bdi_start_background_writeback(struct backing_dev_info *bdi)
 /*
  * Remove the inode from the writeback list it is on.
  */
-void inode_wb_list_del(struct inode *inode)
+void inode_io_list_del(struct inode *inode)
 {
 	struct backing_dev_info *bdi = inode_to_bdi(inode);
 
 	spin_lock(&bdi->wb.list_lock);
-	list_del_init(&inode->i_wb_list);
+	list_del_init(&inode->i_io_list);
 	spin_unlock(&bdi->wb.list_lock);
 }
 
@@ -200,7 +200,7 @@ static void redirty_tail(struct inode *inode, struct bdi_writeback *wb)
 		if (time_before(inode->dirtied_when, tail->dirtied_when))
 			inode->dirtied_when = jiffies;
 	}
-	list_move(&inode->i_wb_list, &wb->b_dirty);
+	list_move(&inode->i_io_list, &wb->b_dirty);
 }
 
 /*
@@ -209,7 +209,7 @@ static void redirty_tail(struct inode *inode, struct bdi_writeback *wb)
 static void requeue_io(struct inode *inode, struct bdi_writeback *wb)
 {
 	assert_spin_locked(&wb->list_lock);
-	list_move(&inode->i_wb_list, &wb->b_more_io);
+	list_move(&inode->i_io_list, &wb->b_more_io);
 }
 
 static void inode_sync_complete(struct inode *inode)
@@ -257,7 +257,7 @@ static int move_expired_inodes(struct list_head *delaying_queue,
 		if (work->older_than_this &&
 		    inode_dirtied_after(inode, *work->older_than_this))
 			break;
-		list_move(&inode->i_wb_list, &tmp);
+		list_move(&inode->i_io_list, &tmp);
 		moved++;
 		if (sb_is_blkdev_sb(inode->i_sb))
 			continue;
@@ -278,7 +278,7 @@ static int move_expired_inodes(struct list_head *delaying_queue,
 		list_for_each_prev_safe(pos, node, &tmp) {
 			inode = wb_inode(pos);
 			if (inode->i_sb == sb)
-				list_move(&inode->i_wb_list, dispatch_queue);
+				list_move(&inode->i_io_list, dispatch_queue);
 		}
 	}
 out:
@@ -427,7 +427,7 @@ static void requeue_inode(struct inode *inode, struct bdi_writeback *wb,
 		redirty_tail(inode, wb);
 	} else {
 		/* The inode is clean. Remove from writeback lists. */
-		list_del_init(&inode->i_wb_list);
+		list_del_init(&inode->i_io_list);
 	}
 }
 
@@ -540,7 +540,7 @@ writeback_single_inode(struct inode *inode, struct bdi_writeback *wb,
 	 * touch it. See comment above for explanation.
 	 */
 	if (!(inode->i_state & I_DIRTY))
-		list_del_init(&inode->i_wb_list);
+		list_del_init(&inode->i_io_list);
 	spin_unlock(&wb->list_lock);
 	inode_sync_complete(inode);
 out:
@@ -1200,7 +1200,7 @@ void __mark_inode_dirty(struct inode *inode, int flags)
 			}
 
 			inode->dirtied_when = jiffies;
-			list_move(&inode->i_wb_list, &bdi->wb.b_dirty);
+			list_move(&inode->i_io_list, &bdi->wb.b_dirty);
 			spin_unlock(&bdi->wb.list_lock);
 
 			if (wakeup_bdi)
