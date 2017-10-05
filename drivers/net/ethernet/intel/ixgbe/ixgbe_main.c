@@ -1559,6 +1559,7 @@ static bool ixgbe_alloc_mapped_page(struct ixgbe_ring *rx_ring,
 {
 	struct page *page = bi->page;
 	dma_addr_t dma;
+	DEFINE_DMA_ATTRS(attrs);
 
 	/* since we are recycling buffers we should seldom need to alloc */
 	if (likely(page))
@@ -1572,8 +1573,11 @@ static bool ixgbe_alloc_mapped_page(struct ixgbe_ring *rx_ring,
 	}
 
 	/* map page for use */
-	dma = dma_map_page(rx_ring->dev, page, 0,
-			   ixgbe_rx_pg_size(rx_ring), DMA_FROM_DEVICE);
+	dma_set_attr(IXGBE_RX_DMA_ATTR, &attrs);
+	dma = dma_map_page_attrs(rx_ring->dev, page, 0,
+				 ixgbe_rx_pg_size(rx_ring),
+				 DMA_FROM_DEVICE,
+				 &attrs);
 
 	/*
 	 * if mapping failed free memory back to system since
@@ -1615,6 +1619,12 @@ void ixgbe_alloc_rx_buffers(struct ixgbe_ring *rx_ring, u16 cleaned_count)
 	do {
 		if (!ixgbe_alloc_mapped_page(rx_ring, bi))
 			break;
+
+		/* sync the buffer for use by the device */
+		dma_sync_single_range_for_device(rx_ring->dev, bi->dma,
+						 bi->page_offset,
+						 ixgbe_rx_bufsz(rx_ring),
+						 DMA_FROM_DEVICE);
 
 		/*
 		 * Refresh the desc even if buffer_addrs didn't change
@@ -1832,10 +1842,15 @@ static void ixgbe_pull_tail(struct ixgbe_ring *rx_ring,
 static void ixgbe_dma_sync_frag(struct ixgbe_ring *rx_ring,
 				struct sk_buff *skb)
 {
+	DEFINE_DMA_ATTRS(attrs);
+
 	/* if the page was released unmap it, else just sync our portion */
 	if (unlikely(IXGBE_CB(skb)->page_released)) {
-		dma_unmap_page(rx_ring->dev, IXGBE_CB(skb)->dma,
-			       ixgbe_rx_pg_size(rx_ring), DMA_FROM_DEVICE);
+		dma_set_attr(IXGBE_RX_DMA_ATTR, &attrs);
+		dma_unmap_page_attrs(rx_ring->dev, IXGBE_CB(skb)->dma,
+				     ixgbe_rx_pg_size(rx_ring),
+				     DMA_FROM_DEVICE,
+				     &attrs);
 		IXGBE_CB(skb)->page_released = false;
 	} else {
 		struct skb_frag_struct *frag = &skb_shinfo(skb)->frags[0];
@@ -1919,12 +1934,6 @@ static void ixgbe_reuse_rx_page(struct ixgbe_ring *rx_ring,
 
 	/* transfer page from old buffer to new buffer */
 	*new_buff = *old_buff;
-
-	/* sync the buffer for use by the device */
-	dma_sync_single_range_for_device(rx_ring->dev, new_buff->dma,
-					 new_buff->page_offset,
-					 ixgbe_rx_bufsz(rx_ring),
-					 DMA_FROM_DEVICE);
 }
 
 static inline bool ixgbe_page_is_reserved(struct page *page)
@@ -2025,6 +2034,7 @@ static struct sk_buff *ixgbe_fetch_rx_buffer(struct ixgbe_ring *rx_ring,
 	struct ixgbe_rx_buffer *rx_buffer;
 	struct sk_buff *skb;
 	struct page *page;
+	DEFINE_DMA_ATTRS(attrs);
 
 	rx_buffer = &rx_ring->rx_buffer_info[rx_ring->next_to_clean];
 	page = rx_buffer->page;
@@ -2091,9 +2101,11 @@ dma_sync:
 		IXGBE_CB(skb)->page_released = true;
 	} else {
 		/* we are not reusing the buffer so unmap it */
-		dma_unmap_page(rx_ring->dev, rx_buffer->dma,
-			       ixgbe_rx_pg_size(rx_ring),
-			       DMA_FROM_DEVICE);
+		dma_set_attr(IXGBE_RX_DMA_ATTR, &attrs);
+		dma_unmap_page_attrs(rx_ring->dev, rx_buffer->dma,
+				     ixgbe_rx_pg_size(rx_ring),
+				     DMA_FROM_DEVICE,
+				     &attrs);
 	}
 
 	/* clear contents of buffer_info */
@@ -4873,11 +4885,13 @@ static void ixgbe_clean_rx_ring(struct ixgbe_ring *rx_ring)
 	struct device *dev = rx_ring->dev;
 	unsigned long size;
 	u16 i;
+	DEFINE_DMA_ATTRS(attrs);
 
 	/* ring already cleared, nothing to do */
 	if (!rx_ring->rx_buffer_info)
 		return;
 
+	dma_set_attr(IXGBE_RX_DMA_ATTR, &attrs);
 	/* Free all the Rx ring sk_buffs */
 	for (i = 0; i < rx_ring->count; i++) {
 		struct ixgbe_rx_buffer *rx_buffer = &rx_ring->rx_buffer_info[i];
@@ -4885,10 +4899,11 @@ static void ixgbe_clean_rx_ring(struct ixgbe_ring *rx_ring)
 		if (rx_buffer->skb) {
 			struct sk_buff *skb = rx_buffer->skb;
 			if (IXGBE_CB(skb)->page_released)
-				dma_unmap_page(dev,
-					       IXGBE_CB(skb)->dma,
-					       ixgbe_rx_bufsz(rx_ring),
-					       DMA_FROM_DEVICE);
+				dma_unmap_page_attrs(dev,
+						     IXGBE_CB(skb)->dma,
+						     ixgbe_rx_pg_size(rx_ring),
+						     DMA_FROM_DEVICE,
+						     &attrs);
 			dev_kfree_skb(skb);
 			rx_buffer->skb = NULL;
 		}
@@ -4896,8 +4911,20 @@ static void ixgbe_clean_rx_ring(struct ixgbe_ring *rx_ring)
 		if (!rx_buffer->page)
 			continue;
 
-		dma_unmap_page(dev, rx_buffer->dma,
-			       ixgbe_rx_pg_size(rx_ring), DMA_FROM_DEVICE);
+		/* Invalidate cache lines that may have been written to by
+		 * device so that we avoid corrupting memory.
+		 */
+		dma_sync_single_range_for_cpu(rx_ring->dev,
+					      rx_buffer->dma,
+					      rx_buffer->page_offset,
+					      ixgbe_rx_bufsz(rx_ring),
+					      DMA_FROM_DEVICE);
+
+		/* free resources associated with mapping */
+		dma_unmap_page_attrs(dev, rx_buffer->dma,
+				     ixgbe_rx_pg_size(rx_ring),
+				     DMA_FROM_DEVICE,
+				     &attrs);
 		__free_pages(rx_buffer->page, ixgbe_rx_pg_order(rx_ring));
 
 		rx_buffer->page = NULL;
