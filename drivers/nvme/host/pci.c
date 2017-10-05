@@ -563,13 +563,29 @@ static bool nvme_setup_prps(struct nvme_dev *dev, struct request *req,
 			break;
 		if (dma_len > 0)
 			continue;
-		BUG_ON(dma_len < 0);
+		if (unlikely(dma_len < 0))
+			goto bad_sgl;
 		sg = sg_next(sg);
 		dma_addr = sg_dma_address(sg);
 		dma_len = sg_dma_len(sg);
 	}
 
 	return true;
+
+ bad_sgl:
+	if (WARN_ONCE(1, "Invalid SGL for payload:%d nents:%d\n",
+				blk_rq_bytes(req), iod->nents)) {
+		for_each_sg(iod->sg, sg, iod->nents, i) {
+			dma_addr_t phys = sg_phys(sg);
+			pr_warn("sg[%d] phys_addr:%pad offset:%d length:%d "
+			       "dma_address:%pad dma_length:%d\n", i, &phys,
+					sg->offset, sg->length,
+					&sg_dma_address(sg),
+					sg_dma_len(sg));
+		}
+	}
+	return false;
+
 }
 
 static int nvme_map_data(struct nvme_dev *dev, struct request *req,
@@ -590,7 +606,8 @@ static int nvme_map_data(struct nvme_dev *dev, struct request *req,
 	if (!dma_map_sg(dev->dev, iod->sg, iod->nents, dma_dir))
 		goto out;
 
-	if (!nvme_setup_prps(dev, req, size))
+	ret = nvme_setup_prps(dev, req, size);
+	if (ret != true)
 		goto out_unmap;
 
 	ret = BLK_MQ_RQ_QUEUE_ERROR;
@@ -2348,6 +2365,9 @@ static const struct pci_device_id nvme_id_table[] = {
 		.driver_data = NVME_QUIRK_STRIPE_SIZE |
 				NVME_QUIRK_DISCARD_ZEROES, },
 	{ PCI_VDEVICE(INTEL, 0x0a54),
+		.driver_data = NVME_QUIRK_STRIPE_SIZE |
+				NVME_QUIRK_DISCARD_ZEROES, },
+	{ PCI_VDEVICE(INTEL, 0x0a55),
 		.driver_data = NVME_QUIRK_STRIPE_SIZE |
 				NVME_QUIRK_DISCARD_ZEROES, },
 	{ PCI_VDEVICE(INTEL, 0xf1a5),	/* Intel 600P/P3100 */
