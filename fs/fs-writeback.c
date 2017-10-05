@@ -1214,6 +1214,15 @@ out_unlock_inode:
 }
 EXPORT_SYMBOL(__mark_inode_dirty);
 
+/*
+ * The @s_sync_lock is used to serialise concurrent sync operations
+ * to avoid lock contention problems with concurrent wait_sb_inodes() calls.
+ * Concurrent callers will block on the s_sync_lock rather than doing contending
+ * walks. The queueing maintains sync(2) required behaviour as all the IO that
+ * has been issued up to the time this function is enter is guaranteed to be
+ * completed by the time we have gained the lock and waited for all IO that is
+ * in progress regardless of the order callers are granted the lock.
+ */
 static void wait_sb_inodes(struct super_block *sb)
 {
 	struct inode *inode, *old_inode = NULL;
@@ -1224,6 +1233,7 @@ static void wait_sb_inodes(struct super_block *sb)
 	 */
 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
 
+	mutex_lock(&sb->s_sync_lock);
 	spin_lock(&sb->s_inode_list_lock);
 
 	/*
@@ -1270,6 +1280,7 @@ static void wait_sb_inodes(struct super_block *sb)
 	}
 	spin_unlock(&sb->s_inode_list_lock);
 	iput(old_inode);
+	mutex_unlock(&sb->s_sync_lock);
 }
 
 /**

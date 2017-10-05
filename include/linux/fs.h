@@ -1530,6 +1530,8 @@ struct super_block {
 
 	/* s_inode_list_lock protects s_inodes */
 	RH_KABI_EXTEND(spinlock_t s_inode_list_lock)
+
+	RH_KABI_EXTEND(struct mutex s_sync_lock) /* sync serialisation lock */
 };
 
 extern const unsigned super_block_wrapper_version;
