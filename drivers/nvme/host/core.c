@@ -1825,6 +1825,10 @@ static ssize_t wwid_show(struct device *dev, struct device_attribute *attr,
 	struct nvme_ctrl *ctrl = ns->ctrl;
 	int serial_len = sizeof(ctrl->serial);
 	int model_len = sizeof(ctrl->model);
+	static const u8 null_uuid[16];
+
+	if (!memcmp(ns->uuid, null_uuid, 16))
+		return sprintf(buf, "uuid.%pU\n", &ns->uuid);
 
 	if (memchr_inv(ns->nguid, 0, sizeof(ns->nguid)))
 		return sprintf(buf, "eui.%16phN\n", ns->nguid);
