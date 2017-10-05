@@ -1802,6 +1802,15 @@ static int nvme_pci_enable(struct nvme_dev *dev)
 	dev->q_depth = min_t(int, NVME_CAP_MQES(cap) + 1, NVME_Q_DEPTH);
 	dev->db_stride = 1 << NVME_CAP_STRIDE(cap);
 	dev->dbs = dev->bar + 4096;
+
+	if (pdev->vendor == PCI_VENDOR_ID_SAMSUNG &&
+	    (pdev->device == 0xa821 || pdev->device == 0xa822) &&
+	    NVME_CAP_MQES(cap) == 0) {
+		dev->q_depth = 64;
+		dev_err(dev->ctrl.device, "detected PM1725 NVMe controller, "
+                        "set queue depth=%u\n", dev->q_depth);
+ 	}
+
 	/*
 	 * CMBs can currently only exist on >=1.2 PCIe devices. We only
 	 * populate sysfs if a CMB is implemented. Note that we add the
@@ -2338,6 +2347,10 @@ static const struct pci_device_id nvme_id_table[] = {
 	{ PCI_DEVICE(0x1c58, 0x0003),	/* HGST adapter */
 		.driver_data = NVME_QUIRK_DELAY_BEFORE_CHK_RDY, },
 	{ PCI_DEVICE(0x1c5f, 0x0540),	/* Memblaze Pblaze4 adapter */
+		.driver_data = NVME_QUIRK_DELAY_BEFORE_CHK_RDY, },
+	{ PCI_DEVICE(0x144d, 0xa821),   /* Samsung PM1725 */
+		.driver_data = NVME_QUIRK_DELAY_BEFORE_CHK_RDY, },
+	{ PCI_DEVICE(0x144d, 0xa822),   /* Samsung PM1725a */
 		.driver_data = NVME_QUIRK_DELAY_BEFORE_CHK_RDY, },
 	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_EXPRESS, 0xffffff) },
 	{ 0, }
