@@ -1960,6 +1960,11 @@ static inline void *skb_put_data(struct sk_buff *skb, const void *data,
 	return tmp;
 }
 
+static inline void skb_put_u8(struct sk_buff *skb, u8 val)
+{
+	*(u8 *)skb_put(skb, 1) = val;
+}
+
 RH_KABI_REPLACE_UNSAFE(
 	unsigned char *skb_push(struct sk_buff *skb, unsigned int len),
 	void *skb_push(struct sk_buff *skb, unsigned int len)
