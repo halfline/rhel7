@@ -134,6 +134,10 @@ struct nvme_rdma_ctrl {
 		struct sockaddr addr;
 		struct sockaddr_in addr_in;
 	};
+	union {
+		struct sockaddr src_addr;
+		struct sockaddr_in src_addr_in;
+	};
 
 	struct nvme_ctrl	ctrl;
 };
@@ -546,6 +550,7 @@ static int nvme_rdma_init_queue(struct nvme_rdma_ctrl *ctrl,
 		int idx, size_t queue_size)
 {
 	struct nvme_rdma_queue *queue;
+	struct sockaddr *src_addr = NULL;
 	int ret;
 
 	queue = &ctrl->queues[idx];
@@ -568,7 +573,10 @@ static int nvme_rdma_init_queue(struct nvme_rdma_ctrl *ctrl,
 	}
 
 	queue->cm_error = -ETIMEDOUT;
-	ret = rdma_resolve_addr(queue->cm_id, NULL, &ctrl->addr,
+	if (ctrl->ctrl.opts->mask & NVMF_OPT_HOST_TRADDR)
+		src_addr = &ctrl->src_addr;
+
+	ret = rdma_resolve_addr(queue->cm_id, src_addr, &ctrl->addr,
 			NVME_RDMA_CONNECT_TIMEOUT_MS);
 	if (ret) {
 		dev_info(ctrl->ctrl.device,
@@ -1882,6 +1890,16 @@ static struct nvme_ctrl *nvme_rdma_create_ctrl(struct device *dev,
 		goto out_free_ctrl;
 	}
 
+	if (opts->mask & NVMF_OPT_HOST_TRADDR) {
+		ret = nvme_rdma_parse_ipaddr(&ctrl->src_addr_in,
+				opts->host_traddr);
+		if (ret) {
+			pr_err("malformed src IP address passed: %s\n",
+			       opts->host_traddr);
+			goto out_free_ctrl;
+		}
+	}
+
 	if (opts->mask & NVMF_OPT_TRSVCID) {
 		u16 port;
 
@@ -1993,7 +2011,7 @@ static struct nvmf_transport_ops nvme_rdma_transport = {
 	.name		= "rdma",
 	.required_opts	= NVMF_OPT_TRADDR,
 	.allowed_opts	= NVMF_OPT_TRSVCID | NVMF_OPT_RECONNECT_DELAY |
-			  NVMF_OPT_CTRL_LOSS_TMO,
+			  NVMF_OPT_HOST_TRADDR | NVMF_OPT_CTRL_LOSS_TMO,
 	.create_ctrl	= nvme_rdma_create_ctrl,
 };
 
