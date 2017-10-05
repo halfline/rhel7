@@ -9973,6 +9973,11 @@ skip_sriov:
 	if (err)
 		goto err_sw_init;
 
+	for (i = 0; i < adapter->num_rx_queues; i++)
+		u64_stats_init(&adapter->rx_ring[i]->syncp);
+	for (i = 0; i < adapter->num_tx_queues; i++)
+		u64_stats_init(&adapter->tx_ring[i]->syncp);
+
 	/* WOL not supported for all devices */
 	adapter->wol = 0;
 	hw->eeprom.ops.read(hw, 0x2c, &adapter->eeprom_cap);
