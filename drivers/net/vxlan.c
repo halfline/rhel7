@@ -1757,7 +1757,7 @@ static int vxlan_build_skb(struct sk_buff *skb, struct dst_entry *dst,
 	if (err)
 		goto out_free;
 
-	vxh = (struct vxlanhdr *) __skb_push(skb, sizeof(*vxh));
+	vxh = __skb_push(skb, sizeof(*vxh));
 	vxh->vx_flags = VXLAN_HF_VNI;
 	vxh->vx_vni = vxlan_vni_field(vni);
 

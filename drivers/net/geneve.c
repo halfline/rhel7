@@ -680,7 +680,7 @@ static int geneve_build_skb(struct rtable *rt, struct sk_buff *skb,
 	if (err)
 		goto free_rt;
 
-	gnvh = (struct genevehdr *)__skb_push(skb, sizeof(*gnvh) + opt_len);
+	gnvh = __skb_push(skb, sizeof(*gnvh) + opt_len);
 	geneve_build_header(gnvh, tun_flags, vni, opt_len, opt);
 
 	skb_set_inner_protocol(skb, htons(ETH_P_TEB));
