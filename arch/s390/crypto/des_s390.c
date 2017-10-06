@@ -52,14 +52,15 @@ static void des_encrypt(struct crypto_tfm *tfm, u8 *out, const u8 *in)
 {
 	struct s390_des_ctx *ctx = crypto_tfm_ctx(tfm);
 
-	cpacf_km(CPACF_KM_DEA_ENC, ctx->key, out, in, DES_BLOCK_SIZE);
+	cpacf_km(CPACF_KM_DEA, ctx->key, out, in, DES_BLOCK_SIZE);
 }
 
 static void des_decrypt(struct crypto_tfm *tfm, u8 *out, const u8 *in)
 {
 	struct s390_des_ctx *ctx = crypto_tfm_ctx(tfm);
 
-	cpacf_km(CPACF_KM_DEA_DEC, ctx->key, out, in, DES_BLOCK_SIZE);
+	cpacf_km(CPACF_KM_DEA | CPACF_DECRYPT,
+		 ctx->key, out, in, DES_BLOCK_SIZE);
 }
 
 static struct crypto_alg des_alg = {
@@ -147,7 +148,7 @@ static int ecb_des_encrypt(struct blkcipher_desc *desc,
 	struct blkcipher_walk walk;
 
 	blkcipher_walk_init(&walk, dst, src, nbytes);
-	return ecb_desall_crypt(desc, CPACF_KM_DEA_ENC, ctx->key, &walk);
+	return ecb_desall_crypt(desc, CPACF_KM_DEA, ctx->key, &walk);
 }
 
 static int ecb_des_decrypt(struct blkcipher_desc *desc,
@@ -158,7 +159,8 @@ static int ecb_des_decrypt(struct blkcipher_desc *desc,
 	struct blkcipher_walk walk;
 
 	blkcipher_walk_init(&walk, dst, src, nbytes);
-	return ecb_desall_crypt(desc, CPACF_KM_DEA_DEC, ctx->key, &walk);
+	return ecb_desall_crypt(desc, CPACF_KM_DEA | CPACF_DECRYPT,
+				ctx->key, &walk);
 }
 
 static struct crypto_alg ecb_des_alg = {
@@ -188,7 +190,7 @@ static int cbc_des_encrypt(struct blkcipher_desc *desc,
 	struct blkcipher_walk walk;
 
 	blkcipher_walk_init(&walk, dst, src, nbytes);
-	return cbc_desall_crypt(desc, CPACF_KMC_DEA_ENC, &walk);
+	return cbc_desall_crypt(desc, CPACF_KMC_DEA, &walk);
 }
 
 static int cbc_des_decrypt(struct blkcipher_desc *desc,
@@ -198,7 +200,7 @@ static int cbc_des_decrypt(struct blkcipher_desc *desc,
 	struct blkcipher_walk walk;
 
 	blkcipher_walk_init(&walk, dst, src, nbytes);
-	return cbc_desall_crypt(desc, CPACF_KMC_DEA_DEC, &walk);
+	return cbc_desall_crypt(desc, CPACF_KMC_DEA | CPACF_DECRYPT, &walk);
 }
 
 static struct crypto_alg cbc_des_alg = {
@@ -256,14 +258,15 @@ static void des3_encrypt(struct crypto_tfm *tfm, u8 *dst, const u8 *src)
 {
 	struct s390_des_ctx *ctx = crypto_tfm_ctx(tfm);
 
-	cpacf_km(CPACF_KM_TDEA_192_ENC, ctx->key, dst, src, DES_BLOCK_SIZE);
+	cpacf_km(CPACF_KM_TDEA_192, ctx->key, dst, src, DES_BLOCK_SIZE);
 }
 
 static void des3_decrypt(struct crypto_tfm *tfm, u8 *dst, const u8 *src)
 {
 	struct s390_des_ctx *ctx = crypto_tfm_ctx(tfm);
 
-	cpacf_km(CPACF_KM_TDEA_192_DEC, ctx->key, dst, src, DES_BLOCK_SIZE);
+	cpacf_km(CPACF_KM_TDEA_192 | CPACF_DECRYPT,
+		 ctx->key, dst, src, DES_BLOCK_SIZE);
 }
 
 static struct crypto_alg des3_alg = {
@@ -293,7 +296,7 @@ static int ecb_des3_encrypt(struct blkcipher_desc *desc,
 	struct blkcipher_walk walk;
 
 	blkcipher_walk_init(&walk, dst, src, nbytes);
-	return ecb_desall_crypt(desc, CPACF_KM_TDEA_192_ENC, ctx->key, &walk);
+	return ecb_desall_crypt(desc, CPACF_KM_TDEA_192, ctx->key, &walk);
 }
 
 static int ecb_des3_decrypt(struct blkcipher_desc *desc,
@@ -304,7 +307,8 @@ static int ecb_des3_decrypt(struct blkcipher_desc *desc,
 	struct blkcipher_walk walk;
 
 	blkcipher_walk_init(&walk, dst, src, nbytes);
-	return ecb_desall_crypt(desc, CPACF_KM_TDEA_192_DEC, ctx->key, &walk);
+	return ecb_desall_crypt(desc, CPACF_KM_TDEA_192 | CPACF_DECRYPT,
+				ctx->key, &walk);
 }
 
 static struct crypto_alg ecb_des3_alg = {
@@ -334,7 +338,7 @@ static int cbc_des3_encrypt(struct blkcipher_desc *desc,
 	struct blkcipher_walk walk;
 
 	blkcipher_walk_init(&walk, dst, src, nbytes);
-	return cbc_desall_crypt(desc, CPACF_KMC_TDEA_192_ENC, &walk);
+	return cbc_desall_crypt(desc, CPACF_KMC_TDEA_192, &walk);
 }
 
 static int cbc_des3_decrypt(struct blkcipher_desc *desc,
@@ -344,7 +348,8 @@ static int cbc_des3_decrypt(struct blkcipher_desc *desc,
 	struct blkcipher_walk walk;
 
 	blkcipher_walk_init(&walk, dst, src, nbytes);
-	return cbc_desall_crypt(desc, CPACF_KMC_TDEA_192_DEC, &walk);
+	return cbc_desall_crypt(desc, CPACF_KMC_TDEA_192 | CPACF_DECRYPT,
+				&walk);
 }
 
 static struct crypto_alg cbc_des3_alg = {
@@ -455,7 +460,7 @@ static int ctr_des_encrypt(struct blkcipher_desc *desc,
 	struct blkcipher_walk walk;
 
 	blkcipher_walk_init(&walk, dst, src, nbytes);
-	return ctr_desall_crypt(desc, CPACF_KMCTR_DEA_ENC, ctx, &walk);
+	return ctr_desall_crypt(desc, CPACF_KMCTR_DEA, ctx, &walk);
 }
 
 static int ctr_des_decrypt(struct blkcipher_desc *desc,
@@ -466,7 +471,8 @@ static int ctr_des_decrypt(struct blkcipher_desc *desc,
 	struct blkcipher_walk walk;
 
 	blkcipher_walk_init(&walk, dst, src, nbytes);
-	return ctr_desall_crypt(desc, CPACF_KMCTR_DEA_DEC, ctx, &walk);
+	return ctr_desall_crypt(desc, CPACF_KMCTR_DEA | CPACF_DECRYPT,
+				ctx, &walk);
 }
 
 static struct crypto_alg ctr_des_alg = {
@@ -498,7 +504,7 @@ static int ctr_des3_encrypt(struct blkcipher_desc *desc,
 	struct blkcipher_walk walk;
 
 	blkcipher_walk_init(&walk, dst, src, nbytes);
-	return ctr_desall_crypt(desc, CPACF_KMCTR_TDEA_192_ENC, ctx, &walk);
+	return ctr_desall_crypt(desc, CPACF_KMCTR_TDEA_192, ctx, &walk);
 }
 
 static int ctr_des3_decrypt(struct blkcipher_desc *desc,
@@ -509,7 +515,8 @@ static int ctr_des3_decrypt(struct blkcipher_desc *desc,
 	struct blkcipher_walk walk;
 
 	blkcipher_walk_init(&walk, dst, src, nbytes);
-	return ctr_desall_crypt(desc, CPACF_KMCTR_TDEA_192_DEC, ctx, &walk);
+	return ctr_desall_crypt(desc, CPACF_KMCTR_TDEA_192 | CPACF_DECRYPT,
+				ctx, &walk);
 }
 
 static struct crypto_alg ctr_des3_alg = {
@@ -537,8 +544,8 @@ static int __init des_s390_init(void)
 {
 	int ret;
 
-	if (!cpacf_query(CPACF_KM, CPACF_KM_DEA_ENC) ||
-	    !cpacf_query(CPACF_KM, CPACF_KM_TDEA_192_ENC))
+	if (!cpacf_query(CPACF_KM, CPACF_KM_DEA) ||
+	    !cpacf_query(CPACF_KM, CPACF_KM_TDEA_192))
 		return -EOPNOTSUPP;
 
 	ret = crypto_register_alg(&des_alg);
@@ -560,8 +567,8 @@ static int __init des_s390_init(void)
 	if (ret)
 		goto cbc_des3_err;
 
-	if (cpacf_query(CPACF_KMCTR, CPACF_KMCTR_DEA_ENC) &&
-	    cpacf_query(CPACF_KMCTR, CPACF_KMCTR_TDEA_192_ENC)) {
+	if (cpacf_query(CPACF_KMCTR, CPACF_KMCTR_DEA) &&
+	    cpacf_query(CPACF_KMCTR, CPACF_KMCTR_TDEA_192)) {
 		ret = crypto_register_alg(&ctr_des_alg);
 		if (ret)
 			goto ctr_des_err;
