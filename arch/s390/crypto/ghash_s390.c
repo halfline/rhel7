@@ -9,8 +9,7 @@
 
 #include <crypto/internal/hash.h>
 #include <linux/module.h>
-
-#include "crypt_s390.h"
+#include <asm/cpacf.h>
 
 #define GHASH_BLOCK_SIZE	16
 #define GHASH_DIGEST_SIZE	16
@@ -71,8 +70,8 @@ static int ghash_update(struct shash_desc *desc,
 		src += n;
 
 		if (!dctx->bytes) {
-			ret = crypt_s390_kimd(KIMD_GHASH, dctx, buf,
-					      GHASH_BLOCK_SIZE);
+			ret = cpacf_kimd(CPACF_KIMD_GHASH, dctx, buf,
+					 GHASH_BLOCK_SIZE);
 			if (ret != GHASH_BLOCK_SIZE)
 				return -EIO;
 		}
@@ -80,7 +79,7 @@ static int ghash_update(struct shash_desc *desc,
 
 	n = srclen & ~(GHASH_BLOCK_SIZE - 1);
 	if (n) {
-		ret = crypt_s390_kimd(KIMD_GHASH, dctx, src, n);
+		ret = cpacf_kimd(CPACF_KIMD_GHASH, dctx, src, n);
 		if (ret != n)
 			return -EIO;
 		src += n;
@@ -105,7 +104,7 @@ static int ghash_flush(struct ghash_desc_ctx *dctx)
 
 		memset(pos, 0, dctx->bytes);
 
-		ret = crypt_s390_kimd(KIMD_GHASH, dctx, buf, GHASH_BLOCK_SIZE);
+		ret = cpacf_kimd(CPACF_KIMD_GHASH, dctx, buf, GHASH_BLOCK_SIZE);
 		if (ret != GHASH_BLOCK_SIZE)
 			return -EIO;
 
@@ -136,7 +135,7 @@ static struct shash_alg ghash_alg = {
 	.base		= {
 		.cra_name		= "ghash",
 		.cra_driver_name	= "ghash-s390",
-		.cra_priority		= CRYPT_S390_PRIORITY,
+		.cra_priority		= 300,
 		.cra_flags		= CRYPTO_ALG_TYPE_SHASH,
 		.cra_blocksize		= GHASH_BLOCK_SIZE,
 		.cra_ctxsize		= sizeof(struct ghash_ctx),
@@ -146,8 +145,7 @@ static struct shash_alg ghash_alg = {
 
 static int __init ghash_mod_init(void)
 {
-	if (!crypt_s390_func_available(KIMD_GHASH,
-				       CRYPT_S390_MSA | CRYPT_S390_MSA4))
+	if (!cpacf_query(CPACF_KIMD, CPACF_KIMD_GHASH))
 		return -EOPNOTSUPP;
 
 	return crypto_register_shash(&ghash_alg);
