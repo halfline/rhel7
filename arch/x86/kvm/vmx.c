@@ -7918,6 +7918,8 @@ static bool nested_vmx_exit_handled(struct kvm_vcpu *vcpu)
 	case EXIT_REASON_PML_FULL:
 		/* We don't expose PML support to L1. */
 		return false;
+	case EXIT_REASON_PREEMPTION_TIMER:
+		return false;
 	default:
 		return true;
 	}
