@@ -40,7 +40,6 @@
 #define AP_POLL_AFTER_TIMEOUT	2 /* run poll tasklet again after timout */
 
 extern int ap_domain_index;
-extern int ap_hwrng_seed;
 
 /**
  * The ap_qid_t identifier of an ap queue. It contains a

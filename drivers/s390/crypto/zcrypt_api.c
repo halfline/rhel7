@@ -54,6 +54,10 @@ MODULE_DESCRIPTION("Cryptographic Coprocessor interface, " \
 		   "Copyright IBM Corp. 2001, 2012");
 MODULE_LICENSE("GPL");
 
+static int zcrypt_hwrng_seed = 1;
+module_param_named(hwrng_seed, zcrypt_hwrng_seed, int, S_IRUSR|S_IRGRP);
+MODULE_PARM_DESC(hwrng_seed, "Turn on/off hwrng auto seed, default is 1 (on).");
+
 static DEFINE_SPINLOCK(zcrypt_device_lock);
 static LIST_HEAD(zcrypt_device_list);
 static int zcrypt_device_count = 0;
@@ -1388,7 +1392,7 @@ static int zcrypt_rng_device_add(void)
 			goto out;
 		}
 		zcrypt_rng_buffer_index = 0;
-		if (!ap_hwrng_seed)
+		if (!zcrypt_hwrng_seed)
 			zcrypt_rng_dev.quality = 0;
 		rc = hwrng_register(&zcrypt_rng_dev);
 		if (rc)
