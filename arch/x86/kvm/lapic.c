@@ -439,7 +439,7 @@ static inline void apic_set_isr(int vec, struct kvm_lapic *apic)
 	 * just set SVI.
 	 */
 	if (unlikely(vcpu->arch.apicv_active))
-		kvm_x86_ops->hwapic_isr_update(vcpu->kvm, vec);
+		kvm_x86_ops->hwapic_isr_update(vcpu, vec);
 	else {
 		++apic->isr_count;
 		BUG_ON(apic->isr_count > MAX_APIC_VECTOR);
@@ -487,7 +487,7 @@ static inline void apic_clear_isr(int vec, struct kvm_lapic *apic)
 	 * and must be left alone.
 	 */
 	if (unlikely(vcpu->arch.apicv_active))
-		kvm_x86_ops->hwapic_isr_update(vcpu->kvm,
+		kvm_x86_ops->hwapic_isr_update(vcpu,
 					       apic_find_highest_isr(apic));
 	else {
 		--apic->isr_count;
@@ -2195,7 +2195,7 @@ int kvm_apic_set_state(struct kvm_vcpu *vcpu, struct kvm_lapic_state *s)
 			kvm_x86_ops->apicv_post_state_restore(vcpu);
 		kvm_x86_ops->hwapic_irr_update(vcpu,
 				apic_find_highest_irr(apic));
-		kvm_x86_ops->hwapic_isr_update(vcpu->kvm,
+		kvm_x86_ops->hwapic_isr_update(vcpu,
 				apic_find_highest_isr(apic));
 	}
 	kvm_make_request(KVM_REQ_EVENT, vcpu);
