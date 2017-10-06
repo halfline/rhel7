@@ -472,10 +472,6 @@ static void i2c_hid_init_reports(struct hid_device *hid)
 		return;
 	}
 
-	list_for_each_entry(report,
-		&hid->report_enum[HID_INPUT_REPORT].report_list, list)
-		i2c_hid_init_report(report, inbuf, ihid->bufsize);
-
 	/*
 	 * The device must be powered on while we fetch initial reports
 	 * from it.
