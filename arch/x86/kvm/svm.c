@@ -1945,7 +1945,7 @@ static int pf_interception(struct vcpu_svm *svm)
 	case KVM_PV_REASON_PAGE_NOT_PRESENT:
 		svm->apf_reason = 0;
 		local_irq_disable();
-		kvm_async_pf_task_wait(fault_address);
+		kvm_async_pf_task_wait(fault_address, true);
 		local_irq_enable();
 		break;
 	case KVM_PV_REASON_PAGE_READY:
