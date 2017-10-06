@@ -1176,11 +1176,12 @@ static ssize_t poll_timeout_store(struct bus_type *bus, const char *buf,
 	poll_timeout = time;
 	hr_time = ktime_set(0, poll_timeout);
 
-	if (!hrtimer_is_queued(&ap_poll_timer) ||
-	    !hrtimer_forward(&ap_poll_timer, hrtimer_get_expires(&ap_poll_timer), hr_time)) {
-		hrtimer_set_expires(&ap_poll_timer, hr_time);
-		hrtimer_start_expires(&ap_poll_timer, HRTIMER_MODE_ABS);
-	}
+	spin_lock_bh(&ap_poll_timer_lock);
+	hrtimer_cancel(&ap_poll_timer);
+	hrtimer_set_expires(&ap_poll_timer, hr_time);
+	hrtimer_start_expires(&ap_poll_timer, HRTIMER_MODE_ABS);
+	spin_unlock_bh(&ap_poll_timer_lock);
+
 	return count;
 }
 
