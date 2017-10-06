@@ -1339,6 +1339,10 @@ static void apic_timer_expired(struct kvm_lapic *apic)
 	/* FIXME: this code should not know anything about vcpus */
 	kvm_make_request(KVM_REQ_PENDING_TIMER, vcpu);
 
+	/*
+	 * For x86, the atomic_inc() is serialized, thus
+	 * using swait_active() is safe.
+	 */
 	if (swait_active(q))
 		swake_up(q);
 }
