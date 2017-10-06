@@ -94,20 +94,10 @@ static int aq_ndev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
 static int aq_ndev_change_mtu(struct net_device *ndev, int new_mtu)
 {
 	struct aq_nic_s *aq_nic = netdev_priv(ndev);
-	int err = 0;
+	int err = aq_nic_set_mtu(aq_nic, new_mtu + ETH_HLEN);
 
-	if (new_mtu == ndev->mtu) {
-		err = 0;
-		goto err_exit;
-	}
-	if (new_mtu < 68) {
-		err = -EINVAL;
-		goto err_exit;
-	}
-	err = aq_nic_set_mtu(aq_nic, new_mtu + ETH_HLEN);
 	if (err < 0)
 		goto err_exit;
-	ndev->mtu = new_mtu;
 
 err_exit:
 	return err;
