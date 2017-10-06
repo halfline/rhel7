@@ -1345,6 +1345,9 @@ int assign_irq_vector(int irq, struct irq_cfg *cfg, const struct cpumask *mask)
 	int err;
 	unsigned long flags;
 
+	if (!cfg)
+		err = -EBUSY;
+
 	raw_spin_lock_irqsave(&vector_lock, flags);
 	err = __assign_irq_vector(irq, cfg, mask);
 	raw_spin_unlock_irqrestore(&vector_lock, flags);
