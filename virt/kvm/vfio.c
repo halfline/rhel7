@@ -201,17 +201,15 @@ static int kvm_vfio_set_group(struct kvm_device *dev, long attr, u64 arg)
 				continue;
 
 			list_del(&kvg->node);
+			kvm_arch_end_assignment(dev->kvm);
+			kvm_vfio_group_set_kvm(kvg->vfio_group, NULL);
 			kvm_vfio_group_put_external_user(kvg->vfio_group);
 			kfree(kvg);
 			ret = 0;
 			break;
 		}
 
-		kvm_arch_end_assignment(dev->kvm);
-
 		mutex_unlock(&kv->lock);
-
-		kvm_vfio_group_set_kvm(vfio_group, NULL);
 
 		kvm_vfio_group_put_external_user(vfio_group);
 
