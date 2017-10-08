@@ -117,7 +117,6 @@ config S390
 	select HAVE_CMPXCHG_LOCAL
 	select HAVE_C_RECORDMCOUNT
 	select HAVE_DEBUG_KMEMLEAK
-	select HAVE_DMA_ATTRS
 	select HAVE_DMA_API_DEBUG
 	select HAVE_DYNAMIC_FTRACE
 	select HAVE_DYNAMIC_FTRACE_WITH_REGS if 64BIT
@@ -531,7 +530,6 @@ config QDIO
 menuconfig PCI
 	bool "PCI support"
 	depends on 64BIT
-	select HAVE_DMA_ATTRS
 	select PCI_MSI
 	help
 	  Enable PCI support.
