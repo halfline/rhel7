@@ -18,14 +18,17 @@ struct tc_to_netdev_rh74 {
 	bool egress_dev;
 };
 
-int __rh_call_ndo_setup_tc(struct net_device *dev, u32 handle, __be16 protocol,
-			   struct tc_to_netdev *tc)
+int __rh_call_ndo_setup_tc(struct net_device *dev, u32 handle, u32 chain_index,
+			   __be16 protocol, struct tc_to_netdev *tc)
 {
 	const struct net_device_ops *ops = dev->netdev_ops;
 
 	if (get_ndo_ext(ops, ndo_setup_tc)) {
-		return get_ndo_ext(ops, ndo_setup_tc)(dev, handle, protocol,
-						      tc);
+		return get_ndo_ext(ops, ndo_setup_tc)(dev, handle, chain_index,
+						      protocol, tc);
+	} else if (chain_index != 0) {
+		/* All older drivers supports only single chain */
+		return -ENOTSUPP;
 	} else if (ops->ndo_setup_tc_rh74) {
 		/* Drivers implementing .ndo_setup_tc_rh74() */
 		struct tc_to_netdev_rh74 tc74;

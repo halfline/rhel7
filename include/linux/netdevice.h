@@ -899,6 +899,13 @@ struct tc_to_netdev_rh74;
  *	of a device.
  *	RHEL: This is an entry point for network device drivers that
  *	      use central MTU range checking provided by network core.
+ *
+ * int (*ndo_setup_tc)(struct net_device *dev, u32 handle, u32 chain_index,
+ *		       __be16 protocol, struct tc_to_netdev *tc);
+ *	Called to setup any 'tc' scheduler, classifier or action on @dev.
+ *	This is always called from the stack with the rtnl lock held and netif
+ *	tx queues stopped. This allows the netdevice to perform queue
+ *	management safely.
  */
 struct net_device_ops_extended {
 	int			(*ndo_set_vf_trust)(struct net_device *dev,
@@ -947,7 +954,7 @@ struct net_device_ops_extended {
 	int			(*ndo_change_mtu)(struct net_device *dev,
 						  int new_mtu);
 	int			(*ndo_setup_tc)(struct net_device *dev,
-						u32 handle,
+						u32 handle, u32 chain_index,
 						__be16 protocol,
 						struct tc_to_netdev *tc);
 };
@@ -1976,8 +1983,8 @@ bool __rh_has_ndo_setup_tc(const struct net_device *dev)
 		ops->ndo_setup_tc_rh72) ? true : false;
 }
 
-int __rh_call_ndo_setup_tc(struct net_device *dev, u32 handle, __be16 protocol,
-			   struct tc_to_netdev *tc);
+int __rh_call_ndo_setup_tc(struct net_device *dev, u32 handle, u32 chain_index,
+			   __be16 protocol, struct tc_to_netdev *tc);
 
 static inline
 int netdev_get_prio_tc_map(const struct net_device *dev, u32 prio)

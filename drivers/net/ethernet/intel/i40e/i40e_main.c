@@ -5605,10 +5605,11 @@ exit:
 }
 
 #ifdef I40E_FCOE
-int __i40e_setup_tc(struct net_device *netdev, u32 handle, __be16 proto,
-		    struct tc_to_netdev *tc)
+int __i40e_setup_tc(struct net_device *netdev, u32 handle, u32 chain_index,
+		    __be16 proto, struct tc_to_netdev *tc)
 #else
-static int __i40e_setup_tc(struct net_device *netdev, u32 handle, __be16 proto,
+static int __i40e_setup_tc(struct net_device *netdev, u32 handle,
+			   u32 chain_index, __be16 proto,
 			   struct tc_to_netdev *tc)
 #endif
 {

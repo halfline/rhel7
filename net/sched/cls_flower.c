@@ -239,7 +239,8 @@ static void fl_hw_destroy_filter(struct tcf_proto *tp, struct cls_fl_filter *f)
 	tc->type = TC_SETUP_CLSFLOWER;
 	tc->cls_flower = &offload;
 
-	__rh_call_ndo_setup_tc(dev, tp->q->handle, tp->protocol, tc);
+	__rh_call_ndo_setup_tc(dev, tp->q->handle, tp->chain->index,
+			       tp->protocol, tc);
 }
 
 static int fl_hw_replace_filter(struct tcf_proto *tp,
@@ -275,7 +276,8 @@ static int fl_hw_replace_filter(struct tcf_proto *tp,
 	tc->type = TC_SETUP_CLSFLOWER;
 	tc->cls_flower = &offload;
 
-	err = __rh_call_ndo_setup_tc(dev, tp->q->handle, tp->protocol, tc);
+	err = __rh_call_ndo_setup_tc(dev, tp->q->handle, tp->chain->index,
+				     tp->protocol, tc);
 	if (!err)
 		f->flags |= TCA_CLS_FLAGS_IN_HW;
 
@@ -301,7 +303,8 @@ static void fl_hw_update_stats(struct tcf_proto *tp, struct cls_fl_filter *f)
 	tc->type = TC_SETUP_CLSFLOWER;
 	tc->cls_flower = &offload;
 
-	__rh_call_ndo_setup_tc(dev, tp->q->handle, tp->protocol, tc);
+	__rh_call_ndo_setup_tc(dev, tp->q->handle, tp->chain->index,
+			       tp->protocol, tc);
 }
 
 static void __fl_delete(struct tcf_proto *tp, struct cls_fl_filter *f)
