@@ -64,7 +64,7 @@ static int mall_replace_hw_filter(struct tcf_proto *tp,
 	offload.cls_mall->exts = &head->exts;
 	offload.cls_mall->cookie = cookie;
 
-	err = __rh_call_ndo_setup_tc(dev, TC_SETUP_MATCHALL,
+	err = __rh_call_ndo_setup_tc(dev, TC_SETUP_CLSMATCHALL,
 				     tp->q->handle, tp->chain->index,
 				     tp->protocol, &offload);
 	if (!err)
@@ -86,7 +86,7 @@ static void mall_destroy_hw_filter(struct tcf_proto *tp,
 	offload.cls_mall->exts = NULL;
 	offload.cls_mall->cookie = cookie;
 
-	__rh_call_ndo_setup_tc(dev, TC_SETUP_MATCHALL, tp->q->handle,
+	__rh_call_ndo_setup_tc(dev, TC_SETUP_CLSMATCHALL, tp->q->handle,
 			       tp->chain->index, tp->protocol, &offload);
 }
 
