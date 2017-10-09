@@ -443,7 +443,7 @@ static inline bool tc_can_offload(const struct net_device *dev,
 
 	if (!(dev->features & NETIF_F_HW_TC))
 		return false;
-	if (!dev->netdev_ops->ndo_setup_tc)
+	if (!__rh_has_ndo_setup_tc(dev))
 		return false;
 	if (cops && cops->tcf_cl_offload)
 		return cops->tcf_cl_offload(tp->classid);

@@ -1958,6 +1958,18 @@ struct net_device_extended {
 #define	NETDEV_ALIGN		32
 
 static inline
+bool __rh_has_ndo_setup_tc(const struct net_device *dev)
+{
+	const struct net_device_ops *ops = dev->netdev_ops;
+
+	return (ops->ndo_setup_tc ||
+		ops->ndo_setup_tc_rh72) ? true : false;
+}
+
+int __rh_call_ndo_setup_tc(struct net_device *dev, u32 handle, __be16 protocol,
+			   struct tc_to_netdev *tc);
+
+static inline
 int netdev_get_prio_tc_map(const struct net_device *dev, u32 prio)
 {
 	return dev->prio_tc_map[prio & TC_BITMASK];
