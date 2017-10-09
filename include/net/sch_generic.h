@@ -6,8 +6,13 @@
  * We can do it as we don't preserve kABI for Qdisc/net-sched API.
  * Unfortunately pointer to struct Qdisc is part of struct net_device so
  * any change in this struct or Qdisc_ops etc. will change kABI checksums.
+ *
+ * Change - Qdisc and all dependant structs are now frozen. We have special
+ * witelisted symbol __rh_kabi_protect_Qdisc and during generation of its
+ * checksum the genksyms tool has to see the real structure not the fake one.
  */
-#ifdef __GENKSYMS__
+#if defined(__GENKSYMS__) && !defined(__RH_KABI_PROTECT_QDISC)
+
 #include <net/sch_generic_kabi.h>
 
 #else
