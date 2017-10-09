@@ -780,10 +780,12 @@ static int fl_set_parms(struct net *net, struct tcf_proto *tp,
 	struct tcf_exts e;
 	int err;
 
-	tcf_exts_init(&e, TCA_FLOWER_ACT, 0);
-	err = tcf_exts_validate(net, tp, tb, est, &e, ovr);
+	err = tcf_exts_init(&e, TCA_FLOWER_ACT, 0);
 	if (err < 0)
 		return err;
+	err = tcf_exts_validate(net, tp, tb, est, &e, ovr);
+	if (err < 0)
+		goto errout;
 
 	if (tb[TCA_FLOWER_CLASSID]) {
 		f->res.classid = nla_get_u32(tb[TCA_FLOWER_CLASSID]);
@@ -860,7 +862,9 @@ static int fl_change(struct net *net, struct sk_buff *in_skb,
 		goto errout_tb;
 	}
 
-	tcf_exts_init(&fnew->exts, TCA_FLOWER_ACT, 0);
+	err = tcf_exts_init(&fnew->exts, TCA_FLOWER_ACT, 0);
+	if (err < 0)
+		goto errout;
 
 	if (!handle) {
 		handle = fl_grab_new_handle(tp, head);
@@ -934,6 +938,7 @@ static int fl_change(struct net *net, struct sk_buff *in_skb,
 	return 0;
 
 errout:
+	tcf_exts_destroy(&fnew->exts);
 	kfree(fnew);
 errout_tb:
 	kfree(tb);

@@ -167,10 +167,12 @@ static int cls_bpf_modify_existing(struct net *net, struct tcf_proto *tp,
 	if (!tb[TCA_BPF_OPS_LEN] || !tb[TCA_BPF_OPS] || !tb[TCA_BPF_CLASSID])
 		return -EINVAL;
 
-	tcf_exts_init(&exts, TCA_BPF_ACT, TCA_BPF_POLICE);
-	ret = tcf_exts_validate(net, tp, tb, est, &exts, ovr);
+	ret = tcf_exts_init(&exts, TCA_BPF_ACT, TCA_BPF_POLICE);
 	if (ret < 0)
 		return ret;
+	ret = tcf_exts_validate(net, tp, tb, est, &exts, ovr);
+	if (ret < 0)
+		goto errout;
 
 	classid = nla_get_u32(tb[TCA_BPF_CLASSID]);
 	bpf_len = nla_get_u16(tb[TCA_BPF_OPS_LEN]);
@@ -259,7 +261,9 @@ static int cls_bpf_change(struct net *net, struct sk_buff *in_skb,
 	if (!prog)
 		return -ENOBUFS;
 
-	tcf_exts_init(&prog->exts, TCA_BPF_ACT, TCA_BPF_POLICE);
+	ret = tcf_exts_init(&prog->exts, TCA_BPF_ACT, TCA_BPF_POLICE);
+	if (ret < 0)
+		goto errout;
 
 	if (oldprog) {
 		if (handle && oldprog->handle != handle) {
@@ -292,9 +296,10 @@ static int cls_bpf_change(struct net *net, struct sk_buff *in_skb,
 
 	*arg = (unsigned long) prog;
 	return 0;
-errout:
-	kfree(prog);
 
+errout:
+	tcf_exts_destroy(&prog->exts);
+	kfree(prog);
 	return ret;
 }
 

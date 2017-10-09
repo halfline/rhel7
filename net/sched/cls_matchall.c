@@ -124,8 +124,7 @@ static int mall_set_parms(struct net *net, struct tcf_proto *tp,
 	struct tcf_exts e;
 	int err;
 
-	tcf_exts_init(&e, TCA_MATCHALL_ACT, 0);
-	err = 0; /* tcf_exts_init() is void in RHEL */
+	err = tcf_exts_init(&e, TCA_MATCHALL_ACT, 0);
 	if (err)
 		return err;
 	err = tcf_exts_validate(net, tp, tb, est, &e, ovr);
@@ -178,8 +177,7 @@ static int mall_change(struct net *net, struct sk_buff *in_skb,
 	if (!new)
 		return -ENOBUFS;
 
-	tcf_exts_init(&new->exts, TCA_MATCHALL_ACT, 0);
-	err = 0; /* tcf_exts_init() is void in RHEL */
+	err = tcf_exts_init(&new->exts, TCA_MATCHALL_ACT, 0);
 	if (err)
 		goto err_exts_init;
 
