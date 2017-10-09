@@ -288,7 +288,7 @@ static void fl_hw_update_stats(struct tcf_proto *tp, struct cls_fl_filter *f)
 	cls_flower.cookie = (unsigned long) f;
 	cls_flower.exts = &f->exts;
 
-	__rh_call_ndo_setup_tc(dev, TC_CLSFLOWER_STATS, &cls_flower);
+	__rh_call_ndo_setup_tc(dev, TC_SETUP_CLSFLOWER, &cls_flower);
 }
 
 static void __fl_delete(struct tcf_proto *tp, struct cls_fl_filter *f)
