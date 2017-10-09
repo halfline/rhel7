@@ -9746,9 +9746,14 @@ static int prepare_vmcs02(struct kvm_vcpu *vcpu, struct vmcs12 *vmcs12,
 	vmcs_write64(VMCS_LINK_POINTER, -1ull);
 
 	exec_control = vmcs12->pin_based_vm_exec_control;
-	exec_control |= vmcs_config.pin_based_exec_ctrl;
-	exec_control &= ~PIN_BASED_VMX_PREEMPTION_TIMER;
 
+	/* Preemption timer setting is only taken from vmcs01.  */
+	exec_control &= ~PIN_BASED_VMX_PREEMPTION_TIMER;
+	exec_control |= vmcs_config.pin_based_exec_ctrl;
+	if (vmx->hv_deadline_tsc == -1)
+		exec_control &= ~PIN_BASED_VMX_PREEMPTION_TIMER;
+
+	/* Posted interrupts setting is only taken from vmcs12.  */
 	if (nested_cpu_has_posted_intr(vmcs12)) {
 		/*
 		 * Note that we use L0's vector here and in
@@ -10710,8 +10715,14 @@ static void nested_vmx_vmexit(struct kvm_vcpu *vcpu, u32 exit_reason,
 
 	load_vmcs12_host_state(vcpu, vmcs12);
 
-	/* Update TSC_OFFSET if TSC was changed while L2 ran */
+	/* Update any VMCS fields that might have changed while L2 ran */
 	vmcs_write64(TSC_OFFSET, vcpu->arch.tsc_offset);
+	if (vmx->hv_deadline_tsc == -1)
+		vmcs_clear_bits(PIN_BASED_VM_EXEC_CONTROL,
+				PIN_BASED_VMX_PREEMPTION_TIMER);
+	else
+		vmcs_set_bits(PIN_BASED_VM_EXEC_CONTROL,
+			      PIN_BASED_VMX_PREEMPTION_TIMER);
 
 	if (kvm_has_tsc_control)
 		decache_tsc_multiplier(vmx);
