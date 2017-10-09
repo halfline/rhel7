@@ -1465,8 +1465,10 @@ static int alloc_new_range(struct dma_ops_domain *dma_dom,
 		}
 	}
 
+	spin_lock_irqsave(&dma_dom->domain.lock, flags);
+
 	/* First take the bitmap_lock and then publish the range */
-	spin_lock_irqsave(&range->bitmap_lock, flags);
+	spin_lock(&range->bitmap_lock);
 
 	old_size                 = dma_dom->aperture_size;
 	dma_dom->aperture[index] = range;
@@ -1517,7 +1519,9 @@ static int alloc_new_range(struct dma_ops_domain *dma_dom,
 
 	update_domain(&dma_dom->domain);
 
-	spin_unlock_irqrestore(&range->bitmap_lock, flags);
+	spin_unlock(&range->bitmap_lock);
+
+	spin_unlock_irqrestore(&dma_dom->domain.lock, flags);
 
 	return 0;
 
@@ -2561,11 +2565,9 @@ static dma_addr_t map_page(struct device *dev, struct page *page,
 			   enum dma_data_direction dir,
 			   struct dma_attrs *attrs)
 {
-	unsigned long flags;
-	struct protection_domain *domain;
-	dma_addr_t addr;
-	u64 dma_mask;
 	phys_addr_t paddr = page_to_phys(page) + offset;
+	struct protection_domain *domain;
+	u64 dma_mask;
 
 	INC_STATS_COUNTER(cnt_map_single);
 
@@ -2577,19 +2579,8 @@ static dma_addr_t map_page(struct device *dev, struct page *page,
 
 	dma_mask = *dev->dma_mask;
 
-	spin_lock_irqsave(&domain->lock, flags);
-
-	addr = __map_single(dev, domain->priv, paddr, size, dir, false,
+	return __map_single(dev, domain->priv, paddr, size, dir, false,
 			    dma_mask);
-	if (addr == DMA_ERROR_CODE)
-		goto out;
-
-	domain_flush_complete(domain);
-
-out:
-	spin_unlock_irqrestore(&domain->lock, flags);
-
-	return addr;
 }
 
 /*
@@ -2598,7 +2589,6 @@ out:
 static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
 		       enum dma_data_direction dir, struct dma_attrs *attrs)
 {
-	unsigned long flags;
 	struct protection_domain *domain;
 
 	INC_STATS_COUNTER(cnt_unmap_single);
@@ -2607,13 +2597,7 @@ static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
 	if (IS_ERR(domain))
 		return;
 
-	spin_lock_irqsave(&domain->lock, flags);
-
 	__unmap_single(domain->priv, dma_addr, size, dir);
-
-	domain_flush_complete(domain);
-
-	spin_unlock_irqrestore(&domain->lock, flags);
 }
 
 /*
@@ -2624,7 +2608,6 @@ static int map_sg(struct device *dev, struct scatterlist *sglist,
 		  int nelems, enum dma_data_direction dir,
 		  struct dma_attrs *attrs)
 {
-	unsigned long flags;
 	struct protection_domain *domain;
 	int i;
 	struct scatterlist *s;
@@ -2640,8 +2623,6 @@ static int map_sg(struct device *dev, struct scatterlist *sglist,
 
 	dma_mask = *dev->dma_mask;
 
-	spin_lock_irqsave(&domain->lock, flags);
-
 	for_each_sg(sglist, s, nelems, i) {
 		paddr = sg_phys(s);
 
@@ -2656,12 +2637,8 @@ static int map_sg(struct device *dev, struct scatterlist *sglist,
 			goto unmap;
 	}
 
-	domain_flush_complete(domain);
-
-out:
-	spin_unlock_irqrestore(&domain->lock, flags);
-
 	return mapped_elems;
+
 unmap:
 	for_each_sg(sglist, s, mapped_elems, i) {
 		if (s->dma_address)
@@ -2670,9 +2647,7 @@ unmap:
 		s->dma_address = s->dma_length = 0;
 	}
 
-	mapped_elems = 0;
-
-	goto out;
+	return 0;
 }
 
 /*
@@ -2683,7 +2658,6 @@ static void unmap_sg(struct device *dev, struct scatterlist *sglist,
 		     int nelems, enum dma_data_direction dir,
 		     struct dma_attrs *attrs)
 {
-	unsigned long flags;
 	struct protection_domain *domain;
 	struct scatterlist *s;
 	int i;
@@ -2694,17 +2668,11 @@ static void unmap_sg(struct device *dev, struct scatterlist *sglist,
 	if (IS_ERR(domain))
 		return;
 
-	spin_lock_irqsave(&domain->lock, flags);
-
 	for_each_sg(sglist, s, nelems, i) {
 		__unmap_single(domain->priv, s->dma_address,
 			       s->dma_length, dir);
 		s->dma_address = s->dma_length = 0;
 	}
-
-	domain_flush_complete(domain);
-
-	spin_unlock_irqrestore(&domain->lock, flags);
 }
 
 /*
@@ -2716,7 +2684,6 @@ static void *alloc_coherent(struct device *dev, size_t size,
 {
 	u64 dma_mask = dev->coherent_dma_mask;
 	struct protection_domain *domain;
-	unsigned long flags;
 	struct page *page;
 
 	INC_STATS_COUNTER(cnt_alloc_coherent);
@@ -2748,19 +2715,11 @@ static void *alloc_coherent(struct device *dev, size_t size,
 	if (!dma_mask)
 		dma_mask = *dev->dma_mask;
 
-	spin_lock_irqsave(&domain->lock, flags);
-
 	*dma_addr = __map_single(dev, domain->priv, page_to_phys(page),
 				 size, DMA_BIDIRECTIONAL, true, dma_mask);
 
-	if (*dma_addr == DMA_ERROR_CODE) {
-		spin_unlock_irqrestore(&domain->lock, flags);
+	if (*dma_addr == DMA_ERROR_CODE)
 		goto out_free;
-	}
-
-	domain_flush_complete(domain);
-
-	spin_unlock_irqrestore(&domain->lock, flags);
 
 	return page_address(page);
 
@@ -2780,7 +2739,6 @@ static void free_coherent(struct device *dev, size_t size,
 			  struct dma_attrs *attrs)
 {
 	struct protection_domain *domain;
-	unsigned long flags;
 	struct page *page;
 
 	INC_STATS_COUNTER(cnt_free_coherent);
@@ -2792,13 +2750,7 @@ static void free_coherent(struct device *dev, size_t size,
 	if (IS_ERR(domain))
 		goto free_mem;
 
-	spin_lock_irqsave(&domain->lock, flags);
-
 	__unmap_single(domain->priv, dma_addr, size, DMA_BIDIRECTIONAL);
-
-	domain_flush_complete(domain);
-
-	spin_unlock_irqrestore(&domain->lock, flags);
 
 free_mem:
 	if (!dma_release_from_contiguous(dev, page, size >> PAGE_SHIFT))
