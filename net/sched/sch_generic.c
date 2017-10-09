@@ -141,7 +141,7 @@ static inline int handle_dev_cpu_collision(struct sk_buff *skb,
 
 /*
  * Transmit possibly several skbs, and handle the return status as
- * required. Holding the __QDISC___STATE_RUNNING bit guarantees that
+ * required. Owning running seqcount bit guarantees that
  * only one CPU can execute this function.
  *
  * Returns to the caller:
@@ -168,10 +168,10 @@ int sch_direct_xmit(struct sk_buff *skb, struct Qdisc *q,
 
 		HARD_TX_UNLOCK(dev, txq);
 	} else {
-		spin_lock(root_lock);
+		spin_lock_nested(root_lock, SINGLE_DEPTH_NESTING);
 		return qdisc_qlen(q);
 	}
-	spin_lock(root_lock);
+	spin_lock_nested(root_lock, SINGLE_DEPTH_NESTING);
 
 	if (dev_xmit_complete(ret)) {
 		/* Driver sent out skb successfully or skb was consumed */
@@ -197,7 +197,7 @@ int sch_direct_xmit(struct sk_buff *skb, struct Qdisc *q,
 /*
  * NOTE: Called under qdisc_lock(q) with locally disabled BH.
  *
- * __QDISC_STATE_RUNNING guarantees only one CPU can process
+ * running seqcount guarantees only one CPU can process
  * this qdisc at a time. qdisc_lock(q) serializes queue accesses for
  * this queue.
  *
@@ -415,6 +415,7 @@ struct Qdisc noop_qdisc = {
 	.list		=	LIST_HEAD_INIT(noop_qdisc.list),
 	.q.lock		=	__SPIN_LOCK_UNLOCKED(noop_qdisc.q.lock),
 	.dev_queue	=	&noop_netdev_queue,
+	.running	=	SEQCNT_ZERO,
 	.busylock	=	__SPIN_LOCK_UNLOCKED(noop_qdisc.busylock),
 };
 EXPORT_SYMBOL(noop_qdisc);
@@ -605,6 +606,8 @@ struct Qdisc *qdisc_alloc(struct netdev_queue *dev_queue,
 	spin_lock_init(&sch->busylock);
 	lockdep_set_class(&sch->busylock,
 			  dev->qdisc_tx_busylock ?: &qdisc_tx_busylock);
+
+	seqcount_init(&sch->running);
 
 	sch->ops = ops;
 	sch->enqueue = ops->enqueue;

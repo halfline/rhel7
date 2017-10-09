@@ -3120,8 +3120,8 @@ static inline int __dev_xmit_skb(struct sk_buff *skb, struct Qdisc *q,
 	/*
 	 * Heuristic to force contended enqueues to serialize on a
 	 * separate lock before trying to get qdisc main lock.
-	 * This permits __QDISC_STATE_RUNNING owner to get the lock more often
-	 * and dequeue packets faster.
+	 * This permits qdisc->running owner to get the lock more
+	 * often and dequeue packets faster.
 	 */
 	contended = qdisc_is_running(q);
 	if (unlikely(contended))
