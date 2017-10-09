@@ -113,6 +113,9 @@ static inline bool qdisc_run_begin(struct Qdisc *qdisc)
 {
 	if (qdisc_is_running(qdisc))
 		return false;
+	/* RHEL: The seqcount structure has not lockdep functionality so
+	 * we use plain write_seqcount_begin() here.
+	 */
 	write_seqcount_begin(&qdisc->running);
 	return true;
 }
