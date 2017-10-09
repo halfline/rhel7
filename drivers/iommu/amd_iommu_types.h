@@ -519,6 +519,8 @@ struct amd_iommu {
 	/* The maximum PC banks and counters/bank (PCSup=1) */
 	u8 max_banks;
 	u8 max_counters;
+
+	volatile u64 __aligned(8) cmd_sem;
 };
 
 #define ACPIHID_UID_LEN 256
