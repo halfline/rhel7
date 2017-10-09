@@ -23,8 +23,7 @@ struct tcf_vlan {
 	__be16			tcfv_push_proto;
 	u8			tcfv_push_prio;
 };
-#define to_vlan(a) \
-	container_of(a->priv, struct tcf_vlan, common)
+#define to_vlan(a) ((struct tcf_vlan *)a)
 
 static inline bool is_tcf_vlan(const struct tc_action *a)
 {
