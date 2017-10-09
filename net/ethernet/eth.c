@@ -64,6 +64,9 @@
 #include <net/dsa.h>
 #include <net/flow_dissector.h>
 #include <asm/uaccess.h>
+#ifndef __GENKSYMS__
+#include <net/pkt_sched.h>
+#endif
 
 __setup("ether=", netdev_boot_setup);
 
@@ -408,7 +411,7 @@ void ether_setup(struct net_device *dev)
 	dev->extended->min_mtu	= ETH_MIN_MTU;
 	dev->extended->max_mtu	= ETH_DATA_LEN;
 	dev->addr_len		= ETH_ALEN;
-	dev->tx_queue_len	= 1000;	/* Ethernet wants good queues */
+	dev->tx_queue_len	= DEFAULT_TX_QUEUE_LEN;
 	dev->flags		= IFF_BROADCAST|IFF_MULTICAST;
 	dev->priv_flags		|= IFF_TX_SKB_SHARING;
 
