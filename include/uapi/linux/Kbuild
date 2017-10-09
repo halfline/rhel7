@@ -180,6 +180,7 @@ header-y += if_tun.h
 header-y += if_tunnel.h
 header-y += if_vlan.h
 header-y += if_x25.h
+header-y += ife.h
 header-y += igmp.h
 header-y += in.h
 header-y += in6.h

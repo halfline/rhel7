@@ -4245,6 +4245,13 @@ F:	net/ieee802154/
 F:	net/mac802154/
 F:	drivers/net/ieee802154/
 
+IFE PROTOCOL
+M:	Yotam Gigi <yotamg@mellanox.com>
+M:	Jamal Hadi Salim <jhs@mojatatu.com>
+F:	net/ife
+F:	include/net/ife.h
+F:	include/uapi/linux/ife.h
+
 IGUANAWORKS USB IR TRANSCEIVER
 M:	Sean Young <sean@mess.org>
 L:	linux-media@vger.kernel.org
