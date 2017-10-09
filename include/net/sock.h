@@ -1617,6 +1617,7 @@ extern struct sk_buff		*sock_wmalloc(struct sock *sk,
 extern struct sk_buff		*sock_rmalloc(struct sock *sk,
 					      unsigned long size, int force,
 					      gfp_t priority);
+void __sock_wfree(struct sk_buff *skb);
 extern void			sock_wfree(struct sk_buff *skb);
 extern void			skb_orphan_partial(struct sk_buff *skb);
 extern void			sock_rfree(struct sk_buff *skb);
