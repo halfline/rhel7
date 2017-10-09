@@ -7,6 +7,9 @@
 #include <linux/atomic.h>
 #include <linux/compat.h>
 #include <uapi/linux/filter.h>
+#ifndef __GENKSYMS__
+#include <net/sch_generic.h>
+#endif
 
 #ifdef CONFIG_COMPAT
 /*

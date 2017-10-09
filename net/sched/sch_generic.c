@@ -29,6 +29,9 @@
 #include <net/sch_generic.h>
 #include <net/pkt_sched.h>
 #include <net/dst.h>
+#ifndef __GENKSYMS__
+#include <trace/events/qdisc.h>
+#endif
 
 /* Qdisc to use by default */
 const struct Qdisc_ops *default_qdisc_ops = &pfifo_fast_ops;
@@ -126,7 +129,7 @@ static struct sk_buff *dequeue_skb(struct Qdisc *q, bool *validate,
 			q->q.qlen--;
 		} else
 			skb = NULL;
-		return skb;
+		goto trace;
 	}
 	*validate = true;
 	skb = q->skb_bad_txq;
@@ -139,7 +142,8 @@ static struct sk_buff *dequeue_skb(struct Qdisc *q, bool *validate,
 			q->q.qlen--;
 			goto bulk;
 		}
-		return NULL;
+		skb = NULL;
+		goto trace;
 	}
 	if (!(q->flags & TCQ_F_ONETXQUEUE) ||
 	    !netif_xmit_frozen_or_stopped(txq))
@@ -151,6 +155,8 @@ bulk:
 		else
 			try_bulk_dequeue_skb_slow(q, skb, packets);
 	}
+trace:
+	trace_qdisc_dequeue(q, txq, *packets, skb);
 	return skb;
 }
 
