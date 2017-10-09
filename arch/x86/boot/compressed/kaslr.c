@@ -696,8 +696,8 @@ void choose_random_location(unsigned long input,
 {
 	unsigned long random_addr, min_addr;
 
-	if (!cmdline_find_option_bool("kaslr")) {
-		debug_putstr("KASLR disabled: no 'kaslr' on cmdline.");
+	if (cmdline_find_option_bool("nokaslr")) {
+		warn("KASLR disabled: 'nokaslr' on cmdline.");
 		return;
 	}
 
