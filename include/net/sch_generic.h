@@ -90,6 +90,9 @@ struct Qdisc {
 	struct netdev_queue	*dev_queue;
 
 	struct gnet_stats_rate_est64	rate_est;
+	struct gnet_stats_basic_cpu __percpu *cpu_bstats;
+	struct gnet_stats_queue __percpu *cpu_qstats;
+
 	struct Qdisc		*next_sched;
 	struct sk_buff		*gso_skb;
 	/*
@@ -103,11 +106,6 @@ struct Qdisc {
 	struct rcu_head		rcu_head;
 	int			padded;
 	atomic_t		refcnt;
-
-	RH_KABI_FILL_HOLE(struct gnet_stats_basic_cpu __percpu *cpu_bstats)
-	RH_KABI_FILL_HOLE(struct gnet_stats_queue __percpu *cpu_qstats)
-	RH_KABI_FILL_HOLE(void *rh_reserved_1)
-	RH_KABI_FILL_HOLE(void *rh_reserved_2)
 
 	spinlock_t		busylock ____cacheline_aligned_in_smp;
 };
@@ -219,37 +217,26 @@ struct tcf_result {
 };
 
 struct tcf_proto_ops {
-	RH_KABI_REPLACE_UNSAFE(struct tcf_proto_ops	*next,
-			       struct list_head		head)
+	struct list_head	head;
 	char			kind[IFNAMSIZ];
 
 	int			(*classify)(struct sk_buff *,
 					    const struct tcf_proto *,
 					    struct tcf_result *);
 	int			(*init)(struct tcf_proto*);
-	RH_KABI_REPLACE(void	(*destroy)(struct tcf_proto*),
-			bool	(*destroy)(struct tcf_proto*, bool))
+	bool			(*destroy)(struct tcf_proto*, bool);
 
 	unsigned long		(*get)(struct tcf_proto*, u32 handle);
-	RH_KABI_DEPRECATE_FN(void, put, struct tcf_proto*, unsigned long)
-	RH_KABI_REPLACE(int	(*change)(struct net *net, struct sk_buff *,
+	int			(*change)(struct net *net, struct sk_buff *,
 					struct tcf_proto*, unsigned long,
 					u32 handle, struct nlattr **,
-					unsigned long *),
-			int	(*change)(struct net *net, struct sk_buff *,
-					struct tcf_proto*, unsigned long,
-					u32 handle, struct nlattr **,
-					unsigned long *, bool))
+					unsigned long *, bool);
 	int			(*delete)(struct tcf_proto*, unsigned long);
 	void			(*walk)(struct tcf_proto*, struct tcf_walker *arg);
 
 	/* rtnetlink specific */
-	RH_KABI_REPLACE(
-			int	(*dump)(struct tcf_proto*, unsigned long,
-					struct sk_buff *skb, struct tcmsg*),
-			int	(*dump)(struct net*, struct tcf_proto*, unsigned long,
-					struct sk_buff *skb, struct tcmsg*)
-		       )
+	int			(*dump)(struct net*, struct tcf_proto*, unsigned long,
+					struct sk_buff *skb, struct tcmsg*);
 
 	struct module		*owner;
 };
@@ -269,7 +256,7 @@ struct tcf_proto {
 	struct Qdisc		*q;
 	void			*data;
 	const struct tcf_proto_ops	*ops;
-	RH_KABI_EXTEND(struct rcu_head		rcu)
+	struct rcu_head		rcu;
 };
 
 struct qdisc_skb_cb {
