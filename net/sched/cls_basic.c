@@ -62,9 +62,12 @@ static unsigned long basic_get(struct tcf_proto *tp, u32 handle)
 	struct basic_head *head = rtnl_dereference(tp->root);
 	struct basic_filter *f;
 
-	list_for_each_entry(f, &head->flist, link)
-		if (f->handle == handle)
+	list_for_each_entry(f, &head->flist, link) {
+		if (f->handle == handle) {
 			l = (unsigned long) f;
+			break;
+		}
+	}
 
 	return l;
 }
