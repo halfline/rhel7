@@ -142,6 +142,7 @@ struct irq_2_iommu {
 struct irq_2_irte {
 	u16 devid; /* Device ID for IRTE table */
 	u16 index; /* Index into IRTE table*/
+	struct amd_ir_data *ir_data;
 };
 
 /*
