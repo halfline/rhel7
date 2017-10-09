@@ -409,6 +409,7 @@ struct amd_iommu_fault {
 
 
 struct iommu_domain;
+struct amd_irte_ops;
 
 /*
  * This structure contains generic data for  IOMMU protection domains
@@ -531,6 +532,8 @@ struct amd_iommu {
 	u8 max_counters;
 
 	volatile u64 __aligned(8) cmd_sem;
+
+	struct amd_irte_ops *irte_ops;
 };
 
 #define ACPIHID_UID_LEN 256
@@ -766,5 +769,25 @@ struct irte_ga {
 	union irte_ga_lo lo;
 	union irte_ga_hi hi;
 };
+
+struct amd_ir_data {
+	void *entry;	/* Pointer to union irte or struct irte_ga */
+};
+
+struct amd_irte_ops {
+	void (*prepare)(void *, u32, u32, u8, u32);
+	void (*activate)(void *, u16, u16);
+	void (*deactivate)(void *, u16, u16);
+	void (*set_affinity)(void *, u16, u16, u8, u32);
+	void *(*get)(struct irq_remap_table *, int);
+	void (*set_allocated)(struct irq_remap_table *, int);
+	bool (*is_allocated)(struct irq_remap_table *, int);
+	void (*clear_allocated)(struct irq_remap_table *, int);
+};
+
+#ifdef CONFIG_IRQ_REMAP
+extern struct amd_irte_ops irte_32_ops;
+extern struct amd_irte_ops irte_128_ops;
+#endif
 
 #endif /* _ASM_X86_AMD_IOMMU_TYPES_H */

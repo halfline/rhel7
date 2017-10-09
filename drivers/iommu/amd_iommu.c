@@ -3671,23 +3671,39 @@ out:
 	return index;
 }
 
-static int get_irte(u16 devid, int index, union irte *irte)
+static int modify_irte_ga(u16 devid, int index, struct irte_ga *irte)
 {
 	struct irq_remap_table *table;
+	struct amd_iommu *iommu;
 	unsigned long flags;
+	struct irte_ga *entry;
+
+	iommu = amd_iommu_rlookup_table[devid];
+	if (iommu == NULL)
+		return -EINVAL;
 
 	table = get_irq_table(devid, false);
 	if (!table)
 		return -ENOMEM;
 
 	spin_lock_irqsave(&table->lock, flags);
-	irte->val = table->table[index];
+
+	entry = (struct irte_ga *)table->table;
+	entry = &entry[index];
+	entry->lo.fields_remap.valid = 0;
+	entry->hi.val = irte->hi.val;
+	entry->lo.val = irte->lo.val;
+	entry->lo.fields_remap.valid = 1;
+
 	spin_unlock_irqrestore(&table->lock, flags);
+
+	iommu_flush_irt(iommu, devid);
+	iommu_completion_wait(iommu);
 
 	return 0;
 }
 
-static int modify_irte(u16 devid, int index, union irte irte)
+static int modify_irte(u16 devid, int index, union irte *irte)
 {
 	struct irq_remap_table *table;
 	struct amd_iommu *iommu;
@@ -3702,7 +3718,7 @@ static int modify_irte(u16 devid, int index, union irte irte)
 		return -ENOMEM;
 
 	spin_lock_irqsave(&table->lock, flags);
-	table->table[index] = irte.val;
+	table->table[index] = irte->val;
 	spin_unlock_irqrestore(&table->lock, flags);
 
 	iommu_flush_irt(iommu, devid);
@@ -3731,6 +3747,134 @@ static void free_irte(u16 devid, int index)
 
 	iommu_flush_irt(iommu, devid);
 	iommu_completion_wait(iommu);
+}
+
+static void irte_prepare(void *entry,
+			 u32 delivery_mode, u32 dest_mode,
+			 u8 vector, u32 dest_apicid)
+{
+	union irte *irte = (union irte *) entry;
+
+	irte->val                = 0;
+	irte->fields.vector      = vector;
+	irte->fields.int_type    = delivery_mode;
+	irte->fields.destination = dest_apicid;
+	irte->fields.dm          = dest_mode;
+	irte->fields.valid       = 1;
+}
+
+static void irte_ga_prepare(void *entry,
+			    u32 delivery_mode, u32 dest_mode,
+			    u8 vector, u32 dest_apicid)
+{
+	struct irte_ga *irte = (struct irte_ga *) entry;
+
+	irte->lo.val                      = 0;
+	irte->hi.val                      = 0;
+	irte->lo.fields_remap.guest_mode  = 0;
+	irte->lo.fields_remap.int_type    = delivery_mode;
+	irte->lo.fields_remap.dm          = dest_mode;
+	irte->hi.fields.vector            = vector;
+	irte->lo.fields_remap.destination = dest_apicid;
+	irte->lo.fields_remap.valid       = 1;
+}
+
+static void irte_activate(void *entry, u16 devid, u16 index)
+{
+	union irte *irte = (union irte *) entry;
+
+	irte->fields.valid = 1;
+	modify_irte(devid, index, irte);
+}
+
+static void irte_ga_activate(void *entry, u16 devid, u16 index)
+{
+	struct irte_ga *irte = (struct irte_ga *) entry;
+
+	irte->lo.fields_remap.valid = 1;
+	modify_irte_ga(devid, index, irte);
+}
+
+static void irte_deactivate(void *entry, u16 devid, u16 index)
+{
+	union irte *irte = (union irte *) entry;
+
+	irte->fields.valid = 0;
+	modify_irte(devid, index, irte);
+}
+
+static void irte_ga_deactivate(void *entry, u16 devid, u16 index)
+{
+	struct irte_ga *irte = (struct irte_ga *) entry;
+
+	irte->lo.fields_remap.valid = 0;
+	modify_irte_ga(devid, index, irte);
+}
+
+static void irte_set_affinity(void *entry, u16 devid, u16 index,
+			      u8 vector, u32 dest_apicid)
+{
+	union irte *irte = (union irte *) entry;
+
+	irte->fields.vector = vector;
+	irte->fields.destination = dest_apicid;
+	modify_irte(devid, index, irte);
+}
+
+static void irte_ga_set_affinity(void *entry, u16 devid, u16 index,
+				 u8 vector, u32 dest_apicid)
+{
+	struct irte_ga *irte = (struct irte_ga *) entry;
+
+	irte->hi.fields.vector = vector;
+	irte->lo.fields_remap.destination = dest_apicid;
+	irte->lo.fields_remap.guest_mode = 0;
+	modify_irte_ga(devid, index, irte);
+}
+
+static void irte_set_allocated(struct irq_remap_table *table, int index)
+{
+	table->table[index] = IRTE_ALLOCATED;
+}
+
+static void irte_ga_set_allocated(struct irq_remap_table *table, int index)
+{
+	struct irte_ga *ptr = (struct irte_ga *)table->table;
+	struct irte_ga *irte = &ptr[index];
+
+	memset(&irte->lo.val, 0, sizeof(u64));
+	memset(&irte->hi.val, 0, sizeof(u64));
+	irte->hi.fields.vector = 0xff;
+}
+
+static bool irte_is_allocated(struct irq_remap_table *table, int index)
+{
+	union irte *ptr = (union irte *)table->table;
+	union irte *irte = &ptr[index];
+
+	return irte->val != 0;
+}
+
+static bool irte_ga_is_allocated(struct irq_remap_table *table, int index)
+{
+	struct irte_ga *ptr = (struct irte_ga *)table->table;
+	struct irte_ga *irte = &ptr[index];
+
+	return irte->hi.fields.vector != 0;
+}
+
+static void irte_clear_allocated(struct irq_remap_table *table, int index)
+{
+	table->table[index] = 0;
+}
+
+static void irte_ga_clear_allocated(struct irq_remap_table *table, int index)
+{
+	struct irte_ga *ptr = (struct irte_ga *)table->table;
+	struct irte_ga *irte = &ptr[index];
+
+	memset(&irte->lo.val, 0, sizeof(u64));
+	memset(&irte->hi.val, 0, sizeof(u64));
 }
 
 static int setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
@@ -3776,7 +3920,7 @@ static int setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
 	irte.fields.dm          = apic->irq_dest_mode;
 	irte.fields.valid       = 1;
 
-	ret = modify_irte(devid, index, irte);
+	ret = modify_irte(devid, index, &irte);
 	if (ret)
 		return ret;
 
@@ -3816,9 +3960,6 @@ static int set_affinity(struct irq_data *data, const struct cpumask *mask,
 	if (!cpumask_intersects(mask, cpu_online_mask))
 		return -EINVAL;
 
-	if (get_irte(irte_info->devid, irte_info->index, &irte))
-		return -EBUSY;
-
 	if (assign_irq_vector(irq, cfg, mask))
 		return -EBUSY;
 
@@ -3832,7 +3973,7 @@ static int set_affinity(struct irq_data *data, const struct cpumask *mask,
 	irte.fields.vector      = cfg->vector;
 	irte.fields.destination = dest;
 
-	modify_irte(irte_info->devid, irte_info->index, irte);
+	modify_irte(irte_info->devid, irte_info->index, &irte);
 
 	if (cfg->move_in_progress)
 		send_cleanup_vector(cfg);
@@ -3858,6 +3999,26 @@ static int free_irq(int irq)
 	return 0;
 }
 
+struct amd_irte_ops irte_32_ops = {
+	.prepare = irte_prepare,
+	.activate = irte_activate,
+	.deactivate = irte_deactivate,
+	.set_affinity = irte_set_affinity,
+	.set_allocated = irte_set_allocated,
+	.is_allocated = irte_is_allocated,
+	.clear_allocated = irte_clear_allocated,
+};
+
+struct amd_irte_ops irte_128_ops = {
+	.prepare = irte_ga_prepare,
+	.activate = irte_ga_activate,
+	.deactivate = irte_ga_deactivate,
+	.set_affinity = irte_ga_set_affinity,
+	.set_allocated = irte_ga_set_allocated,
+	.is_allocated = irte_ga_is_allocated,
+	.clear_allocated = irte_ga_clear_allocated,
+};
+
 static void compose_msi_msg(struct pci_dev *pdev,
 			    unsigned int irq, unsigned int dest,
 			    struct msi_msg *msg, u8 hpet_id)
@@ -3879,7 +4040,7 @@ static void compose_msi_msg(struct pci_dev *pdev,
 	irte.fields.dm		= apic->irq_dest_mode;
 	irte.fields.valid	= 1;
 
-	modify_irte(irte_info->devid, irte_info->index, irte);
+	modify_irte(irte_info->devid, irte_info->index, &irte);
 
 	msg->address_hi = MSI_ADDR_BASE_HI;
 	msg->address_lo = MSI_ADDR_BASE_LO;
