@@ -37,6 +37,7 @@
 #include <linux/sched.h>
 #include <net/flow_dissector.h>
 #include <linux/in6.h>
+#include <linux/if_packet.h>
 #include <net/flow.h>
 
 #include <linux/rh_kabi.h>
@@ -939,6 +940,15 @@ static inline bool skb_dst_is_noref(const struct sk_buff *skb)
 static inline struct rtable *skb_rtable(const struct sk_buff *skb)
 {
 	return (struct rtable *)skb_dst(skb);
+}
+
+/* For mangling skb->pkt_type from user space side from applications
+ * such as nft, tc, etc, we only allow a conservative subset of
+ * possible pkt_types to be set.
+*/
+static inline bool skb_pkt_type_ok(u32 ptype)
+{
+	return ptype <= PACKET_OTHERHOST;
 }
 
 static inline unsigned int skb_napi_id(const struct sk_buff *skb)
