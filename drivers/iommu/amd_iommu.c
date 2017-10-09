@@ -3532,21 +3532,6 @@ EXPORT_SYMBOL(amd_iommu_device_info);
  *
  *****************************************************************************/
 
-union irte {
-	u32 val;
-	struct {
-		u32 valid	: 1,
-		    no_fault	: 1,
-		    int_type	: 3,
-		    rq_eoi	: 1,
-		    dm		: 1,
-		    rsvd_1	: 1,
-		    destination	: 8,
-		    vector	: 8,
-		    rsvd_2	: 8;
-	} fields;
-};
-
 #define DTE_IRQ_PHYS_ADDR_MASK	(((1ULL << 45)-1) << 6)
 #define DTE_IRQ_REMAP_INTCTL    (2ULL << 60)
 #define DTE_IRQ_TABLE_LEN       (8ULL << 1)
