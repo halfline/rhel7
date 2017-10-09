@@ -426,7 +426,6 @@ void tcf_destroy_chain(struct tcf_proto __rcu **fl);
 static inline void skb_reset_tc(struct sk_buff *skb)
 {
 #ifdef CONFIG_NET_CLS_ACT
-	skb->tc_verd = SET_TC_AT(skb->tc_verd, 0);
 	skb->tc_verd = SET_TC_FROM(skb->tc_verd, 0);
 #endif
 }

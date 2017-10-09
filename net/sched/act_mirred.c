@@ -39,15 +39,15 @@ static bool tcf_mirred_is_act_redirect(int action)
 	return action == TCA_EGRESS_REDIR || action == TCA_INGRESS_REDIR;
 }
 
-static u32 tcf_mirred_act_direction(int action)
+static bool tcf_mirred_act_wants_ingress(int action)
 {
 	switch (action) {
 	case TCA_EGRESS_REDIR:
 	case TCA_EGRESS_MIRROR:
-		return AT_EGRESS;
+		return false;
 	case TCA_INGRESS_REDIR:
 	case TCA_INGRESS_MIRROR:
-		return AT_INGRESS;
+		return true;
 	default:
 		BUG();
 	}
@@ -198,7 +198,7 @@ static int tcf_mirred(struct sk_buff *skb, const struct tc_action *a,
 	 * and devices expect a mac header on xmit, then mac push/pull is
 	 * needed.
 	 */
-	if (G_TC_AT(skb->tc_verd) != tcf_mirred_act_direction(m_eaction) &&
+	if (skb_at_tc_ingress(skb) != tcf_mirred_act_wants_ingress(m_eaction) &&
 	    m_mac_header_xmit) {
 		if (!skb_at_tc_ingress(skb)) {
 			/* caught at egress, act ingress: pull mac */
@@ -213,11 +213,12 @@ static int tcf_mirred(struct sk_buff *skb, const struct tc_action *a,
 	/* mirror is always swallowed */
 	if (tcf_mirred_is_act_redirect(m_eaction))
 		skb2->tc_verd = SET_TC_FROM(skb2->tc_verd,
-					    G_TC_AT(skb2->tc_verd));
+					    skb_at_tc_ingress(skb) ?
+					    AT_INGRESS : AT_EGRESS);
 
 	skb2->skb_iif = skb->dev->ifindex;
 	skb2->dev = dev;
-	if (tcf_mirred_act_direction(m_eaction) & AT_EGRESS)
+	if (!tcf_mirred_act_wants_ingress(m_eaction))
 		err = dev_queue_xmit(skb2);
 	else
 		err = netif_receive_skb(skb2);
