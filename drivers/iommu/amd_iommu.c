@@ -3711,6 +3711,28 @@ out_unlock:
 	return table;
 }
 
+/* RHEL7 ONLY: */
+static int setup_amd_ir_data(struct irq_2_irte *irte_info)
+{
+	struct amd_ir_data *ir_data;
+
+	ir_data = kzalloc(sizeof(struct amd_ir_data), GFP_KERNEL);
+	if (!ir_data)
+		return -ENOMEM;
+
+	if (!AMD_IOMMU_GUEST_IR_GA(amd_iommu_guest_ir))
+		ir_data->entry = kzalloc(sizeof(union irte), GFP_KERNEL);
+	else
+		ir_data->entry = kzalloc(sizeof(struct irte_ga), GFP_KERNEL);
+	if (!ir_data->entry) {
+		kfree(ir_data);
+		return -ENOMEM;
+	}
+
+	irte_info->ir_data = ir_data;
+	return 0;
+}
+
 static int alloc_irq_index(struct irq_cfg *cfg, u16 devid, int count)
 {
 	struct irq_remap_table *table;
@@ -3739,13 +3761,21 @@ static int alloc_irq_index(struct irq_cfg *cfg, u16 devid, int count)
 		if (c == count)	{
 			struct irq_2_irte *irte_info;
 
+			/* RHEL7 Only */
+			irte_info = &cfg->irq_2_irte;
+			if (!irte_info->ir_data) {
+				int ret = setup_amd_ir_data(irte_info);
+
+				if (ret)
+					return ret;
+			}
+
 			for (; c != 0; --c)
 				iommu->irte_ops->set_allocated(table, index - c + 1);
 
 			index -= count - 1;
 
 			cfg->remapped	      = 1;
-			irte_info             = &cfg->irq_2_irte;
 			irte_info->devid      = devid;
 			irte_info->index      = index;
 
@@ -3844,7 +3874,7 @@ static void free_irte(u16 devid, int index)
 	iommu_completion_wait(iommu);
 }
 
-static void irte_prepare(void *entry,
+static void irte_prepare(void *entry, int index,
 			 u32 delivery_mode, u32 dest_mode,
 			 u8 vector, u32 dest_apicid, int devid)
 {
@@ -3856,9 +3886,10 @@ static void irte_prepare(void *entry,
 	irte->fields.destination = dest_apicid;
 	irte->fields.dm          = dest_mode;
 	irte->fields.valid       = 1;
+	modify_irte(devid, index, irte);
 }
 
-static void irte_ga_prepare(void *entry,
+static void irte_ga_prepare(void *entry, int index,
 			    u32 delivery_mode, u32 dest_mode,
 			    u8 vector, u32 dest_apicid, int devid)
 {
@@ -3873,6 +3904,7 @@ static void irte_ga_prepare(void *entry,
 	irte->hi.fields.vector            = vector;
 	irte->lo.fields_remap.destination = dest_apicid;
 	irte->lo.fields_remap.valid       = 1;
+	modify_irte_ga(devid, index, irte, NULL);
 }
 
 static void irte_activate(void *entry, u16 devid, u16 index)
@@ -3984,7 +4016,7 @@ static int setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
 	struct irq_remap_table *table;
 	struct irq_2_irte *irte_info;
 	struct irq_cfg *cfg;
-	union irte irte;
+	struct amd_iommu *iommu;
 	int ioapic_id;
 	int index;
 	int devid;
@@ -4008,22 +4040,22 @@ static int setup_ioapic_entry(int irq, struct IO_APIC_route_entry *entry,
 	index = attr->ioapic_pin;
 
 	/* Setup IRQ remapping info */
+	if (!irte_info->ir_data) {
+		ret = setup_amd_ir_data(irte_info);
+
+		if (ret)
+			return ret;
+	}
+
 	cfg->remapped	      = 1;
 	irte_info->devid      = devid;
 	irte_info->index      = index;
 
-	/* Setup IRTE for IOMMU */
-	irte.val		= 0;
-	irte.fields.vector      = vector;
-	irte.fields.int_type    = apic->irq_delivery_mode;
-	irte.fields.destination = destination;
-	irte.fields.dm          = apic->irq_dest_mode;
-	irte.fields.valid       = 1;
-
-	ret = modify_irte(devid, index, &irte);
-	if (ret)
-		return ret;
-
+	iommu = amd_iommu_rlookup_table[devid];
+	iommu->irte_ops->prepare(irte_info->ir_data->entry, index,
+				 apic->irq_delivery_mode,
+				 apic->irq_dest_mode,
+				 vector, destination, devid);
 	/* Setup IOAPIC entry */
 	memset(entry, 0, sizeof(*entry));
 
@@ -4095,6 +4127,7 @@ static int free_irq(int irq)
 	irte_info = &cfg->irq_2_irte;
 
 	free_irte(irte_info->devid, irte_info->index);
+	kfree(irte_info->ir_data);
 
 	return 0;
 }
@@ -4125,22 +4158,23 @@ static void compose_msi_msg(struct pci_dev *pdev,
 {
 	struct irq_2_irte *irte_info;
 	struct irq_cfg *cfg;
-	union irte irte;
+	struct amd_iommu *iommu;
 
 	cfg = irq_get_chip_data(irq);
 	if (!cfg)
 		return;
 
 	irte_info = &cfg->irq_2_irte;
+	if (!irte_info->ir_data)
+		if (setup_amd_ir_data(irte_info))
+			return;
 
-	irte.val		= 0;
-	irte.fields.vector	= cfg->vector;
-	irte.fields.int_type    = apic->irq_delivery_mode;
-	irte.fields.destination	= dest;
-	irte.fields.dm		= apic->irq_dest_mode;
-	irte.fields.valid	= 1;
-
-	modify_irte(irte_info->devid, irte_info->index, &irte);
+	iommu = amd_iommu_rlookup_table[irte_info->devid];
+	iommu->irte_ops->prepare(irte_info->ir_data->entry,
+				 irte_info->index,
+				 apic->irq_delivery_mode,
+				 apic->irq_dest_mode,
+				 cfg->vector, dest, irte_info->devid);
 
 	msg->address_hi = MSI_ADDR_BASE_HI;
 	msg->address_lo = MSI_ADDR_BASE_LO;
