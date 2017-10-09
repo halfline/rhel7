@@ -70,7 +70,7 @@ static const struct nla_policy tunnel_key_policy[TCA_TUNNEL_KEY_MAX + 1] = {
 };
 
 static int tunnel_key_init(struct net *net, struct nlattr *nla,
-			   struct nlattr *est, struct tc_action *a,
+			   struct nlattr *est, struct tc_action **a,
 			   int ovr, int bind)
 {
 	struct tc_action_net *tn = net_generic(net, tunnel_key_net_id);
@@ -152,13 +152,13 @@ static int tunnel_key_init(struct net *net, struct nlattr *nla,
 
 	if (!exists) {
 		ret = tcf_hash_create(tn, parm->index, est, a,
-				      sizeof(*t), bind, true);
+				      &act_tunnel_key_ops, bind, true);
 		if (ret)
 			return ret;
 
 		ret = ACT_P_CREATED;
 	} else {
-		tcf_hash_release(a, bind);
+		tcf_hash_release(*a, bind);
 		if (!ovr)
 			return -EEXIST;
 	}
@@ -169,7 +169,7 @@ static int tunnel_key_init(struct net *net, struct nlattr *nla,
 	params_new = kzalloc(sizeof(*params_new), GFP_KERNEL);
 	if (unlikely(!params_new)) {
 		if (ret == ACT_P_CREATED)
-			tcf_hash_release(a, bind);
+			tcf_hash_release(*a, bind);
 		return -ENOMEM;
 	}
 
@@ -185,13 +185,13 @@ static int tunnel_key_init(struct net *net, struct nlattr *nla,
 		kfree_rcu(params_old, rcu);
 
 	if (ret == ACT_P_CREATED)
-		tcf_hash_insert(tn, a);
+		tcf_hash_insert(tn, *a);
 
 	return ret;
 
 err_out:
 	if (exists)
-		tcf_hash_release(a, bind);
+		tcf_hash_release(*a, bind);
 	return ret;
 }
 
@@ -283,14 +283,14 @@ nla_put_failure:
 
 static int tunnel_key_walker(struct net *net, struct sk_buff *skb,
 			     struct netlink_callback *cb, int type,
-			     struct tc_action *a)
+			     const struct tc_action_ops *ops)
 {
 	struct tc_action_net *tn = net_generic(net, tunnel_key_net_id);
 
-	return tcf_generic_walker(tn, skb, cb, type, a);
+	return tcf_generic_walker(tn, skb, cb, type, ops);
 }
 
-static int tunnel_key_search(struct net *net, struct tc_action *a, u32 index)
+static int tunnel_key_search(struct net *net, struct tc_action **a, u32 index)
 {
 	struct tc_action_net *tn = net_generic(net, tunnel_key_net_id);
 
