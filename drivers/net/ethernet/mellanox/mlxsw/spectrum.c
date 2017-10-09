@@ -1223,6 +1223,7 @@ static int mlxsw_sp_port_add_cls_matchall(struct mlxsw_sp_port *mlxsw_sp_port,
 {
 	struct mlxsw_sp_port_mall_tc_entry *mall_tc_entry;
 	const struct tc_action *a;
+	LIST_HEAD(actions);
 	int err;
 
 	if (!tc_single_action(cls->exts)) {
@@ -1235,7 +1236,8 @@ static int mlxsw_sp_port_add_cls_matchall(struct mlxsw_sp_port *mlxsw_sp_port,
 		return -ENOMEM;
 	mall_tc_entry->cookie = cls->cookie;
 
-	a = list_first_entry(&cls->exts->actions, struct tc_action, list);
+	tcf_exts_to_list(cls->exts, &actions);
+	a = list_first_entry(&actions, struct tc_action, list);
 
 	if (is_tcf_mirred_egress_mirror(a) && protocol == htons(ETH_P_ALL)) {
 		struct mlxsw_sp_port_mall_mirror_tc_entry *mirror;

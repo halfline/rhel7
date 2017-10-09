@@ -99,7 +99,8 @@ static int fill_action_fields(struct adapter *adap,
 	if (tc_no_actions(exts))
 		return -EINVAL;
 
-	tc_for_each_action(a, exts) {
+	tcf_exts_to_list(exts, &actions);
+	list_for_each_entry(a, &actions, list) {
 		/* Don't allow more than one action per rule. */
 		if (num_actions)
 			return -EINVAL;
