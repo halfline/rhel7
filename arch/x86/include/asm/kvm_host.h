@@ -736,6 +736,7 @@ struct kvm_arch {
 	u32 ldr_mode;
 	struct page *avic_logical_id_table_page;
 	struct page *avic_physical_id_table_page;
+	struct hlist_node hnode;
 };
 
 struct kvm_vm_stat {
