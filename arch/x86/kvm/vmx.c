@@ -898,8 +898,9 @@ static void nested_release_page_clean(struct page *page)
 	kvm_release_page_clean(page);
 }
 
+static bool nested_ept_ad_enabled(struct kvm_vcpu *vcpu);
 static unsigned long nested_ept_get_cr3(struct kvm_vcpu *vcpu);
-static u64 construct_eptp(unsigned long root_hpa);
+static u64 construct_eptp(struct kvm_vcpu *vcpu, unsigned long root_hpa);
 static void kvm_cpu_vmxon(u64 addr);
 static void kvm_cpu_vmxoff(void);
 static int vmx_set_tss_addr(struct kvm *kvm, unsigned int addr);
@@ -3742,7 +3743,7 @@ static inline void __vmx_flush_tlb(struct kvm_vcpu *vcpu, int vpid)
 	if (enable_ept) {
 		if (!VALID_PAGE(vcpu->arch.mmu.root_hpa))
 			return;
-		ept_sync_context(construct_eptp(vcpu->arch.mmu.root_hpa));
+		ept_sync_context(construct_eptp(vcpu, vcpu->arch.mmu.root_hpa));
 	} else {
 		vpid_sync_context(vpid);
 	}
@@ -3880,14 +3881,15 @@ static void vmx_set_cr0(struct kvm_vcpu *vcpu, unsigned long cr0)
 	vmx->emulation_required = emulation_required(vcpu);
 }
 
-static u64 construct_eptp(unsigned long root_hpa)
+static u64 construct_eptp(struct kvm_vcpu *vcpu, unsigned long root_hpa)
 {
 	u64 eptp;
 
 	/* TODO write the value reading from MSR */
 	eptp = VMX_EPT_DEFAULT_MT |
 		VMX_EPT_DEFAULT_GAW << VMX_EPT_GAW_EPTP_SHIFT;
-	if (enable_ept_ad_bits)
+	if (enable_ept_ad_bits &&
+	    (!is_guest_mode(vcpu) || nested_ept_ad_enabled(vcpu)))
 		eptp |= VMX_EPT_AD_ENABLE_BIT;
 	eptp |= (root_hpa & PAGE_MASK);
 
@@ -3901,7 +3903,7 @@ static void vmx_set_cr3(struct kvm_vcpu *vcpu, unsigned long cr3)
 
 	guest_cr3 = cr3;
 	if (enable_ept) {
-		eptp = construct_eptp(cr3);
+		eptp = construct_eptp(vcpu, cr3);
 		vmcs_write64(EPT_POINTER, eptp);
 		if (is_paging(vcpu) || is_guest_mode(vcpu))
 			guest_cr3 = kvm_read_cr3(vcpu);
@@ -6101,17 +6103,6 @@ static int handle_ept_violation(struct kvm_vcpu *vcpu)
 
 	exit_qualification = vmcs_readl(EXIT_QUALIFICATION);
 
-	if (is_guest_mode(vcpu)
-	    && !(exit_qualification & EPT_VIOLATION_GVA_TRANSLATED)) {
-		/*
-		 * Fix up exit_qualification according to whether guest
-		 * page table accesses are reads or writes.
-		 */
-		u64 eptp = nested_ept_get_cr3(vcpu);
-		if (!(eptp & VMX_EPT_AD_ENABLE_BIT))
-			exit_qualification &= ~EPT_VIOLATION_ACC_WRITE;
-	}
-
 	/*
 	 * EPT violation happened while executing iret from NMI,
 	 * "blocked by NMI" bit has to be set before next VM entry.
@@ -6338,7 +6329,7 @@ void vmx_enable_tdp(void)
 		enable_ept_ad_bits ? VMX_EPT_DIRTY_BIT : 0ull,
 		0ull, VMX_EPT_EXECUTABLE_MASK,
 		cpu_has_vmx_ept_execute_only() ? 0ull : VMX_EPT_READABLE_MASK,
-		enable_ept_ad_bits ? 0ull : VMX_EPT_RWX_MASK);
+		VMX_EPT_RWX_MASK);
 
 	ept_set_mmio_spte_mask();
 	kvm_enable_tdp();
@@ -9370,6 +9361,11 @@ static void nested_ept_inject_page_fault(struct kvm_vcpu *vcpu,
 	vmcs12->guest_physical_address = fault->address;
 }
 
+static bool nested_ept_ad_enabled(struct kvm_vcpu *vcpu)
+{
+	return nested_ept_get_cr3(vcpu) & VMX_EPT_AD_ENABLE_BIT;
+}
+
 /* Callbacks for nested_ept_init_mmu_context: */
 
 static unsigned long nested_ept_get_cr3(struct kvm_vcpu *vcpu)
@@ -9380,18 +9376,18 @@ static unsigned long nested_ept_get_cr3(struct kvm_vcpu *vcpu)
 
 static int nested_ept_init_mmu_context(struct kvm_vcpu *vcpu)
 {
-	u64 eptp;
+	bool wants_ad;
 
 	WARN_ON(mmu_is_nested(vcpu));
-	eptp = nested_ept_get_cr3(vcpu);
-	if ((eptp & VMX_EPT_AD_ENABLE_BIT) && !enable_ept_ad_bits)
+	wants_ad = nested_ept_ad_enabled(vcpu);
+	if (wants_ad && !enable_ept_ad_bits)
 		return 1;
 
 	kvm_mmu_unload(vcpu);
 	kvm_init_shadow_ept_mmu(vcpu,
 			to_vmx(vcpu)->nested.nested_vmx_ept_caps &
 			VMX_EPT_EXECUTE_ONLY_BIT,
-			eptp & VMX_EPT_AD_ENABLE_BIT);
+			wants_ad);
 	vcpu->arch.mmu.set_cr3           = vmx_set_cr3;
 	vcpu->arch.mmu.get_cr3           = nested_ept_get_cr3;
 	vcpu->arch.mmu.inject_page_fault = nested_ept_inject_page_fault;
