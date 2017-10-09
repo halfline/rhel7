@@ -1945,6 +1945,9 @@ struct net_device_extended {
 
 	bool needs_free_netdev;
 	void (*priv_destructor)(struct net_device *dev);
+#ifdef CONFIG_NET_CLS_ACT
+	struct tcf_proto __rcu	*egress_cl_list;
+#endif
 };
 
 #define to_net_dev(d) container_of(d, struct net_device, dev)
