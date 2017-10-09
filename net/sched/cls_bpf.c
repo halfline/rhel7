@@ -154,7 +154,6 @@ static int cls_bpf_set_parms(struct net *net, struct tcf_proto *tp,
 			     struct nlattr **tb, struct nlattr *est, bool ovr)
 {
 	struct sock_filter *bpf_ops;
-	struct tcf_exts exts;
 	struct sock_fprog tmp;
 	struct sk_filter *fp;
 	u16 bpf_size, bpf_len;
@@ -164,31 +163,22 @@ static int cls_bpf_set_parms(struct net *net, struct tcf_proto *tp,
 	if (!tb[TCA_BPF_OPS_LEN] || !tb[TCA_BPF_OPS] || !tb[TCA_BPF_CLASSID])
 		return -EINVAL;
 
-	ret = tcf_exts_init(&exts, TCA_BPF_ACT, TCA_BPF_POLICE);
+	ret = tcf_exts_validate(net, tp, tb, est, &prog->exts, ovr);
 	if (ret < 0)
 		return ret;
-	ret = tcf_exts_validate(net, tp, tb, est, &exts, ovr);
-	if (ret < 0)
-		goto errout;
 
 	classid = nla_get_u32(tb[TCA_BPF_CLASSID]);
 	bpf_len = nla_get_u16(tb[TCA_BPF_OPS_LEN]);
-	if (bpf_len > BPF_MAXINSNS || bpf_len == 0) {
-		ret = -EINVAL;
-		goto errout;
-	}
+	if (bpf_len > BPF_MAXINSNS || bpf_len == 0)
+		return -EINVAL;
 
 	bpf_size = bpf_len * sizeof(*bpf_ops);
-	if (bpf_size != nla_len(tb[TCA_BPF_OPS])) {
-		ret = -EINVAL;
-		goto errout;
-	}
+	if (bpf_size != nla_len(tb[TCA_BPF_OPS]))
+		return -EINVAL;
 
 	bpf_ops = kzalloc(bpf_size, GFP_KERNEL);
-	if (bpf_ops == NULL) {
-		ret = -ENOMEM;
-		goto errout;
-	}
+	if (bpf_ops == NULL)
+		return -ENOMEM;
 
 	memcpy(bpf_ops, nla_data(tb[TCA_BPF_OPS]), bpf_size);
 
@@ -205,13 +195,10 @@ static int cls_bpf_set_parms(struct net *net, struct tcf_proto *tp,
 	prog->res.classid = classid;
 
 	tcf_bind_filter(tp, &prog->res, base);
-	tcf_exts_change(tp, &prog->exts, &exts);
 
 	return 0;
 errout_free:
 	kfree(bpf_ops);
-errout:
-	tcf_exts_destroy(&exts);
 	return ret;
 }
 
