@@ -5614,7 +5614,7 @@ static int __i40e_setup_tc(struct net_device *netdev, enum tc_setup_type type,
 #endif
 {
 	if (type != TC_SETUP_MQPRIO)
-		return -EINVAL;
+		return -EOPNOTSUPP;
 
 	tc->mqprio->hw = TC_MQPRIO_HW_OFFLOAD_TCS;
 
