@@ -80,8 +80,8 @@ static int tcf_vlan_init(struct net *net, struct nlattr *nla,
 	__be16 push_vid = 0;
 	__be16 push_proto = 0;
 	u8 push_prio = 0;
-	int ret = 0, exists = 0;
-	int err;
+	bool exists = false;
+	int ret = 0, err;
 
 	if (!nla)
 		return -EINVAL;
