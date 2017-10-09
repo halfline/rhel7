@@ -3750,24 +3750,7 @@ static int ixgbevf_change_mtu(struct net_device *netdev, int new_mtu)
 	struct ixgbevf_adapter *adapter = netdev_priv(netdev);
 	struct ixgbe_hw *hw = &adapter->hw;
 	int max_frame = new_mtu + ETH_HLEN + ETH_FCS_LEN;
-	int max_possible_frame = MAXIMUM_ETHERNET_VLAN_SIZE;
 	int ret;
-
-	switch (adapter->hw.api_version) {
-	case ixgbe_mbox_api_11:
-	case ixgbe_mbox_api_12:
-	case ixgbe_mbox_api_13:
-		max_possible_frame = IXGBE_MAX_JUMBO_FRAME_SIZE;
-		break;
-	default:
-		if (adapter->hw.mac.type != ixgbe_mac_82599_vf)
-			max_possible_frame = IXGBE_MAX_JUMBO_FRAME_SIZE;
-		break;
-	}
-
-	/* MTU < 68 is an error and causes problems on some kernels */
-	if ((new_mtu < 68) || (max_frame > max_possible_frame))
-		return -EINVAL;
 
 	spin_lock_bh(&adapter->mbx_lock);
 	/* notify the PF of our intent to use this size of frame */
@@ -3954,6 +3937,7 @@ ixgbevf_features_check(struct sk_buff *skb, struct net_device *dev,
 }
 
 static const struct net_device_ops ixgbevf_netdev_ops = {
+	.ndo_size		= sizeof(struct net_device_ops),
 	.ndo_open		= ixgbevf_open,
 	.ndo_stop		= ixgbevf_close,
 	.ndo_start_xmit		= ixgbevf_xmit_frame,
@@ -3961,7 +3945,7 @@ static const struct net_device_ops ixgbevf_netdev_ops = {
 	.ndo_get_stats64	= ixgbevf_get_stats,
 	.ndo_validate_addr	= eth_validate_addr,
 	.ndo_set_mac_address	= ixgbevf_set_mac,
-	.ndo_change_mtu_rh74	= ixgbevf_change_mtu,
+	.extended.ndo_change_mtu	= ixgbevf_change_mtu,
 	.ndo_tx_timeout		= ixgbevf_tx_timeout,
 	.ndo_vlan_rx_add_vid	= ixgbevf_vlan_rx_add_vid,
 	.ndo_vlan_rx_kill_vid	= ixgbevf_vlan_rx_kill_vid,
@@ -4109,6 +4093,23 @@ static int ixgbevf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 			    NETIF_F_HW_VLAN_CTAG_TX;
 
 	netdev->priv_flags |= IFF_UNICAST_FLT;
+
+	/* MTU range: 68 - 1504 or 9710 */
+	netdev->extended->min_mtu = ETH_MIN_MTU;
+	switch (adapter->hw.api_version) {
+	case ixgbe_mbox_api_11:
+	case ixgbe_mbox_api_12:
+		netdev->extended->max_mtu = IXGBE_MAX_JUMBO_FRAME_SIZE -
+				  (ETH_HLEN + ETH_FCS_LEN);
+		break;
+	default:
+		if (adapter->hw.mac.type != ixgbe_mac_82599_vf)
+			netdev->extended->max_mtu = IXGBE_MAX_JUMBO_FRAME_SIZE -
+					  (ETH_HLEN + ETH_FCS_LEN);
+		else
+			netdev->extended->max_mtu = ETH_DATA_LEN + ETH_FCS_LEN;
+		break;
+	}
 
 	if (IXGBE_REMOVED(hw->hw_addr)) {
 		err = -EIO;
