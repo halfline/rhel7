@@ -3228,12 +3228,12 @@ sch_handle_egress(struct sk_buff *skb, int *ret, struct net_device *dev)
 	case TC_ACT_SHOT:
 		qdisc_qstats_cpu_drop(cl->q);
 		*ret = NET_XMIT_DROP;
-		goto drop;
+		kfree_skb(skb);
+		return NULL;
 	case TC_ACT_STOLEN:
 	case TC_ACT_QUEUED:
 		*ret = NET_XMIT_SUCCESS;
-drop:
-		kfree_skb(skb);
+		consume_skb(skb);
 		return NULL;
 	default:
 		break;
