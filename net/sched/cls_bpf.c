@@ -107,7 +107,7 @@ static void __cls_bpf_delete_prog(struct rcu_head *rcu)
 	cls_bpf_delete_prog(prog->tp, prog);
 }
 
-static int cls_bpf_delete(struct tcf_proto *tp, unsigned long arg, bool *last)
+static int cls_bpf_delete(struct tcf_proto *tp, void *arg, bool *last)
 {
 	struct cls_bpf_head *head = rtnl_dereference(tp->root);
 	struct cls_bpf_prog *prog = (struct cls_bpf_prog *) arg;
@@ -133,20 +133,17 @@ static void cls_bpf_destroy(struct tcf_proto *tp)
 	kfree_rcu(head, rcu);
 }
 
-static unsigned long cls_bpf_get(struct tcf_proto *tp, u32 handle)
+static void *cls_bpf_get(struct tcf_proto *tp, u32 handle)
 {
 	struct cls_bpf_head *head = rtnl_dereference(tp->root);
 	struct cls_bpf_prog *prog;
-	unsigned long ret = 0UL;
 
 	list_for_each_entry(prog, &head->plist, link) {
-		if (prog->handle == handle) {
-			ret = (unsigned long) prog;
-			break;
-		}
+		if (prog->handle == handle)
+			return prog;
 	}
 
-	return ret;
+	return NULL;
 }
 
 static int cls_bpf_set_parms(struct net *net, struct tcf_proto *tp,
@@ -226,10 +223,10 @@ static u32 cls_bpf_grab_new_handle(struct tcf_proto *tp,
 static int cls_bpf_change(struct net *net, struct sk_buff *in_skb,
 			  struct tcf_proto *tp, unsigned long base,
 			  u32 handle, struct nlattr **tca,
-			  unsigned long *arg, bool ovr)
+			  void **arg, bool ovr)
 {
 	struct cls_bpf_head *head = rtnl_dereference(tp->root);
-	struct cls_bpf_prog *oldprog = (struct cls_bpf_prog *) *arg;
+	struct cls_bpf_prog *oldprog = *arg;
 	struct nlattr *tb[TCA_BPF_MAX + 1];
 	struct cls_bpf_prog *prog;
 	int ret;
@@ -277,7 +274,7 @@ static int cls_bpf_change(struct net *net, struct sk_buff *in_skb,
 		list_add_rcu(&prog->link, &head->plist);
 	}
 
-	*arg = (unsigned long) prog;
+	*arg = prog;
 	return 0;
 
 errout:
@@ -286,7 +283,7 @@ errout:
 	return ret;
 }
 
-static int cls_bpf_dump(struct net *net, struct tcf_proto *tp, unsigned long fh,
+static int cls_bpf_dump(struct net *net, struct tcf_proto *tp, void *fh,
 			struct sk_buff *skb, struct tcmsg *tm)
 {
 	struct cls_bpf_prog *prog = (struct cls_bpf_prog *) fh;
@@ -336,7 +333,7 @@ static void cls_bpf_walk(struct tcf_proto *tp, struct tcf_walker *arg)
 	list_for_each_entry(prog, &head->plist, link) {
 		if (arg->count < arg->skip)
 			goto skip;
-		if (arg->fn(tp, (unsigned long) prog, arg) < 0) {
+		if (arg->fn(tp, prog, arg) < 0) {
 			arg->stop = 1;
 			break;
 		}
