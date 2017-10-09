@@ -113,6 +113,8 @@ SECTIONS
 
 	EXCEPTION_TABLE(16) :text = 0x9090
 
+	MC_EXCEPTION_TABLE(16) :text = 0x9090
+
 #if defined(CONFIG_DEBUG_RODATA)
 	/* .text should occupy whole number of pages */
 	. = ALIGN(PAGE_SIZE);

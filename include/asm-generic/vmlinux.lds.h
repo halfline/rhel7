@@ -484,6 +484,17 @@
 	}
 
 /*
+ * MC Exception table
+ */
+#define MC_EXCEPTION_TABLE(align)						\
+	. = ALIGN(align);						\
+	__mc_table : AT(ADDR(__mc_table) - LOAD_OFFSET) {		\
+		VMLINUX_SYMBOL(__start___mc_table) = .;			\
+		*(__mc_table)						\
+		VMLINUX_SYMBOL(__stop___mc_table) = .;			\
+	}
+
+/*
  * Init task
  */
 #define INIT_TASK_DATA_SECTION(align)					\
