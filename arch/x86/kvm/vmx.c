@@ -10235,9 +10235,10 @@ static int nested_vmx_run(struct kvm_vcpu *vcpu, bool launch)
 	if (!vmx_control_verify(vmcs12->cpu_based_vm_exec_control,
 				vmx->nested.nested_vmx_true_procbased_ctls_low,
 				vmx->nested.nested_vmx_procbased_ctls_high) ||
-	    !vmx_control_verify(vmcs12->secondary_vm_exec_control,
-				vmx->nested.nested_vmx_secondary_ctls_low,
-				vmx->nested.nested_vmx_secondary_ctls_high) ||
+	    (nested_cpu_has(vmcs12, CPU_BASED_ACTIVATE_SECONDARY_CONTROLS) &&
+	     !vmx_control_verify(vmcs12->secondary_vm_exec_control,
+				 vmx->nested.nested_vmx_secondary_ctls_low,
+				 vmx->nested.nested_vmx_secondary_ctls_high)) ||
 	    !vmx_control_verify(vmcs12->pin_based_vm_exec_control,
 				vmx->nested.nested_vmx_pinbased_ctls_low,
 				vmx->nested.nested_vmx_pinbased_ctls_high) ||
