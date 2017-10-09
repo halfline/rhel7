@@ -81,7 +81,7 @@ static void ri_tasklet(unsigned long dev)
 	while ((skb = __skb_dequeue(&dp->tq)) != NULL) {
 		u32 from = G_TC_FROM(skb->tc_verd);
 
-		skb->tc_verd = 0;
+		skb_reset_tc(skb);
 		skb->tc_verd = SET_TC_NCLS(skb->tc_verd);
 
 		u64_stats_update_begin(&dp->tsync);
@@ -190,14 +190,13 @@ static void ifb_setup(struct net_device *dev)
 static netdev_tx_t ifb_xmit(struct sk_buff *skb, struct net_device *dev)
 {
 	struct ifb_private *dp = netdev_priv(dev);
-	u32 from = G_TC_FROM(skb->tc_verd);
 
 	u64_stats_update_begin(&dp->rsync);
 	dp->rx_packets++;
 	dp->rx_bytes += skb->len;
 	u64_stats_update_end(&dp->rsync);
 
-	if (!(from & (AT_INGRESS|AT_EGRESS)) || !skb->skb_iif) {
+	if (G_TC_FROM(skb->tc_verd) == AT_STACK || !skb->skb_iif) {
 		dev_kfree_skb(skb);
 		dev->stats.rx_dropped++;
 		return NETDEV_TX_OK;
