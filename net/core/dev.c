@@ -8034,7 +8034,9 @@ struct net_device *alloc_netdev_mqs(int sizeof_priv, const char *name,
 	INIT_LIST_HEAD(&dev->lower_dev_list);
 	INIT_LIST_HEAD(&dev->extended->ptype_all);
 	INIT_LIST_HEAD(&dev->extended->ptype_specific);
-
+#ifdef CONFIG_NET_SCHED
+	hash_init(dev->extended->qdisc_hash);
+#endif
 	dev->priv_flags = IFF_XMIT_DST_RELEASE | IFF_XMIT_DST_RELEASE_PERM;
 	setup(dev);
 

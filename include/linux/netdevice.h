@@ -53,6 +53,7 @@
 #include <uapi/linux/netdevice.h>
 #include <uapi/linux/if_bonding.h>
 #include <uapi/linux/pkt_cls.h>
+#include <linux/hashtable.h>
 
 #include <linux/rh_kabi.h>
 
@@ -1946,6 +1947,9 @@ struct net_device_extended {
 	void (*priv_destructor)(struct net_device *dev);
 #ifdef CONFIG_NET_CLS_ACT
 	struct tcf_proto __rcu	*egress_cl_list;
+#endif
+#ifdef CONFIG_NET_SCHED
+	DECLARE_HASHTABLE	(qdisc_hash, 4);
 #endif
 };
 
