@@ -4079,7 +4079,7 @@ static int set_affinity(struct irq_data *data, const struct cpumask *mask,
 	struct irq_2_irte *irte_info;
 	unsigned int dest, irq;
 	struct irq_cfg *cfg;
-	union irte irte;
+	struct amd_iommu *iommu;
 	int err;
 
 	if (!config_enabled(CONFIG_SMP))
@@ -4088,6 +4088,9 @@ static int set_affinity(struct irq_data *data, const struct cpumask *mask,
 	cfg       = data->chip_data;
 	irq       = data->irq;
 	irte_info = &cfg->irq_2_irte;
+	iommu     = amd_iommu_rlookup_table[irte_info->devid];
+	if (!iommu)
+		return -ENODEV;
 
 	if (!cpumask_intersects(mask, cpu_online_mask))
 		return -EINVAL;
@@ -4102,10 +4105,8 @@ static int set_affinity(struct irq_data *data, const struct cpumask *mask,
 		return err;
 	}
 
-	irte.fields.vector      = cfg->vector;
-	irte.fields.destination = dest;
-
-	modify_irte(irte_info->devid, irte_info->index, &irte);
+	iommu->irte_ops->set_affinity(irte_info->ir_data->entry, irte_info->devid,
+			    irte_info->index, cfg->vector, dest);
 
 	if (cfg->move_in_progress)
 		send_cleanup_vector(cfg);
