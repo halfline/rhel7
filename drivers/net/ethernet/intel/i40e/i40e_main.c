@@ -5606,19 +5606,20 @@ exit:
 
 #ifdef I40E_FCOE
 int __i40e_setup_tc(struct net_device *netdev, enum tc_setup_type type,
-		    u32 handle, u32 chain_index, __be16 proto,
-		    struct tc_to_netdev *tc)
+		    void *type_data)
 #else
 static int __i40e_setup_tc(struct net_device *netdev, enum tc_setup_type type,
-			   struct tc_to_netdev *tc)
+			   void *type_data)
 #endif
 {
+	struct tc_mqprio_qopt *mqprio = type_data;
+
 	if (type != TC_SETUP_MQPRIO)
 		return -EOPNOTSUPP;
 
-	tc->mqprio->hw = TC_MQPRIO_HW_OFFLOAD_TCS;
+	mqprio->hw = TC_MQPRIO_HW_OFFLOAD_TCS;
 
-	return i40e_setup_tc(netdev, tc->mqprio->num_tc);
+	return i40e_setup_tc(netdev, mqprio->num_tc);
 }
 
 /**

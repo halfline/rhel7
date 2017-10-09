@@ -1239,14 +1239,16 @@ err_queueing_scheme:
 }
 
 static int __fm10k_setup_tc(struct net_device *dev, enum tc_setup_type type,
-			    struct tc_to_netdev *tc)
+			    void *type_data)
 {
+	struct tc_mqprio_qopt *mqprio = type_data;
+
 	if (type != TC_SETUP_MQPRIO)
 		return -EOPNOTSUPP;
 
-	tc->mqprio->hw = TC_MQPRIO_HW_OFFLOAD_TCS;
+	mqprio->hw = TC_MQPRIO_HW_OFFLOAD_TCS;
 
-	return fm10k_setup_tc(dev, tc->mqprio->num_tc);
+	return fm10k_setup_tc(dev, mqprio->num_tc);
 }
 
 #if 0

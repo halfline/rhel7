@@ -805,25 +805,11 @@ static inline bool netdev_phys_item_id_same(struct netdev_phys_item_id *a,
 typedef u16 (*select_queue_fallback_t)(struct net_device *dev,
 				       struct sk_buff *skb);
 
-/* These structures hold the attributes of qdisc and classifiers
- * that are being passed to the netdevice through the setup_tc op.
- */
 enum tc_setup_type {
 	TC_SETUP_MQPRIO,
 	TC_SETUP_CLSU32,
 	TC_SETUP_CLSFLOWER,
 	TC_SETUP_CLSMATCHALL,
-};
-
-struct tc_cls_u32_offload;
-
-struct tc_to_netdev {
-	union {
-		struct tc_cls_u32_offload *cls_u32;
-		struct tc_cls_flower_offload *cls_flower;
-		struct tc_cls_matchall_offload *cls_mall;
-		struct tc_mqprio_qopt *mqprio;
-	};
 };
 
 /* Forward declaration of tc_to_netdev structure used by __rh_call_ndo_setup_tc
@@ -899,7 +885,7 @@ struct tc_to_netdev_rh74;
  *	      use central MTU range checking provided by network core.
  *
  * int (*ndo_setup_tc)(struct net_device *dev, enum tc_setup_type type,
- *		       struct tc_to_netdev *tc);
+ *		       void *type_data);
  *	Called to setup any 'tc' scheduler, classifier or action on @dev.
  *	This is always called from the stack with the rtnl lock held and netif
  *	tx queues stopped. This allows the netdevice to perform queue
@@ -953,7 +939,7 @@ struct net_device_ops_extended {
 						  int new_mtu);
 	int			(*ndo_setup_tc)(struct net_device *dev,
 						enum tc_setup_type type,
-						struct tc_to_netdev *tc);
+						void *type_data);
 };
 
 /*
@@ -1981,7 +1967,7 @@ bool __rh_has_ndo_setup_tc(const struct net_device *dev)
 }
 
 int __rh_call_ndo_setup_tc(struct net_device *dev, enum tc_setup_type type,
-			   struct tc_to_netdev *tc);
+			   void *type_data);
 
 static inline
 int netdev_get_prio_tc_map(const struct net_device *dev, u32 prio)

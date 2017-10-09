@@ -46,31 +46,30 @@ struct tc_to_netdev_rh74 {
 
 static inline
 int handle_sch_mqprio_rh74(struct net_device *dev,
-			   const struct tc_to_netdev *tc)
+			   const struct tc_mqprio_qopt *mqprio)
 {
 	struct tc_to_netdev_rh74 tc74 = {
 		.type	= TC_SETUP_MQPRIO,
+		.tc	= mqprio->num_tc,
 	};
-
-	/* The drivers use value tc->tc instead of tc->mqprio->num_tc */
-	tc74.tc = tc->mqprio->num_tc;
 
 	return dev->netdev_ops->ndo_setup_tc_rh74(dev, 0, 0, &tc74);
 }
 
 static inline
-int handle_cls_u32_rh74(struct net_device *dev, const struct tc_to_netdev *tc)
+int handle_cls_u32_rh74(struct net_device *dev,
+			const struct tc_cls_u32_offload *cls_u32)
 {
-	struct tc_cls_u32_offload_rh74 cls_u32 = {
-		.command	= tc->cls_u32->command,
-		.knode		= tc->cls_u32->knode,
-		.hnode		= tc->cls_u32->hnode,
+	struct tc_cls_u32_offload_rh74 cls_u32_rh74 = {
+		.command	= cls_u32->command,
+		.knode		= cls_u32->knode,
+		.hnode		= cls_u32->hnode,
 	};
 	struct tc_to_netdev_rh74 tc74 = {
 		.type		= TC_SETUP_CLSU32,
-		.cls_u32	= &cls_u32,
+		.cls_u32	= &cls_u32_rh74,
 	};
-	struct tc_cls_common_offload *common = &tc->cls_u32->common;
+	const struct tc_cls_common_offload *common = &cls_u32->common;
 
 	/* All older drivers supports only single chain */
 	if (common->chain_index)
@@ -82,23 +81,23 @@ int handle_cls_u32_rh74(struct net_device *dev, const struct tc_to_netdev *tc)
 
 static inline
 int handle_cls_flower_rh74(struct net_device *dev,
-			   const struct tc_to_netdev *tc)
+			   const struct tc_cls_flower_offload *cls_flower)
 {
-	struct tc_cls_flower_offload_rh74 cls_flower = {
-		.command	= tc->cls_flower->command,
-		.prio		= tc->cls_flower->common.prio,
-		.cookie		= tc->cls_flower->cookie,
-		.dissector	= tc->cls_flower->dissector,
-		.mask		= tc->cls_flower->mask,
-		.key		= tc->cls_flower->key,
-		.exts		= tc->cls_flower->exts,
+	struct tc_cls_flower_offload_rh74 cls_flower_rh74 = {
+		.command	= cls_flower->command,
+		.prio		= cls_flower->common.prio,
+		.cookie		= cls_flower->cookie,
+		.dissector	= cls_flower->dissector,
+		.mask		= cls_flower->mask,
+		.key		= cls_flower->key,
+		.exts		= cls_flower->exts,
 	};
 	struct tc_to_netdev_rh74 tc74 = {
 		.type		= TC_SETUP_CLSFLOWER,
-		.cls_flower	= &cls_flower,
-		.egress_dev	= tc->cls_flower->egress_dev,
+		.cls_flower	= &cls_flower_rh74,
+		.egress_dev	= cls_flower->egress_dev,
 	};
-	struct tc_cls_common_offload *common = &tc->cls_flower->common;
+	const struct tc_cls_common_offload *common = &cls_flower->common;
 
 	/* All older drivers supports only single chain */
 	if (common->chain_index)
@@ -110,18 +109,18 @@ int handle_cls_flower_rh74(struct net_device *dev,
 
 static inline
 int handle_cls_matchall_rh74(struct net_device *dev,
-			     const struct tc_to_netdev *tc)
+			     const struct tc_cls_matchall_offload *cls_mall)
 {
-	struct tc_cls_matchall_offload_rh74 cls_mall = {
-		.command	= tc->cls_mall->command,
-		.exts		= tc->cls_mall->exts,
-		.cookie		= tc->cls_mall->cookie,
+	struct tc_cls_matchall_offload_rh74 cls_mall_rh74 = {
+		.command	= cls_mall->command,
+		.exts		= cls_mall->exts,
+		.cookie		= cls_mall->cookie,
 	};
 	struct tc_to_netdev_rh74 tc74 = {
 		.type		= TC_SETUP_CLSMATCHALL,
-		.cls_mall	= &cls_mall,
+		.cls_mall	= &cls_mall_rh74,
 	};
-	struct tc_cls_common_offload *common = &tc->cls_mall->common;
+	const struct tc_cls_common_offload *common = &cls_mall->common;
 
 	/* All older drivers supports only single chain */
 	if (common->chain_index)
@@ -132,22 +131,22 @@ int handle_cls_matchall_rh74(struct net_device *dev,
 }
 
 int __rh_call_ndo_setup_tc(struct net_device *dev, enum tc_setup_type type,
-			   struct tc_to_netdev *tc)
+			   void *type_data)
 {
 	const struct net_device_ops *ops = dev->netdev_ops;
 
 	if (get_ndo_ext(ops, ndo_setup_tc)) {
-		return get_ndo_ext(ops, ndo_setup_tc)(dev, type, tc);
+		return get_ndo_ext(ops, ndo_setup_tc)(dev, type, type_data);
 	} else if (ops->ndo_setup_tc_rh74) {
 		switch (type) {
 		case TC_SETUP_MQPRIO:
-			return handle_sch_mqprio_rh74(dev, tc);
+			return handle_sch_mqprio_rh74(dev, type_data);
 		case TC_SETUP_CLSU32:
-			return handle_cls_u32_rh74(dev, tc);
+			return handle_cls_u32_rh74(dev, type_data);
 		case TC_SETUP_CLSFLOWER:
-			return handle_cls_flower_rh74(dev, tc);
+			return handle_cls_flower_rh74(dev, type_data);
 		case TC_SETUP_CLSMATCHALL:
-			return handle_cls_matchall_rh74(dev, tc);
+			return handle_cls_matchall_rh74(dev, type_data);
 		}
 	} else if (ops->ndo_setup_tc_rh72 && type == TC_SETUP_MQPRIO) {
 		/* Drivers implementing .ndo_setup_tc_rh72()
@@ -155,7 +154,9 @@ int __rh_call_ndo_setup_tc(struct net_device *dev, enum tc_setup_type type,
 		 * only support mqprio so this entry-point can be called
 		 * only for this type.
 		 */
-		return ops->ndo_setup_tc_rh72(dev, tc->mqprio->num_tc);
+		struct tc_mqprio_qopt *mqprio = type_data;
+
+		return ops->ndo_setup_tc_rh72(dev, mqprio->num_tc);
 	}
 
 	return -EOPNOTSUPP;

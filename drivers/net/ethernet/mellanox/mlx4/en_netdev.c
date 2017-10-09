@@ -83,14 +83,16 @@ int mlx4_en_setup_tc(struct net_device *dev, u8 up)
 }
 
 static int __mlx4_en_setup_tc(struct net_device *dev, enum tc_setup_type type,
-			      struct tc_to_netdev *tc)
+			      void *type_data)
 {
+	struct tc_mqprio_qopt *mqprio = type_data;
+
 	if (type != TC_SETUP_MQPRIO)
 		return -EOPNOTSUPP;
 
-	tc->mqprio->hw = TC_MQPRIO_HW_OFFLOAD_TCS;
+	mqprio->hw = TC_MQPRIO_HW_OFFLOAD_TCS;
 
-	return mlx4_en_setup_tc(dev, tc->mqprio->num_tc);
+	return mlx4_en_setup_tc(dev, mqprio->num_tc);
 }
 
 #ifdef CONFIG_RFS_ACCEL
