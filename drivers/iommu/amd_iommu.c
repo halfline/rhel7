@@ -3551,8 +3551,6 @@ static void set_dte_irq_entry(u16 devid, struct irq_remap_table *table)
 	amd_iommu_dev_table[devid].data[2] = dte;
 }
 
-#define IRTE_ALLOCATED (~1U)
-
 static struct irq_remap_table *get_irq_table(u16 devid, bool ioapic)
 {
 	struct irq_remap_table *table = NULL;
@@ -3598,13 +3596,18 @@ static struct irq_remap_table *get_irq_table(u16 devid, bool ioapic)
 		goto out_unlock;
 	}
 
-	memset(table->table, 0, MAX_IRQS_PER_TABLE * sizeof(u32));
+	if (!AMD_IOMMU_GUEST_IR_GA(amd_iommu_guest_ir))
+		memset(table->table, 0,
+		       MAX_IRQS_PER_TABLE * sizeof(u32));
+	else
+		memset(table->table, 0,
+		       (MAX_IRQS_PER_TABLE * (sizeof(u64) * 2)));
 
 	if (ioapic) {
 		int i;
 
 		for (i = 0; i < 32; ++i)
-			table->table[i] = IRTE_ALLOCATED;
+			iommu->irte_ops->set_allocated(table, i);
 	}
 
 	irq_lookup_table[devid] = table;
@@ -3630,6 +3633,10 @@ static int alloc_irq_index(struct irq_cfg *cfg, u16 devid, int count)
 	struct irq_remap_table *table;
 	unsigned long flags;
 	int index, c;
+	struct amd_iommu *iommu = amd_iommu_rlookup_table[devid];
+
+	if (!iommu)
+		return -ENODEV;
 
 	table = get_irq_table(devid, false);
 	if (!table)
@@ -3641,7 +3648,7 @@ static int alloc_irq_index(struct irq_cfg *cfg, u16 devid, int count)
 	for (c = 0, index = table->min_index;
 	     index < MAX_IRQS_PER_TABLE;
 	     ++index) {
-		if (table->table[index] == 0)
+		if (!iommu->irte_ops->is_allocated(table, index))
 			c += 1;
 		else
 			c = 0;
@@ -3650,7 +3657,7 @@ static int alloc_irq_index(struct irq_cfg *cfg, u16 devid, int count)
 			struct irq_2_irte *irte_info;
 
 			for (; c != 0; --c)
-				table->table[index - c + 1] = IRTE_ALLOCATED;
+				iommu->irte_ops->set_allocated(table, index - c + 1);
 
 			index -= count - 1;
 
@@ -3742,7 +3749,7 @@ static void free_irte(u16 devid, int index)
 		return;
 
 	spin_lock_irqsave(&table->lock, flags);
-	table->table[index] = 0;
+	iommu->irte_ops->clear_allocated(table, index);
 	spin_unlock_irqrestore(&table->lock, flags);
 
 	iommu_flush_irt(iommu, devid);
@@ -3832,6 +3839,7 @@ static void irte_ga_set_affinity(void *entry, u16 devid, u16 index,
 	modify_irte_ga(devid, index, irte);
 }
 
+#define IRTE_ALLOCATED (~1U)
 static void irte_set_allocated(struct irq_remap_table *table, int index)
 {
 	table->table[index] = IRTE_ALLOCATED;
