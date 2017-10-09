@@ -383,11 +383,6 @@ enum {
 	KVM_DEBUGREG_RELOAD = 4,
 };
 
-/* Hyper-V per vcpu emulation context */
-struct kvm_vcpu_hv {
-	u64 hv_vapic;
-};
-
 struct kvm_mtrr_range {
 	u64 base;
 	u64 mask;
@@ -400,6 +395,12 @@ struct kvm_mtrr {
 	u64 deftype;
 
 	struct list_head head;
+};
+
+/* Hyper-V per vcpu emulation context */
+struct kvm_vcpu_hv {
+	u64 hv_vapic;
+	s64 runtime_offset;
 };
 
 struct kvm_vcpu_arch {
