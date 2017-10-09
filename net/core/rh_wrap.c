@@ -86,7 +86,7 @@ int handle_cls_flower_rh74(struct net_device *dev,
 {
 	struct tc_cls_flower_offload_rh74 cls_flower = {
 		.command	= tc->cls_flower->command,
-		.prio		= tc->cls_flower->prio,
+		.prio		= tc->cls_flower->common.prio,
 		.cookie		= tc->cls_flower->cookie,
 		.dissector	= tc->cls_flower->dissector,
 		.mask		= tc->cls_flower->mask,
