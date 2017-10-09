@@ -1,6 +1,17 @@
 #ifndef __NET_SCHED_GENERIC_H
 #define __NET_SCHED_GENERIC_H
 
+/*
+ * RHEL - include a different sch_generic.h for kABI checksums generation.
+ * We can do it as we don't preserve kABI for Qdisc/net-sched API.
+ * Unfortunately pointer to struct Qdisc is part of struct net_device so
+ * any change in this struct or Qdisc_ops etc. will change kABI checksums.
+ */
+#ifdef __GENKSYMS__
+#include <net/sch_generic_kabi.h>
+
+#else
+
 #include <linux/netdevice.h>
 #include <linux/types.h>
 #include <linux/rcupdate.h>
@@ -845,4 +856,5 @@ static inline void psched_ratecfg_getrate(struct tc_ratespec *res,
 	res->linklayer = (r->linklayer & TC_LINKLAYER_MASK);
 }
 
+#endif
 #endif
