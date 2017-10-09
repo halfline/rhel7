@@ -263,7 +263,7 @@ static int iommu_pc_get_set_reg_val(struct amd_iommu *iommu,
 				    u8 bank, u8 cntr, u8 fxn,
 				    u64 *value, bool is_write);
 
-static bool __initdata amd_iommu_pre_enabled = true;
+static bool amd_iommu_pre_enabled = true;
 
 bool translation_pre_enabled(struct amd_iommu *iommu)
 {
