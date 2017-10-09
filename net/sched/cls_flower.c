@@ -28,8 +28,6 @@
 #include <net/dst.h>
 #include <net/dst_metadata.h>
 
-#include <linux/idr_ext.h>
-
 struct fl_flow_key {
 	int	indev_ifindex;
 	struct flow_dissector_key_control control;
