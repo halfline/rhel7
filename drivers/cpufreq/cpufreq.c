@@ -1743,7 +1743,7 @@ void cpufreq_suspend(void)
 	pr_debug("%s: Suspending Governors\n", __func__);
 
 	list_for_each_entry(policy, &cpufreq_policy_list, policy_list) {
-		if (cpufreq_governor(policy, CPUFREQ_GOV_STOP))
+		if (has_target() && cpufreq_governor(policy, CPUFREQ_GOV_STOP))
 			pr_err("%s: Failed to stop governor for policy: %p\n",
 				__func__, policy);
 		else if (cpufreq_driver->suspend
@@ -1779,7 +1779,7 @@ void cpufreq_resume(void)
 		if (cpufreq_driver->resume && cpufreq_driver->resume(policy))
 			pr_err("%s: Failed to resume driver: %p\n", __func__,
 				policy);
-		else if (cpufreq_start_governor(policy))
+		else if (has_target() && cpufreq_start_governor(policy))
 			pr_err("%s: Failed to start governor for policy: %p\n",
 				__func__, policy);
 
