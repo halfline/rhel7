@@ -4038,6 +4038,7 @@ F:	drivers/net/hyperv/
 F:	drivers/scsi/storvsc_drv.c
 F:	drivers/video/hyperv_fb.c
 F:	drivers/uio/uio_hv_generic.c
+F:	net/vmw_vsock/hyperv_transport.c
 F:	include/linux/hyperv.h
 F:	tools/hv/
 
