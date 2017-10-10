@@ -138,7 +138,7 @@ void test_attr__open(struct perf_event_attr *attr, pid_t pid, int cpu,
 {
 	int errno_saved = errno;
 
-	if (store_event(attr, pid, cpu, fd, group_fd, flags))
+	if ((fd != -1) && store_event(attr, pid, cpu, fd, group_fd, flags))
 		die("test attr FAILED");
 
 	errno = errno_saved;
