@@ -1148,17 +1148,10 @@ static void hmm_device_release(struct device *device)
 struct hmm_device *hmm_device_new(void *drvdata)
 {
 	struct hmm_device *hmm_device;
-	int ret;
 
 	hmm_device = kzalloc(sizeof(*hmm_device), GFP_KERNEL);
 	if (!hmm_device)
 		return ERR_PTR(-ENOMEM);
-
-	ret = alloc_chrdev_region(&hmm_device->device.devt, 0, 1, "hmm_device");
-	if (ret < 0) {
-		kfree(hmm_device);
-		return NULL;
-	}
 
 	spin_lock(&hmm_device_lock);
 	hmm_device->minor = find_first_zero_bit(hmm_device_mask, HMM_DEVICE_MAX);
