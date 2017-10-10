@@ -874,6 +874,9 @@ static int __init hvs_init(void)
 {
 	int ret;
 
+	mark_tech_preview("Hyper-V Virtual Sockets transport driver",
+			   THIS_MODULE);
+
 	if (vmbus_proto_version < VERSION_WIN10)
 		return -ENODEV;
 
