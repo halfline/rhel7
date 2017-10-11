@@ -3595,7 +3595,52 @@ out_free_mem:
 	return rc;
 }
 
- /**
+static uint64_t
+lpfc_get_wwpn(struct lpfc_hba *phba)
+{
+	uint64_t wwn;
+	int rc;
+	LPFC_MBOXQ_t *mboxq;
+	MAILBOX_t *mb;
+
+	if (phba->sli_rev < LPFC_SLI_REV4) {
+		/* Reset the port first */
+		lpfc_sli_brdrestart(phba);
+		rc = lpfc_sli_chipset_init(phba);
+		if (rc)
+			return (uint64_t)-1;
+	}
+
+	mboxq = (LPFC_MBOXQ_t *) mempool_alloc(phba->mbox_mem_pool,
+						GFP_KERNEL);
+	if (!mboxq)
+		return (uint64_t)-1;
+
+	/* First get WWN of HBA instance */
+	lpfc_read_nv(phba, mboxq);
+	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
+	if (rc != MBX_SUCCESS) {
+		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+				"6019 Mailbox failed , mbxCmd x%x "
+				"READ_NV, mbxStatus x%x\n",
+				bf_get(lpfc_mqe_command, &mboxq->u.mqe),
+				bf_get(lpfc_mqe_status, &mboxq->u.mqe));
+		mempool_free(mboxq, phba->mbox_mem_pool);
+		return (uint64_t) -1;
+	}
+	mb = &mboxq->u.mb;
+	memcpy(&wwn, (char *)mb->un.varRDnvp.portname, sizeof(uint64_t));
+	/* wwn is WWPN of HBA instance */
+	mempool_free(mboxq, phba->mbox_mem_pool);
+	if (phba->sli_rev == LPFC_SLI_REV4)
+		return be64_to_cpu(wwn);
+	else
+		return (((wwn & 0xffffffff00000000) >> 32) |
+			((wwn & 0x00000000ffffffff) << 32));
+
+}
+
+/**
  * lpfc_sli4_nvme_sgl_update - update xri-sgl sizing and mapping
  * @phba: pointer to lpfc hba data structure.
  *
@@ -3694,51 +3739,6 @@ out_free_mem:
 	return rc;
 }
 
-
-static uint64_t
-lpfc_get_wwpn(struct lpfc_hba *phba)
-{
-	uint64_t wwn;
-	int rc;
-	LPFC_MBOXQ_t *mboxq;
-	MAILBOX_t *mb;
-
-	if (phba->sli_rev < LPFC_SLI_REV4) {
-		/* Reset the port first */
-		lpfc_sli_brdrestart(phba);
-		rc = lpfc_sli_chipset_init(phba);
-		if (rc)
-			return (uint64_t)-1;
-	}
-
-	mboxq = (LPFC_MBOXQ_t *) mempool_alloc(phba->mbox_mem_pool,
-						GFP_KERNEL);
-	if (!mboxq)
-		return (uint64_t)-1;
-
-	/* First get WWN of HBA instance */
-	lpfc_read_nv(phba, mboxq);
-	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
-	if (rc != MBX_SUCCESS) {
-		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-				"6019 Mailbox failed , mbxCmd x%x "
-				"READ_NV, mbxStatus x%x\n",
-				bf_get(lpfc_mqe_command, &mboxq->u.mqe),
-				bf_get(lpfc_mqe_status, &mboxq->u.mqe));
-		mempool_free(mboxq, phba->mbox_mem_pool);
-		return (uint64_t) -1;
-	}
-	mb = &mboxq->u.mb;
-	memcpy(&wwn, (char *)mb->un.varRDnvp.portname, sizeof(uint64_t));
-	/* wwn is WWPN of HBA instance */
-	mempool_free(mboxq, phba->mbox_mem_pool);
-	if (phba->sli_rev == LPFC_SLI_REV4)
-		return be64_to_cpu(wwn);
-	else
-		return (((wwn & 0xffffffff00000000) >> 32) |
-			((wwn & 0x00000000ffffffff) << 32));
-
-}
 
 /**
  * lpfc_create_port - Create an FC port
