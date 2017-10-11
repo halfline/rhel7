@@ -808,6 +808,18 @@ static int __init add_huge_page_size(unsigned long long size)
 	if ((mmu_psize = shift_to_mmu_psize(shift)) < 0)
 		return -EINVAL;
 
+#ifdef CONFIG_PPC_BOOK3S_64
+	/*
+	 * We need to make sure that for different page sizes reported by
+	 * firmware we only add hugetlb support for page sizes that can be
+	 * supported by linux page table layout.
+	 * For now we have
+	 * Hash: 16M and 16G
+	 */
+	if (mmu_psize != MMU_PAGE_16M && mmu_psize != MMU_PAGE_16G)
+		return -EINVAL;
+#endif
+
 #ifdef CONFIG_SPU_FS_64K_LS
 	/* Disable support for 64K huge pages when 64K SPU local store
 	 * support is enabled as the current implementation conflicts.
