@@ -247,6 +247,7 @@ int __init dma_contiguous_reserve_area(phys_addr_t size, phys_addr_t base,
 	 */
 	cma->base_pfn = PFN_DOWN(base);
 	cma->count = size >> PAGE_SHIFT;
+	totalcma_pages += cma->count;
 	*res_cma = cma;
 	cma_area_count++;
 
