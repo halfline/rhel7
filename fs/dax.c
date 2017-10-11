@@ -32,6 +32,8 @@
 #include <linux/vmstat.h>
 #include <linux/pfn_t.h>
 #include <linux/sizes.h>
+#include <linux/iomap.h>
+#include "internal.h"
 
 /* We choose 4096 entries - same as per-zone page wait tables */
 #define DAX_WAIT_TABLE_BITS 12
@@ -1041,3 +1043,146 @@ int dax_truncate_page(struct inode *inode, loff_t from, get_block_t get_block)
 	return dax_zero_page_range(inode, from, length, get_block);
 }
 EXPORT_SYMBOL_GPL(dax_truncate_page);
+
+#ifdef CONFIG_FS_IOMAP
+static loff_t
+iomap_dax_actor(int rw, struct inode *inode, loff_t pos, loff_t length, void *data,
+		struct iomap *iomap)
+{
+	struct iov_iter *iter = data;
+	loff_t end = pos + length, done = 0;
+	ssize_t ret = 0;
+
+	if (!(rw & WRITE)) {
+		end = min(end, i_size_read(inode));
+		if (pos >= end)
+			return 0;
+
+		if (iomap->type == IOMAP_HOLE ||
+		    iomap->type == IOMAP_UNWRITTEN) {
+			loff_t len;
+			len = zero_toiovecend_partial(iter->iov,
+					iter->iov_offset, end - pos);
+			iov_iter_advance(iter, len);
+			return len;
+		}
+	}
+
+	if (WARN_ON_ONCE(iomap->type != IOMAP_MAPPED))
+		return -EIO;
+
+	while (pos < end) {
+		unsigned offset = pos & (PAGE_SIZE - 1);
+		struct blk_dax_ctl dax = { 0 };
+		ssize_t map_len;
+
+		dax.sector = iomap->blkno +
+			(((pos & PAGE_MASK) - iomap->offset) >> 9);
+		dax.size = (length + offset + PAGE_SIZE - 1) & PAGE_MASK;
+		map_len = dax_map_atomic(iomap->bdev, &dax);
+		if (map_len < 0) {
+			ret = map_len;
+			break;
+		}
+
+		dax.addr += offset;
+		map_len -= offset;
+		if (map_len > end - pos)
+			map_len = end - pos;
+
+		if (rw & WRITE)
+			map_len = memcpy_fromiovecend_partial_nocache(
+					(void __force *)dax.addr, iter->iov,
+					iter->iov_offset, map_len);
+		else
+			map_len = memcpy_toiovecend_partial(iter->iov,
+					(void __force *)dax.addr,
+					iter->iov_offset, map_len);
+
+		dax_unmap_atomic(iomap->bdev, &dax);
+		if (map_len <= 0) {
+			ret = map_len ? map_len : -EFAULT;
+			break;
+		}
+
+		iov_iter_advance(iter, map_len);
+		pos += map_len;
+		length -= map_len;
+		done += map_len;
+	}
+
+	return done ? done : ret;
+}
+
+static loff_t
+iomap_dax_actor_read(struct inode *inode, loff_t pos, loff_t length, void *data,
+		struct iomap *iomap)
+{
+	return iomap_dax_actor(READ, inode, pos, length, data, iomap);
+}
+static loff_t
+iomap_dax_actor_write(struct inode *inode, loff_t pos, loff_t length, void *data,
+		struct iomap *iomap)
+{
+	return iomap_dax_actor(WRITE, inode, pos, length, data, iomap);
+}
+
+/**
+ * iomap_dax_rw - Perform I/O to a DAX file
+ * @iocb:	The control block for this I/O
+ * @iter:	The addresses to do I/O from or to
+ * @ops:	iomap ops passed from the file system
+ *
+ * This function performs read and write operations to directly mapped
+ * persistent memory.  The callers needs to take care of read/write exclusion
+ * and evicting any page cache pages in the region under I/O.
+ */
+ssize_t
+iomap_dax_rw(int rw, struct kiocb *iocb, const struct iovec *iov,
+                unsigned long nr_segs, loff_t pos,
+                size_t count, struct iomap_ops *ops)
+{
+	struct address_space *mapping = iocb->ki_filp->f_mapping;
+	struct inode *inode = mapping->host;
+	loff_t ret = 0, done = 0;
+	unsigned flags = 0;
+	struct iov_iter iter;
+
+	iov_iter_init(&iter, iov, nr_segs, count, 0);
+
+	if (rw & WRITE)
+		flags |= IOMAP_WRITE;
+
+	/*
+	 * Yes, even DAX files can have page cache attached to them:  A zeroed
+	 * page is inserted into the pagecache when we have to serve a write
+	 * fault on a hole.  It should never be dirtied and can simply be
+	 * dropped from the pagecache once we get real data for the page.
+	 *
+	 * XXX: This is racy against mmap, and there's nothing we can do about
+	 * it. We'll eventually need to shift this down even further so that
+	 * we can check if we allocated blocks over a hole first.
+	 */
+	if (mapping->nrpages) {
+		ret = invalidate_inode_pages2_range(mapping,
+				pos >> PAGE_SHIFT,
+				(pos + iov_iter_count(&iter) - 1) >> PAGE_SHIFT);
+		WARN_ON_ONCE(ret);
+	}
+
+	while (iov_iter_count(&iter)) {
+		ret = iomap_apply(inode, pos, iov_iter_count(&iter), flags, ops,
+				&iter,
+				(rw & WRITE) ?
+				  iomap_dax_actor_write : iomap_dax_actor_read);
+		if (ret <= 0)
+			break;
+		pos += ret;
+		done += ret;
+	}
+
+	iocb->ki_pos += done;
+	return done ? done : ret;
+}
+EXPORT_SYMBOL_GPL(iomap_dax_rw);
+#endif /* CONFIG_FS_IOMAP */

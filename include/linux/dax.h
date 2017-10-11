@@ -22,6 +22,11 @@
 		RADIX_TREE_EXCEPTIONAL_ENTRY))
 
 
+struct iomap_ops;
+
+ssize_t iomap_dax_rw(int rw, struct kiocb *iocb, const struct iovec *iov,
+		unsigned long nr_segs, loff_t pos,
+		size_t count, struct iomap_ops *ops);
 ssize_t dax_do_io(int rw, struct kiocb *iocb, struct inode *inode,
                   const struct iovec *iov, loff_t pos, unsigned long nr_segs,
                   get_block_t get_block, dio_iodone_t end_io, int flags);
