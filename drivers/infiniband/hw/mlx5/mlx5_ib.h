@@ -329,6 +329,12 @@ struct mlx5_ib_raw_packet_qp {
 	struct mlx5_ib_rq rq;
 };
 
+struct mlx5_bf {
+	int			buf_size;
+	unsigned long		offset;
+	struct mlx5_sq_bfreg   *bfreg;
+};
+
 struct mlx5_ib_qp {
 	struct ib_qp		ibqp;
 	union {
@@ -354,7 +360,7 @@ struct mlx5_ib_qp {
 	int			wq_sig;
 	int			scat_cqe;
 	int			max_inline_data;
-	struct mlx5_bf	       *bf;
+	struct mlx5_bf	        bf;
 	int			has_rq;
 
 	/* only for user space QPs. For kernel
@@ -597,7 +603,6 @@ struct mlx5_ib_dev {
 	struct ib_device		ib_dev;
 	struct mlx5_core_dev		*mdev;
 	struct mlx5_roce		roce;
-	MLX5_DECLARE_DOORBELL_LOCK(uar_lock);
 	int				num_ports;
 	/* serialize update of capability mask
 	 */
@@ -627,6 +632,8 @@ struct mlx5_ib_dev {
 	struct list_head	qp_list;
 	/* Array with num_ports elements */
 	struct mlx5_ib_port	*port;
+	struct mlx5_sq_bfreg     bfreg;
+	struct mlx5_sq_bfreg     fp_bfreg;
 };
 
 static inline struct mlx5_ib_cq *to_mibcq(struct mlx5_core_cq *mcq)
