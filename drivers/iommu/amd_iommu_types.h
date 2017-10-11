@@ -799,6 +799,7 @@ struct irte_ga {
 };
 
 struct amd_ir_data {
+	u32 cached_ga_tag;
 	void *entry;	/* Pointer to union irte or struct irte_ga */
 	void *ref;      /* Pointer to the actual irte */
 	u16 pi_devid;	/* Keep track posted-interrupt devid */

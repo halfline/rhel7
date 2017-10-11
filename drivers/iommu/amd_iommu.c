@@ -3745,7 +3745,8 @@ out:
 	return index;
 }
 
-static int modify_irte_ga(u16 devid, int index, struct irte_ga *irte)
+static int modify_irte_ga(u16 devid, int index, struct irte_ga *irte,
+			  struct amd_ir_data *data)
 {
 	struct irq_remap_table *table;
 	struct amd_iommu *iommu;
@@ -3768,6 +3769,10 @@ static int modify_irte_ga(u16 devid, int index, struct irte_ga *irte)
 	entry->hi.val = irte->hi.val;
 	entry->lo.val = irte->lo.val;
 	entry->lo.fields_remap.valid = 1;
+	if (data) {
+		data->ref = entry;
+		data->pi_devid = devid; /* RHEL7 ONLY */
+	}
 
 	spin_unlock_irqrestore(&table->lock, flags);
 
@@ -3866,7 +3871,7 @@ static void irte_ga_activate(void *entry, u16 devid, u16 index)
 	struct irte_ga *irte = (struct irte_ga *) entry;
 
 	irte->lo.fields_remap.valid = 1;
-	modify_irte_ga(devid, index, irte);
+	modify_irte_ga(devid, index, irte, NULL);
 }
 
 static void irte_deactivate(void *entry, u16 devid, u16 index)
@@ -3882,7 +3887,7 @@ static void irte_ga_deactivate(void *entry, u16 devid, u16 index)
 	struct irte_ga *irte = (struct irte_ga *) entry;
 
 	irte->lo.fields_remap.valid = 0;
-	modify_irte_ga(devid, index, irte);
+	modify_irte_ga(devid, index, irte, NULL);
 }
 
 static void irte_set_affinity(void *entry, u16 devid, u16 index,
@@ -3903,7 +3908,7 @@ static void irte_ga_set_affinity(void *entry, u16 devid, u16 index,
 	irte->hi.fields.vector = vector;
 	irte->lo.fields_remap.destination = dest_apicid;
 	irte->lo.fields_remap.guest_mode = 0;
-	modify_irte_ga(devid, index, irte);
+	modify_irte_ga(devid, index, irte, NULL);
 }
 
 #define IRTE_ALLOCATED (~1U)
@@ -4141,6 +4146,70 @@ static int msi_alloc_irq(struct pci_dev *pdev, int irq, int nvec)
 	return index < 0 ? MAX_IRQS_PER_TABLE : index;
 }
 
+static int amd_ir_set_vcpu_affinity(int irq, void *vcpu_info)
+{
+	struct amd_iommu *iommu;
+	struct amd_iommu_pi_data *pi_data = vcpu_info;
+	struct vcpu_data *vcpu_pi_info = pi_data->vcpu_data;
+	struct irq_cfg *cfg = irq_get_chip_data(irq);
+	struct irq_2_irte *irte_info = &cfg->irq_2_irte;
+	struct amd_ir_data *ir_data = irte_info->ir_data;
+	struct irte_ga *irte = (struct irte_ga *) ir_data->entry;
+
+	pi_data->ir_data = ir_data;
+
+	/* Note:
+	 * SVM tries to set up for VAPIC mode, but we are in
+	 * legacy mode. So, we force legacy mode instead.
+	 */
+	if (!AMD_IOMMU_GUEST_IR_VAPIC(amd_iommu_guest_ir)) {
+		pr_debug("AMD-Vi: %s: Fall back to using intr legacy remap\n",
+			 __func__);
+		pi_data->is_guest_mode = false;
+	}
+
+	iommu = amd_iommu_rlookup_table[irte_info->devid];
+	if (iommu == NULL)
+		return -EINVAL;
+
+	pi_data->prev_ga_tag = ir_data->cached_ga_tag;
+	if (pi_data->is_guest_mode) {
+		/* Setting */
+		irte->hi.fields.ga_root_ptr = (pi_data->base >> 12);
+		irte->hi.fields.vector = vcpu_pi_info->vector;
+		irte->lo.fields_vapic.guest_mode = 1;
+		irte->lo.fields_vapic.ga_tag = pi_data->ga_tag;
+
+		ir_data->cached_ga_tag = pi_data->ga_tag;
+	} else {
+		/* Un-Setting */
+		struct irq_cfg *cfg = irq_get_chip_data(irq);
+		unsigned int dest;
+		int err;
+
+		err = apic->cpu_mask_to_apicid_and(cfg->domain,
+						   apic->target_cpus(), &dest);
+		if (err)
+			return -EINVAL;
+
+		irte->hi.val = 0;
+		irte->lo.val = 0;
+		irte->hi.fields.vector = cfg->vector;
+		irte->lo.fields_remap.guest_mode = 0;
+		irte->lo.fields_remap.destination = dest;
+		irte->lo.fields_remap.int_type = apic->irq_delivery_mode;
+		irte->lo.fields_remap.dm = apic->irq_dest_mode;
+
+		/*
+		 * This communicates the ga_tag back to the caller
+		 * so that it can do all the necessary clean up.
+		 */
+		ir_data->cached_ga_tag = 0;
+	}
+
+	return modify_irte_ga(irte_info->devid, irte_info->index, irte, ir_data);
+}
+
 static int msi_setup_irq(struct pci_dev *pdev, unsigned int irq,
 			 int index, int offset)
 {
@@ -4207,6 +4276,7 @@ struct irq_remap_ops amd_iommu_irq_ops = {
 	.msi_alloc_irq		= msi_alloc_irq,
 	.msi_setup_irq		= msi_setup_irq,
 	.alloc_hpet_msi		= alloc_hpet_msi,
+	.irq_set_vcpu_affinity  = amd_ir_set_vcpu_affinity,
 };
 
 int amd_iommu_update_ga(int cpu, bool is_run, void *data)
