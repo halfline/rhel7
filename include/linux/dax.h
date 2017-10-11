@@ -24,7 +24,7 @@
 
 struct iomap_ops;
 
-ssize_t iomap_dax_rw(int rw, struct kiocb *iocb, const struct iovec *iov,
+ssize_t dax_iomap_rw(int rw, struct kiocb *iocb, const struct iovec *iov,
 		unsigned long nr_segs, loff_t pos,
 		size_t count, struct iomap_ops *ops);
 ssize_t dax_do_io(int rw, struct kiocb *iocb, struct inode *inode,
@@ -32,7 +32,7 @@ ssize_t dax_do_io(int rw, struct kiocb *iocb, struct inode *inode,
                   get_block_t get_block, dio_iodone_t end_io, int flags);
 int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
 int dax_truncate_page(struct inode *, loff_t from, get_block_t);
-int iomap_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+int dax_iomap_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
 			struct iomap_ops *ops);
 int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
 int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
