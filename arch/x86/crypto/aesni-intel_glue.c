@@ -71,12 +71,18 @@ struct aesni_hash_subkey_req_data {
 };
 
 #define AESNI_ALIGN	(16)
+#define AESNI_ALIGN_ATTR __attribute__ ((__aligned__(AESNI_ALIGN)))
 #define AES_BLOCK_MASK	(~(AES_BLOCK_SIZE-1))
 #define RFC4106_HASH_SUBKEY_SIZE 16
 
 struct aesni_lrw_ctx {
 	struct lrw_table_ctx lrw_table;
 	u8 raw_aes_ctx[sizeof(struct crypto_aes_ctx) + AESNI_ALIGN - 1];
+};
+
+struct generic_gcmaes_ctx {
+	u8 hash_subkey[16] AESNI_ALIGN_ATTR;
+	struct crypto_aes_ctx aes_key_expanded AESNI_ALIGN_ATTR;
 };
 
 struct aesni_xts_ctx {
@@ -120,13 +126,11 @@ asmlinkage void aesni_xts_crypt8(struct crypto_aes_ctx *ctx, u8 *out,
  * u8 *out, Ciphertext output. Encrypt in-place is allowed.
  * const u8 *in, Plaintext input
  * unsigned long plaintext_len, Length of data in bytes for encryption.
- * u8 *iv, Pre-counter block j0: 4 byte salt (from Security Association)
- *         concatenated with 8 byte Initialisation Vector (from IPSec ESP
- *         Payload) concatenated with 0x00000001. 16-byte aligned pointer.
+ * u8 *iv, Pre-counter block j0: 12 byte IV concatenated with 0x00000001.
+ *         16-byte aligned pointer.
  * u8 *hash_subkey, the Hash sub key input. Data starts on a 16-byte boundary.
  * const u8 *aad, Additional Authentication Data (AAD)
- * unsigned long aad_len, Length of AAD in bytes. With RFC4106 this
- *          is going to be 8 or 12 bytes
+ * unsigned long aad_len, Length of AAD in bytes.
  * u8 *auth_tag, Authenticated Tag output.
  * unsigned long auth_tag_len), Authenticated Tag Length in bytes.
  *          Valid values are 16 (most likely), 12 or 8.
@@ -141,9 +145,8 @@ asmlinkage void aesni_gcm_enc(void *ctx, u8 *out,
  * u8 *out, Plaintext output. Decrypt in-place is allowed.
  * const u8 *in, Ciphertext input
  * unsigned long ciphertext_len, Length of data in bytes for decryption.
- * u8 *iv, Pre-counter block j0: 4 byte salt (from Security Association)
- *         concatenated with 8 byte Initialisation Vector (from IPSec ESP
- *         Payload) concatenated with 0x00000001. 16-byte aligned pointer.
+ * u8 *iv, Pre-counter block j0: 12 byte IV concatenated with 0x00000001.
+ *         16-byte aligned pointer.
  * u8 *hash_subkey, the Hash sub key input. Data starts on a 16-byte boundary.
  * const u8 *aad, Additional Authentication Data (AAD)
  * unsigned long aad_len, Length of AAD in bytes. With RFC4106 this is going
@@ -288,6 +291,16 @@ aesni_rfc4106_gcm_ctx *aesni_rfc4106_gcm_ctx_get(struct crypto_aead *tfm)
 		(struct aesni_rfc4106_gcm_ctx *)
 		PTR_ALIGN((u8 *)
 		crypto_tfm_ctx(crypto_aead_tfm(tfm)), AESNI_ALIGN);
+}
+
+static inline struct
+generic_gcmaes_ctx *generic_gcmaes_ctx_get(struct crypto_aead *tfm)
+{
+	unsigned long align = AESNI_ALIGN;
+
+	if (align <= crypto_tfm_ctx_alignment())
+		align = 1;
+	return PTR_ALIGN(crypto_aead_ctx(tfm), align);
 }
 #endif
 
@@ -968,6 +981,25 @@ static int rfc4106_set_authsize(struct crypto_aead *parent,
 	return 0;
 }
 
+static int generic_gcmaes_set_authsize(struct crypto_aead *tfm,
+				       unsigned int authsize)
+{
+	switch (authsize) {
+	case 4:
+	case 8:
+	case 12:
+	case 13:
+	case 14:
+	case 15:
+	case 16:
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 static int rfc4106_encrypt(struct aead_request *req)
 {
 	int ret;
@@ -1183,6 +1215,206 @@ static int __driver_rfc4106_decrypt(struct aead_request *req)
 	}
 	return retval;
 }
+
+static int gcmaes_encrypt(struct aead_request *req, unsigned int assoclen, void *hash_subkey, u8 *iv, struct crypto_aes_ctx *aes_ctx)
+{
+	u8 one_entry_in_sg = 0;
+	u8 *src, *dst, *assoc;
+	struct crypto_aead *tfm = crypto_aead_reqtfm(req);
+	u32 key_len = aes_ctx->key_length;
+	unsigned long auth_tag_len = crypto_aead_authsize(tfm);
+	struct scatter_walk src_sg_walk;
+	struct scatter_walk assoc_sg_walk;
+	struct scatter_walk dst_sg_walk;
+
+	if (unlikely(key_len != AES_KEYSIZE_128 &&
+		     key_len != AES_KEYSIZE_192 &&
+		     key_len != AES_KEYSIZE_256))
+		return -EINVAL;
+
+	if ((sg_is_last(req->src)) && (sg_is_last(req->assoc))) {
+		scatterwalk_start(&src_sg_walk, req->src);
+		scatterwalk_start(&assoc_sg_walk, req->assoc);
+		src = scatterwalk_map(&src_sg_walk);
+		assoc = scatterwalk_map(&assoc_sg_walk);
+		if (assoc + req->assoc->length != src)
+			goto unmap;
+		dst = src;
+		if (unlikely(req->src != req->dst)) {
+			scatterwalk_start(&dst_sg_walk, req->dst);
+			dst = scatterwalk_map(&dst_sg_walk);
+			if (assoc + req->assoc->length != dst) {
+				scatterwalk_unmap(dst);
+				scatterwalk_done(&dst_sg_walk, 0, 0);
+unmap:
+				scatterwalk_unmap(src);
+				scatterwalk_unmap(assoc);
+				scatterwalk_done(&src_sg_walk, 0, 0);
+				scatterwalk_done(&assoc_sg_walk, 0, 0);
+				goto slow;
+			}
+		}
+		one_entry_in_sg = 1;
+	} else {
+slow:
+		/* Allocate memory for src, dst, assoc */
+		src = kmalloc(req->cryptlen + auth_tag_len + req->assoclen,
+			GFP_ATOMIC);
+		if (unlikely(!src))
+			return -ENOMEM;
+		assoc = (src + req->cryptlen + auth_tag_len);
+		scatterwalk_map_and_copy(src, req->src, 0, req->cryptlen, 0);
+		scatterwalk_map_and_copy(assoc, req->assoc, 0,
+					req->assoclen, 0);
+		dst = src;
+	}
+
+	aesni_gcm_enc_tfm(aes_ctx, dst, src, (unsigned long)req->cryptlen, iv,
+		hash_subkey, assoc, (unsigned long)req->assoclen, dst
+		+ ((unsigned long)req->cryptlen), auth_tag_len);
+
+	/* The authTag (aka the Integrity Check Value) needs to be written
+	 * back to the packet. */
+	if (one_entry_in_sg) {
+		if (unlikely(req->src != req->dst)) {
+			scatterwalk_unmap(dst);
+			scatterwalk_done(&dst_sg_walk, 0, 0);
+		}
+		scatterwalk_unmap(src);
+		scatterwalk_unmap(assoc);
+		scatterwalk_done(&src_sg_walk, 0, 0);
+		scatterwalk_done(&assoc_sg_walk, 0, 0);
+	} else {
+		scatterwalk_map_and_copy(dst, req->dst, 0,
+			req->cryptlen + auth_tag_len, 1);
+		kfree(src);
+	}
+	return 0;
+}
+
+static int gcmaes_decrypt(struct aead_request *req, unsigned int assoclen, void *hash_subkey, u8 *iv, struct crypto_aes_ctx *aes_ctx)
+{
+	u8 one_entry_in_sg = 0;
+	u8 auth_tag_align[16+AESNI_ALIGN];
+	u8 *authTag = (u8 *) PTR_ALIGN((u8 *)auth_tag_align, AESNI_ALIGN);
+	u8 *src, *dst, *assoc;
+	int retval = 0;
+	u32 key_len = aes_ctx->key_length;
+	struct scatter_walk src_sg_walk;
+	struct scatter_walk assoc_sg_walk;
+	struct scatter_walk dst_sg_walk;
+	struct crypto_aead *tfm = crypto_aead_reqtfm(req);
+	unsigned long auth_tag_len = crypto_aead_authsize(tfm);
+	unsigned long tempCipherLen = 0;
+
+	if (unlikely(req->cryptlen < auth_tag_len))
+		return -EINVAL;
+	if (unlikely(key_len != AES_KEYSIZE_128 &&
+		     key_len != AES_KEYSIZE_192 &&
+		     key_len != AES_KEYSIZE_256))
+		return -EINVAL;
+
+	tempCipherLen = (unsigned long)(req->cryptlen - auth_tag_len);
+
+	if ((sg_is_last(req->src)) && (sg_is_last(req->assoc))) {
+		scatterwalk_start(&src_sg_walk, req->src);
+		scatterwalk_start(&assoc_sg_walk, req->assoc);
+		src = scatterwalk_map(&src_sg_walk);
+		assoc = scatterwalk_map(&assoc_sg_walk);
+		if (assoc + req->assoc->length != src)
+			goto unmap;
+		dst = src;
+		if (unlikely(req->src != req->dst)) {
+			scatterwalk_start(&dst_sg_walk, req->dst);
+			dst = scatterwalk_map(&dst_sg_walk);
+			if (assoc + req->assoc->length != dst) {
+				scatterwalk_unmap(dst);
+				scatterwalk_done(&dst_sg_walk, 0, 0);
+unmap:
+				scatterwalk_unmap(src);
+				scatterwalk_unmap(assoc);
+				scatterwalk_done(&src_sg_walk, 0, 0);
+				scatterwalk_done(&assoc_sg_walk, 0, 0);
+				goto slow;
+			}
+		}
+		one_entry_in_sg = 1;
+	} else {
+slow:
+		/* Allocate memory for src, dst, assoc */
+		src = kmalloc(req->cryptlen + req->assoclen, GFP_ATOMIC);
+		if (!src)
+			return -ENOMEM;
+		assoc = (src + req->cryptlen);
+		scatterwalk_map_and_copy(src, req->src, 0, req->cryptlen, 0);
+		scatterwalk_map_and_copy(assoc, req->assoc, 0,
+			req->assoclen, 0);
+		dst = src;
+	}
+
+	aesni_gcm_dec_tfm(aes_ctx, dst, src, tempCipherLen, iv,
+		hash_subkey, assoc, (unsigned long)req->assoclen,
+		authTag, auth_tag_len);
+
+	/* Compare generated tag with passed in tag. */
+	retval = memcmp(src + tempCipherLen, authTag, auth_tag_len) ?
+		-EBADMSG : 0;
+
+	if (one_entry_in_sg) {
+		if (unlikely(req->src != req->dst)) {
+			scatterwalk_unmap(dst);
+			scatterwalk_done(&dst_sg_walk, 0, 0);
+		}
+		scatterwalk_unmap(src);
+		scatterwalk_unmap(assoc);
+		scatterwalk_done(&src_sg_walk, 0, 0);
+		scatterwalk_done(&assoc_sg_walk, 0, 0);
+	} else {
+		scatterwalk_map_and_copy(dst, req->dst, 0, tempCipherLen, 1);
+		kfree(src);
+	}
+	return retval;
+}
+
+static int generic_gcmaes_set_key(struct crypto_aead *aead, const u8 *key,
+				  unsigned int key_len)
+{
+	struct generic_gcmaes_ctx *ctx = generic_gcmaes_ctx_get(aead);
+
+	return aes_set_key_common(crypto_aead_tfm(aead),
+				  &ctx->aes_key_expanded, key, key_len) ?:
+	       rfc4106_set_hash_subkey(ctx->hash_subkey, key, key_len);
+}
+
+static int generic_gcmaes_encrypt(struct aead_request *req)
+{
+	struct crypto_aead *tfm = crypto_aead_reqtfm(req);
+	struct generic_gcmaes_ctx *ctx = generic_gcmaes_ctx_get(tfm);
+	void *aes_ctx = &(ctx->aes_key_expanded);
+	u8 iv[16] __attribute__ ((__aligned__(AESNI_ALIGN)));
+	__be32 counter = cpu_to_be32(1);
+
+	memcpy(iv, req->iv, 12);
+	*((__be32 *)(iv+12)) = counter;
+
+	return gcmaes_encrypt(req, req->assoclen, ctx->hash_subkey, iv,
+			      aes_ctx);
+}
+
+static int generic_gcmaes_decrypt(struct aead_request *req)
+{
+	__be32 counter = cpu_to_be32(1);
+	struct crypto_aead *tfm = crypto_aead_reqtfm(req);
+	struct aesni_rfc4106_gcm_ctx *ctx = aesni_rfc4106_gcm_ctx_get(tfm);
+	void *aes_ctx = &(ctx->aes_key_expanded);
+	u8 iv[16] __attribute__ ((__aligned__(AESNI_ALIGN)));
+
+	memcpy(iv, req->iv, 12);
+	*((__be32 *)(iv+12)) = counter;
+
+	return gcmaes_decrypt(req, req->assoclen, ctx->hash_subkey, iv,
+			      aes_ctx);
+}
 #endif
 
 static struct crypto_alg aesni_algs[] = { {
@@ -1392,6 +1624,28 @@ static struct crypto_alg aesni_algs[] = { {
 			.decrypt	= rfc4106_decrypt,
 			.geniv		= "seqiv",
 			.ivsize		= 8,
+			.maxauthsize	= 16,
+		},
+	},
+}, {
+	.cra_name		= "gcm(aes)",
+	.cra_driver_name	= "generic-gcm-aesni",
+	.cra_priority		= 400,
+	.cra_flags		= CRYPTO_ALG_TYPE_AEAD | CRYPTO_ALG_ASYNC,
+	.cra_blocksize		= 1,
+	.cra_ctxsize		= sizeof(struct generic_gcmaes_ctx) +
+				  AESNI_ALIGN,
+	.cra_alignmask		= 0,
+	.cra_type		= &crypto_nivaead_type,
+	.cra_module		= THIS_MODULE,
+	.cra_u = {
+		.aead = {
+			.setkey		= generic_gcmaes_set_key,
+			.setauthsize	= generic_gcmaes_set_authsize,
+			.encrypt	= generic_gcmaes_encrypt,
+			.decrypt	= generic_gcmaes_decrypt,
+			.geniv		= "seqiv",
+			.ivsize		= 12,
 			.maxauthsize	= 16,
 		},
 	},
