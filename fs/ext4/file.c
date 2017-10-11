@@ -200,16 +200,63 @@ ext4_file_dio_write(struct kiocb *iocb, const struct iovec *iov,
 	return ret;
 }
 
+#ifdef CONFIG_FS_DAX
+static ssize_t
+ext4_file_dax_write(
+	struct kiocb		*iocb,
+	const struct iovec	*iovp,
+	unsigned long		nr_segs,
+	loff_t			pos)
+{
+	struct inode *inode = file_inode(iocb->ki_filp);
+	ssize_t			ret;
+	size_t			size = 0;
+
+	inode_lock(inode);
+	ret = generic_segment_checks(iovp, &nr_segs, &size, VERIFY_WRITE);
+	if (ret < 0)
+		return ret;
+	ret = ext4_write_checks(iocb, iovp, nr_segs, &pos);
+	if (ret < 0)
+		goto out;
+	ret = file_remove_privs(iocb->ki_filp);
+	if (ret)
+		goto out;
+	ret = file_update_time(iocb->ki_filp);
+	if (ret)
+		goto out;
+
+	ret = dax_iomap_rw(WRITE, iocb, iovp, nr_segs, pos,
+					size, &ext4_iomap_ops);
+out:
+	inode_unlock(inode);
+
+	if (ret > 0) {
+		int err;
+		err = generic_write_sync(iocb->ki_filp, pos, ret);
+		if (err < 0)
+			ret = err;
+	}
+	return ret;
+}
+#endif
+
 static ssize_t
 ext4_file_write(struct kiocb *iocb, const struct iovec *iov,
 		unsigned long nr_segs, loff_t pos)
 {
+	struct inode *inode = file_inode(iocb->ki_filp);
 	ssize_t ret;
 	int overwrite = 0;
 
 	ret = ext4_write_checks(iocb, iov, nr_segs, &pos);
 	if (ret <= 0)
 		return ret;
+
+#ifdef CONFIG_FS_DAX
+	if (IS_DAX(inode))
+		return ext4_file_dax_write(iocb, iov, nr_segs, pos);
+#endif
 
 	iocb->private = &overwrite; /* RHEL7 only - prevent DIO race */
 	if (unlikely(io_is_direct(iocb->ki_filp)))
