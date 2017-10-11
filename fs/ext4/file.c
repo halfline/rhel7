@@ -661,11 +661,63 @@ loff_t ext4_llseek(struct file *file, loff_t offset, int whence)
 	return -EINVAL;
 }
 
+#ifdef CONFIG_FS_DAX
+static ssize_t
+ext4_file_dax_read(
+	struct kiocb		*iocb,
+	const struct iovec	*iovp,
+	unsigned long		nr_segs,
+	loff_t			pos)
+{
+	size_t			size = 0;
+	ssize_t			ret = 0;
+	struct inode *inode = file_inode(iocb->ki_filp);
+
+	ret = generic_segment_checks(iovp, &nr_segs, &size, VERIFY_WRITE);
+	if (ret < 0)
+		return ret;
+
+	if (!size)
+		return 0; /* skip atime */
+
+	inode_lock(inode);
+	/*
+	 * Recheck under inode lock - at this point we are sure it cannot
+	 * change anymore
+	 */
+	if (!IS_DAX(inode)) {
+		inode_unlock(inode);
+		/* Fallback to buffered IO in case we cannot support DAX */
+		return generic_file_aio_read(iocb, iovp, nr_segs, pos);
+	}
+	ret = dax_iomap_rw(READ, iocb, iovp, nr_segs, pos,
+					size, &ext4_iomap_ops);
+	inode_unlock(inode);
+
+	file_accessed(iocb->ki_filp);
+	return ret;
+}
+#endif
+
+static ssize_t
+ext4_file_read(
+	struct kiocb		*iocb,
+	const struct iovec	*iovp,
+	unsigned long		nr_segs,
+	loff_t 			pos)
+{
+#ifdef CONFIG_FS_DAX
+	if (IS_DAX(file_inode(iocb->ki_filp)))
+		return ext4_file_dax_read(iocb, iovp, nr_segs, pos);
+#endif
+	return generic_file_aio_read(iocb, iovp, nr_segs, pos);
+}
+
 const struct file_operations ext4_file_operations = {
 	.llseek		= ext4_llseek,
 	.read		= do_sync_read,
 	.write		= do_sync_write,
-	.aio_read	= generic_file_aio_read,
+	.aio_read	= ext4_file_read,
 	.aio_write	= ext4_file_write,
 	.unlocked_ioctl = ext4_ioctl,
 #ifdef CONFIG_COMPAT
