@@ -41,6 +41,8 @@ struct bsg_job;
 struct blkcg_gq;
 struct blk_flush_queue;
 struct pr_ops;
+struct blk_queue_stats;
+struct blk_stat_callback;
 
 #define BLKDEV_MIN_RQ	4
 #define BLKDEV_MAX_RQ	128	/* Default maximum */
@@ -550,7 +552,9 @@ struct request_queue {
 	RH_KABI_EXTEND(bool			mq_sysfs_init_done)
 	RH_KABI_EXTEND(struct work_struct	timeout_work)
 	RH_KABI_EXTEND(struct delayed_work	requeue_work)
-	RH_KABI_EXTEND(struct blk_rq_stat	rq_stats[2])
+	RH_KABI_EXTEND(struct blk_queue_stats	*stats)
+	RH_KABI_EXTEND(struct blk_stat_callback	*poll_cb)
+	RH_KABI_EXTEND(struct blk_rq_stat	poll_stat[2])
 #ifdef CONFIG_BLK_DEBUG_FS
 	RH_KABI_EXTEND(struct dentry		*debugfs_dir)
 	RH_KABI_EXTEND(struct dentry		*mq_debugfs_dir)
@@ -584,6 +588,7 @@ struct request_queue {
 #define QUEUE_FLAG_DAX         24	/* device supports DAX */
 #define QUEUE_FLAG_RESTART     25	/* queue needs restart at completion */
 #define QUEUE_FLAG_STATS       26	/* track rq completion times */
+#define QUEUE_FLAG_POLL_STATS  27	/* collecting stats for hybrid polling */
 
 #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
 				 (1 << QUEUE_FLAG_STACKABLE)	|	\

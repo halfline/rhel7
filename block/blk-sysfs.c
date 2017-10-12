@@ -317,26 +317,6 @@ queue_rq_affinity_store(struct request_queue *q, const char *page, size_t count)
 	return ret;
 }
 
-static ssize_t print_stat(char *page, struct blk_rq_stat *stat, const char *pre)
-{
-	return sprintf(page, "%s samples=%llu, mean=%lld, min=%lld, max=%lld\n",
-			pre, (long long) stat->nr_samples,
-			(long long) stat->mean, (long long) stat->min,
-			(long long) stat->max);
-}
-
-static ssize_t queue_stats_show(struct request_queue *q, char *page)
-{
-	struct blk_rq_stat stat[2];
-	ssize_t ret;
-
-	blk_queue_stat_get(q, stat);
-
-	ret = print_stat(page, &stat[READ], "read :");
-	ret += print_stat(page + ret, &stat[WRITE], "write:");
-	return ret;
-}
-
 static struct queue_sysfs_entry queue_requests_entry = {
 	.attr = {.name = "nr_requests", .mode = S_IRUGO | S_IWUSR },
 	.show = queue_requests_show,
@@ -462,11 +442,6 @@ static struct queue_sysfs_entry queue_random_entry = {
 	.store = queue_store_random,
 };
 
-static struct queue_sysfs_entry queue_stats_entry = {
-	.attr = {.name = "stats", .mode = S_IRUGO },
-	.show = queue_stats_show,
-};
-
 static struct attribute *default_attrs[] = {
 	&queue_requests_entry.attr,
 	&queue_ra_entry.attr,
@@ -491,7 +466,6 @@ static struct attribute *default_attrs[] = {
 	&queue_rq_affinity_entry.attr,
 	&queue_iostats_entry.attr,
 	&queue_random_entry.attr,
-	&queue_stats_entry.attr,
 	NULL,
 };
 
@@ -566,6 +540,9 @@ static void blk_release_queue(struct kobject *kobj)
 	struct request_queue *q =
 		container_of(kobj, struct request_queue, kobj);
 
+	if (test_bit(QUEUE_FLAG_POLL_STATS, &q->queue_flags))
+		blk_stat_remove_callback(q, q->poll_cb);
+	blk_stat_free_callback(q->poll_cb);
 	blkcg_exit_queue(q);
 
 	if (q->elevator) {
@@ -574,6 +551,8 @@ static void blk_release_queue(struct kobject *kobj)
 		spin_unlock_irq(q->queue_lock);
 		elevator_exit(q, q->elevator);
 	}
+
+	blk_free_queue_stats(q->stats);
 
 	blk_exit_rl(&q->root_rl);
 
