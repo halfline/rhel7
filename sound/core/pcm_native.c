@@ -36,6 +36,8 @@
 #include <sound/timer.h>
 #include <sound/minors.h>
 
+#include "pcm_local.h"
+
 #ifdef CONFIG_SND_DEBUG
 #define CREATE_TRACE_POINTS
 #include "pcm_param_trace.h"
