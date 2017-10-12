@@ -260,7 +260,7 @@ EXPORT_SYMBOL_GPL(__blk_mq_alloc_request);
 struct request *blk_mq_alloc_request(struct request_queue *q, int rw,
 		unsigned int flags)
 {
-	struct blk_mq_alloc_data alloc_data;
+	struct blk_mq_alloc_data alloc_data = { .flags = flags };
 	struct request *rq;
 	int ret;
 
@@ -1343,7 +1343,7 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
 {
 	const int is_sync = rw_is_sync(bio->bi_rw);
 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
-	struct blk_mq_alloc_data data;
+	struct blk_mq_alloc_data data = { .flags = 0 };
 	struct request *rq;
 	unsigned int request_count = 0, srcu_idx;
 	struct blk_plug *plug;
@@ -1451,7 +1451,7 @@ static void blk_sq_make_request(struct request_queue *q, struct bio *bio)
 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
 	struct blk_plug *plug;
 	unsigned int request_count = 0;
-	struct blk_mq_alloc_data data;
+	struct blk_mq_alloc_data data = { .flags = 0 };
 	struct request *rq;
 
 	blk_queue_bounce(q, &bio);
