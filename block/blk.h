@@ -174,7 +174,7 @@ static inline struct request *__elv_next_request(struct request_queue *q)
 			return NULL;
 		}
 		if (unlikely(blk_queue_bypass(q)) ||
-		    !q->elevator->type->ops.sq.elevator_dispatch_fn(q, 0))
+		    !q->elevator->aux->ops.sq.elevator_dispatch_fn(q, 0))
 			return NULL;
 	}
 }
@@ -183,16 +183,16 @@ static inline void elv_activate_rq(struct request_queue *q, struct request *rq)
 {
 	struct elevator_queue *e = q->elevator;
 
-	if (e->type->ops.sq.elevator_activate_req_fn)
-		e->type->ops.sq.elevator_activate_req_fn(q, rq);
+	if (e->aux->ops.sq.elevator_activate_req_fn)
+		e->aux->ops.sq.elevator_activate_req_fn(q, rq);
 }
 
 static inline void elv_deactivate_rq(struct request_queue *q, struct request *rq)
 {
 	struct elevator_queue *e = q->elevator;
 
-	if (e->type->ops.sq.elevator_deactivate_req_fn)
-		e->type->ops.sq.elevator_deactivate_req_fn(q, rq);
+	if (e->aux->ops.sq.elevator_deactivate_req_fn)
+		e->aux->ops.sq.elevator_deactivate_req_fn(q, rq);
 }
 
 struct elevator_type_aux *elevator_aux_find(struct elevator_type *e);

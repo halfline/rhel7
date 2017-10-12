@@ -536,8 +536,8 @@ int blk_attempt_req_merge(struct request_queue *q, struct request *rq,
 	struct elevator_queue *e = q->elevator;
 	struct request *free;
 
-	if (!e->uses_mq && e->type->ops.sq.elevator_allow_rq_merge_fn)
-		if (!e->type->ops.sq.elevator_allow_rq_merge_fn(q, rq, next))
+	if (!e->uses_mq && e->aux->ops.sq.elevator_allow_rq_merge_fn)
+		if (!e->aux->ops.sq.elevator_allow_rq_merge_fn(q, rq, next))
 			return 0;
 
 	free = attempt_merge(q, rq, next);

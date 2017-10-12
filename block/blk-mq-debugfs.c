@@ -766,12 +766,12 @@ void blk_mq_debugfs_unregister_hctxs(struct request_queue *q)
 
 int blk_mq_debugfs_register_sched(struct request_queue *q)
 {
-	struct elevator_type *e = q->elevator->type;
+	struct elevator_type_aux *aux = q->elevator->aux;
 
 	if (!q->debugfs_dir)
 		return -ENOENT;
 
-	if (!e->queue_debugfs_attrs)
+	if (!aux->queue_debugfs_attrs)
 		return 0;
 
 	q->sched_debugfs_dir = debugfs_create_dir("sched", q->debugfs_dir);
@@ -779,7 +779,7 @@ int blk_mq_debugfs_register_sched(struct request_queue *q)
 		return -ENOMEM;
 
 	if (!debugfs_create_files(q->sched_debugfs_dir, q,
-				  e->queue_debugfs_attrs))
+				  aux->queue_debugfs_attrs))
 		goto err;
 
 	return 0;
@@ -798,12 +798,12 @@ void blk_mq_debugfs_unregister_sched(struct request_queue *q)
 int blk_mq_debugfs_register_sched_hctx(struct request_queue *q,
 				       struct blk_mq_hw_ctx *hctx)
 {
-	struct elevator_type *e = q->elevator->type;
+	struct elevator_type_aux *aux = q->elevator->aux;
 
 	if (!hctx->debugfs_dir)
 		return -ENOENT;
 
-	if (!e->hctx_debugfs_attrs)
+	if (!aux->hctx_debugfs_attrs)
 		return 0;
 
 	hctx->sched_debugfs_dir = debugfs_create_dir("sched",
@@ -812,7 +812,7 @@ int blk_mq_debugfs_register_sched_hctx(struct request_queue *q,
 		return -ENOMEM;
 
 	if (!debugfs_create_files(hctx->sched_debugfs_dir, hctx,
-				  e->hctx_debugfs_attrs))
+				  aux->hctx_debugfs_attrs))
 		return -ENOMEM;
 
 	return 0;

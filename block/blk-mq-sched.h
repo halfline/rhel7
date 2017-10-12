@@ -55,8 +55,8 @@ static inline int blk_mq_sched_get_rq_priv(struct request_queue *q,
 {
 	struct elevator_queue *e = q->elevator;
 
-	if (e && e->type->ops.mq.get_rq_priv)
-		return e->type->ops.mq.get_rq_priv(q, rq, bio);
+	if (e && e->aux->ops.mq.get_rq_priv)
+		return e->aux->ops.mq.get_rq_priv(q, rq, bio);
 
 	return 0;
 }
@@ -66,8 +66,8 @@ static inline void blk_mq_sched_put_rq_priv(struct request_queue *q,
 {
 	struct elevator_queue *e = q->elevator;
 
-	if (e && e->type->ops.mq.put_rq_priv)
-		e->type->ops.mq.put_rq_priv(q, rq);
+	if (e && e->aux->ops.mq.put_rq_priv)
+		e->aux->ops.mq.put_rq_priv(q, rq);
 }
 
 static inline bool
@@ -76,8 +76,8 @@ blk_mq_sched_allow_merge(struct request_queue *q, struct request *rq,
 {
 	struct elevator_queue *e = q->elevator;
 
-	if (e && e->type->ops.mq.allow_merge)
-		return e->type->ops.mq.allow_merge(q, rq, bio);
+	if (e && e->aux->ops.mq.allow_merge)
+		return e->aux->ops.mq.allow_merge(q, rq, bio);
 
 	return true;
 }
@@ -86,8 +86,8 @@ static inline void blk_mq_sched_completed_request(struct request *rq)
 {
 	struct elevator_queue *e = rq->q->elevator;
 
-	if (e && e->type->ops.mq.completed_request)
-		e->type->ops.mq.completed_request(rq);
+	if (e && e->aux->ops.mq.completed_request)
+		e->aux->ops.mq.completed_request(rq);
 }
 
 static inline void blk_mq_sched_started_request(struct request *rq)
@@ -95,8 +95,8 @@ static inline void blk_mq_sched_started_request(struct request *rq)
 	struct request_queue *q = rq->q;
 	struct elevator_queue *e = q->elevator;
 
-	if (e && e->type->ops.mq.started_request)
-		e->type->ops.mq.started_request(rq);
+	if (e && e->aux->ops.mq.started_request)
+		e->aux->ops.mq.started_request(rq);
 }
 
 static inline void blk_mq_sched_requeue_request(struct request *rq)
@@ -104,16 +104,16 @@ static inline void blk_mq_sched_requeue_request(struct request *rq)
 	struct request_queue *q = rq->q;
 	struct elevator_queue *e = q->elevator;
 
-	if (e && e->type->ops.mq.requeue_request)
-		e->type->ops.mq.requeue_request(rq);
+	if (e && e->aux->ops.mq.requeue_request)
+		e->aux->ops.mq.requeue_request(rq);
 }
 
 static inline bool blk_mq_sched_has_work(struct blk_mq_hw_ctx *hctx)
 {
 	struct elevator_queue *e = hctx->queue->elevator;
 
-	if (e && e->type->ops.mq.has_work)
-		return e->type->ops.mq.has_work(hctx);
+	if (e && e->aux->ops.mq.has_work)
+		return e->aux->ops.mq.has_work(hctx);
 
 	return false;
 }
