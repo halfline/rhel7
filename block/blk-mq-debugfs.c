@@ -250,7 +250,7 @@ static const char *const cmd_flag_name[] = {
 };
 #undef CMD_FLAG_NAME
 
-static int blk_mq_debugfs_rq_show(struct seq_file *m, void *v)
+int blk_mq_debugfs_rq_show(struct seq_file *m, void *v)
 {
 	struct request *rq = list_entry_rq(v);
 
@@ -261,6 +261,7 @@ static int blk_mq_debugfs_rq_show(struct seq_file *m, void *v)
 		   rq->internal_tag);
 	return 0;
 }
+EXPORT_SYMBOL_GPL(blk_mq_debugfs_rq_show);
 
 static void *hctx_dispatch_start(struct seq_file *m, loff_t *pos)
 	__acquires(&hctx->lock)
