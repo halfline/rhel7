@@ -827,11 +827,6 @@ static struct elevator_mq_ops kyber_ops = {
 };
 
 static struct elevator_type kyber_sched = {
-	.uses_mq = true,
-#ifdef CONFIG_BLK_DEBUG_FS
-	.queue_debugfs_attrs = kyber_queue_debugfs_attrs,
-	.hctx_debugfs_attrs = kyber_hctx_debugfs_attrs,
-#endif
 	.elevator_attrs = kyber_sched_attrs,
 	.elevator_name = "kyber",
 	.elevator_owner = THIS_MODULE,
@@ -846,7 +841,6 @@ static int __init kyber_init(void)
 		return ret;
 	aux = elevator_aux_find(&kyber_sched);
 	memcpy(&aux->ops.mq, &kyber_ops, sizeof(struct elevator_mq_ops));
-	memcpy(&kyber_sched.ops.mq, &kyber_ops, sizeof(struct elevator_mq_ops));
 	aux->uses_mq = true;
 	aux->queue_debugfs_attrs = kyber_queue_debugfs_attrs;
 	aux->hctx_debugfs_attrs = kyber_hctx_debugfs_attrs;

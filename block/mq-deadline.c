@@ -652,10 +652,6 @@ static struct elevator_mq_ops dd_ops = {
 };
 
 static struct elevator_type mq_deadline = {
-	.uses_mq	= true,
-#ifdef CONFIG_BLK_DEBUG_FS
-	.queue_debugfs_attrs = deadline_queue_debugfs_attrs,
-#endif
 	.elevator_attrs = deadline_attrs,
 	.elevator_name = "mq-deadline",
 	.elevator_owner = THIS_MODULE,
@@ -672,7 +668,6 @@ static int __init deadline_init(void)
 
 	aux = elevator_aux_find(&mq_deadline);
 	memcpy(&aux->ops.mq, &dd_ops, sizeof(struct elevator_mq_ops));
-	memcpy(&mq_deadline.ops.mq, &dd_ops, sizeof(struct elevator_mq_ops));
 	aux->uses_mq = true;
 	aux->queue_debugfs_attrs = deadline_queue_debugfs_attrs;
 

@@ -932,7 +932,7 @@ static int elv_aux_register(struct elevator_type *e)
 		goto fail;
 
 	e_aux->type = e;
-	memcpy(&e_aux->ops.sq, &e->ops.sq, sizeof(struct elevator_ops));
+	memcpy(&e_aux->ops.sq, &e->ops, sizeof(struct elevator_ops));
 	spin_lock(&elv_list_lock);
 	list_add_tail(&e_aux->list, &elv_aux_list);
 	spin_unlock(&elv_list_lock);

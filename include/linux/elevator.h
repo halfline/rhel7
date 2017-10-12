@@ -56,8 +56,6 @@ struct elevator_ops
 	elevator_merged_fn *elevator_merged_fn;
 	elevator_merge_req_fn *elevator_merge_req_fn;
 	elevator_allow_merge_fn *elevator_allow_merge_fn;
-	elevator_allow_bio_merge_fn *elevator_allow_bio_merge_fn;
-	elevator_allow_rq_merge_fn *elevator_allow_rq_merge_fn;
 	elevator_bio_merged_fn *elevator_bio_merged_fn;
 
 	elevator_dispatch_fn *elevator_dispatch_fn;
@@ -80,7 +78,6 @@ struct elevator_ops
 
 	elevator_init_fn *elevator_init_fn;
 	elevator_exit_fn *elevator_exit_fn;
-	elevator_registered_fn *elevator_registered_fn;
 };
 
 struct blk_mq_alloc_data;
@@ -178,20 +175,12 @@ struct elevator_type
 	struct kmem_cache *icq_cache;
 
 	/* fields provided by elevator implementation */
-	union {
-		struct elevator_ops sq;
-		struct elevator_mq_ops mq;
-	} ops;
+	struct elevator_ops ops;
 	size_t icq_size;	/* see iocontext.h */
 	size_t icq_align;	/* ditto */
 	struct elv_fs_entry *elevator_attrs;
 	char elevator_name[ELV_NAME_MAX];
 	struct module *elevator_owner;
-	bool uses_mq;
-#ifdef CONFIG_BLK_DEBUG_FS
-	const struct blk_mq_debugfs_attr *queue_debugfs_attrs;
-	const struct blk_mq_debugfs_attr *hctx_debugfs_attrs;
-#endif
 
 	/* managed by elevator core */
 	char icq_cache_name[ELV_NAME_MAX + 5];	/* elvname + "_io_cq" */
@@ -215,7 +204,6 @@ struct elevator_queue
 	struct kobject kobj;
 	struct mutex sysfs_lock;
 	unsigned int registered:1;
-	unsigned int uses_mq:1;
 	DECLARE_HASHTABLE(hash, ELV_HASH_BITS);
 
 	/*
@@ -223,6 +211,7 @@ struct elevator_queue
 	 * shouldn't be covered by kABI
 	 */
 	RH_KABI_EXTEND(struct elevator_type_aux *aux)
+	RH_KABI_EXTEND(unsigned int uses_mq)
 };
 
 /*
