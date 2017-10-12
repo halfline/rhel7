@@ -23,6 +23,7 @@ config SND_SOC_ALL_CODECS
 	select SND_SOC_RT5645 if I2C
 	select SND_SOC_RT5651 if I2C
 	select SND_SOC_RT5670 if I2C
+	select SND_SOC_RT5677 if I2C
 	select SND_SOC_SN95031 if INTEL_SCU_IPC
 	select SND_SOC_SSM4567 if I2C
 	select SND_SOC_TS3A227E if I2C
@@ -88,6 +89,9 @@ config SND_SOC_RT5651
 	tristate
 
 config SND_SOC_RT5670
+	tristate
+
+config SND_SOC_RT5677
 	tristate
 
 config SND_SOC_SN95031
