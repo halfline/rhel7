@@ -71,7 +71,8 @@ static inline void scsi_activate_tcq(struct scsi_device *sdev, int depth)
 		queue_flag_set_unlocked(QUEUE_FLAG_QUEUED, sdev->request_queue);
 	else if (!blk_queue_tagged(sdev->request_queue))
 		blk_queue_init_tags(sdev->request_queue, depth,
-				    sdev->host->bqt);
+				    sdev->host->bqt,
+				    sdev->host->hostt->tag_alloc_policy);
 
 	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
 }
@@ -166,7 +167,8 @@ static inline int scsi_init_shared_tag_map(struct Scsi_Host *shost, int depth)
 	 * devices on the shared host (for libata)
 	 */
 	if (!shost->bqt) {
-		shost->bqt = blk_init_tags(depth);
+		shost->bqt = blk_init_tags(depth,
+			shost->hostt->tag_alloc_policy);
 		if (!shost->bqt)
 			return -ENOMEM;
 	}
