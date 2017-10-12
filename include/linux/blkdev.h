@@ -230,6 +230,9 @@ struct request {
 
 	/* for bidi */
 	struct request *next_rq;
+
+	/* for blk-mq io sched */
+	int internal_tag;
 };
 
 #define req_op(req)		(op_from_rq_bits((req)->cmd_flags))
