@@ -58,8 +58,8 @@ static int elv_iosched_allow_bio_merge(struct request *rq, struct bio *bio)
 	struct request_queue *q = rq->q;
 	struct elevator_queue *e = q->elevator;
 
-	if (e->type->ops.elevator_allow_bio_merge_fn)
-		return e->type->ops.elevator_allow_bio_merge_fn(q, rq, bio);
+	if (e->type->ops.sq.elevator_allow_bio_merge_fn)
+		return e->type->ops.sq.elevator_allow_bio_merge_fn(q, rq, bio);
 
 	return 1;
 }
@@ -235,7 +235,7 @@ int elevator_init(struct request_queue *q, char *name)
 		}
 	}
 
-	err = e->ops.elevator_init_fn(q, e);
+	err = e->ops.sq.elevator_init_fn(q, e);
 	if (err)
 		elevator_put(e);
 	return err;
@@ -245,8 +245,8 @@ EXPORT_SYMBOL(elevator_init);
 void elevator_exit(struct elevator_queue *e)
 {
 	mutex_lock(&e->sysfs_lock);
-	if (e->type->ops.elevator_exit_fn)
-		e->type->ops.elevator_exit_fn(e);
+	if (e->type->ops.sq.elevator_exit_fn)
+		e->type->ops.sq.elevator_exit_fn(e);
 	mutex_unlock(&e->sysfs_lock);
 
 	kobject_put(&e->kobj);
@@ -457,8 +457,8 @@ int elv_merge(struct request_queue *q, struct request **req, struct bio *bio)
 		return ELEVATOR_BACK_MERGE;
 	}
 
-	if (e->type->ops.elevator_merge_fn)
-		return e->type->ops.elevator_merge_fn(q, req, bio);
+	if (e->type->ops.sq.elevator_merge_fn)
+		return e->type->ops.sq.elevator_merge_fn(q, req, bio);
 
 	return ELEVATOR_NO_MERGE;
 }
@@ -509,8 +509,8 @@ void elv_merged_request(struct request_queue *q, struct request *rq, int type)
 {
 	struct elevator_queue *e = q->elevator;
 
-	if (e->type->ops.elevator_merged_fn)
-		e->type->ops.elevator_merged_fn(q, rq, type);
+	if (e->type->ops.sq.elevator_merged_fn)
+		e->type->ops.sq.elevator_merged_fn(q, rq, type);
 
 	if (type == ELEVATOR_BACK_MERGE)
 		elv_rqhash_reposition(q, rq);
@@ -524,8 +524,8 @@ void elv_merge_requests(struct request_queue *q, struct request *rq,
 	struct elevator_queue *e = q->elevator;
 	const int next_sorted = next->cmd_flags & REQ_SORTED;
 
-	if (next_sorted && e->type->ops.elevator_merge_req_fn)
-		e->type->ops.elevator_merge_req_fn(q, rq, next);
+	if (next_sorted && e->type->ops.sq.elevator_merge_req_fn)
+		e->type->ops.sq.elevator_merge_req_fn(q, rq, next);
 
 	elv_rqhash_reposition(q, rq);
 
@@ -542,8 +542,8 @@ void elv_bio_merged(struct request_queue *q, struct request *rq,
 {
 	struct elevator_queue *e = q->elevator;
 
-	if (e->type->ops.elevator_bio_merged_fn)
-		e->type->ops.elevator_bio_merged_fn(q, rq, bio);
+	if (e->type->ops.sq.elevator_bio_merged_fn)
+		e->type->ops.sq.elevator_bio_merged_fn(q, rq, bio);
 }
 
 #ifdef CONFIG_PM_RUNTIME
@@ -592,7 +592,7 @@ void elv_drain_elevator(struct request_queue *q)
 
 	lockdep_assert_held(q->queue_lock);
 
-	while (q->elevator->type->ops.elevator_dispatch_fn(q, 1))
+	while (q->elevator->type->ops.sq.elevator_dispatch_fn(q, 1))
 		;
 	if (q->nr_sorted && printed++ < 10) {
 		printk(KERN_ERR "%s: forced dispatching is broken "
@@ -667,7 +667,7 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
 		 * rq cannot be accessed after calling
 		 * elevator_add_req_fn.
 		 */
-		q->elevator->type->ops.elevator_add_req_fn(q, rq);
+		q->elevator->type->ops.sq.elevator_add_req_fn(q, rq);
 		break;
 
 	case ELEVATOR_INSERT_FLUSH:
@@ -696,8 +696,8 @@ struct request *elv_latter_request(struct request_queue *q, struct request *rq)
 {
 	struct elevator_queue *e = q->elevator;
 
-	if (e->type->ops.elevator_latter_req_fn)
-		return e->type->ops.elevator_latter_req_fn(q, rq);
+	if (e->type->ops.sq.elevator_latter_req_fn)
+		return e->type->ops.sq.elevator_latter_req_fn(q, rq);
 	return NULL;
 }
 
@@ -705,8 +705,8 @@ struct request *elv_former_request(struct request_queue *q, struct request *rq)
 {
 	struct elevator_queue *e = q->elevator;
 
-	if (e->type->ops.elevator_former_req_fn)
-		return e->type->ops.elevator_former_req_fn(q, rq);
+	if (e->type->ops.sq.elevator_former_req_fn)
+		return e->type->ops.sq.elevator_former_req_fn(q, rq);
 	return NULL;
 }
 
@@ -715,8 +715,8 @@ int elv_set_request(struct request_queue *q, struct request *rq,
 {
 	struct elevator_queue *e = q->elevator;
 
-	if (e->type->ops.elevator_set_req_fn)
-		return e->type->ops.elevator_set_req_fn(q, rq, bio, gfp_mask);
+	if (e->type->ops.sq.elevator_set_req_fn)
+		return e->type->ops.sq.elevator_set_req_fn(q, rq, bio, gfp_mask);
 	return 0;
 }
 
@@ -724,16 +724,16 @@ void elv_put_request(struct request_queue *q, struct request *rq)
 {
 	struct elevator_queue *e = q->elevator;
 
-	if (e->type->ops.elevator_put_req_fn)
-		e->type->ops.elevator_put_req_fn(rq);
+	if (e->type->ops.sq.elevator_put_req_fn)
+		e->type->ops.sq.elevator_put_req_fn(rq);
 }
 
 int elv_may_queue(struct request_queue *q, int rw)
 {
 	struct elevator_queue *e = q->elevator;
 
-	if (e->type->ops.elevator_may_queue_fn)
-		return e->type->ops.elevator_may_queue_fn(q, rw);
+	if (e->type->ops.sq.elevator_may_queue_fn)
+		return e->type->ops.sq.elevator_may_queue_fn(q, rw);
 
 	return ELV_MQUEUE_MAY;
 }
@@ -748,8 +748,8 @@ void elv_completed_request(struct request_queue *q, struct request *rq)
 	if (blk_account_rq(rq)) {
 		q->in_flight[rq_is_sync(rq)]--;
 		if ((rq->cmd_flags & REQ_SORTED) &&
-		    e->type->ops.elevator_completed_req_fn)
-			e->type->ops.elevator_completed_req_fn(q, rq);
+		    e->type->ops.sq.elevator_completed_req_fn)
+			e->type->ops.sq.elevator_completed_req_fn(q, rq);
 	}
 }
 
@@ -817,8 +817,8 @@ int elv_register_queue(struct request_queue *q)
 		}
 		kobject_uevent(&e->kobj, KOBJ_ADD);
 		e->registered = 1;
-		if (e->type->ops.elevator_registered_fn)
-			e->type->ops.elevator_registered_fn(q);
+		if (e->type->ops.sq.elevator_registered_fn)
+			e->type->ops.sq.elevator_registered_fn(q);
 	}
 	return error;
 }
@@ -926,7 +926,7 @@ static int elevator_switch(struct request_queue *q, struct elevator_type *new_e)
 	spin_unlock_irq(q->queue_lock);
 
 	/* allocate, init and register new elevator */
-	err = new_e->ops.elevator_init_fn(q, new_e);
+	err = new_e->ops.sq.elevator_init_fn(q, new_e);
 	if (err)
 		goto fail_init;
 
