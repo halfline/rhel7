@@ -555,6 +555,7 @@ struct request_queue {
 	RH_KABI_EXTEND(struct blk_queue_stats	*stats)
 	RH_KABI_EXTEND(struct blk_stat_callback	*poll_cb)
 	RH_KABI_EXTEND(struct blk_rq_stat	poll_stat[2])
+	RH_KABI_EXTEND(atomic_t		shared_hctx_restart)
 #ifdef CONFIG_BLK_DEBUG_FS
 	RH_KABI_EXTEND(struct dentry		*debugfs_dir)
 	RH_KABI_EXTEND(struct dentry		*mq_debugfs_dir)
