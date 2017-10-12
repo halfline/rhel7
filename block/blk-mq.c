@@ -1319,7 +1319,7 @@ insert_rq:
 	}
 }
 
-static void blk_mq_try_issue_directly(struct request *rq, bool may_sleep)
+static void __blk_mq_try_issue_directly(struct request *rq, bool may_sleep)
 {
 	struct request_queue *q = rq->q;
 	struct blk_mq_queue_data bd = {
@@ -1357,13 +1357,27 @@ insert:
 	blk_mq_sched_insert_request(rq, false, true, false, may_sleep);
 }
 
+static void blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+				      struct request *rq)
+{
+	if (!(hctx->flags & BLK_MQ_F_BLOCKING)) {
+		rcu_read_lock();
+		__blk_mq_try_issue_directly(rq, false);
+		rcu_read_unlock();
+	} else {
+		unsigned int srcu_idx = srcu_read_lock(&hctx->queue_rq_srcu);
+		__blk_mq_try_issue_directly(rq, true);
+		srcu_read_unlock(&hctx->queue_rq_srcu, srcu_idx);
+	}
+}
+
 static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
 {
 	const int is_sync = rw_is_sync(bio->bi_rw);
 	const int is_flush_fua = bio->bi_rw & (REQ_FLUSH | REQ_FUA);
 	struct blk_mq_alloc_data data = { .flags = 0 };
 	struct request *rq;
-	unsigned int request_count = 0, srcu_idx;
+	unsigned int request_count = 0;
 	struct blk_plug *plug;
 	struct request *same_queue_rq = NULL;
 
@@ -1449,18 +1463,8 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
 		} else /* is_sync */
 			old_rq = rq;
 		blk_mq_put_ctx(data.ctx);
-		if (!old_rq)
-			return;
-
-		if (!(data.hctx->flags & BLK_MQ_F_BLOCKING)) {
-			rcu_read_lock();
-			blk_mq_try_issue_directly(old_rq, false);
-			rcu_read_unlock();
-		} else {
-			srcu_idx = srcu_read_lock(&data.hctx->queue_rq_srcu);
-			blk_mq_try_issue_directly(old_rq, true);
-			srcu_read_unlock(&data.hctx->queue_rq_srcu, srcu_idx);
-		}
+		if (old_rq)
+			blk_mq_try_issue_directly(data.hctx, old_rq);
 		return;
 	}
 
