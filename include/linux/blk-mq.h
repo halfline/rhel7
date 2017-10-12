@@ -132,6 +132,7 @@ struct blk_mq_queue_data {
  */
 struct request_aux {
 	int internal_tag;
+	struct blk_issue_stat issue_stat;
 }____cacheline_aligned_in_smp;
 
 /* None of these function pointers are covered by RHEL kABI */

@@ -499,7 +499,7 @@ void blk_mq_start_request(struct request *rq)
 		rq->next_rq->resid_len = blk_rq_bytes(rq->next_rq);
 
 	if (test_bit(QUEUE_FLAG_STATS, &q->queue_flags)) {
-		blk_stat_set_issue_time(&rq->issue_stat);
+		blk_stat_set_issue_time(&rq_aux(rq)->issue_stat);
 		rq->cmd_flags |= REQ_STATS;
 	}
 

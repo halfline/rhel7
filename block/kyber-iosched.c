@@ -490,10 +490,10 @@ static void kyber_completed_request(struct request *rq)
 		return;
 
 	now = __blk_stat_time(ktime_to_ns(ktime_get()));
-	if (now < blk_stat_time(&rq->issue_stat))
+	if (now < blk_stat_time(&rq_aux(rq)->issue_stat))
 		return;
 
-	latency = now - blk_stat_time(&rq->issue_stat);
+	latency = now - blk_stat_time(&rq_aux(rq)->issue_stat);
 
 	if (latency > target)
 		blk_stat_activate_msecs(kqd->cb, 10);

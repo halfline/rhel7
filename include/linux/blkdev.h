@@ -232,8 +232,6 @@ struct request {
 
 	/* for bidi */
 	struct request *next_rq;
-
-	struct blk_issue_stat issue_stat;
 };
 
 #define req_op(req)		(op_from_rq_bits((req)->cmd_flags))
