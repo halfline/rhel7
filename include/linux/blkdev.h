@@ -556,6 +556,7 @@ struct request_queue {
 	RH_KABI_EXTEND(struct blk_stat_callback	*poll_cb)
 	RH_KABI_EXTEND(struct blk_rq_stat	poll_stat[2])
 	RH_KABI_EXTEND(atomic_t		shared_hctx_restart)
+	RH_KABI_EXTEND(unsigned int		queue_depth)
 #ifdef CONFIG_BLK_DEBUG_FS
 	RH_KABI_EXTEND(struct dentry		*debugfs_dir)
 	RH_KABI_EXTEND(struct dentry		*mq_debugfs_dir)
@@ -783,6 +784,14 @@ static inline bool blk_write_same_mergeable(struct bio *a, struct bio *b)
 		return true;
 
 	return false;
+}
+
+static inline unsigned int blk_queue_depth(struct request_queue *q)
+{
+	if (q->queue_depth)
+		return q->queue_depth;
+
+	return q->nr_requests;
 }
 
 /*
@@ -1112,6 +1121,7 @@ extern void blk_limits_io_min(struct queue_limits *limits, unsigned int min);
 extern void blk_queue_io_min(struct request_queue *q, unsigned int min);
 extern void blk_limits_io_opt(struct queue_limits *limits, unsigned int opt);
 extern void blk_queue_io_opt(struct request_queue *q, unsigned int opt);
+extern void blk_set_queue_depth(struct request_queue *q, unsigned int depth);
 extern void blk_set_default_limits(struct queue_limits *lim);
 extern void blk_set_stacking_limits(struct queue_limits *lim);
 extern int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
