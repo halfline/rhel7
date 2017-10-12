@@ -631,6 +631,8 @@ int blk_register_queue(struct gendisk *disk)
 	if (q->mq_ops)
 		__blk_mq_register_dev(dev, q);
 
+	blk_mq_debugfs_register(q);
+
 	kobject_uevent(&q->kobj, KOBJ_ADD);
 
 	if (q->request_fn || (q->mq_ops && q->elevator)) {

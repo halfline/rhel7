@@ -28,6 +28,7 @@
 #include <linux/blk-mq.h>
 #include "blk.h"
 #include "blk-mq.h"
+#include "blk-mq-debugfs.h"
 #include "blk-mq-tag.h"
 #include "blk-mq-sched.h"
 #include "blk-stat.h"
@@ -1805,6 +1806,8 @@ static void blk_mq_exit_hctx(struct request_queue *q,
 {
 	unsigned flush_start_tag = set->queue_depth;
 
+	blk_mq_debugfs_unregister_hctx(hctx);
+
 	blk_mq_tag_idle(hctx);
 
 	if (set->ops->exit_request)
@@ -1907,6 +1910,8 @@ static int blk_mq_init_hctx(struct request_queue *q,
 
 	if (hctx->flags & BLK_MQ_F_BLOCKING)
 		init_srcu_struct(&hctx->queue_rq_srcu);
+
+	blk_mq_debugfs_register_hctx(q, hctx);
 
 	return 0;
 
@@ -2348,6 +2353,7 @@ static void blk_mq_queue_reinit(struct request_queue *q,
 {
 	WARN_ON_ONCE(!atomic_read(&q->mq_freeze_depth));
 
+	blk_mq_debugfs_unregister_hctxs(q);
 	blk_mq_sysfs_unregister(q);
 
 	/*
@@ -2359,6 +2365,7 @@ static void blk_mq_queue_reinit(struct request_queue *q,
 	blk_mq_map_swqueue(q, online_mask);
 
 	blk_mq_sysfs_register(q);
+	blk_mq_debugfs_register_hctxs(q);
 }
 
 static int blk_mq_queue_reinit_notify(struct notifier_block *nb,

@@ -82,6 +82,9 @@ struct blk_mq_hw_ctx {
 	RH_KABI_EXTEND(struct blk_flush_queue	*fq)
 	RH_KABI_EXTEND(struct srcu_struct	queue_rq_srcu)
 	RH_KABI_EXTEND(wait_queue_t		dispatch_wait)
+#ifdef CONFIG_BLK_DEBUG_FS
+	RH_KABI_EXTEND(struct dentry		*debugfs_dir)
+#endif
 };
 
 #ifdef __GENKSYMS__

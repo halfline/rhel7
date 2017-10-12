@@ -559,7 +559,6 @@ struct request_queue {
 	RH_KABI_EXTEND(unsigned int		queue_depth)
 #ifdef CONFIG_BLK_DEBUG_FS
 	RH_KABI_EXTEND(struct dentry		*debugfs_dir)
-	RH_KABI_EXTEND(struct dentry		*mq_debugfs_dir)
 #endif
 };
 
