@@ -814,18 +814,19 @@ static const struct blk_mq_debugfs_attr kyber_hctx_debugfs_attrs[] = {
 #undef KYBER_HCTX_DOMAIN_ATTRS
 #endif
 
+static struct elevator_mq_ops kyber_ops = {
+	.init_sched = kyber_init_sched,
+	.exit_sched = kyber_exit_sched,
+	.init_hctx = kyber_init_hctx,
+	.exit_hctx = kyber_exit_hctx,
+	.get_request = kyber_get_request,
+	.put_request = kyber_put_request,
+	.completed_request = kyber_completed_request,
+	.dispatch_request = kyber_dispatch_request,
+	.has_work = kyber_has_work,
+};
+
 static struct elevator_type kyber_sched = {
-	.ops.mq = {
-		.init_sched = kyber_init_sched,
-		.exit_sched = kyber_exit_sched,
-		.init_hctx = kyber_init_hctx,
-		.exit_hctx = kyber_exit_hctx,
-		.get_request = kyber_get_request,
-		.put_request = kyber_put_request,
-		.completed_request = kyber_completed_request,
-		.dispatch_request = kyber_dispatch_request,
-		.has_work = kyber_has_work,
-	},
 	.uses_mq = true,
 #ifdef CONFIG_BLK_DEBUG_FS
 	.queue_debugfs_attrs = kyber_queue_debugfs_attrs,
@@ -838,7 +839,19 @@ static struct elevator_type kyber_sched = {
 
 static int __init kyber_init(void)
 {
-	return elv_register(&kyber_sched);
+	int ret = elv_register(&kyber_sched);
+	struct elevator_type_aux *aux;
+
+	if (ret)
+		return ret;
+	aux = elevator_aux_find(&kyber_sched);
+	memcpy(&aux->ops.mq, &kyber_ops, sizeof(struct elevator_mq_ops));
+	memcpy(&kyber_sched.ops.mq, &kyber_ops, sizeof(struct elevator_mq_ops));
+	aux->uses_mq = true;
+	aux->queue_debugfs_attrs = kyber_queue_debugfs_attrs;
+	aux->hctx_debugfs_attrs = kyber_hctx_debugfs_attrs;
+
+	return 0;
 }
 
 static void __exit kyber_exit(void)
