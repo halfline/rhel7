@@ -22,6 +22,7 @@ config SND_SOC_ALL_CODECS
 	select SND_SOC_MAX98357A if GPIOLIB
 	select SND_SOC_MAX98927 if I2C
 	select SND_SOC_NAU8825 if I2C
+	select SND_SOC_RT5514 if I2C
 	select SND_SOC_RT5640 if I2C
 	select SND_SOC_RT5645 if I2C
 	select SND_SOC_RT5651 if I2C
@@ -75,12 +76,14 @@ config SND_SOC_MAX98927
 
 config SND_SOC_RL6231
 	tristate
+	default y if SND_SOC_RT5514=y
 	default y if SND_SOC_RT5640=y
 	default y if SND_SOC_RT5645=y
 	default y if SND_SOC_RT5651=y
 	default y if SND_SOC_RT5663=y
 	default y if SND_SOC_RT5670=y
 	default y if SND_SOC_RT5677=y
+	default m if SND_SOC_RT5514=m
 	default m if SND_SOC_RT5640=m
 	default m if SND_SOC_RT5645=m
 	default m if SND_SOC_RT5651=m
@@ -97,6 +100,9 @@ config SND_SOC_RT286
 	tristate
 	select SND_SOC_RT5663
 	depends on I2C
+
+config SND_SOC_RT5514
+	tristate
 
 config SND_SOC_RT5640
 	tristate
