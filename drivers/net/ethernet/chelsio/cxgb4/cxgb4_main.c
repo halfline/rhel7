@@ -746,14 +746,8 @@ static void quiesce_rx(struct adapter *adap)
 	for (i = 0; i < adap->sge.ingr_sz; i++) {
 		struct sge_rspq *q = adap->sge.ingr_map[i];
 
-		if (q && q->handler) {
+		if (q && q->handler)
 			napi_disable(&q->napi);
-			local_bh_disable();
-			while (!cxgb_poll_lock_napi(q))
-				mdelay(1);
-			local_bh_enable();
-		}
-
 	}
 }
 
@@ -784,10 +778,9 @@ static void enable_rx(struct adapter *adap)
 
 		if (!q)
 			continue;
-		if (q->handler) {
-			cxgb_busy_poll_init_lock(q);
+		if (q->handler)
 			napi_enable(&q->napi);
-		}
+
 		/* 0-increment GTS to start the timer and enable interrupts */
 		t4_write_reg(adap, MYPF_REG(SGE_PF_GTS_A),
 			     SEINTARM_V(q->intr_params) |
@@ -2969,9 +2962,6 @@ static const struct net_device_ops cxgb4_netdev_ops = {
 	.ndo_change_mtu_rh74  = cxgb_change_mtu,
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller  = cxgb_netpoll,
-#endif
-#ifdef CONFIG_NET_RX_BUSY_POLL
-	.ndo_busy_poll        = cxgb_busy_poll,
 #endif
 	.extended.ndo_set_tx_maxrate   = cxgb_set_tx_maxrate,
 	.ndo_setup_tc         = cxgb_setup_tc,
