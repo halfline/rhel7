@@ -1,3 +1,4 @@
+snd-soc-da7213-objs := da7213.o
 snd-soc-da7219-objs := da7219.o da7219-aad.o
 snd-soc-dmic-objs := dmic.o
 snd-soc-hdac-hdmi-objs := hdac_hdmi.o
@@ -17,6 +18,7 @@ snd-soc-ssm2518-objs := ssm2518.o
 snd-soc-ssm4567-objs := ssm4567.o
 snd-soc-ts3a227e-objs := ts3a227e.o
 
+obj-$(CONFIG_SND_SOC_DA7213)	+= snd-soc-da7213.o
 obj-$(CONFIG_SND_SOC_DA7219)	+= snd-soc-da7219.o
 obj-$(CONFIG_SND_SOC_DMIC)	+= snd-soc-dmic.o
 obj-$(CONFIG_SND_SOC_HDAC_HDMI) += snd-soc-hdac-hdmi.o
