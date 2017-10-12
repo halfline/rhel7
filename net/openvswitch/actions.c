@@ -1145,6 +1145,10 @@ static int do_execute_actions(struct datapath *dp, struct sk_buff *skb,
 			if (err)
 				return err == -EINPROGRESS ? 0 : err;
 			break;
+
+		case OVS_ACTION_ATTR_CT_CLEAR:
+			err = ovs_ct_clear(skb, key);
+			break;
 		}
 
 		if (unlikely(err)) {

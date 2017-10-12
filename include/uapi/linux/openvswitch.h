@@ -730,6 +730,7 @@ enum ovs_nat_attr {
  * is no MPLS label stack, as determined by ethertype, no action is taken.
  * @OVS_ACTION_ATTR_CT: Track the connection. Populate the conntrack-related
  * entries in the flow key.
+ * @OVS_ACTION_ATTR_CT_CLEAR: Clear conntrack state from the packet.
  *
  * Only a single header can be set with a single %OVS_ACTION_ATTR_SET.  Not all
  * fields within a header are modifiable, e.g. the IPv4 protocol and fragment
@@ -756,6 +757,10 @@ enum ovs_action_attr {
 				       * The data must be zero for the unmasked
 				       * bits. */
 	OVS_ACTION_ATTR_CT,           /* Nested OVS_CT_ATTR_* . */
+	__RH_RESERVED_OVS_ACTION_ATTR_TRUNC,
+	__RH_RESERVED_OVS_ACTION_ATTR_PUSH_ETH,
+	__RH_RESERVED_OVS_ACTION_ATTR_POP_ETH,
+	OVS_ACTION_ATTR_CT_CLEAR,     /* No argument. */
 
 	__OVS_ACTION_ATTR_MAX,	      /* Nothing past this will be accepted
 				       * from userspace. */
