@@ -1683,7 +1683,7 @@ void blk_queue_bio(struct request_queue *q, struct bio *bio)
 	const bool sync = !!(bio->bi_rw & REQ_SYNC);
 	struct blk_plug *plug;
 	int el_ret, rw_flags, where = ELEVATOR_INSERT_SORT;
-	struct request *req;
+	struct request *req, *free;
 	unsigned int request_count = 0;
 
 	/*
@@ -1720,15 +1720,21 @@ void blk_queue_bio(struct request_queue *q, struct bio *bio)
 	if (el_ret == ELEVATOR_BACK_MERGE) {
 		if (bio_attempt_back_merge(q, req, bio)) {
 			elv_bio_merged(q, req, bio);
-			if (!attempt_back_merge(q, req))
+			free = attempt_back_merge(q, req);
+			if (!free)
 				elv_merged_request(q, req, el_ret);
+			else
+				__blk_put_request(q, free);
 			goto out_unlock;
 		}
 	} else if (el_ret == ELEVATOR_FRONT_MERGE) {
 		if (bio_attempt_front_merge(q, req, bio)) {
 			elv_bio_merged(q, req, bio);
-			if (!attempt_front_merge(q, req))
+			free = attempt_front_merge(q, req);
+			if (!free)
 				elv_merged_request(q, req, el_ret);
+			else
+				__blk_put_request(q, free);
 			goto out_unlock;
 		}
 	}
