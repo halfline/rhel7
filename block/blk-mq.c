@@ -552,13 +552,13 @@ static void blk_mq_requeue_work(struct work_struct *work)
 
 		rq->cmd_flags &= ~REQ_SOFTBARRIER;
 		list_del_init(&rq->queuelist);
-		blk_mq_sched_insert_request(rq, true, false, false);
+		blk_mq_sched_insert_request(rq, true, false, false, true);
 	}
 
 	while (!list_empty(&rq_list)) {
 		rq = list_entry(rq_list.next, struct request, queuelist);
 		list_del_init(&rq->queuelist);
-		blk_mq_sched_insert_request(rq, false, false, false);
+		blk_mq_sched_insert_request(rq, false, false, false, true);
 	}
 
 	blk_mq_run_hw_queues(q, false);
@@ -813,12 +813,11 @@ static inline unsigned int queued_to_index(unsigned int queued)
 	return min(BLK_MQ_MAX_DISPATCH_ORDER - 1, ilog2(queued) + 1);
 }
 
-static bool blk_mq_get_driver_tag(struct request *rq,
-				  struct blk_mq_hw_ctx **hctx, bool wait)
+bool blk_mq_get_driver_tag(struct request *rq, struct blk_mq_hw_ctx **hctx,
+			   bool wait)
 {
 	struct blk_mq_alloc_data data = {
 		.q = rq->q,
-		.ctx = rq->mq_ctx,
 		.hctx = blk_mq_map_queue(rq->q, rq->mq_ctx->cpu),
 		.flags = wait ? 0 : BLK_MQ_REQ_NOWAIT,
 	};
@@ -1356,7 +1355,7 @@ static void blk_mq_try_issue_directly(struct request *rq)
 	}
 
 insert:
-	blk_mq_sched_insert_request(rq, false, true, true);
+	blk_mq_sched_insert_request(rq, false, true, true, false);
 }
 
 /*
@@ -1395,10 +1394,12 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
 		return;
 
 	if (unlikely(is_flush_fua)) {
+		blk_mq_put_ctx(data.ctx);
 		blk_mq_bio_to_request(rq, bio);
 		blk_mq_get_driver_tag(rq, NULL, true);
 		blk_insert_flush(rq);
-		goto run_queue;
+		blk_mq_run_hw_queue(data.hctx, true);
+		return;
 	}
 
 	plug = current->plug;
@@ -1451,7 +1452,7 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
 		blk_mq_put_ctx(data.ctx);
 		blk_mq_bio_to_request(rq, bio);
 		blk_mq_sched_insert_request(rq, false, true,
-						!is_sync || is_flush_fua);
+						!is_sync || is_flush_fua, true);
 		return;
 	}
 	if (!blk_mq_merge_queue_io(data.hctx, data.ctx, rq, bio)) {
@@ -1461,7 +1462,6 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
 		 * latter allows for merging opportunities and more efficient
 		 * dispatching.
 		 */
-run_queue:
 		blk_mq_run_hw_queue(data.hctx, !is_sync || is_flush_fua);
 	}
 	blk_mq_put_ctx(data.ctx);
@@ -1503,10 +1503,12 @@ static void blk_sq_make_request(struct request_queue *q, struct bio *bio)
 		return;
 
 	if (unlikely(is_flush_fua)) {
+		blk_mq_put_ctx(data.ctx);
 		blk_mq_bio_to_request(rq, bio);
 		blk_mq_get_driver_tag(rq, NULL, true);
 		blk_insert_flush(rq);
-		goto run_queue;
+		blk_mq_run_hw_queue(data.hctx, true);
+		return;
 	}
 
 	/*
@@ -1535,7 +1537,7 @@ static void blk_sq_make_request(struct request_queue *q, struct bio *bio)
 		blk_mq_put_ctx(data.ctx);
 		blk_mq_bio_to_request(rq, bio);
 		blk_mq_sched_insert_request(rq, false, true,
-						!is_sync || is_flush_fua);
+						!is_sync || is_flush_fua, true);
 		return;
 	}
 	if (!blk_mq_merge_queue_io(data.hctx, data.ctx, rq, bio)) {
@@ -1545,7 +1547,6 @@ static void blk_sq_make_request(struct request_queue *q, struct bio *bio)
 		 * latter allows for merging opportunities and more efficient
 		 * dispatching.
 		 */
-run_queue:
 		blk_mq_run_hw_queue(data.hctx, !is_sync || is_flush_fua);
 	}
 
