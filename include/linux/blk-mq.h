@@ -84,6 +84,7 @@ struct blk_mq_hw_ctx {
 	RH_KABI_EXTEND(wait_queue_t		dispatch_wait)
 #ifdef CONFIG_BLK_DEBUG_FS
 	RH_KABI_EXTEND(struct dentry		*debugfs_dir)
+	RH_KABI_EXTEND(struct dentry		*sched_debugfs_dir)
 #endif
 };
 
