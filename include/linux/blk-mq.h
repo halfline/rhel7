@@ -34,7 +34,6 @@ struct blk_mq_hw_ctx {
 
 	unsigned long		flags;		/* BLK_MQ_F_* flags */
 
-	void			*sched_data;
 	struct request_queue	*queue;
 	unsigned int		queue_num;
 
@@ -56,7 +55,6 @@ struct blk_mq_hw_ctx {
 			struct list_head	padding3)
 
 	struct blk_mq_tags	*tags;
-	struct blk_mq_tags	*sched_tags;
 
 	unsigned long		queued;
 	unsigned long		run;
@@ -82,6 +80,8 @@ struct blk_mq_hw_ctx {
 	RH_KABI_EXTEND(struct blk_flush_queue	*fq)
 	RH_KABI_EXTEND(struct srcu_struct	queue_rq_srcu)
 	RH_KABI_EXTEND(wait_queue_t		dispatch_wait)
+	RH_KABI_EXTEND(void			*sched_data)
+	RH_KABI_EXTEND(struct blk_mq_tags	*sched_tags)
 #ifdef CONFIG_BLK_DEBUG_FS
 	RH_KABI_EXTEND(struct dentry		*debugfs_dir)
 	RH_KABI_EXTEND(struct dentry		*sched_debugfs_dir)
