@@ -681,6 +681,10 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
 	if (q->id < 0)
 		goto fail_q;
 
+	q->stats = blk_alloc_queue_stats();
+	if (!q->stats)
+		goto fail_stats;
+
 	q->backing_dev_info.ra_pages =
 			(VM_MAX_READAHEAD * 1024) / PAGE_CACHE_SIZE;
 	q->backing_dev_info.state = 0;
@@ -748,6 +752,8 @@ fail_ref:
 fail_bdi:
 	bdi_destroy(&q->backing_dev_info);
 fail_id:
+	blk_free_queue_stats(q->stats);
+fail_stats:
 	ida_simple_remove(&blk_queue_ida, q->id);
 fail_q:
 	kmem_cache_free(blk_requestq_cachep, q);
@@ -817,10 +823,6 @@ blk_init_allocated_queue(struct request_queue *q, request_fn_proc *rfn,
 {
 	if (!q)
 		return NULL;
-
-	q->stats = blk_alloc_queue_stats();
-	if (!q->stats)
-		return ERR_PTR(-ENOMEM);
 
 	q->fq = blk_alloc_flush_queue(q, NUMA_NO_NODE, 0);
 	if (!q->fq)
