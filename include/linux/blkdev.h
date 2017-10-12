@@ -551,7 +551,7 @@ struct request_queue {
 	RH_KABI_EXTEND(struct work_struct	timeout_work)
 	RH_KABI_EXTEND(struct delayed_work	requeue_work)
 	RH_KABI_EXTEND(struct blk_rq_stat	rq_stats[2])
-#ifdef CONFIG_DEBUG_FS
+#ifdef CONFIG_BLK_DEBUG_FS
 	RH_KABI_EXTEND(struct dentry		*debugfs_dir)
 	RH_KABI_EXTEND(struct dentry		*mq_debugfs_dir)
 #endif
