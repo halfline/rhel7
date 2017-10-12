@@ -345,6 +345,8 @@ static int kyber_init_sched(struct request_queue *q, struct elevator_type *e)
 	struct kyber_queue_data *kqd;
 	struct elevator_queue *eq;
 
+	mark_tech_preview("kyber", THIS_MODULE);
+
 	eq = elevator_alloc(q, e);
 	if (!eq)
 		return -ENOMEM;

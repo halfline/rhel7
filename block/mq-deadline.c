@@ -318,6 +318,8 @@ static int dd_init_queue(struct request_queue *q, struct elevator_type *e)
 	struct deadline_data *dd;
 	struct elevator_queue *eq;
 
+	mark_tech_preview("mq-deadline", THIS_MODULE);
+
 	eq = elevator_alloc(q, e);
 	if (!eq)
 		return -ENOMEM;

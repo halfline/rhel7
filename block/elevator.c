@@ -243,10 +243,18 @@ int elevator_init(struct request_queue *q, char *name)
 		 * to "none".
 		 */
 		if (q->mq_ops) {
+#if 0
+			/*
+			 * now mq-deadline is mark_tech_preview, so still use
+			 * none as default
+			 */
 			if (q->nr_hw_queues == 1)
 				e = elevator_get("mq-deadline", false);
 			if (!e)
 				return 0;
+#else
+			return 0;
+#endif
 		} else
 			e = elevator_get(CONFIG_DEFAULT_IOSCHED, false);
 
