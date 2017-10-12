@@ -637,21 +637,21 @@ static const struct blk_mq_debugfs_attr deadline_queue_debugfs_attrs[] = {
 #undef DEADLINE_QUEUE_DDIR_ATTRS
 #endif
 
-static struct elevator_type mq_deadline = {
-	.ops.mq = {
-		.insert_requests	= dd_insert_requests,
-		.dispatch_request	= dd_dispatch_request,
-		.next_request		= elv_rb_latter_request,
-		.former_request		= elv_rb_former_request,
-		.bio_merge		= dd_bio_merge,
-		.request_merge		= dd_request_merge,
-		.requests_merged	= dd_merged_requests,
-		.request_merged		= dd_request_merged,
-		.has_work		= dd_has_work,
-		.init_sched		= dd_init_queue,
-		.exit_sched		= dd_exit_queue,
-	},
+static struct elevator_mq_ops dd_ops = {
+	.insert_requests	= dd_insert_requests,
+	.dispatch_request	= dd_dispatch_request,
+	.next_request		= elv_rb_latter_request,
+	.former_request		= elv_rb_former_request,
+	.bio_merge		= dd_bio_merge,
+	.request_merge		= dd_request_merge,
+	.requests_merged	= dd_merged_requests,
+	.request_merged		= dd_request_merged,
+	.has_work		= dd_has_work,
+	.init_sched		= dd_init_queue,
+	.exit_sched		= dd_exit_queue,
+};
 
+static struct elevator_type mq_deadline = {
 	.uses_mq	= true,
 #ifdef CONFIG_BLK_DEBUG_FS
 	.queue_debugfs_attrs = deadline_queue_debugfs_attrs,
@@ -664,7 +664,19 @@ MODULE_ALIAS("mq-deadline-iosched");
 
 static int __init deadline_init(void)
 {
-	return elv_register(&mq_deadline);
+	int ret = elv_register(&mq_deadline);
+	struct elevator_type_aux *aux;
+
+	if (ret)
+		return ret;
+
+	aux = elevator_aux_find(&mq_deadline);
+	memcpy(&aux->ops.mq, &dd_ops, sizeof(struct elevator_mq_ops));
+	memcpy(&mq_deadline.ops.mq, &dd_ops, sizeof(struct elevator_mq_ops));
+	aux->uses_mq = true;
+	aux->queue_debugfs_attrs = deadline_queue_debugfs_attrs;
+
+	return 0;
 }
 
 static void __exit deadline_exit(void)
