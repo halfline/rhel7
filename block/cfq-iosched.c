@@ -4622,6 +4622,7 @@ static struct blkcg_policy blkcg_policy_cfq = {
 static int __init cfq_init(void)
 {
 	int ret;
+	struct elevator_type_aux *aux;
 
 	/*
 	 * could be 0 on HZ < 1000 setups
@@ -4650,6 +4651,11 @@ static int __init cfq_init(void)
 	ret = elv_register(&iosched_cfq);
 	if (ret)
 		goto err_free_pool;
+
+	aux = elevator_aux_find(&iosched_cfq);
+	aux->ops.sq.elevator_allow_bio_merge_fn = cfq_allow_bio_merge;
+	aux->ops.sq.elevator_allow_rq_merge_fn = cfq_allow_rq_merge;
+	aux->ops.sq.elevator_registered_fn = cfq_registered_queue;
 
 	return 0;
 
