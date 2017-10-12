@@ -1372,7 +1372,7 @@ static void __blk_mq_try_issue_directly(struct request *rq, bool may_sleep)
 	struct blk_mq_queue_data bd = {
 		.rq = rq,
 		.list = NULL,
-		.last = 1
+		.last = true,
 	};
 	struct blk_mq_hw_ctx *hctx;
 	int ret;
