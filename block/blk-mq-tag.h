@@ -6,6 +6,9 @@
 /*
  * Tag address space map.
  */
+#ifdef __GENKSYMS__
+struct blk_mq_tags;
+#else
 struct blk_mq_tags {
 	unsigned int nr_tags;
 	unsigned int nr_reserved_tags;
@@ -19,6 +22,7 @@ struct blk_mq_tags {
 	struct request **static_rqs;
 	struct list_head page_list;
 };
+#endif
 
 
 extern struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags, unsigned int reserved_tags, int node, int alloc_policy);
