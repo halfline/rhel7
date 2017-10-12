@@ -11,7 +11,6 @@
  */
 
 #include <linux/bitops.h>
-#include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/dmaengine.h>
 #include <linux/dma-mapping.h>
@@ -1511,13 +1510,6 @@ int dw_dma_probe(struct dw_dma_chip *chip, struct dw_dma_platform_data *pdata)
 	dw->regs = chip->regs;
 	chip->dw = dw;
 
-	dw->clk = devm_clk_get(chip->dev, "hclk");
-	if (IS_ERR(dw->clk))
-		return PTR_ERR(dw->clk);
-	err = clk_prepare_enable(dw->clk);
-	if (err)
-		return err;
-
 	dw_params = dma_read_byaddr(chip->regs, DW_PARAMS);
 	autocfg = dw_params >> DW_PARAMS_EN & 0x1;
 
@@ -1688,7 +1680,6 @@ int dw_dma_probe(struct dw_dma_chip *chip, struct dw_dma_platform_data *pdata)
 err_dma_register:
 	free_irq(chip->irq, dw);
 err_pdata:
-	clk_disable_unprepare(dw->clk);
 	return err;
 }
 EXPORT_SYMBOL_GPL(dw_dma_probe);
@@ -1710,8 +1701,6 @@ int dw_dma_remove(struct dw_dma_chip *chip)
 		channel_clear_bit(dw, CH_EN, dwc->mask);
 	}
 
-	clk_disable_unprepare(dw->clk);
-
 	return 0;
 }
 EXPORT_SYMBOL_GPL(dw_dma_remove);
@@ -1721,7 +1710,6 @@ void dw_dma_shutdown(struct dw_dma_chip *chip)
 	struct dw_dma *dw = chip->dw;
 
 	dw_dma_off(dw);
-	clk_disable_unprepare(dw->clk);
 }
 EXPORT_SYMBOL_GPL(dw_dma_shutdown);
 
@@ -1732,8 +1720,6 @@ int dw_dma_suspend(struct dw_dma_chip *chip)
 	struct dw_dma *dw = chip->dw;
 
 	dw_dma_off(dw);
-	clk_disable_unprepare(dw->clk);
-
 	return 0;
 }
 EXPORT_SYMBOL_GPL(dw_dma_suspend);
@@ -1742,9 +1728,7 @@ int dw_dma_resume(struct dw_dma_chip *chip)
 {
 	struct dw_dma *dw = chip->dw;
 
-	clk_prepare_enable(dw->clk);
 	dma_writel(dw, CFG, DW_CFG_DMA_EN);
-
 	return 0;
 }
 EXPORT_SYMBOL_GPL(dw_dma_resume);
