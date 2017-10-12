@@ -250,16 +250,20 @@ static const char *const cmd_flag_name[] = {
 };
 #undef CMD_FLAG_NAME
 
-int blk_mq_debugfs_rq_show(struct seq_file *m, void *v)
+int __blk_mq_debugfs_rq_show(struct seq_file *m, struct request *rq)
 {
-	struct request *rq = list_entry_rq(v);
-
 	seq_puts(m, ", .cmd_flags=");
 	blk_flags_show(m, rq->cmd_flags, cmd_flag_name,
 		       ARRAY_SIZE(cmd_flag_name));
 	seq_printf(m, ", .tag=%d, .internal_tag=%d}\n", rq->tag,
 		   rq->internal_tag);
 	return 0;
+}
+EXPORT_SYMBOL_GPL(__blk_mq_debugfs_rq_show);
+
+int blk_mq_debugfs_rq_show(struct seq_file *m, void *v)
+{
+	return __blk_mq_debugfs_rq_show(m, list_entry_rq(v));
 }
 EXPORT_SYMBOL_GPL(blk_mq_debugfs_rq_show);
 
