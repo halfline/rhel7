@@ -586,7 +586,6 @@ struct request_queue {
 #define QUEUE_FLAG_NO_SG_MERGE 22	/* don't attempt to merge SG segments*/
 #define QUEUE_FLAG_SG_GAPS     23	/* queue doesn't support SG gaps */
 #define QUEUE_FLAG_DAX         24	/* device supports DAX */
-#define QUEUE_FLAG_RESTART     25	/* queue needs restart at completion */
 #define QUEUE_FLAG_STATS       26	/* track rq completion times */
 #define QUEUE_FLAG_POLL_STATS  27	/* collecting stats for hybrid polling */
 
