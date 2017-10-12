@@ -60,7 +60,6 @@ static int blk_flags_show(struct seq_file *m, const unsigned long flags,
 		else
 			seq_printf(m, "%d", i);
 	}
-	seq_puts(m, "\n");
 	return 0;
 }
 
@@ -99,6 +98,7 @@ static int blk_queue_flags_show(struct seq_file *m, void *v)
 
 	blk_flags_show(m, q->queue_flags, blk_queue_flag_name,
 		       ARRAY_SIZE(blk_queue_flag_name));
+	seq_puts(m, "\n");
 	return 0;
 }
 
@@ -187,6 +187,7 @@ static int hctx_state_show(struct seq_file *m, void *v)
 
 	blk_flags_show(m, hctx->state, hctx_state_name,
 		       ARRAY_SIZE(hctx_state_name));
+	seq_puts(m, "\n");
 	return 0;
 }
 
@@ -230,6 +231,7 @@ static int hctx_flags_show(struct seq_file *m, void *v)
 	blk_flags_show(m,
 		       hctx->flags ^ BLK_ALLOC_POLICY_TO_MQ_FLAG(alloc_policy),
 		       hctx_flag_name, ARRAY_SIZE(hctx_flag_name));
+	seq_puts(m, "\n");
 	return 0;
 }
 
