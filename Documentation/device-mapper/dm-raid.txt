@@ -335,3 +335,4 @@ Version History
 1.11.0  Fix table line argument order
 	(wrong raid10_copies/raid10_format sequence)
 1.12.0  MD deadlock fixes
+1.13.0  Fix dev_health status at end of "recover" (was 'a', now 'A')
