@@ -247,13 +247,54 @@ static const struct file_operations hctx_flags_fops = {
 	.release	= single_release,
 };
 
+static const char *const cmd_flag_name[] = {
+	[__REQ_WRITE]			= "WRITE",
+	[__REQ_FAILFAST_DEV]		= "FAILFAST_DEV",
+	[__REQ_FAILFAST_TRANSPORT]	= "FAILFAST_TRANSPORT",
+	[__REQ_FAILFAST_DRIVER]		= "FAILFAST_DRIVER",
+	[__REQ_SYNC]			= "SYNC",
+	[__REQ_META]			= "META",
+	[__REQ_PRIO]			= "PRIO",
+	[__REQ_DISCARD]			= "DISCARD",
+	[__REQ_SECURE]			= "SECURE",
+	[__REQ_WRITE_SAME]		= "WRITE_SAME",
+	[__REQ_NOIDLE]			= "NOIDLE",
+	[__REQ_FUA]			= "FUA",
+	[__REQ_FLUSH]			= "FLUSH",
+	[__REQ_RAHEAD]			= "RAHEAD",
+	[__REQ_THROTTLED]		= "THROTTLED",
+	[__REQ_SORTED]			= "SORTED",
+	[__REQ_SOFTBARRIER]		= "SOFTBARRIER",
+	[__REQ_NOMERGE]			= "NOMERGE",
+	[__REQ_STARTED]			= "STARTED",
+	[__REQ_DONTPREP]		= "DONTPREP",
+	[__REQ_QUEUED]			= "QUEUED",
+	[__REQ_ELVPRIV]			= "ELVPRIV",
+	[__REQ_FAILED]			= "FAILED",
+	[__REQ_QUIET]			= "QUIET",
+	[__REQ_PREEMPT]			= "PREEMPT",
+	[__REQ_ALLOCED]			= "ALLOCED",
+	[__REQ_COPY_USER]		= "COPY_USER",
+	[__REQ_FLUSH_SEQ]		= "FLUSH_SEQ",
+	[__REQ_IO_STAT]			= "IO_STAT",
+	[__REQ_MIXED_MERGE]		= "MIXED_MERGE",
+	[__REQ_KERNEL]			= "KERNEL",
+	[__REQ_PM]			= "PM",
+	[__REQ_END]			= "END",
+	[__REQ_HASHED]			= "HASHED",
+	[__REQ_MQ_INFLIGHT]		= "MQ_INFLIGHT",
+	[__REQ_NR_BITS]			= "NR_BITS",
+};
+
 static int blk_mq_debugfs_rq_show(struct seq_file *m, void *v)
 {
 	struct request *rq = list_entry_rq(v);
 
-	seq_printf(m, "%p {.cmd_type=%u, .cmd_flags=0x%llx, .tag=%d, .internal_tag=%d}\n",
-		   rq, rq->cmd_type, rq->cmd_flags,
-		   rq->tag, rq->internal_tag);
+	seq_puts(m, ", .cmd_flags=");
+	blk_flags_show(m, rq->cmd_flags, cmd_flag_name,
+		       ARRAY_SIZE(cmd_flag_name));
+	seq_printf(m, ", .tag=%d, .internal_tag=%d}\n", rq->tag,
+		   rq->internal_tag);
 	return 0;
 }
 
