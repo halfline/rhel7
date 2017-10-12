@@ -343,7 +343,7 @@ static void __blk_mq_unregister_disk(struct gendisk *disk)
 		kobject_put(&hctx->kobj);
 	}
 
-	blk_mq_debugfs_unregister(q);
+	blk_mq_debugfs_unregister_hctxs(q);
 
 	kobject_uevent(&q->mq_kobj, KOBJ_REMOVE);
 	kobject_del(&q->mq_kobj);

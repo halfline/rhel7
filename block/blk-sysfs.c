@@ -587,6 +587,9 @@ static void blk_release_queue(struct kobject *kobj)
 
 	blk_trace_shutdown(q);
 
+	if (q->mq_ops)
+		blk_mq_debugfs_unregister(q);
+
 	bdi_destroy(&q->backing_dev_info);
 
 	ida_simple_remove(&blk_queue_ida, q->id);
