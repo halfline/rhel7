@@ -257,6 +257,13 @@ static inline int blk_do_io_stat(struct request *rq)
 		(rq->cmd_type == REQ_TYPE_FS);
 }
 
+static inline void req_set_nomerge(struct request_queue *q, struct request *req)
+{
+	req->cmd_flags |= REQ_NOMERGE;
+	if (req == q->last_merge)
+		q->last_merge = NULL;
+}
+
 /*
  * Internal io_context interface
  */

@@ -265,13 +265,6 @@ int blk_bio_map_sg(struct request_queue *q, struct bio *bio,
 }
 EXPORT_SYMBOL(blk_bio_map_sg);
 
-static void req_set_nomerge(struct request_queue *q, struct request *req)
-{
-	req->cmd_flags |= REQ_NOMERGE;
-	if (req == q->last_merge)
-		q->last_merge = NULL;
-}
-
 static inline int ll_new_hw_segment(struct request_queue *q,
 				    struct request *req,
 				    struct bio *bio)
