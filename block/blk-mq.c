@@ -1318,7 +1318,7 @@ insert_rq:
 	}
 }
 
-static void blk_mq_try_issue_directly(struct request *rq)
+static void blk_mq_try_issue_directly(struct request *rq, bool may_sleep)
 {
 	struct request_queue *q = rq->q;
 	struct blk_mq_queue_data bd = {
@@ -1353,7 +1353,7 @@ static void blk_mq_try_issue_directly(struct request *rq)
 	}
 
 insert:
-	blk_mq_sched_insert_request(rq, false, true, true, false);
+	blk_mq_sched_insert_request(rq, false, true, false, may_sleep);
 }
 
 /*
@@ -1435,11 +1435,11 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
 
 		if (!(data.hctx->flags & BLK_MQ_F_BLOCKING)) {
 			rcu_read_lock();
-			blk_mq_try_issue_directly(old_rq);
+			blk_mq_try_issue_directly(old_rq, false);
 			rcu_read_unlock();
 		} else {
 			srcu_idx = srcu_read_lock(&data.hctx->queue_rq_srcu);
-			blk_mq_try_issue_directly(old_rq);
+			blk_mq_try_issue_directly(old_rq, true);
 			srcu_read_unlock(&data.hctx->queue_rq_srcu, srcu_idx);
 		}
 		return;
