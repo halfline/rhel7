@@ -233,9 +233,6 @@ struct request {
 	/* for bidi */
 	struct request *next_rq;
 
-	/* for blk-mq io sched */
-	int internal_tag;
-
 	struct blk_issue_stat issue_stat;
 };
 

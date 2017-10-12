@@ -244,14 +244,14 @@ struct request *__blk_mq_alloc_request(struct blk_mq_alloc_data *data, int rw)
 
 		if (data->flags & BLK_MQ_REQ_INTERNAL) {
 			rq->tag = -1;
-			rq->internal_tag = tag;
+			__rq_aux(rq, data->q)->internal_tag = tag;
 		} else {
 			if (blk_mq_tag_busy(data->hctx)) {
 				rq->cmd_flags = REQ_MQ_INFLIGHT;
 				atomic_inc(&data->hctx->nr_active);
 			}
 			rq->tag = tag;
-			rq->internal_tag = -1;
+			__rq_aux(rq, data->q)->internal_tag = -1;
 			data->hctx->tags->rqs[rq->tag] = rq;
 		}
 
@@ -344,7 +344,7 @@ blk_mq_sched_completed_request(struct request *rq)
 void __blk_mq_finish_request(struct blk_mq_hw_ctx *hctx, struct blk_mq_ctx *ctx,
 			     struct request *rq)
 {
-	const int sched_tag = rq->internal_tag;
+	const int sched_tag = rq_aux(rq)->internal_tag;
 	struct request_queue *q = rq->q;
 
 	if (rq->cmd_flags & REQ_MQ_INFLIGHT)
@@ -448,7 +448,7 @@ static void __blk_mq_complete_request(struct request *rq)
 {
 	struct request_queue *q = rq->q;
 
-	if (rq->internal_tag != -1)
+	if (rq_aux(rq)->internal_tag != -1)
 		blk_mq_sched_completed_request(rq);
 
 	blk_mq_stat_add(rq);
@@ -855,7 +855,7 @@ bool blk_mq_get_driver_tag(struct request *rq, struct blk_mq_hw_ctx **hctx,
 	if (rq->tag != -1)
 		goto done;
 
-	if (blk_mq_tag_is_reserved(data.hctx->sched_tags, rq->internal_tag))
+	if (blk_mq_tag_is_reserved(data.hctx->sched_tags, rq_aux(rq)->internal_tag))
 		data.flags |= BLK_MQ_REQ_RESERVED;
 
 	rq->tag = blk_mq_get_tag(&data);
@@ -888,7 +888,7 @@ static void __blk_mq_put_driver_tag(struct blk_mq_hw_ctx *hctx,
 static void blk_mq_put_driver_tag_hctx(struct blk_mq_hw_ctx *hctx,
 				       struct request *rq)
 {
-	if (rq->tag == -1 || rq->internal_tag == -1)
+	if (rq->tag == -1 || rq_aux(rq)->internal_tag == -1)
 		return;
 
 	__blk_mq_put_driver_tag(hctx, rq);
@@ -898,7 +898,7 @@ static void blk_mq_put_driver_tag(struct request *rq)
 {
 	struct blk_mq_hw_ctx *hctx;
 
-	if (rq->tag == -1 || rq->internal_tag == -1)
+	if (rq->tag == -1 || rq_aux(rq)->internal_tag == -1)
 		return;
 
 	hctx = blk_mq_map_queue(rq->q, rq->mq_ctx->cpu);
