@@ -1749,7 +1749,7 @@ static void da7219_handle_pdata(struct snd_soc_codec *codec)
 	}
 }
 
-static struct reg_sequence da7219_rev_aa_patch[] = {
+static struct reg_default da7219_rev_aa_patch[] = {
 	{ DA7219_REFERENCES, 0x08 },
 };
 
@@ -2091,13 +2091,13 @@ static int da7219_i2c_probe(struct i2c_client *i2c,
 	}
 
 	/* Soft reset codec */
-	regmap_write_bits(da7219->regmap, DA7219_ACCDET_CONFIG_1,
-			  DA7219_ACCDET_EN_MASK, 0);
-	regmap_write_bits(da7219->regmap, DA7219_CIF_CTRL,
-			  DA7219_CIF_REG_SOFT_RESET_MASK,
-			  DA7219_CIF_REG_SOFT_RESET_MASK);
-	regmap_write_bits(da7219->regmap, DA7219_SYSTEM_ACTIVE,
-			  DA7219_SYSTEM_ACTIVE_MASK, 0);
+	regmap_update_bits(da7219->regmap, DA7219_ACCDET_CONFIG_1,
+			   DA7219_ACCDET_EN_MASK, 0);
+	regmap_update_bits(da7219->regmap, DA7219_CIF_CTRL,
+			   DA7219_CIF_REG_SOFT_RESET_MASK,
+			   DA7219_CIF_REG_SOFT_RESET_MASK);
+	regmap_update_bits(da7219->regmap, DA7219_SYSTEM_ACTIVE,
+			   DA7219_SYSTEM_ACTIVE_MASK, 0);
 
 	regcache_cache_bypass(da7219->regmap, false);
 

@@ -35,7 +35,7 @@
 #include "rt5514-spi.h"
 #endif
 
-static const struct reg_sequence rt5514_i2c_patch[] = {
+static const struct reg_default rt5514_i2c_patch[] = {
 	{0x1800101c, 0x00000000},
 	{0x18001100, 0x0000031f},
 	{0x18001104, 0x00000007},
@@ -57,7 +57,7 @@ static const struct reg_sequence rt5514_i2c_patch[] = {
 	{0xfafafafa, 0x00000000},
 };
 
-static const struct reg_sequence rt5514_patch[] = {
+static const struct reg_default rt5514_patch[] = {
 	{RT5514_DIG_IO_CTRL,		0x00000040},
 	{RT5514_CLK_CTRL1,		0x38020041},
 	{RT5514_SRC_CTRL,		0x44000eee},

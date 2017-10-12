@@ -58,7 +58,7 @@ struct rt5663_priv {
 	int jack_type;
 };
 
-static const struct reg_sequence rt5663_patch_list[] = {
+static const struct reg_default rt5663_patch_list[] = {
 	{ 0x002a, 0x8020 },
 	{ 0x0086, 0x0028 },
 };
