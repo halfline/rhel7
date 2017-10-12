@@ -228,7 +228,7 @@ static void dw_shutdown(struct platform_device *pdev)
 {
 	struct dw_dma_chip *chip = platform_get_drvdata(pdev);
 
-	dw_dma_shutdown(chip);
+	dw_dma_disable(chip);
 	clk_disable_unprepare(chip->clk);
 }
 
@@ -254,7 +254,7 @@ static int dw_suspend_noirq(struct device *dev)
 	struct platform_device *pdev = to_platform_device(dev);
 	struct dw_dma_chip *chip = platform_get_drvdata(pdev);
 
-	dw_dma_suspend(chip);
+	dw_dma_disable(chip);
 	clk_disable_unprepare(chip->clk);
 
 	return 0;
@@ -266,7 +266,7 @@ static int dw_resume_noirq(struct device *dev)
 	struct dw_dma_chip *chip = platform_get_drvdata(pdev);
 
 	clk_prepare_enable(chip->clk);
-	return dw_dma_resume(chip);
+	return dw_dma_enable(chip);
 }
 
 #else /* !CONFIG_PM_SLEEP */
@@ -288,7 +288,7 @@ static const struct dev_pm_ops dw_dev_pm_ops = {
 static struct platform_driver dw_driver = {
 	.probe		= dw_probe,
 	.remove		= dw_remove,
-	.shutdown	= dw_shutdown,
+	.shutdown       = dw_shutdown,
 	.driver = {
 		.name	= "dw_dmac",
 		.pm	= &dw_dev_pm_ops,
