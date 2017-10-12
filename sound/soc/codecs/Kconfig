@@ -16,6 +16,7 @@ config SND_SOC_ALL_CODECS
 	select SND_SOC_DA7213 if I2C
 	select SND_SOC_DA7219 if I2C
 	select SND_SOC_DMIC if GPIOLIB
+	select SND_SOC_ES8316 if I2C
 	select SND_SOC_HDAC_HDMI
 	select SND_SOC_MAX98090 if I2C
 	select SND_SOC_MAX98357A if GPIOLIB
@@ -50,6 +51,9 @@ config SND_SOC_DA7219
 
 config SND_SOC_DMIC
 	tristate
+
+config SND_SOC_ES8316
+	tristate "Everest Semi ES8316 CODEC"
 
 config SND_SOC_HDAC_HDMI
 	tristate
