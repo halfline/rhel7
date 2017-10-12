@@ -619,7 +619,7 @@ int blk_register_queue(struct gendisk *disk)
 		return ret;
 
 	if (q->mq_ops)
-		blk_mq_register_disk(disk);
+		blk_mq_register_dev(dev, q);
 
 	/* Prevent changes through sysfs until registration is completed. */
 	mutex_lock(&q->sysfs_lock);
@@ -656,7 +656,7 @@ void blk_unregister_queue(struct gendisk *disk)
 		return;
 
 	if (q->mq_ops)
-		blk_mq_unregister_disk(disk);
+		blk_mq_unregister_dev(disk_to_dev(disk), q);
 
 	if (q->request_fn || (q->mq_ops && q->elevator))
 		elv_unregister_queue(q);
