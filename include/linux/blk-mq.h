@@ -3,6 +3,7 @@
 
 #include <linux/blkdev.h>
 #include <linux/rh_kabi.h>
+#include <linux/sbitmap.h>
 
 struct blk_mq_tags;
 struct blk_flush_queue;
@@ -72,7 +73,7 @@ struct blk_mq_hw_ctx {
 	RH_KABI_EXTEND(int			next_cpu)
 	RH_KABI_EXTEND(int			next_cpu_batch)
 
-	RH_KABI_EXTEND(struct blk_mq_ctxmap	ctx_map)
+	RH_KABI_EXTEND(struct sbitmap ctx_map)
 
 	RH_KABI_EXTEND(atomic_t		nr_active)
 
