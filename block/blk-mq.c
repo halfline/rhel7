@@ -332,6 +332,15 @@ struct request *blk_mq_alloc_request_hctx(struct request_queue *q, int rw,
 }
 EXPORT_SYMBOL_GPL(blk_mq_alloc_request_hctx);
 
+static void
+blk_mq_sched_completed_request(struct request *rq)
+{
+	struct elevator_queue *e = rq->q->elevator;
+
+	if (e && e->aux->ops.mq.completed_request)
+		e->aux->ops.mq.completed_request(rq);
+}
+
 void __blk_mq_finish_request(struct blk_mq_hw_ctx *hctx, struct blk_mq_ctx *ctx,
 			     struct request *rq)
 {

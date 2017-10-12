@@ -1,9 +1,6 @@
 #ifndef BLK_MQ_SCHED_H
 #define BLK_MQ_SCHED_H
 
-#include "blk-mq.h"
-#include "blk-mq-tag.h"
-
 void blk_mq_sched_free_hctx_data(struct request_queue *q,
 				 void (*exit)(struct blk_mq_hw_ctx *));
 
@@ -80,14 +77,6 @@ blk_mq_sched_allow_merge(struct request_queue *q, struct request *rq,
 		return e->aux->ops.mq.allow_merge(q, rq, bio);
 
 	return true;
-}
-
-static inline void blk_mq_sched_completed_request(struct request *rq)
-{
-	struct elevator_queue *e = rq->q->elevator;
-
-	if (e && e->aux->ops.mq.completed_request)
-		e->aux->ops.mq.completed_request(rq);
 }
 
 static inline void blk_mq_sched_started_request(struct request *rq)

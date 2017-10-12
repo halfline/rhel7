@@ -40,6 +40,7 @@
 #include "blk.h"
 #include "blk-cgroup.h"
 #include "blk-mq.h"
+#include "blk-mq-tag.h"
 #include "blk-mq-sched.h"
 
 #ifdef CONFIG_DEBUG_FS
