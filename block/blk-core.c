@@ -2528,10 +2528,13 @@ void blk_start_request(struct request *req)
 {
 	blk_dequeue_request(req);
 
+	/* blk-stat isn't used on non-mq now, so disable it until it is needed */
+#if 0
 	if (test_bit(QUEUE_FLAG_STATS, &req->q->queue_flags)) {
 		blk_stat_set_issue_time(&req->issue_stat);
 		req->cmd_flags |= REQ_STATS;
 	}
+#endif
 
 	/*
 	 * We are now handing the request to the hardware, initialize
