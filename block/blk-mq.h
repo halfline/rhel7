@@ -14,8 +14,7 @@ struct blk_mq_ctx {
 	unsigned int		cpu;
 	unsigned int		index_hw;
 
-	RH_KABI_REPLACE_UNSAFE(unsigned int ipi_redirect,
-		               unsigned int last_tag ____cacheline_aligned_in_smp)
+	RH_KABI_DEPRECATE(unsigned int, ipi_redirect)
 
 	/* incremented at dispatch time */
 	unsigned long		rq_dispatched[2];
