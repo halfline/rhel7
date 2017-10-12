@@ -206,7 +206,6 @@ enum {
 	BLK_MQ_F_SHOULD_SORT	= 1 << 1,
 	BLK_MQ_F_TAG_SHARED	= 1 << 2,
 	BLK_MQ_F_SG_MERGE	= 1 << 3,
-	BLK_MQ_F_DEFER_ISSUE	= 1 << 5,
 	BLK_MQ_F_BLOCKING	= 1 << 6,
 	BLK_MQ_F_NO_SCHED	= 1 << 7,
 
