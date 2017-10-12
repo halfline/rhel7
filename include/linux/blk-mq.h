@@ -125,6 +125,15 @@ struct blk_mq_queue_data {
 	bool last;
 };
 
+/*
+ * This structure is only for blk-mq and per request
+ * for support some new blk-mq features, such as io
+ * scheduler, blk-stat and so on.
+ */
+struct request_aux {
+	int internal_tag;
+}____cacheline_aligned_in_smp;
+
 /* None of these function pointers are covered by RHEL kABI */
 #ifdef __GENKSYMS__
 typedef int (queue_rq_fn)(struct blk_mq_hw_ctx *, struct request *);
@@ -323,6 +332,18 @@ static inline struct request *blk_mq_rq_from_pdu(void *pdu)
 static inline void *blk_mq_rq_to_pdu(struct request *rq)
 {
 	return (void *) rq + sizeof(*rq);
+}
+
+static inline struct request_aux *__rq_aux(struct request *rq,
+					   struct request_queue *q)
+{
+	BUG_ON(!q->mq_ops);
+	return (void *) rq + sizeof(*rq) + q->tag_set->cmd_size;
+}
+
+static inline struct request_aux *rq_aux(struct request *rq)
+{
+	return __rq_aux(rq, rq->q);
 }
 
 #define queue_for_each_hw_ctx(q, hctx, i)				\

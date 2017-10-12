@@ -1698,8 +1698,8 @@ int blk_mq_alloc_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
 	 * rq_size is the size of the request plus driver payload, rounded
 	 * to the cacheline size
 	 */
-	rq_size = round_up(sizeof(struct request) + set->cmd_size,
-				cache_line_size());
+	rq_size = round_up(sizeof(struct request) + set->cmd_size +
+			   sizeof(struct request_aux), cache_line_size());
 	left = rq_size * depth;
 
 	for (i = 0; i < depth; ) {
