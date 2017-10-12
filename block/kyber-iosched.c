@@ -107,7 +107,7 @@ static bool op_is_sync(unsigned int cmd_flags)
 	return rw_is_sync(cmd_flags) || (cmd_flags & (REQ_FUA | REQ_FLUSH));
 }
 
-static unsigned int rq_sched_domain(const struct request *rq)
+static int rq_sched_domain(const struct request *rq)
 {
 	unsigned int cmd_flags = (unsigned int)rq->cmd_flags;
 
