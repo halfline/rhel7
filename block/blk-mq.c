@@ -358,6 +358,7 @@ static void blk_mq_finish_hctx_request(struct blk_mq_hw_ctx *hctx,
 	ctx->rq_completed[rq_is_sync(rq)]++;
 	__blk_mq_finish_request(hctx, ctx, rq);
 }
+EXPORT_SYMBOL_GPL(blk_mq_finish_request);
 
 void blk_mq_finish_request(struct request *rq)
 {
@@ -1125,6 +1126,7 @@ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async)
 {
 	__blk_mq_delay_run_hw_queue(hctx, async, 0);
 }
+EXPORT_SYMBOL(blk_mq_run_hw_queue);
 
 void blk_mq_run_hw_queues(struct request_queue *q, bool async)
 {
