@@ -951,10 +951,9 @@ int blkcg_activate_policy(struct request_queue *q,
 	if (!new_blkg)
 		return -ENOMEM;
 
-	if (q->mq_ops) {
+	if (q->mq_ops)
 		blk_mq_freeze_queue(q);
-		blk_mq_quiesce_queue(q);
-	} else
+	else
 		blk_queue_bypass_start(q);
 
 	preloaded = !radix_tree_preload(GFP_KERNEL);
@@ -1030,10 +1029,9 @@ int blkcg_activate_policy(struct request_queue *q,
 out_unlock:
 	spin_unlock_irq(q->queue_lock);
 out_free:
-	if (q->mq_ops) {
+	if (q->mq_ops)
 		blk_mq_unfreeze_queue(q);
-		blk_mq_start_stopped_hw_queues(q, true);
-	} else
+	else
 		blk_queue_bypass_end(q);
 	list_for_each_entry_safe(pd, n, &pds, alloc_node)
 		kfree(pd);
@@ -1057,10 +1055,9 @@ void blkcg_deactivate_policy(struct request_queue *q,
 	if (!blkcg_policy_enabled(q, pol))
 		return;
 
-	if (q->mq_ops) {
+	if (q->mq_ops)
 		blk_mq_freeze_queue(q);
-		blk_mq_quiesce_queue(q);
-	} else
+	else
 		blk_queue_bypass_start(q);
 
 	spin_lock_irq(q->queue_lock);
@@ -1088,10 +1085,9 @@ void blkcg_deactivate_policy(struct request_queue *q,
 
 	spin_unlock_irq(q->queue_lock);
 
-	if (q->mq_ops) {
+	if (q->mq_ops)
 		blk_mq_unfreeze_queue(q);
-		blk_mq_start_stopped_hw_queues(q, true);
-	} else
+	else
 		blk_queue_bypass_end(q);
 }
 EXPORT_SYMBOL_GPL(blkcg_deactivate_policy);
