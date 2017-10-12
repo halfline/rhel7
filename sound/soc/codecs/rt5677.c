@@ -5278,7 +5278,6 @@ static int rt5677_i2c_remove(struct i2c_client *i2c)
 static struct i2c_driver rt5677_i2c_driver = {
 	.driver = {
 		.name = "rt5677",
-		.owner = THIS_MODULE,
 		.of_match_table = rt5677_of_match,
 		.acpi_match_table = ACPI_PTR(rt5677_acpi_match),
 	},
