@@ -44,6 +44,7 @@
 
 static DEFINE_SPINLOCK(elv_list_lock);
 static LIST_HEAD(elv_list);
+static LIST_HEAD(elv_aux_list);
 
 /*
  * Merge hash stuff.
@@ -170,6 +171,9 @@ struct elevator_queue *elevator_alloc(struct request_queue *q,
 		goto err;
 
 	eq->type = e;
+	eq->aux = elevator_aux_find(e);
+	if (!eq->aux)
+		goto err;
 	kobject_init(&eq->kobj, &elv_ktype);
 	mutex_init(&eq->sysfs_lock);
 	hash_init(eq->hash);
@@ -894,6 +898,61 @@ void elv_unregister_queue(struct request_queue *q)
 }
 EXPORT_SYMBOL(elv_unregister_queue);
 
+static struct elevator_type_aux *__elevator_aux_find(struct elevator_type *e)
+{
+	struct elevator_type_aux *e_aux;
+
+	list_for_each_entry(e_aux, &elv_aux_list, list) {
+		if (e_aux->type == e)
+			return e_aux;
+	}
+	return NULL;
+}
+
+struct elevator_type_aux *elevator_aux_find(struct elevator_type *e)
+{
+	struct elevator_type_aux *e_aux;
+
+	spin_lock(&elv_list_lock);
+	e_aux = __elevator_aux_find(e);
+	spin_unlock(&elv_list_lock);
+
+	return e_aux;
+}
+EXPORT_SYMBOL(elevator_aux_find);
+
+static int elv_aux_register(struct elevator_type *e)
+{
+	struct elevator_type_aux *e_aux;
+
+	e_aux = kzalloc(sizeof(*e_aux), GFP_KERNEL);
+	if (!e_aux)
+		goto fail;
+
+	e_aux->type = e;
+	memcpy(&e_aux->ops.sq, &e->ops.sq, sizeof(struct elevator_ops));
+	spin_lock(&elv_list_lock);
+	list_add_tail(&e_aux->list, &elv_aux_list);
+	spin_unlock(&elv_list_lock);
+
+	return 0;
+ fail:
+	elv_unregister(e);
+	return -ENOMEM;
+}
+
+static void elv_aux_unregister(struct elevator_type *e)
+{
+	struct elevator_type_aux *e_aux;
+
+	spin_lock(&elv_list_lock);
+	e_aux = __elevator_aux_find(e);
+	if (e_aux)
+		list_del_init(&e_aux->list);
+	spin_unlock(&elv_list_lock);
+	kfree(e_aux);
+}
+
 int elv_register(struct elevator_type *e)
 {
 	char *def = "";
@@ -928,6 +987,8 @@ int elv_register(struct elevator_type *e)
 			(!*chosen_elevator &&
 			 !strcmp(e->elevator_name, CONFIG_DEFAULT_IOSCHED)))
 				def = " (default)";
+	if (elv_aux_register(e))
+		return -ENOMEM;
 
 	printk(KERN_INFO "io scheduler %s registered%s\n", e->elevator_name,
 								def);
@@ -951,6 +1012,7 @@ void elv_unregister(struct elevator_type *e)
 		kmem_cache_destroy(e->icq_cache);
 		e->icq_cache = NULL;
 	}
+	elv_aux_unregister(e);
 }
 EXPORT_SYMBOL_GPL(elv_unregister);
 

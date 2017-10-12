@@ -113,6 +113,54 @@ struct elevator_mq_ops {
 	void (*exit_icq)(struct io_cq *);
 };
 
+struct elevator_sq_ops_aux {
+	/* The 1st part is same with elevator_ops */
+	elevator_merge_fn *elevator_merge_fn;
+	elevator_merged_fn *elevator_merged_fn;
+	elevator_merge_req_fn *elevator_merge_req_fn;
+	elevator_allow_merge_fn *elevator_allow_merge_fn;
+	elevator_bio_merged_fn *elevator_bio_merged_fn;
+
+	elevator_dispatch_fn *elevator_dispatch_fn;
+	elevator_add_req_fn *elevator_add_req_fn;
+	elevator_activate_req_fn *elevator_activate_req_fn;
+	elevator_deactivate_req_fn *elevator_deactivate_req_fn;
+
+	elevator_completed_req_fn *elevator_completed_req_fn;
+
+	elevator_request_list_fn *elevator_former_req_fn;
+	elevator_request_list_fn *elevator_latter_req_fn;
+
+	elevator_init_icq_fn *elevator_init_icq_fn;	/* see iocontext.h */
+	elevator_exit_icq_fn *elevator_exit_icq_fn;	/* ditto */
+
+	elevator_set_req_fn *elevator_set_req_fn;
+	elevator_put_req_fn *elevator_put_req_fn;
+
+	elevator_may_queue_fn *elevator_may_queue_fn;
+
+	elevator_init_fn *elevator_init_fn;
+	elevator_exit_fn *elevator_exit_fn;
+
+	/* The 2nd part for extension */
+	elevator_allow_bio_merge_fn *elevator_allow_bio_merge_fn;
+	elevator_allow_rq_merge_fn *elevator_allow_rq_merge_fn;
+	elevator_registered_fn *elevator_registered_fn;
+};
+
+struct elevator_type_aux {
+	struct list_head list;
+	struct elevator_type *type;
+	bool uses_mq;
+	union {
+		struct elevator_sq_ops_aux sq;
+		struct elevator_mq_ops mq;
+	} ops;
+
+	const struct blk_mq_debugfs_attr *queue_debugfs_attrs;
+	const struct blk_mq_debugfs_attr *hctx_debugfs_attrs;
+};
+
 #define ELV_NAME_MAX	(16)
 
 struct elv_fs_entry {
@@ -169,6 +217,12 @@ struct elevator_queue
 	unsigned int registered:1;
 	unsigned int uses_mq:1;
 	DECLARE_HASHTABLE(hash, ELV_HASH_BITS);
+
+	/*
+	 * elevator_queue is allocated via elevator_alloc(),
+	 * shouldn't be covered by kABI
+	 */
+	RH_KABI_EXTEND(struct elevator_type_aux *aux)
 };
 
 /*
