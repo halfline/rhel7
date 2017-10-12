@@ -81,6 +81,7 @@ struct blk_mq_hw_ctx {
 
 	RH_KABI_EXTEND(struct blk_flush_queue	*fq)
 	RH_KABI_EXTEND(struct srcu_struct	queue_rq_srcu)
+	RH_KABI_EXTEND(wait_queue_t		dispatch_wait)
 };
 
 #ifdef __GENKSYMS__
@@ -215,6 +216,7 @@ enum {
 	BLK_MQ_S_STOPPED	= 0,
 	BLK_MQ_S_TAG_ACTIVE	= 1,
 	BLK_MQ_S_SCHED_RESTART	= 2,
+	BLK_MQ_S_TAG_WAITING	= 3,
 
 	BLK_MQ_MAX_DEPTH	= 10240,
 
