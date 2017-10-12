@@ -1,3 +1,4 @@
+snd-soc-da7219-objs := da7219.o da7219-aad.o
 snd-soc-dmic-objs := dmic.o
 snd-soc-hdac-hdmi-objs := hdac_hdmi.o
 snd-soc-max98090-objs := max98090.o
@@ -14,6 +15,7 @@ snd-soc-ssm2518-objs := ssm2518.o
 snd-soc-ssm4567-objs := ssm4567.o
 snd-soc-ts3a227e-objs := ts3a227e.o
 
+obj-$(CONFIG_SND_SOC_DA7219)	+= snd-soc-da7219.o
 obj-$(CONFIG_SND_SOC_DMIC)	+= snd-soc-dmic.o
 obj-$(CONFIG_SND_SOC_HDAC_HDMI) += snd-soc-hdac-hdmi.o
 obj-$(CONFIG_SND_SOC_MAX98090)	+= snd-soc-max98090.o
