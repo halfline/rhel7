@@ -1366,7 +1366,8 @@ insert_rq:
 	}
 }
 
-static void __blk_mq_try_issue_directly(struct request *rq, bool may_sleep)
+static void __blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
+					struct request *rq, bool may_sleep)
 {
 	struct request_queue *q = rq->q;
 	struct blk_mq_queue_data bd = {
@@ -1374,13 +1375,18 @@ static void __blk_mq_try_issue_directly(struct request *rq, bool may_sleep)
 		.list = NULL,
 		.last = true,
 	};
-	struct blk_mq_hw_ctx *hctx;
 	int ret;
+	bool run_queue = true;
+
+	if (blk_mq_hctx_stopped(hctx)) {
+		run_queue = false;
+		goto insert;
+	}
 
 	if (q->elevator)
 		goto insert;
 
-	if (!blk_mq_get_driver_tag(rq, &hctx, false))
+	if (!blk_mq_get_driver_tag(rq, NULL, false))
 		goto insert;
 
 	/*
@@ -1400,7 +1406,7 @@ static void __blk_mq_try_issue_directly(struct request *rq, bool may_sleep)
 
 	__blk_mq_requeue_request(rq);
 insert:
-	blk_mq_sched_insert_request(rq, false, true, false, may_sleep);
+	blk_mq_sched_insert_request(rq, false, run_queue, false, may_sleep);
 }
 
 static void blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
@@ -1408,7 +1414,7 @@ static void blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
 {
 	if (!(hctx->flags & BLK_MQ_F_BLOCKING)) {
 		rcu_read_lock();
-		__blk_mq_try_issue_directly(rq, false);
+		__blk_mq_try_issue_directly(hctx, rq, false);
 		rcu_read_unlock();
 	} else {
 		unsigned int srcu_idx;
@@ -1416,7 +1422,7 @@ static void blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
 		might_sleep();
 
 		srcu_idx = srcu_read_lock(&hctx->queue_rq_srcu);
-		__blk_mq_try_issue_directly(rq, true);
+		__blk_mq_try_issue_directly(hctx, rq, true);
 		srcu_read_unlock(&hctx->queue_rq_srcu, srcu_idx);
 	}
 }
