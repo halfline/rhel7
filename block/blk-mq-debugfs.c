@@ -125,30 +125,6 @@ inval:
 	return count;
 }
 
-static void print_stat(struct seq_file *m, struct blk_rq_stat *stat)
-{
-	if (stat->nr_samples) {
-		seq_printf(m, "samples=%d, mean=%lld, min=%llu, max=%llu",
-			   stat->nr_samples, stat->mean, stat->min, stat->max);
-	} else {
-		seq_puts(m, "samples=0");
-	}
-}
-
-static int queue_poll_stat_show(void *data, struct seq_file *m)
-{
-	struct request_queue *q = data;
-
-	seq_puts(m, "read: ");
-	print_stat(m, &q->poll_stat[READ]);
-	seq_puts(m, "\n");
-
-	seq_puts(m, "write: ");
-	print_stat(m, &q->poll_stat[WRITE]);
-	seq_puts(m, "\n");
-	return 0;
-}
-
 #define HCTX_STATE_NAME(name) [BLK_MQ_S_##name] = #name
 static const char *const hctx_state_name[] = {
 	HCTX_STATE_NAME(STOPPED),
@@ -622,7 +598,6 @@ const struct file_operations blk_mq_debugfs_fops = {
 };
 
 static const struct blk_mq_debugfs_attr blk_mq_debugfs_queue_attrs[] = {
-	{"poll_stat", 0400, queue_poll_stat_show},
 	{"state", 0600, queue_state_show, queue_state_write},
 	{},
 };
