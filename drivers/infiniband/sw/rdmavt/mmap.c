@@ -50,6 +50,7 @@
 #include <linux/mm.h>
 #include <asm/pgtable.h>
 #include "mmap.h"
+#include <linux/shm.h>
 
 /**
  * rvt_mmap_init - init link list and lock for mem map
@@ -170,9 +171,9 @@ struct rvt_mmap_info *rvt_create_mmap_info(struct rvt_dev_info *rdi,
 
 	spin_lock_irq(&rdi->mmap_offset_lock);
 	if (rdi->mmap_offset == 0)
-		rdi->mmap_offset = PAGE_SIZE;
+		rdi->mmap_offset = ALIGN(PAGE_SIZE, SHMLBA);
 	ip->offset = rdi->mmap_offset;
-	rdi->mmap_offset += size;
+	rdi->mmap_offset += ALIGN(size, SHMLBA);
 	spin_unlock_irq(&rdi->mmap_offset_lock);
 
 	INIT_LIST_HEAD(&ip->pending_mmaps);

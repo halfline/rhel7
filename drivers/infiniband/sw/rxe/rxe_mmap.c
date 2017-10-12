@@ -36,6 +36,7 @@
 #include <linux/mm.h>
 #include <linux/errno.h>
 #include <asm/pgtable.h>
+#include <linux/shm.h>
 
 #include "rxe.h"
 #include "rxe_loc.h"
@@ -156,10 +157,10 @@ struct rxe_mmap_info *rxe_create_mmap_info(struct rxe_dev *rxe,
 	spin_lock_bh(&rxe->mmap_offset_lock);
 
 	if (rxe->mmap_offset == 0)
-		rxe->mmap_offset = PAGE_SIZE;
+		rxe->mmap_offset = ALIGN(PAGE_SIZE, SHMLBA);
 
 	ip->info.offset = rxe->mmap_offset;
-	rxe->mmap_offset += size;
+	rxe->mmap_offset += ALIGN(size, SHMLBA);
 
 	spin_unlock_bh(&rxe->mmap_offset_lock);
 
