@@ -233,6 +233,8 @@ struct request {
 
 	/* for blk-mq io sched */
 	int internal_tag;
+
+	struct blk_issue_stat issue_stat;
 };
 
 #define req_op(req)		(op_from_rq_bits((req)->cmd_flags))
@@ -548,6 +550,7 @@ struct request_queue {
 	RH_KABI_EXTEND(bool			mq_sysfs_init_done)
 	RH_KABI_EXTEND(struct work_struct	timeout_work)
 	RH_KABI_EXTEND(struct delayed_work	requeue_work)
+	RH_KABI_EXTEND(struct blk_rq_stat	rq_stats[2])
 };
 
 #define QUEUE_FLAG_QUEUED	1	/* uses generic tag queueing */
@@ -576,6 +579,7 @@ struct request_queue {
 #define QUEUE_FLAG_SG_GAPS     23	/* queue doesn't support SG gaps */
 #define QUEUE_FLAG_DAX         24	/* device supports DAX */
 #define QUEUE_FLAG_RESTART     25	/* queue needs restart at completion */
+#define QUEUE_FLAG_STATS       26	/* track rq completion times */
 
 #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
 				 (1 << QUEUE_FLAG_STACKABLE)	|	\
