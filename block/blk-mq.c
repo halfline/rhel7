@@ -1507,8 +1507,11 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
 
 		blk_mq_put_ctx(data.ctx);
 
-		if (same_queue_rq)
+		if (same_queue_rq) {
+			data.hctx = blk_mq_map_queue(q,
+					same_queue_rq->mq_ctx->cpu);
 			blk_mq_try_issue_directly(data.hctx, same_queue_rq);
+		}
 	} else if (q->nr_hw_queues > 1 && is_sync) {
 		blk_mq_put_ctx(data.ctx);
 		blk_mq_bio_to_request(rq, bio);
