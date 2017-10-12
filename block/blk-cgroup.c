@@ -1030,9 +1030,10 @@ int blkcg_activate_policy(struct request_queue *q,
 out_unlock:
 	spin_unlock_irq(q->queue_lock);
 out_free:
-	if (q->mq_ops)
+	if (q->mq_ops) {
 		blk_mq_unfreeze_queue(q);
-	else
+		blk_mq_start_stopped_hw_queues(q, true);
+	} else
 		blk_queue_bypass_end(q);
 	list_for_each_entry_safe(pd, n, &pds, alloc_node)
 		kfree(pd);
@@ -1087,9 +1088,10 @@ void blkcg_deactivate_policy(struct request_queue *q,
 
 	spin_unlock_irq(q->queue_lock);
 
-	if (q->mq_ops)
+	if (q->mq_ops) {
 		blk_mq_unfreeze_queue(q);
-	else
+		blk_mq_start_stopped_hw_queues(q, true);
+	} else
 		blk_queue_bypass_end(q);
 }
 EXPORT_SYMBOL_GPL(blkcg_deactivate_policy);
