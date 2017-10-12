@@ -337,6 +337,7 @@ static int hdmi_lpe_audio_probe(struct platform_device *pdev)
 	};
 
 	dev_dbg(&pdev->dev, "Enter %s\n", __func__);
+	dev_dbg(&pdev->dev, "dma_mask: %p\n", pdev->dev.dma_mask);
 
 	/*TBD:remove globals*/
 	hlpe_state = hdmi_connector_status_disconnected;
