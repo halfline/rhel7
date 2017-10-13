@@ -13072,7 +13072,7 @@ static const struct net_device_ops bnx2x_netdev_ops = {
 	.ndo_set_mac_address	= bnx2x_change_mac_addr,
 	.ndo_validate_addr	= bnx2x_validate_addr,
 	.ndo_do_ioctl		= bnx2x_ioctl,
-	.ndo_change_mtu_rh74	= bnx2x_change_mtu,
+	.extended.ndo_change_mtu	= bnx2x_change_mtu,
 	.ndo_fix_features	= bnx2x_fix_features,
 	.ndo_set_features	= bnx2x_set_features,
 	.ndo_tx_timeout		= bnx2x_tx_timeout,
@@ -13316,11 +13316,9 @@ static int bnx2x_init_dev(struct bnx2x *bp, struct pci_dev *pdev,
 	dev->dcbnl_ops = &bnx2x_dcbnl_ops;
 #endif
 
-#if 0  /* Not in RHEL 7.4. mtu range check remains in bnx2x_change_mtu(). */
 	/* MTU range, 46 - 9600 */
-	dev->min_mtu = ETH_MIN_PACKET_SIZE;
-	dev->max_mtu = ETH_MAX_JUMBO_PACKET_SIZE;
-#endif
+	dev->extended->min_mtu = ETH_MIN_PACKET_SIZE;
+	dev->extended->max_mtu = ETH_MAX_JUMBO_PACKET_SIZE;
 
 	/* get_port_hwinfo() will set prtad and mmds properly */
 	bp->mdio.prtad = MDIO_PRTAD_NONE;

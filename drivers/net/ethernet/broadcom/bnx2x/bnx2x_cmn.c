@@ -4863,12 +4863,6 @@ int bnx2x_change_mtu(struct net_device *dev, int new_mtu)
 		return -EAGAIN;
 	}
 
-	if ((new_mtu > ETH_MAX_JUMBO_PACKET_SIZE) ||
-	    (new_mtu < ETH_MIN_PACKET_SIZE)) {
-		BNX2X_ERR("Can't support requested MTU size\n");
-		return -EINVAL;
-	}
-
 	/* This does not race with packet allocation
 	 * because the actual alloc size is
 	 * only updated as part of load
