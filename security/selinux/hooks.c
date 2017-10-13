@@ -502,8 +502,9 @@ static int sb_finish_set_opts(struct super_block *sb)
 
 	/* Special handling. Genfs but also in-core setxattr handler */
 	if (!strcmp(sb->s_type->name, "sysfs") ||
-	    !strcmp(sb->s_type->name, "cgroup") ||
-	    !strcmp(sb->s_type->name, "cgroup2"))
+	    (selinux_policycap_cgroupseclabel &&
+	     (!strcmp(sb->s_type->name, "cgroup") ||
+	      !strcmp(sb->s_type->name, "cgroup2"))))
 		sbsec->flags |= SBLABEL_MNT;
 
 	/* Initialize the root inode. */
