@@ -26,7 +26,7 @@
 #include <linux/vmalloc.h>
 #include <linux/mm.h>
 #include <linux/clockchips.h>
-
+#include <linux/hyperv.h>
 
 #ifdef CONFIG_HYPERV_TSCPAGE
 
