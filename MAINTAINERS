@@ -4029,6 +4029,7 @@ M:	Haiyang Zhang <haiyangz@microsoft.com>
 L:	devel@linuxdriverproject.org
 S:	Maintained
 F:	arch/x86/include/asm/mshyperv.h
+F:	arch/x86/include/asm/trace/hyperv.h
 F:	arch/x86/include/uapi/asm/hyperv.h
 F:	arch/x86/kernel/cpu/mshyperv.c
 F:	arch/x86/hyperv
