@@ -65,8 +65,12 @@ enum devlink_command {
 #define DEVLINK_CMD_ESWITCH_MODE_SET /* obsolete, never use this! */ \
 	DEVLINK_CMD_ESWITCH_SET
 
-	/* add new commands above here */
+	DEVLINK_CMD_DPIPE_TABLE_GET,
+	DEVLINK_CMD_DPIPE_ENTRIES_GET,
+	DEVLINK_CMD_DPIPE_HEADERS_GET,
+	DEVLINK_CMD_DPIPE_TABLE_COUNTERS_SET,
 
+	/* add new commands above here */
 	__DEVLINK_CMD_MAX,
 	DEVLINK_CMD_MAX = __DEVLINK_CMD_MAX - 1
 };
@@ -202,6 +206,24 @@ enum devlink_attr {
 
 	__DEVLINK_ATTR_MAX,
 	DEVLINK_ATTR_MAX = __DEVLINK_ATTR_MAX - 1
+};
+
+/* Mapping between internal resource described by the field and system
+ * structure
+ */
+enum devlink_dpipe_field_mapping_type {
+	DEVLINK_DPIPE_FIELD_MAPPING_TYPE_NONE,
+	DEVLINK_DPIPE_FIELD_MAPPING_TYPE_IFINDEX,
+};
+
+/* Match type - specify the type of the match */
+enum devlink_dpipe_match_type {
+	DEVLINK_DPIPE_MATCH_TYPE_FIELD_EXACT,
+};
+
+/* Action type - specify the action type */
+enum devlink_dpipe_action_type {
+	DEVLINK_DPIPE_ACTION_TYPE_FIELD_MODIFY,
 };
 
 #endif /* _UAPI_LINUX_DEVLINK_H_ */
