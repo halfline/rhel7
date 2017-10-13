@@ -439,6 +439,34 @@ void pmdp_splitting_flush(struct vm_area_struct *vma,
 		flush_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
 	}
 }
+
+static void do_nothing(void *unused)
+{
+
+}
+
+static void serialize_against_pte_lookup(struct mm_struct *mm)
+{
+	smp_mb();
+	smp_call_function_many(mm_cpumask(mm), do_nothing, NULL, 1);
+}
+
+void pmdp_invalidate(struct vm_area_struct *vma, unsigned long address,
+		     pmd_t *pmdp)
+{
+	pmd_t entry = *pmdp;
+	if (pmd_numa(entry))
+		entry = pmd_mknonnuma(entry);
+	set_pmd_at(vma->vm_mm, address, pmdp, pmd_mknotpresent(entry));
+	flush_tlb_range(vma, address, address + HPAGE_PMD_SIZE);
+
+	/*
+	 * Serialization requirements for RHEL differ from upstream, make sure
+	 * we deliver IPIs on huge page split.
+	 */
+	if (pv_mmu_ops.flush_tlb_others != native_flush_tlb_others)
+		serialize_against_pte_lookup(vma->vm_mm);
+}
 #endif
 
 /**
