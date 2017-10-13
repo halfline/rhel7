@@ -84,13 +84,9 @@ long kvmppc_alloc_hpt(struct kvm *kvm, u32 *htab_orderp)
 
 	kvm->arch.hpt.virt = hpt;
 	kvm->arch.hpt.order = order;
-	/* HPTEs are 2**4 bytes long */
-	kvm->arch.hpt.npte = 1ul << (order - 4);
-	/* 128 (2**7) bytes in each HPTEG */
-	kvm->arch.hpt.mask = (1ul << (order - 7)) - 1;
 
 	/* Allocate reverse map array */
-	rev = vmalloc(sizeof(struct revmap_entry) * kvm->arch.hpt.npte);
+	rev = vmalloc(sizeof(struct revmap_entry) * kvmppc_hpt_npte(&kvm->arch.hpt));
 	if (!rev) {
 		pr_err("kvmppc_alloc_hpt: Couldn't alloc reverse map array\n");
 		goto out_freehpt;
@@ -193,8 +189,8 @@ void kvmppc_map_vrma(struct kvm_vcpu *vcpu, struct kvm_memory_slot *memslot,
 	if (npages > 1ul << (40 - porder))
 		npages = 1ul << (40 - porder);
 	/* Can't use more than 1 HPTE per HPTEG */
-	if (npages > kvm->arch.hpt.mask + 1)
-		npages = kvm->arch.hpt.mask + 1;
+	if (npages > kvmppc_hpt_mask(&kvm->arch.hpt) + 1)
+		npages = kvmppc_hpt_mask(&kvm->arch.hpt) + 1;
 
 	hp0 = HPTE_V_1TB_SEG | (VRMA_VSID << (40 - 16)) |
 		HPTE_V_BOLTED | hpte0_pgsize_encoding(psize);
@@ -204,7 +200,8 @@ void kvmppc_map_vrma(struct kvm_vcpu *vcpu, struct kvm_memory_slot *memslot,
 	for (i = 0; i < npages; ++i) {
 		addr = i << porder;
 		/* can't use hpt_hash since va > 64 bits */
-		hash = (i ^ (VRMA_VSID ^ (VRMA_VSID << 25))) & kvm->arch.hpt.mask;
+		hash = (i ^ (VRMA_VSID ^ (VRMA_VSID << 25)))
+			& kvmppc_hpt_mask(&kvm->arch.hpt);
 		/*
 		 * We assume that the hash table is empty and no
 		 * vcpus are using it at this stage.  Since we create
@@ -1269,7 +1266,7 @@ static ssize_t kvm_htab_read(struct file *file, char __user *buf,
 
 		/* Skip uninteresting entries, i.e. clean on not-first pass */
 		if (!first_pass) {
-			while (i < kvm->arch.hpt.npte &&
+			while (i < kvmppc_hpt_npte(&kvm->arch.hpt) &&
 			       !hpte_dirty(revp, hptp)) {
 				++i;
 				hptp += 2;
@@ -1279,7 +1276,7 @@ static ssize_t kvm_htab_read(struct file *file, char __user *buf,
 		hdr.index = i;
 
 		/* Grab a series of valid entries */
-		while (i < kvm->arch.hpt.npte &&
+		while (i < kvmppc_hpt_npte(&kvm->arch.hpt) &&
 		       hdr.n_valid < 0xffff &&
 		       nb + HPTE_SIZE < count &&
 		       record_hpte(flags, hptp, hpte, revp, 1, first_pass)) {
@@ -1295,7 +1292,7 @@ static ssize_t kvm_htab_read(struct file *file, char __user *buf,
 			++revp;
 		}
 		/* Now skip invalid entries while we can */
-		while (i < kvm->arch.hpt.npte &&
+		while (i < kvmppc_hpt_npte(&kvm->arch.hpt) &&
 		       hdr.n_invalid < 0xffff &&
 		       record_hpte(flags, hptp, hpte, revp, 0, first_pass)) {
 			/* found an invalid entry */
@@ -1316,7 +1313,7 @@ static ssize_t kvm_htab_read(struct file *file, char __user *buf,
 		}
 
 		/* Check if we've wrapped around the hash table */
-		if (i >= kvm->arch.hpt.npte) {
+		if (i >= kvmppc_hpt_npte(&kvm->arch.hpt)) {
 			i = 0;
 			ctx->first_pass = 0;
 			break;
@@ -1375,8 +1372,8 @@ static ssize_t kvm_htab_write(struct file *file, const char __user *buf,
 
 		err = -EINVAL;
 		i = hdr.index;
-		if (i >= kvm->arch.hpt.npte ||
-		    i + hdr.n_valid + hdr.n_invalid > kvm->arch.hpt.npte)
+		if (i >= kvmppc_hpt_npte(&kvm->arch.hpt) ||
+		    i + hdr.n_valid + hdr.n_invalid > kvmppc_hpt_npte(&kvm->arch.hpt))
 			break;
 
 		hptp = (__be64 *)(kvm->arch.hpt.virt + (i * HPTE_SIZE));
@@ -1567,7 +1564,8 @@ static ssize_t debugfs_htab_read(struct file *file, char __user *buf,
 	kvm = p->kvm;
 	i = p->hpt_index;
 	hptp = (__be64 *)(kvm->arch.hpt.virt + (i * HPTE_SIZE));
-	for (; len != 0 && i < kvm->arch.hpt.npte; ++i, hptp += 2) {
+	for (; len != 0 && i < kvmppc_hpt_npte(&kvm->arch.hpt);
+	     ++i, hptp += 2) {
 		if (!(be64_to_cpu(hptp[0]) & (HPTE_V_VALID | HPTE_V_ABSENT)))
 			continue;
 

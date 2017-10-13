@@ -434,6 +434,18 @@ static inline struct kvm_memslots *kvm_memslots_raw(struct kvm *kvm)
 extern void kvmhv_rm_send_ipi(int cpu);
 extern void kvmppc_mmu_debugfs_init(struct kvm *kvm);
 
+static inline unsigned long kvmppc_hpt_npte(struct kvm_hpt_info *hpt)
+{
+	/* HPTEs are 2**4 bytes long */
+	return 1UL << (hpt->order - 4);
+}
+
+static inline unsigned long kvmppc_hpt_mask(struct kvm_hpt_info *hpt)
+{
+	/* 128 (2**7) bytes in each HPTEG */
+	return (1UL << (hpt->order - 7)) - 1;
+}
+
 #endif /* CONFIG_KVM_BOOK3S_HV_POSSIBLE */
 
 #endif /* __ASM_KVM_BOOK3S_64_H__ */
