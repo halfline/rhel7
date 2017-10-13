@@ -20,6 +20,10 @@
 #ifndef __ASM_KVM_BOOK3S_64_H__
 #define __ASM_KVM_BOOK3S_64_H__
 
+/* Power architecture requires HPT is at least 256kiB, at most 64TiB */
+#define PPC_MIN_HPT_ORDER	18
+#define PPC_MAX_HPT_ORDER	46
+
 #ifdef CONFIG_KVM_BOOK3S_PR_POSSIBLE
 static inline struct kvmppc_book3s_shadow_vcpu *svcpu_get(struct kvm_vcpu *vcpu)
 {
