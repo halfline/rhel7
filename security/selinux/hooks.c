@@ -3184,6 +3184,10 @@ static int selinux_inode_getsecurity(struct inode *inode, const char *name, void
 	char *context = NULL;
 	struct inode_security_struct *isec;
 
+	error = cap_inode_getsecurity(inode, name, buffer, alloc);
+	if (error != -EOPNOTSUPP)
+		return error;
+
 	if (strcmp(name, XATTR_SELINUX_SUFFIX))
 		return -EOPNOTSUPP;
 
