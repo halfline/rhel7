@@ -86,6 +86,8 @@ EXPORT_SYMBOL_GPL(hyperv_cs);
 u32 *hv_vp_index;
 EXPORT_SYMBOL_GPL(hv_vp_index);
 
+u32 hv_max_vp_index;
+
 static void hv_cpu_init(void *arg)
 {
 	u64 msr_vp_index;
@@ -93,6 +95,9 @@ static void hv_cpu_init(void *arg)
 	hv_get_vp_index(msr_vp_index);
 
 	hv_vp_index[smp_processor_id()] = msr_vp_index;
+
+	if (msr_vp_index > hv_max_vp_index)
+		hv_max_vp_index = msr_vp_index;
 }
 
 /* RHEL-only: old CPUHP infrastructure */
