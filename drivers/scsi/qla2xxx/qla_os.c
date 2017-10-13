@@ -119,7 +119,11 @@ MODULE_PARM_DESC(ql2xmaxqdepth,
 		"Maximum queue depth to set for each LUN. "
 		"Default is 64.");
 
+#if (IS_ENABLED(CONFIG_NVME_FC))
+int ql2xenabledif;
+#else
 int ql2xenabledif = 2;
+#endif
 module_param(ql2xenabledif, int, S_IRUGO);
 MODULE_PARM_DESC(ql2xenabledif,
 		" Enable T10-CRC-DIF:\n"
@@ -127,6 +131,16 @@ MODULE_PARM_DESC(ql2xenabledif,
 		"  0 -- No DIF Support\n"
 		"  1 -- Enable DIF for all types\n"
 		"  2 -- Enable DIF for all types, except Type 0.\n");
+
+#if (IS_ENABLED(CONFIG_NVME_FC))
+int ql2xnvmeenable = 1;
+#else
+int ql2xnvmeenable;
+#endif
+module_param(ql2xnvmeenable, int, 0644);
+MODULE_PARM_DESC(ql2xnvmeenable,
+    "Enables NVME support. "
+    "0 - no NVMe.  Default is Y");
 
 int ql2xenablehba_err_chk = 2;
 module_param(ql2xenablehba_err_chk, int, S_IRUGO|S_IWUSR);
@@ -273,6 +287,7 @@ static int qla2x00_change_queue_type(struct scsi_device *, int);
 static void qla2x00_clear_drv_active(struct qla_hw_data *);
 static void qla2x00_free_device(scsi_qla_host_t *);
 static void qla83xx_disable_laser(scsi_qla_host_t *vha);
+static void qla2x00_destroy_deferred_work(struct qla_hw_data *);
 
 struct scsi_host_template qla2xxx_driver_template = {
 	.module			= THIS_MODULE,
@@ -698,7 +713,7 @@ qla2x00_sp_free_dma(void *ptr)
 	}
 
 end:
-	if (sp->type != SRB_NVME_CMD) {
+	if ((sp->type != SRB_NVME_CMD) && (sp->type != SRB_NVME_LS)) {
 		CMD_SP(cmd) = NULL;
 		qla2x00_rel_sp(sp);
 	}
@@ -1700,17 +1715,25 @@ qla2x00_abort_all_cmds(scsi_qla_host_t *vha, int res)
 			if (sp) {
 				req->outstanding_cmds[cnt] = NULL;
 				if (sp->cmd_type == TYPE_SRB) {
-					/*
-					 * Don't abort commands in adapter
-					 * during EEH recovery as it's not
-					 * accessible/responding.
-					 */
-					if (GET_CMD_SP(sp) &&
+					if ((sp->type == SRB_NVME_CMD) ||
+					    (sp->type == SRB_NVME_LS)) {
+						sp_get(sp);
+						spin_unlock_irqrestore(
+						    &ha->hardware_lock, flags);
+						qla_nvme_abort(ha, sp);
+						spin_lock_irqsave(
+						    &ha->hardware_lock, flags);
+					} else if (GET_CMD_SP(sp) &&
 					    !ha->flags.eeh_busy &&
 					    (!test_bit(ABORT_ISP_ACTIVE,
 						&vha->dpc_flags)) &&
 					    (sp->type == SRB_SCSI_CMD)) {
 						/*
+						 * Don't abort commands in
+						 * adapter during EEH
+						 * recovery as it's not
+						 * accessible/responding.
+						 *
 						 * Get a reference to the sp
 						 * and drop the lock. The
 						 * reference ensures this
@@ -3641,6 +3664,9 @@ qla2x00_remove_one(struct pci_dev *pdev)
 		return;
 
 	set_bit(UNLOADING, &base_vha->dpc_flags);
+
+	qla_nvme_delete(base_vha);
+
 	dma_free_coherent(&ha->pdev->dev,
 		base_vha->gnl.size, base_vha->gnl.l, base_vha->gnl.ldma);
 
