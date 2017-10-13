@@ -1683,8 +1683,10 @@ start_again:
 
 	hdr = genlmsg_put(skb, info->snd_portid, info->snd_seq,
 			  &devlink_nl_family, NLM_F_MULTI, cmd);
-	if (!hdr)
+	if (!hdr) {
+		nlmsg_free(skb);
 		return -EMSGSIZE;
+	}
 
 	if (devlink_nl_put_handle(skb, devlink))
 		goto nla_put_failure;
@@ -2101,8 +2103,10 @@ start_again:
 
 	hdr = genlmsg_put(skb, info->snd_portid, info->snd_seq,
 			  &devlink_nl_family, NLM_F_MULTI, cmd);
-	if (!hdr)
+	if (!hdr) {
+		nlmsg_free(skb);
 		return -EMSGSIZE;
+	}
 
 	if (devlink_nl_put_handle(skb, devlink))
 		goto nla_put_failure;
