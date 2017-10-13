@@ -51,6 +51,9 @@ void hyperv_vector_handler(struct pt_regs *regs)
 	if (vmbus_handler)
 		vmbus_handler();
 
+	if (ms_hyperv.hints & HV_X64_DEPRECATING_AEOI_RECOMMENDED)
+		ack_APIC_irq();
+
 	irq_exit();
 	set_irq_regs(old_regs);
 }
