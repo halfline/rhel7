@@ -2716,6 +2716,8 @@ static int pfkey_spdflush(struct sock *sk, struct sk_buff *skb, const struct sad
 	audit_info.sessionid = audit_get_sessionid(current);
 	audit_info.secid = 0;
 	err = xfrm_policy_flush(net, XFRM_POLICY_TYPE_MAIN, &audit_info);
+	if (!err)
+		xfrm_garbage_collect(net);
 	err2 = unicast_flush_resp(sk, hdr);
 	if (err || err2) {
 		if (err == -ESRCH) /* empty table - old silent behavior */
