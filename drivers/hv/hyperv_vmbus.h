@@ -167,12 +167,6 @@ struct hv_monitor_page {
 	u8 rsvdz4[1984];
 };
 
-/* Declare the various hypercall operations. */
-enum hv_call_code {
-	HVCALL_POST_MESSAGE	= 0x005c,
-	HVCALL_SIGNAL_EVENT	= 0x005d,
-};
-
 #define HV_HYPERCALL_PARAM_ALIGN	sizeof(u64)
 
 /* Definition of the hv_post_message hypercall input structure. */
