@@ -27,6 +27,8 @@
 #include <linux/mm.h>
 #include <linux/clockchips.h>
 #include <linux/hyperv.h>
+#include <linux/slab.h>
+#include <linux/cpu.h>
 
 #ifdef CONFIG_HYPERV_TSCPAGE
 
@@ -81,6 +83,38 @@ EXPORT_SYMBOL_GPL(hv_hypercall_pg);
 struct clocksource *hyperv_cs;
 EXPORT_SYMBOL_GPL(hyperv_cs);
 
+u32 *hv_vp_index;
+EXPORT_SYMBOL_GPL(hv_vp_index);
+
+static void hv_cpu_init(void *arg)
+{
+	u64 msr_vp_index;
+
+	hv_get_vp_index(msr_vp_index);
+
+	hv_vp_index[smp_processor_id()] = msr_vp_index;
+}
+
+/* RHEL-only: old CPUHP infrastructure */
+static int hv_newcpu_cb(struct notifier_block *nfb,
+			unsigned long action, void *hcpu)
+{
+	switch (action & ~CPU_TASKS_FROZEN) {
+	case CPU_STARTING:
+		hv_cpu_init(hcpu);
+		break;
+	default:
+		break;
+	}
+
+	return NOTIFY_OK;
+}
+
+static struct notifier_block hv_newcpu_notifier __refdata = {
+       .notifier_call = hv_newcpu_cb,
+       .priority = INT_MAX,
+};
+
 /*
  * This function is to be invoked early in the boot sequence after the
  * hypervisor has been detected.
@@ -96,6 +130,17 @@ void hyperv_init(void)
 	if (x86_hyper != &x86_hyper_ms_hyperv)
 		return;
 
+	/* Allocate percpu VP index */
+	hv_vp_index = kmalloc_array(num_possible_cpus(), sizeof(*hv_vp_index),
+				    GFP_KERNEL);
+	if (!hv_vp_index)
+		return;
+
+	cpu_notifier_register_begin();
+	on_each_cpu(hv_cpu_init, NULL, 1);
+	__register_hotcpu_notifier(&hv_newcpu_notifier);
+	cpu_notifier_register_done();
+
 	/*
 	 * Setup the hypercall page and enable hypercalls.
 	 * 1. Register the guest ID
@@ -107,7 +152,7 @@ void hyperv_init(void)
 	hv_hypercall_pg  = __vmalloc(PAGE_SIZE, GFP_KERNEL, PAGE_KERNEL_RX);
 	if (hv_hypercall_pg == NULL) {
 		wrmsrl(HV_X64_MSR_GUEST_OS_ID, 0);
-		return;
+		goto free_vp_index;
 	}
 
 	rdmsrl(HV_X64_MSR_HYPERCALL, hypercall_msr.as_uint64);
@@ -155,6 +200,12 @@ register_msr_cs:
 	hyperv_cs = &hyperv_cs_msr;
 	if (ms_hyperv.features & HV_X64_MSR_TIME_REF_COUNT_AVAILABLE)
 		clocksource_register_hz(&hyperv_cs_msr, NSEC_PER_SEC/100);
+
+	return;
+
+free_vp_index:
+	kfree(hv_vp_index);
+	hv_vp_index = NULL;
 }
 
 /*

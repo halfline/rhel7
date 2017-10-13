@@ -852,7 +852,7 @@ static int hv_set_affinity(struct irq_data *data, const struct cpumask *dest,
 		var_size = 1 + HV_VP_SET_BANK_COUNT_MAX;
 
 		for_each_cpu_and(cpu, dest, cpu_online_mask) {
-			cpu_vmbus = vmbus_cpu_number_to_vp_number(cpu);
+			cpu_vmbus = hv_cpu_number_to_vp_number(cpu);
 
 			if (cpu_vmbus >= HV_VP_SET_BANK_COUNT_MAX * 64) {
 				dev_err(&hbus->hdev->device,
@@ -866,7 +866,7 @@ static int hv_set_affinity(struct irq_data *data, const struct cpumask *dest,
 	} else {
 		for_each_cpu_and(cpu, dest, cpu_online_mask) {
 			params->int_target.vp_mask |=
-				(1ULL << vmbus_cpu_number_to_vp_number(cpu));
+				(1ULL << hv_cpu_number_to_vp_number(cpu));
 		}
 	}
 
@@ -972,7 +972,7 @@ static u32 hv_compose_msi_req_v2(
 	 */
 	cpu = cpumask_first_and(affinity, cpu_online_mask);
 	int_pkt->int_desc.processor_array[0] =
-		vmbus_cpu_number_to_vp_number(cpu);
+		hv_cpu_number_to_vp_number(cpu);
 	int_pkt->int_desc.processor_count = 1;
 
 	return sizeof(*int_pkt);
