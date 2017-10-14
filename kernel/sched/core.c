@@ -7775,7 +7775,7 @@ static int build_sched_domains(const struct cpumask *cpu_map,
 		sd = NULL;
 		for_each_sd_topology(tl) {
 			sd = build_sched_domain(tl, &d, cpu_map, attr, sd, i);
-			if (tl->flags & SDTL_OVERLAP || sched_feat(FORCE_SD_OVERLAP))
+			if (tl->flags & SDTL_OVERLAP)
 				sd->flags |= SD_OVERLAP;
 			if (cpumask_equal(cpu_map, sched_domain_span(sd)))
 				break;
