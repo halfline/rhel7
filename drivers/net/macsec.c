@@ -3008,6 +3008,7 @@ static void macsec_setup(struct net_device *dev)
 	dev->netdev_ops = &macsec_netdev_ops;
 	dev->extended->needs_free_netdev = true;
 	dev->extended->priv_destructor = macsec_free_netdev;
+	SET_NETDEV_DEVTYPE(dev, &macsec_type);
 
 	eth_zero_addr(dev->broadcast);
 }
