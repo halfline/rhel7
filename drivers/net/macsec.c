@@ -2957,18 +2957,19 @@ static int macsec_get_iflink(const struct net_device *dev)
 }
 
 static const struct net_device_ops macsec_netdev_ops = {
+	.ndo_size		= sizeof(struct net_device_ops),
 	.ndo_init		= macsec_dev_init,
 	.ndo_uninit		= macsec_dev_uninit,
 	.ndo_open		= macsec_dev_open,
 	.ndo_stop		= macsec_dev_stop,
 	.ndo_fix_features	= macsec_fix_features,
-	.ndo_change_mtu_rh74	= macsec_change_mtu,
 	.ndo_set_rx_mode	= macsec_dev_set_rx_mode,
 	.ndo_change_rx_flags	= macsec_dev_change_rx_flags,
 	.ndo_set_mac_address	= macsec_set_mac_address,
 	.ndo_start_xmit		= macsec_start_xmit,
 	.ndo_get_stats64	= macsec_get_stats64,
 	.ndo_get_iflink		= macsec_get_iflink,
+	.extended.ndo_change_mtu	= macsec_change_mtu,
 };
 
 static const struct device_type macsec_type = {
@@ -3004,6 +3005,8 @@ static void macsec_free_netdev(struct net_device *dev)
 static void macsec_setup(struct net_device *dev)
 {
 	ether_setup(dev);
+	dev->extended->min_mtu = 0;
+	dev->extended->max_mtu = ETH_MAX_MTU;
 	dev->priv_flags |= IFF_NO_QUEUE;
 	dev->netdev_ops = &macsec_netdev_ops;
 	dev->extended->needs_free_netdev = true;
