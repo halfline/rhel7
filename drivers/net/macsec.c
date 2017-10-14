@@ -18,6 +18,7 @@
 #include <linux/rtnetlink.h>
 #include <net/genetlink.h>
 #include <net/sock.h>
+#include <net/gro_cells.h>
 
 #include <uapi/linux/if_macsec.h>
 
@@ -269,6 +270,7 @@ struct macsec_dev {
 	struct net_device *real_dev;
 	struct pcpu_secy_stats __percpu *stats;
 	struct list_head secys;
+	struct gro_cells gro_cells;
 };
 
 /**
@@ -907,7 +909,7 @@ static void macsec_decrypt_done(struct crypto_async_request *base, int err)
 	macsec_reset_skb(skb, macsec->secy.netdev);
 
 	len = skb->len;
-	ret = netif_rx(skb);
+	ret = gro_cells_receive(&macsec->gro_cells, skb);
 	if (ret == NET_RX_SUCCESS)
 		count_rx(dev, len);
 	else
@@ -1100,6 +1102,7 @@ static rx_handler_result_t macsec_handle_frame(struct sk_buff **pskb)
 	struct pcpu_rx_sc_stats *rxsc_stats;
 	struct pcpu_secy_stats *secy_stats;
 	bool pulled_sci;
+	int ret;
 
 	if (skb_headroom(skb) < ETH_HLEN)
 		goto drop_direct;
@@ -1248,12 +1251,16 @@ deliver:
 		macsec_rxsa_put(rx_sa);
 	macsec_rxsc_put(rx_sc);
 
-	count_rx(dev, skb->len);
+	ret = gro_cells_receive(&macsec->gro_cells, skb);
+	if (ret == NET_RX_SUCCESS)
+		count_rx(dev, skb->len);
+	else
+		macsec->secy.netdev->stats.rx_dropped++;
 
 	rcu_read_unlock();
 
-	*pskb = skb;
-	return RX_HANDLER_ANOTHER;
+	*pskb = NULL;
+	return RX_HANDLER_CONSUMED;
 
 drop:
 	macsec_rxsa_put(rx_sa);
@@ -1274,7 +1281,6 @@ nosci:
 
 	list_for_each_entry_rcu(macsec, &rxd->secys, secys) {
 		struct sk_buff *nskb;
-		int ret;
 
 		secy_stats = this_cpu_ptr(macsec->stats);
 
@@ -2745,10 +2751,17 @@ static int macsec_dev_init(struct net_device *dev)
 {
 	struct macsec_dev *macsec = macsec_priv(dev);
 	struct net_device *real_dev = macsec->real_dev;
+	int err;
 
 	dev->tstats = netdev_alloc_pcpu_stats(struct pcpu_sw_netstats);
 	if (!dev->tstats)
 		return -ENOMEM;
+
+	err = gro_cells_init(&macsec->gro_cells, dev);
+	if (err) {
+		free_percpu(dev->tstats);
+		return err;
+	}
 
 	dev->features = real_dev->features & MACSEC_FEATURES;
 	dev->features |= NETIF_F_LLTX | NETIF_F_GSO_SOFTWARE;
@@ -2768,6 +2781,9 @@ static int macsec_dev_init(struct net_device *dev)
 
 static void macsec_dev_uninit(struct net_device *dev)
 {
+	struct macsec_dev *macsec = macsec_priv(dev);
+
+	gro_cells_destroy(&macsec->gro_cells);
 	free_percpu(dev->tstats);
 }
 
@@ -2777,8 +2793,9 @@ static netdev_features_t macsec_fix_features(struct net_device *dev,
 	struct macsec_dev *macsec = macsec_priv(dev);
 	struct net_device *real_dev = macsec->real_dev;
 
-	features &= real_dev->features & MACSEC_FEATURES;
-	features |= NETIF_F_LLTX | NETIF_F_GSO_SOFTWARE;
+	features &= (real_dev->features & MACSEC_FEATURES) |
+		    NETIF_F_GSO_SOFTWARE | NETIF_F_SOFT_FEATURES;
+	features |= NETIF_F_LLTX;
 
 	return features;
 }
