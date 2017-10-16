@@ -133,6 +133,8 @@ enum virtchnl_ops {
 	VIRTCHNL_OP_CONFIG_RSS_LUT = 24,
 	VIRTCHNL_OP_GET_RSS_HENA_CAPS = 25,
 	VIRTCHNL_OP_SET_RSS_HENA = 26,
+	VIRTCHNL_OP_ENABLE_VLAN_STRIPPING = 27,
+	VIRTCHNL_OP_DISABLE_VLAN_STRIPPING = 28,
 };
 
 /* Virtual channel message descriptor. This overlays the admin queue
@@ -632,6 +634,9 @@ virtchnl_vc_validate_vf_msg(struct virtchnl_version_info *ver, u32 v_opcode,
 		break;
 	case VIRTCHNL_OP_SET_RSS_HENA:
 		valid_len = sizeof(struct virtchnl_rss_hena);
+		break;
+	case VIRTCHNL_OP_ENABLE_VLAN_STRIPPING:
+	case VIRTCHNL_OP_DISABLE_VLAN_STRIPPING:
 		break;
 	/* These are always errors coming from the VF. */
 	case VIRTCHNL_OP_EVENT:
