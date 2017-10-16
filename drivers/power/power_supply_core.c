@@ -339,10 +339,16 @@ static int power_supply_match_device_by_name(struct device *dev, const void *dat
  */
 struct power_supply *power_supply_get_by_name(const char *name)
 {
+	struct power_supply *psy = NULL;
 	struct device *dev = class_find_device(power_supply_class, NULL, name,
 					power_supply_match_device_by_name);
 
-	return dev ? dev_get_drvdata(dev) : NULL;
+	if (dev) {
+		psy = dev_get_drvdata(dev);
+		atomic_inc(&psy->use_cnt);
+	}
+
+	return psy;
 }
 EXPORT_SYMBOL_GPL(power_supply_get_by_name);
 
@@ -357,6 +363,7 @@ void power_supply_put(struct power_supply *psy)
 {
 	might_sleep();
 
+	atomic_dec(&psy->use_cnt);
 	put_device(&psy->dev);
 }
 EXPORT_SYMBOL_GPL(power_supply_put);
