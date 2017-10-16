@@ -3962,6 +3962,7 @@ static void igb_clean_rx_ring(struct igb_ring *rx_ring)
 
 		/* free resources associated with mapping */
 		dma_set_attr(DMA_ATTR_SKIP_CPU_SYNC, &attrs);
+		dma_set_attr(DMA_ATTR_WEAK_ORDERING, &attrs);
 		dma_unmap_page_attrs(rx_ring->dev,
 				     buffer_info->dma,
 				     PAGE_SIZE,
@@ -6993,6 +6994,7 @@ static struct sk_buff *igb_fetch_rx_buffer(struct igb_ring *rx_ring,
 		 */
 		DEFINE_DMA_ATTRS(attrs);
 		dma_set_attr(DMA_ATTR_SKIP_CPU_SYNC, &attrs);
+		dma_set_attr(DMA_ATTR_WEAK_ORDERING, &attrs);
 		dma_unmap_page_attrs(rx_ring->dev, rx_buffer->dma,
 				     PAGE_SIZE, DMA_FROM_DEVICE,
 				     &attrs);
@@ -7256,6 +7258,7 @@ static bool igb_alloc_mapped_page(struct igb_ring *rx_ring,
 
 	/* map page for use */
 	dma_set_attr(DMA_ATTR_SKIP_CPU_SYNC, &attrs);
+	dma_set_attr(DMA_ATTR_WEAK_ORDERING, &attrs);
 	dma = dma_map_page_attrs(rx_ring->dev, page, 0, PAGE_SIZE,
 				 DMA_FROM_DEVICE, &attrs);
 
