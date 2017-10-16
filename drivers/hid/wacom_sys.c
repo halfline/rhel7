@@ -1199,6 +1199,10 @@ static int __wacom_initialize_battery(struct wacom *wacom,
 	struct power_supply *ps_bat;
 	struct power_supply_desc *bat_desc = &battery->bat_desc;
 	unsigned long n;
+	int error;
+
+	if (!devres_open_group(dev, bat_desc, GFP_KERNEL))
+		return -ENOMEM;
 
 	/*
 	 * Disabling power_supply code for RHEL-7.4 due lack of more intrusive
@@ -1221,13 +1225,21 @@ static int __wacom_initialize_battery(struct wacom *wacom,
 	bat_desc->use_for_apm = 0;
 
 	ps_bat = devm_power_supply_register(dev, bat_desc, &psy_cfg);
-	if (IS_ERR(ps_bat))
-		return PTR_ERR(ps_bat);
+	if (IS_ERR(ps_bat)) {
+		error = PTR_ERR(ps_bat);
+		goto err;
+	}
 
 	power_supply_powers(ps_bat, &wacom->hdev->dev);
 
 	battery->battery = ps_bat;
+
+	devres_close_group(dev, bat_desc);
 	return 0;
+
+err:
+	devres_release_group(dev, bat_desc);
+	return error;
 }
 
 static int wacom_initialize_battery(struct wacom *wacom)
@@ -1245,7 +1257,8 @@ static void wacom_destroy_battery(struct wacom *wacom)
 		return;
 
 	if (wacom->battery.battery) {
-		power_supply_unregister(wacom->battery.battery);
+		devres_release_group(&wacom->hdev->dev,
+				     &wacom->battery.bat_desc);
 		wacom->battery.battery = NULL;
 	}
 }
