@@ -67,8 +67,8 @@ static void __wacom_notify_battery(struct wacom_battery *battery,
 		battery->bat_connected = bat_connected;
 		battery->ps_connected = ps_connected;
 
-		if (battery->battery.dev)
-			power_supply_changed(&battery->battery);
+		if (battery->battery)
+			power_supply_changed(battery->battery);
 	}
 }
 
@@ -2198,14 +2198,14 @@ static int wacom_status_irq(struct wacom_wac *wacom_wac, size_t len)
 		wacom_notify_battery(wacom_wac, battery, charging,
 				     battery || charging, 1);
 
-		if (!wacom->battery.battery.dev &&
+		if (!wacom->battery.battery &&
 		    !(features->quirks & WACOM_QUIRK_BATTERY)) {
 			features->quirks |= WACOM_QUIRK_BATTERY;
 			wacom_schedule_work(wacom_wac, WACOM_WORKER_BATTERY);
 		}
 	}
 	else if ((features->quirks & WACOM_QUIRK_BATTERY) &&
-		 wacom->battery.battery.dev) {
+		 wacom->battery.battery) {
 		features->quirks &= ~WACOM_QUIRK_BATTERY;
 		wacom_schedule_work(wacom_wac, WACOM_WORKER_BATTERY);
 		wacom_notify_battery(wacom_wac, 0, 0, 0, 0);

@@ -118,7 +118,8 @@ struct wacom_group_leds {
 
 struct wacom_battery {
 	struct wacom *wacom;
-	struct power_supply battery;
+	struct power_supply *battery;
+	struct power_supply_desc bat_desc;
 	char bat_name[WACOM_NAME_MAX];
 	int battery_capacity;
 	int bat_charging;
