@@ -121,6 +121,7 @@ struct wacom_battery {
 	struct power_supply *battery;
 	struct power_supply_desc bat_desc;
 	char bat_name[WACOM_NAME_MAX];
+	int bat_status;
 	int battery_capacity;
 	int bat_charging;
 	int bat_connected;
