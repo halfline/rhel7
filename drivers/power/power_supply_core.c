@@ -489,7 +489,10 @@ static void psy_unregister_cooler(struct power_supply *psy)
 }
 #endif
 
-int __power_supply_register(struct device *parent, struct power_supply *psy, bool ws)
+int __power_supply_register(struct device *parent,
+			    struct power_supply *psy,
+			    const struct power_supply_config *cfg,
+			    bool ws)
 {
 	struct device *dev;
 	int rc;
@@ -506,6 +509,12 @@ int __power_supply_register(struct device *parent, struct power_supply *psy, boo
 	dev->release = power_supply_dev_release;
 	dev_set_drvdata(dev, psy);
 	psy->dev = dev;
+	if (cfg) {
+		psy->drv_data = cfg->drv_data;
+		psy->of_node = cfg->of_node;
+		psy->supplied_to = cfg->supplied_to;
+		psy->num_supplicants = cfg->num_supplicants;
+	}
 
 	INIT_WORK(&psy->changed_work, power_supply_changed_work);
 
@@ -559,15 +568,17 @@ success:
 	return rc;
 }
 
-int power_supply_register(struct device *parent, struct power_supply *psy)
+int power_supply_register(struct device *parent, struct power_supply *psy,
+		const struct power_supply_config *cfg)
 {
-	return __power_supply_register(parent, psy, true);
+	return __power_supply_register(parent, psy, cfg, true);
 }
 EXPORT_SYMBOL_GPL(power_supply_register);
 
-int power_supply_register_no_ws(struct device *parent, struct power_supply *psy)
+int power_supply_register_no_ws(struct device *parent, struct power_supply *psy,
+		const struct power_supply_config *cfg)
 {
-	return __power_supply_register(parent, psy, false);
+	return __power_supply_register(parent, psy, cfg, false);
 }
 EXPORT_SYMBOL_GPL(power_supply_register_no_ws);
 
@@ -578,7 +589,8 @@ static void devm_power_supply_release(struct device *dev, void *res)
 	power_supply_unregister(*psy);
 }
 
-int devm_power_supply_register(struct device *parent, struct power_supply *psy)
+int devm_power_supply_register(struct device *parent, struct power_supply *psy,
+		const struct power_supply_config *cfg)
 {
 	struct power_supply **ptr = devres_alloc(devm_power_supply_release,
 						 sizeof(*ptr), GFP_KERNEL);
@@ -586,7 +598,7 @@ int devm_power_supply_register(struct device *parent, struct power_supply *psy)
 
 	if (!ptr)
 		return -ENOMEM;
-	ret = __power_supply_register(parent, psy, true);
+	ret = __power_supply_register(parent, psy, cfg, true);
 	if (ret < 0)
 		devres_free(ptr);
 	else {
@@ -597,7 +609,8 @@ int devm_power_supply_register(struct device *parent, struct power_supply *psy)
 }
 EXPORT_SYMBOL_GPL(devm_power_supply_register);
 
-int devm_power_supply_register_no_ws(struct device *parent, struct power_supply *psy)
+int devm_power_supply_register_no_ws(struct device *parent, struct power_supply *psy,
+		const struct power_supply_config *cfg)
 {
 	struct power_supply **ptr = devres_alloc(devm_power_supply_release,
 						 sizeof(*ptr), GFP_KERNEL);
@@ -605,7 +618,7 @@ int devm_power_supply_register_no_ws(struct device *parent, struct power_supply 
 
 	if (!ptr)
 		return -ENOMEM;
-	ret = __power_supply_register(parent, psy, false);
+	ret = __power_supply_register(parent, psy, cfg, false);
 	if (ret < 0)
 		devres_free(ptr);
 	else {

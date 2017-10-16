@@ -1249,7 +1249,7 @@ static int wiimote_hid_probe(struct hid_device *hdev,
 		goto err_battery_name;
 	}
 
-	ret = power_supply_register(&wdata->hdev->dev, &wdata->battery);
+	ret = power_supply_register(&wdata->hdev->dev, &wdata->battery, NULL);
 	if (ret) {
 		hid_err(hdev, "Cannot register battery device\n");
 		goto err_battery;

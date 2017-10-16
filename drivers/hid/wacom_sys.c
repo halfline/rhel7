@@ -1222,7 +1222,8 @@ static int __wacom_initialize_battery(struct wacom *wacom,
 	wacom->battery.battery.use_for_apm = 0;
 
 	error = devm_power_supply_register(&wacom->hdev->dev,
-					   &wacom->battery.battery);
+					   &wacom->battery.battery,
+					   NULL);
 	if (error)
 		goto err;
 
