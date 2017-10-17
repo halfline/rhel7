@@ -493,9 +493,9 @@ err:
  **/
 void i40evf_clean_rx_ring(struct i40e_ring *rx_ring)
 {
-	struct device *dev = rx_ring->dev;
 	unsigned long bi_size;
 	u16 i;
+	DEFINE_DMA_ATTRS(attrs);
 
 	/* ring already cleared, nothing to do */
 	if (!rx_ring->rx_bi)
@@ -513,7 +513,22 @@ void i40evf_clean_rx_ring(struct i40e_ring *rx_ring)
 		if (!rx_bi->page)
 			continue;
 
-		dma_unmap_page(dev, rx_bi->dma, PAGE_SIZE, DMA_FROM_DEVICE);
+		/* Invalidate cache lines that may have been written to by
+		 * device so that we avoid corrupting memory.
+		 */
+		dma_sync_single_range_for_cpu(rx_ring->dev,
+					      rx_bi->dma,
+					      rx_bi->page_offset,
+					      I40E_RXBUFFER_2048,
+					      DMA_FROM_DEVICE);
+
+		/* free resources associated with mapping */
+		dma_set_attr(DMA_ATTR_SKIP_CPU_SYNC, &attrs);
+		dma_set_attr(DMA_ATTR_WEAK_ORDERING, &attrs);
+		dma_unmap_page_attrs(rx_ring->dev, rx_bi->dma,
+				     PAGE_SIZE,
+				     DMA_FROM_DEVICE,
+				     &attrs);
 		__free_pages(rx_bi->page, 0);
 
 		rx_bi->page = NULL;
@@ -627,6 +642,7 @@ static bool i40e_alloc_mapped_page(struct i40e_ring *rx_ring,
 {
 	struct page *page = bi->page;
 	dma_addr_t dma;
+	DEFINE_DMA_ATTRS(attrs);
 
 	/* since we are recycling buffers we should seldom need to alloc */
 	if (likely(page)) {
@@ -642,7 +658,12 @@ static bool i40e_alloc_mapped_page(struct i40e_ring *rx_ring,
 	}
 
 	/* map page for use */
-	dma = dma_map_page(rx_ring->dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
+	dma_set_attr(DMA_ATTR_SKIP_CPU_SYNC, &attrs);
+	dma_set_attr(DMA_ATTR_WEAK_ORDERING, &attrs);
+	dma = dma_map_page_attrs(rx_ring->dev, page, 0,
+				 PAGE_SIZE,
+				 DMA_FROM_DEVICE,
+				 &attrs);
 
 	/* if mapping failed free memory back to system since
 	 * there isn't much point in holding memory we can't use
@@ -701,6 +722,12 @@ bool i40evf_alloc_rx_buffers(struct i40e_ring *rx_ring, u16 cleaned_count)
 	do {
 		if (!i40e_alloc_mapped_page(rx_ring, bi))
 			goto no_buffers;
+
+		/* sync the buffer for use by the device */
+		dma_sync_single_range_for_device(rx_ring->dev, bi->dma,
+						 bi->page_offset,
+						 I40E_RXBUFFER_2048,
+						 DMA_FROM_DEVICE);
 
 		/* Refresh the desc even if buffer_addrs didn't change
 		 * because each write-back erases this info.
@@ -1114,6 +1141,7 @@ struct sk_buff *i40evf_fetch_rx_buffer(struct i40e_ring *rx_ring,
 		I40E_RXD_QW1_LENGTH_PBUF_SHIFT;
 	struct i40e_rx_buffer *rx_buffer;
 	struct page *page;
+	DEFINE_DMA_ATTRS(attrs);
 
 	rx_buffer = &rx_ring->rx_bi[rx_ring->next_to_clean];
 	page = rx_buffer->page;
@@ -1158,8 +1186,10 @@ struct sk_buff *i40evf_fetch_rx_buffer(struct i40e_ring *rx_ring,
 		rx_ring->rx_stats.page_reuse_count++;
 	} else {
 		/* we are not reusing the buffer so unmap it */
-		dma_unmap_page(rx_ring->dev, rx_buffer->dma, PAGE_SIZE,
-			       DMA_FROM_DEVICE);
+		dma_set_attr(DMA_ATTR_SKIP_CPU_SYNC, &attrs);
+		dma_set_attr(DMA_ATTR_WEAK_ORDERING, &attrs);
+		dma_unmap_page_attrs(rx_ring->dev, rx_buffer->dma, PAGE_SIZE,
+				     DMA_FROM_DEVICE, &attrs);
 	}
 
 	/* clear contents of buffer_info */
