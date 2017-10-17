@@ -843,6 +843,9 @@ struct device_rh {
 #endif
 	RH_KABI_EXTEND(struct fwnode_handle *fwnode)
 	RH_KABI_EXTEND(struct dma_map_ops *dma_ops)
+
+	/* RHEL7: due to KABI this can't go into struct class */
+	RH_KABI_EXTEND(int (*class_shutdown)(struct device *dev))
 };
 /* allocator for device_rh */
 extern void device_rh_alloc(struct device *dev);
