@@ -1633,6 +1633,27 @@ done:
 }
 EXPORT_SYMBOL(___pskb_trim);
 
+
+/* RHEL: Wrap ___pskb_trim() and adjust skb->truesize after calling it, as
+ * it's done upstream within ___pskb_trim() itself since c21b48cc1bbf
+ * ("net: adjust skb->truesize in ___pskb_trim()").
+ *
+ * We can't do this in ___pskb_trim() directly as it's in the kABI whitelist
+ * and we can't modify its semantics for out-of-three drivers. Hence add this
+ * function and use it internally ONLY.
+ */
+int ___pskb_trim_adjust_truesize(struct sk_buff *skb, unsigned int len)
+{
+	int err;
+
+	err = ___pskb_trim(skb, len);
+	if (!err && (!skb->sk || skb->destructor == sock_edemux))
+		skb_condense(skb);
+
+	return err;
+}
+EXPORT_SYMBOL(___pskb_trim_adjust_truesize);
+
 /**
  *	__pskb_pull_tail - advance tail of skb header
  *	@skb: buffer to reallocate

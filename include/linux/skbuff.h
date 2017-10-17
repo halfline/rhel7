@@ -2361,6 +2361,7 @@ static inline int pskb_network_may_pull(struct sk_buff *skb, unsigned int len)
 #endif
 
 int ___pskb_trim(struct sk_buff *skb, unsigned int len);
+int ___pskb_trim_adjust_truesize(struct sk_buff *skb, unsigned int len);
 
 static inline void __skb_trim(struct sk_buff *skb, unsigned int len)
 {
@@ -2377,7 +2378,7 @@ void skb_trim(struct sk_buff *skb, unsigned int len);
 static inline int __pskb_trim(struct sk_buff *skb, unsigned int len)
 {
 	if (skb->data_len)
-		return ___pskb_trim(skb, len);
+		return ___pskb_trim_adjust_truesize(skb, len);
 	__skb_trim(skb, len);
 	return 0;
 }
