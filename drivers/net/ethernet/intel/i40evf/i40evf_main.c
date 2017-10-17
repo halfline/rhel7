@@ -2186,10 +2186,6 @@ static struct net_device_stats *i40evf_get_stats(struct net_device *netdev)
 static int i40evf_change_mtu(struct net_device *netdev, int new_mtu)
 {
 	struct i40evf_adapter *adapter = netdev_priv(netdev);
-	int max_frame = new_mtu + ETH_HLEN + ETH_FCS_LEN;
-
-	if ((new_mtu < 68) || (max_frame > I40E_MAX_RXBUFFER))
-		return -EINVAL;
 
 	netdev->mtu = new_mtu;
 	adapter->flags |= I40EVF_FLAG_RESET_NEEDED;
@@ -2286,7 +2282,7 @@ static const struct net_device_ops i40evf_netdev_ops = {
 	.ndo_set_rx_mode	= i40evf_set_rx_mode,
 	.ndo_validate_addr	= eth_validate_addr,
 	.ndo_set_mac_address	= i40evf_set_mac,
-	.ndo_change_mtu_rh74	= i40evf_change_mtu,
+	.extended.ndo_change_mtu	= i40evf_change_mtu,
 	.ndo_tx_timeout		= i40evf_tx_timeout,
 	.ndo_vlan_rx_add_vid	= i40evf_vlan_rx_add_vid,
 	.ndo_vlan_rx_kill_vid	= i40evf_vlan_rx_kill_vid,
@@ -2535,6 +2531,10 @@ static void i40evf_init_task(struct work_struct *work)
 	netdev->netdev_ops = &i40evf_netdev_ops;
 	i40evf_set_ethtool_ops(netdev);
 	netdev->watchdog_timeo = 5 * HZ;
+
+	/* MTU range: 68 - 9710 */
+	netdev->extended->min_mtu = ETH_MIN_MTU;
+	netdev->extended->max_mtu = I40E_MAX_RXBUFFER - (ETH_HLEN + ETH_FCS_LEN);
 
 	if (!is_valid_ether_addr(adapter->hw.mac.addr)) {
 		dev_info(&pdev->dev, "Invalid MAC address %pM, using random\n",
