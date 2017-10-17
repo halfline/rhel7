@@ -389,7 +389,6 @@ struct cfs_rq {
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	u32 tg_runnable_contrib;
 	u64 tg_load_contrib;
-#endif /* CONFIG_FAIR_GROUP_SCHED */
 
 	/*
 	 *   h_load = weight * f(tg)
@@ -398,6 +397,7 @@ struct cfs_rq {
 	 * this group.
 	 */
 	unsigned long h_load;
+#endif /* CONFIG_FAIR_GROUP_SCHED */
 #endif /* CONFIG_SMP */
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
@@ -425,6 +425,10 @@ struct cfs_rq {
 	int throttled, throttle_count;
 	struct list_head throttled_list;
 #endif /* CONFIG_CFS_BANDWIDTH */
+#ifdef CONFIG_SMP
+	RH_KABI_EXTEND(u64 last_h_load_update)
+	RH_KABI_EXTEND(struct sched_entity *h_load_next)
+#endif
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 };
 
@@ -590,7 +594,7 @@ struct rq {
 	/* list of leaf cfs_rq on this cpu: */
 	struct list_head leaf_cfs_rq_list;
 #ifdef CONFIG_SMP
-	unsigned long h_load_throttle;
+	RH_KABI_DEPRECATE(unsigned long, h_load_throttle)
 #endif /* CONFIG_SMP */
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 
