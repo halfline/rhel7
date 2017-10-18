@@ -27,6 +27,7 @@
 #include <linux/uio_driver.h>
 #include <linux/stringify.h>
 #include <linux/bitops.h>
+#include <linux/configfs.h>
 #include <net/genetlink.h>
 #include <asm/unaligned.h>
 #include <target/target_core_base.h>
@@ -1369,7 +1370,48 @@ tcmu_parse_cdb(struct se_cmd *cmd)
 	return passthrough_parse_cdb(cmd, tcmu_queue_cmd);
 }
 
-static const struct target_backend_ops tcmu_ops = {
+static ssize_t tcmu_cmd_time_out_show(struct config_item *item, char *page)
+{
+	struct se_dev_attrib *da = container_of(to_config_group(item),
+					struct se_dev_attrib, da_group);
+	struct tcmu_dev *udev = container_of(da->da_dev,
+					struct tcmu_dev, se_dev);
+
+	return snprintf(page, PAGE_SIZE, "%lu\n", udev->cmd_time_out / MSEC_PER_SEC);
+}
+
+static ssize_t tcmu_cmd_time_out_store(struct config_item *item, const char *page,
+				       size_t count)
+{
+	struct se_dev_attrib *da = container_of(to_config_group(item),
+					struct se_dev_attrib, da_group);
+	struct tcmu_dev *udev = container_of(da->da_dev,
+					struct tcmu_dev, se_dev);
+	u32 val;
+	int ret;
+
+	if (da->da_dev->export_count) {
+		pr_err("Unable to set tcmu cmd_time_out while exports exist\n");
+		return -EINVAL;
+	}
+
+	ret = kstrtou32(page, 0, &val);
+	if (ret < 0)
+		return ret;
+
+	if (!val) {
+		pr_err("Illegal value for cmd_time_out\n");
+		return -EINVAL;
+	}
+
+	udev->cmd_time_out = val * MSEC_PER_SEC;
+	return count;
+}
+CONFIGFS_ATTR(tcmu_, cmd_time_out);
+
+static struct configfs_attribute **tcmu_attrs;
+
+static struct target_backend_ops tcmu_ops = {
 	.name			= "user",
 	.owner			= THIS_MODULE,
 	.transport_flags	= TRANSPORT_FLAG_PASSTHROUGH,
@@ -1384,12 +1426,12 @@ static const struct target_backend_ops tcmu_ops = {
 	.show_configfs_dev_params = tcmu_show_configfs_dev_params,
 	.get_device_type	= sbc_get_device_type,
 	.get_blocks		= tcmu_get_blocks,
-	.tb_dev_attrib_attrs	= passthrough_attrib_attrs,
+	.tb_dev_attrib_attrs	= NULL,
 };
 
 static int __init tcmu_module_init(void)
 {
-	int ret;
+	int ret, i, len = 0;
 
 	BUILD_BUG_ON((sizeof(struct tcmu_cmd_entry) % TCMU_OP_ALIGN_SIZE) != 0);
 
@@ -1411,14 +1453,33 @@ static int __init tcmu_module_init(void)
 		goto out_unreg_device;
 	}
 
+	for (i = 0; passthrough_attrib_attrs[i] != NULL; i++) {
+		len += sizeof(struct configfs_attribute *);
+	}
+	len += sizeof(struct configfs_attribute *) * 2;
+
+	tcmu_attrs = kzalloc(len, GFP_KERNEL);
+	if (!tcmu_attrs) {
+		ret = -ENOMEM;
+		goto out_unreg_genl;
+	}
+
+	for (i = 0; passthrough_attrib_attrs[i] != NULL; i++) {
+		tcmu_attrs[i] = passthrough_attrib_attrs[i];
+	}
+	tcmu_attrs[i] = &tcmu_attr_cmd_time_out;
+	tcmu_ops.tb_dev_attrib_attrs = tcmu_attrs;
+
 	ret = transport_backend_register(&tcmu_ops);
 	if (ret)
-		goto out_unreg_genl;
+		goto out_attrs;
 
 	idr_init(&devices_idr);
 
 	return 0;
 
+out_attrs:
+	kfree(tcmu_attrs);
 out_unreg_genl:
 	genl_unregister_family(&tcmu_genl_family);
 out_unreg_device:
@@ -1433,6 +1494,7 @@ static void __exit tcmu_module_exit(void)
 {
 	idr_destroy(&devices_idr);
 	target_backend_unregister(&tcmu_ops);
+	kfree(tcmu_attrs);
 	genl_unregister_family(&tcmu_genl_family);
 	root_device_unregister(tcmu_root_device);
 	kmem_cache_destroy(tcmu_cmd_cache);
