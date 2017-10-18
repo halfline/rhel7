@@ -1583,50 +1583,6 @@ static void tcm_vhost_port_unlink(struct se_portal_group *se_tpg,
 	mutex_unlock(&tcm_vhost_mutex);
 }
 
-static struct se_node_acl *tcm_vhost_make_nodeacl(
-	struct se_portal_group *se_tpg,
-	struct config_group *group,
-	const char *name)
-{
-	struct se_node_acl *se_nacl, *se_nacl_new;
-	struct tcm_vhost_nacl *nacl;
-	u64 wwpn = 0;
-	u32 nexus_depth;
-
-	/* tcm_vhost_parse_wwn(name, &wwpn, 1) < 0)
-		return ERR_PTR(-EINVAL); */
-	se_nacl_new = tcm_vhost_alloc_fabric_acl(se_tpg);
-	if (!se_nacl_new)
-		return ERR_PTR(-ENOMEM);
-
-	nexus_depth = 1;
-	/*
-	 * se_nacl_new may be released by core_tpg_add_initiator_node_acl()
-	 * when converting a NodeACL from demo mode -> explict
-	 */
-	se_nacl = core_tpg_add_initiator_node_acl(se_tpg, se_nacl_new,
-				name, nexus_depth);
-	if (IS_ERR(se_nacl)) {
-		tcm_vhost_release_fabric_acl(se_tpg, se_nacl_new);
-		return se_nacl;
-	}
-	/*
-	 * Locate our struct tcm_vhost_nacl and set the FC Nport WWPN
-	 */
-	nacl = container_of(se_nacl, struct tcm_vhost_nacl, se_node_acl);
-	nacl->iport_wwpn = wwpn;
-
-	return se_nacl;
-}
-
-static void tcm_vhost_drop_nodeacl(struct se_node_acl *se_acl)
-{
-	struct tcm_vhost_nacl *nacl = container_of(se_acl,
-				struct tcm_vhost_nacl, se_node_acl);
-	core_tpg_del_initiator_node_acl(se_acl->se_tpg, se_acl, 1);
-	kfree(nacl);
-}
-
 static int tcm_vhost_make_nexus(struct tcm_vhost_tpg *tv_tpg,
 	const char *name)
 {
@@ -2022,10 +1978,6 @@ static struct target_core_fabric_ops tcm_vhost_ops = {
 	.fabric_drop_tpg		= tcm_vhost_drop_tpg,
 	.fabric_post_link		= tcm_vhost_port_link,
 	.fabric_pre_unlink		= tcm_vhost_port_unlink,
-	.fabric_make_np			= NULL,
-	.fabric_drop_np			= NULL,
-	.fabric_make_nodeacl		= tcm_vhost_make_nodeacl,
-	.fabric_drop_nodeacl		= tcm_vhost_drop_nodeacl,
 
 	.tfc_wwn_attrs                  = tcm_vhost_wwn_attrs,
 	.tfc_tpg_base_attrs             = tcm_vhost_tpg_attrs,

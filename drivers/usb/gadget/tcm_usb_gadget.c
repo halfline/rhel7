@@ -1901,10 +1901,7 @@ static const struct target_core_fabric_ops usbg_ops = {
 	.fabric_drop_tpg		= usbg_drop_tpg,
 	.fabric_post_link		= usbg_port_link,
 	.fabric_pre_unlink		= usbg_port_unlink,
-	.fabric_make_np			= NULL,
-	.fabric_drop_np			= NULL,
-	.fabric_make_nodeacl		= usbg_make_nodeacl,
-	.fabric_drop_nodeacl		= usbg_drop_nodeacl,
+	.fabric_init_nodeacl		= usbg_init_nodeacl,
 
 	.tfc_wwn_attrs			= usbg_wwn_attrs,
 	.tfc_tpg_base_attrs		= usbg_base_attrs,
