@@ -4331,6 +4331,7 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
 
 	cmd->cmd_in_wq = 1;
 	cmd->trc_flags |= TRC_NEW_CMD;
+	cmd->se_cmd.cpuid = -1;
 
 	spin_lock_irqsave(&vha->cmd_list_lock, flags);
 	list_add_tail(&cmd->cmd_list, &vha->qla_cmd_list);
@@ -4340,6 +4341,14 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
 	if (vha->flags.qpairs_available) {
 		queue_work_on(smp_processor_id(), qla_tgt_wq,
 		    &cmd->work);
+	} else if (ha->msix_count) {
+		cmd->se_cmd.cpuid = ha->tgt.rspq_vector_cpuid;
+		if (cmd->atio.u.isp24.fcp_cmnd.rddata)
+			queue_work_on(smp_processor_id(), qla_tgt_wq,
+			    &cmd->work);
+		else
+			queue_work_on(cmd->se_cmd.cpuid, qla_tgt_wq,
+			    &cmd->work);
 	} else {
 		queue_work(qla_tgt_wq, &cmd->work);
 	}
