@@ -1195,11 +1195,17 @@ static int tcmu_check_and_free_pending_cmd(struct tcmu_cmd *cmd)
 	return -EINVAL;
 }
 
-static void tcmu_free_device(struct se_device *dev)
+static void tcmu_dev_call_rcu(struct rcu_head *p)
 {
+	struct se_device *dev = container_of(p, struct se_device, rcu_head);
 	struct tcmu_dev *udev = TCMU_DEV(dev);
 
 	kfree(udev);
+}
+
+static void tcmu_free_device(struct se_device *dev)
+{
+	call_rcu(&dev->rcu_head, tcmu_dev_call_rcu);
 }
 
 static bool tcmu_dev_configured(struct tcmu_dev *udev)
