@@ -10,7 +10,7 @@
 #include <net/sock.h>
 #include <net/tcp.h>
 
-#define TARGET_CORE_VERSION		"v4.1.0"
+#define TARGET_CORE_VERSION		"v5.0"
 
 /*
  * Maximum size of a CDB that can be stored in se_cmd without allocating
