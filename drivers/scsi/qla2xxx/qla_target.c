@@ -3818,7 +3818,7 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha,
 {
 	struct qla_hw_data *ha = vha->hw;
 	struct se_cmd *se_cmd;
-	struct target_core_fabric_ops *tfo;
+	const struct target_core_fabric_ops *tfo;
 	struct qla_tgt_cmd *cmd;
 	struct qla_qpair *qpair = rsp->qpair;
 
