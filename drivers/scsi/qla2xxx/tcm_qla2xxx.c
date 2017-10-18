@@ -853,17 +853,6 @@ static void tcm_qla2xxx_release_session(struct kref *kref)
 	qlt_unreg_sess(se_sess->fabric_sess_ptr);
 }
 
-static void tcm_qla2xxx_put_session(struct se_session *se_sess)
-{
-	struct fc_port *sess = se_sess->fabric_sess_ptr;
-	struct qla_hw_data *ha = sess->vha->hw;
-	unsigned long flags;
-
-	spin_lock_irqsave(&ha->hardware_lock, flags);
-	kref_put(&se_sess->sess_kref, tcm_qla2xxx_release_session);
-	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-}
-
 static void tcm_qla2xxx_put_sess(struct fc_port *sess)
 {
 	if (!sess)
@@ -1966,7 +1955,6 @@ static const struct target_core_fabric_ops tcm_qla2xxx_ops = {
 	.tpg_get_inst_index		= tcm_qla2xxx_tpg_get_inst_index,
 	.check_stop_free		= tcm_qla2xxx_check_stop_free,
 	.release_cmd			= tcm_qla2xxx_release_cmd,
-	.put_session			= tcm_qla2xxx_put_session,
 	.shutdown_session		= tcm_qla2xxx_shutdown_session,
 	.close_session			= tcm_qla2xxx_close_session,
 	.sess_get_index			= tcm_qla2xxx_sess_get_index,
@@ -2010,7 +1998,6 @@ static const struct target_core_fabric_ops tcm_qla2xxx_npiv_ops = {
 	.tpg_check_demo_mode_login_only	= tcm_qla2xxx_check_demo_mode_login_only,
 	.tpg_get_inst_index		= tcm_qla2xxx_tpg_get_inst_index,
 	.release_cmd			= tcm_qla2xxx_release_cmd,
-	.put_session			= tcm_qla2xxx_put_session,
 	.shutdown_session		= tcm_qla2xxx_shutdown_session,
 	.close_session			= tcm_qla2xxx_close_session,
 	.sess_get_index			= tcm_qla2xxx_sess_get_index,
