@@ -13,9 +13,6 @@
 #define TARGET_CORE_MOD_VERSION		"v4.1.0"
 #define TARGET_CORE_VERSION		TARGET_CORE_MOD_VERSION
 
-/* Maximum Number of LUNs per Target Portal Group */
-/* Don't raise above 511 or REPORT_LUNS needs to handle >1 page */
-#define TRANSPORT_MAX_LUNS_PER_TPG		256
 /*
  * Maximum size of a CDB that can be stored in se_cmd without allocating
  * memory dynamically for the CDB.
