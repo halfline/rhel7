@@ -1029,8 +1029,7 @@ static ssize_t target_stat_scsi_transport_show_attr_proto_id(
 		return -ENODEV;
 	}
 	tpg = sep->sep_tpg;
-	ret = snprintf(page, PAGE_SIZE, "%u\n",
-		       tpg->se_tpg_tfo->get_fabric_proto_ident(tpg));
+	ret = snprintf(page, PAGE_SIZE, "%u\n", tpg->proto_id);
 	spin_unlock(&lun->lun_sep_lock);
 	return ret;
 }
