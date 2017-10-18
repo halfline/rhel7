@@ -208,7 +208,6 @@ struct srpt_send_ioctx {
 	enum srpt_command_state	state;
 	struct se_cmd		cmd;
 	struct completion	tx_done;
-	u64			tag;
 	u8			n_rdma;
 	u8			n_rw_ctx;
 	bool			queue_status_only;

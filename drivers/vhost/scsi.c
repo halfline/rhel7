@@ -371,11 +371,6 @@ static void tcm_vhost_set_default_node_attrs(struct se_node_acl *nacl)
 	return;
 }
 
-static u32 tcm_vhost_get_task_tag(struct se_cmd *se_cmd)
-{
-	return 0;
-}
-
 static int tcm_vhost_get_cmd_state(struct se_cmd *se_cmd)
 {
 	return 0;
@@ -733,6 +728,7 @@ static void tcm_vhost_submission_work(struct work_struct *work)
 	}
 	tv_nexus = tv_cmd->tvc_nexus;
 
+	se_cmd->tag = 0;
 	rc = target_submit_cmd_map_sgls(se_cmd, tv_nexus->tvn_se_sess,
 			tv_cmd->tvc_cdb, &tv_cmd->tvc_sense_buf[0],
 			tv_cmd->tvc_lun, tv_cmd->tvc_exp_data_len,
@@ -1856,7 +1852,6 @@ static struct target_core_fabric_ops tcm_vhost_ops = {
 	.write_pending			= tcm_vhost_write_pending,
 	.write_pending_status		= tcm_vhost_write_pending_status,
 	.set_default_node_attributes	= tcm_vhost_set_default_node_attrs,
-	.get_task_tag			= tcm_vhost_get_task_tag,
 	.get_cmd_state			= tcm_vhost_get_cmd_state,
 	.queue_data_in			= tcm_vhost_queue_data_in,
 	.queue_status			= tcm_vhost_queue_status,

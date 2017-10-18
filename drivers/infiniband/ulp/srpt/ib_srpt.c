@@ -1153,7 +1153,7 @@ static int srpt_abort_cmd(struct srpt_send_ioctx *ioctx)
 	spin_unlock_irqrestore(&ioctx->spinlock, flags);
 
 	pr_debug("Aborting cmd with state %d and tag %lld\n", state,
-		 ioctx->tag);
+		 ioctx->cmd.tag);
 
 	switch (state) {
 	case SRPT_STATE_NEW:
@@ -1166,7 +1166,7 @@ static int srpt_abort_cmd(struct srpt_send_ioctx *ioctx)
 		 */
 		break;
 	case SRPT_STATE_NEED_DATA:
-		pr_debug("tag %#llx: RDMA read error\n", ioctx->tag);
+		pr_debug("tag %#llx: RDMA read error\n", ioctx->cmd.tag);
 		transport_generic_request_failure(&ioctx->cmd,
 					TCM_CHECK_CONDITION_ABORT_CMD);
 		break;
@@ -1346,7 +1346,7 @@ static void srpt_handle_cmd(struct srpt_rdma_ch *ch,
 
 	srp_cmd = recv_ioctx->ioctx.buf;
 	cmd = &send_ioctx->cmd;
-	send_ioctx->tag = srp_cmd->tag;
+	cmd->tag = srp_cmd->tag;
 
 	switch (srp_cmd->task_attr) {
 	case SRP_CMD_SIMPLE_Q:
@@ -1437,7 +1437,7 @@ static void srpt_handle_tsk_mgmt(struct srpt_rdma_ch *ch,
 		 srp_tsk->task_tag, srp_tsk->tag, ch->cm_id, ch->sess);
 
 	srpt_set_cmd_state(send_ioctx, SRPT_STATE_MGMT);
-	send_ioctx->tag = srp_tsk->tag;
+	send_ioctx->cmd.tag = srp_tsk->tag;
 	tcm_tmr = srp_tmr_to_tcm(srp_tsk->tsk_mgmt_func);
 	rc = target_submit_tmr(&send_ioctx->cmd, sess, NULL,
 			       scsilun_to_int(&srp_tsk->lun), srp_tsk, tcm_tmr,
@@ -2349,13 +2349,13 @@ static void srpt_queue_response(struct se_cmd *cmd)
 	}
 
 	if (state != SRPT_STATE_MGMT)
-		resp_len = srpt_build_cmd_rsp(ch, ioctx, ioctx->tag,
+		resp_len = srpt_build_cmd_rsp(ch, ioctx, ioctx->cmd.tag,
 					      cmd->scsi_status);
 	else {
 		srp_tm_status
 			= tcm_to_srp_tsk_mgmt_status(cmd->se_tmr_req->response);
 		resp_len = srpt_build_tskmgmt_rsp(ch, ioctx, srp_tm_status,
-						 ioctx->tag);
+						 ioctx->cmd.tag);
 	}
 
 	atomic_inc(&ch->req_lim);
@@ -2386,7 +2386,7 @@ static void srpt_queue_response(struct se_cmd *cmd)
 	ret = ib_post_send(ch->qp, first_wr, &bad_wr);
 	if (ret < 0) {
 		pr_err("%s: sending cmd response failed for tag %llu (%d)\n",
-			__func__, ioctx->tag, ret);
+			__func__, ioctx->cmd.tag, ret);
 		goto out;
 	}
 
@@ -2769,14 +2769,6 @@ static void srpt_set_default_node_attrs(struct se_node_acl *nacl)
 {
 }
 
-static u32 srpt_get_task_tag(struct se_cmd *se_cmd)
-{
-	struct srpt_send_ioctx *ioctx;
-
-	ioctx = container_of(se_cmd, struct srpt_send_ioctx, cmd);
-	return ioctx->tag;
-}
-
 /* Note: only used from inside debug printk's by the TCM core. */
 static int srpt_get_tcm_cmd_state(struct se_cmd *se_cmd)
 {
@@ -3143,7 +3135,6 @@ static const struct target_core_fabric_ops srpt_template = {
 	.write_pending			= srpt_write_pending,
 	.write_pending_status		= srpt_write_pending_status,
 	.set_default_node_attributes	= srpt_set_default_node_attrs,
-	.get_task_tag			= srpt_get_task_tag,
 	.get_cmd_state			= srpt_get_tcm_cmd_state,
 	.queue_data_in			= srpt_queue_data_in,
 	.queue_status			= srpt_queue_status,

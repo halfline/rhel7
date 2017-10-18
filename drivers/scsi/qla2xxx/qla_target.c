@@ -1884,7 +1884,7 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
 	list_for_each_entry(se_cmd, &se_sess->sess_cmd_list, se_cmd_list) {
 		struct qla_tgt_cmd *cmd =
 			container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
-		if (cmd->tag == abts->exchange_addr_to_abort) {
+		if (se_cmd->tag == abts->exchange_addr_to_abort) {
 			lun = cmd->unpacked_lun;
 			found_lun = true;
 			break;
@@ -2596,16 +2596,16 @@ static int qlt_pre_xmit_response(struct qla_tgt_cmd *cmd,
 	if (se_cmd->se_cmd_flags & SCF_UNDERFLOW_BIT) {
 		prm->residual = se_cmd->residual_count;
 		ql_dbg_qp(ql_dbg_io + ql_dbg_verbose, qpair, 0x305c,
-		    "Residual underflow: %d (tag %d, op %x, bufflen %d, rq_result %x)\n",
-		       prm->residual, cmd->tag,
+		    "Residual underflow: %d (tag %lld, op %x, bufflen %d, rq_result %x)\n",
+		       prm->residual, se_cmd->tag,
 		       se_cmd->t_task_cdb ? se_cmd->t_task_cdb[0] : 0,
 		       cmd->bufflen, prm->rq_result);
 		prm->rq_result |= SS_RESIDUAL_UNDER;
 	} else if (se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT) {
 		prm->residual = se_cmd->residual_count;
 		ql_dbg_qp(ql_dbg_io, qpair, 0x305d,
-		    "Residual overflow: %d (tag %d, op %x, bufflen %d, rq_result %x)\n",
-		       prm->residual, cmd->tag, se_cmd->t_task_cdb ?
+		    "Residual overflow: %d (tag %lld, op %x, bufflen %d, rq_result %x)\n",
+		       prm->residual, se_cmd->tag, se_cmd->t_task_cdb ?
 		       se_cmd->t_task_cdb[0] : 0, cmd->bufflen, prm->rq_result);
 		prm->rq_result |= SS_RESIDUAL_OVER;
 	}
@@ -3935,7 +3935,7 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha,
 	} else if (cmd->aborted) {
 		cmd->trc_flags |= TRC_CTIO_ABORTED;
 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf01e,
-		    "Aborted command %p (tag %d) finished\n", cmd, cmd->tag);
+		  "Aborted command %p (tag %lld) finished\n", cmd, se_cmd->tag);
 	} else {
 		cmd->trc_flags |= TRC_CTIO_STRANGE;
 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf05c,
@@ -4013,7 +4013,7 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
 
 	spin_lock_init(&cmd->cmd_lock);
 	cdb = &atio->u.isp24.fcp_cmnd.cdb[0];
-	cmd->tag = atio->u.isp24.exchange_addr;
+	cmd->se_cmd.tag = atio->u.isp24.exchange_addr;
 	cmd->unpacked_lun = scsilun_to_int(
 	    (struct scsi_lun *)&atio->u.isp24.fcp_cmnd.lun);
 

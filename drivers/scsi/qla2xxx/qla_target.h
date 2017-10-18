@@ -906,7 +906,6 @@ struct qla_tgt_cmd {
 	int sg_cnt;		/* SG segments count */
 	int bufflen;		/* cmd buffer length */
 	int offset;
-	uint32_t tag;
 	u64 unpacked_lun;
 	enum dma_data_direction dma_data_direction;
 
