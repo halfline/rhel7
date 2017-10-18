@@ -28,8 +28,6 @@
 
 USB_GADGET_COMPOSITE_OPTIONS();
 
-static const struct target_core_fabric_ops usbg_ops;
-
 static inline struct f_uas *to_f_uas(struct usb_function *f)
 {
 	return container_of(f, struct f_uas, function);
@@ -1539,7 +1537,7 @@ static struct se_portal_group *usbg_make_tpg(
 	tpg->tport = tport;
 	tpg->tport_tpgt = tpgt;
 
-	ret = core_tpg_register(&usbg_ops, wwn, &tpg->se_tpg,
+	ret = core_tpg_register(wwn, &tpg->se_tpg,
 				tport->tport_proto_id);
 	if (ret < 0) {
 		destroy_workqueue(tpg->workqueue);

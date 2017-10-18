@@ -92,7 +92,6 @@ MODULE_PARM_DESC(srpt_service_guid,
 		 " instead of using the node_guid of the first HCA.");
 
 static struct ib_client srpt_client;
-static const struct target_core_fabric_ops srpt_template;
 static void srpt_release_cmd(struct se_cmd *se_cmd);
 static void srpt_free_ch(struct kref *kref);
 static int srpt_queue_status(struct se_cmd *cmd);
@@ -3045,8 +3044,7 @@ static struct se_portal_group *srpt_make_tpg(struct se_wwn *wwn,
 	int res;
 
 	/* Initialize sport->port_wwn and sport->port_tpg_1 */
-	res = core_tpg_register(&srpt_template, &sport->port_wwn,
-			&sport->port_tpg_1, SCSI_PROTOCOL_SRP);
+	res = core_tpg_register(&sport->port_wwn, &sport->port_tpg_1, SCSI_PROTOCOL_SRP);
 	if (res)
 		return ERR_PTR(res);
 
