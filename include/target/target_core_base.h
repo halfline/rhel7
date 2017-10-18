@@ -494,7 +494,6 @@ struct se_cmd {
 #define CMD_T_SENT		(1 << 4)
 #define CMD_T_STOP		(1 << 5)
 #define CMD_T_DEV_ACTIVE	(1 << 7)
-#define CMD_T_REQUEST_STOP	(1 << 8)
 #define CMD_T_BUSY		(1 << 9)
 #define CMD_T_TAS		(1 << 10)
 #define CMD_T_FABRIC_STOP	(1 << 11)
@@ -516,9 +515,6 @@ struct se_cmd {
 	int			lun_ref_active;
 
 	struct list_head	state_list;
-
-	/* old task stop completion, consider merging with some of the above */
-	struct completion	task_stop_comp;
 
 	/* backend private data */
 	void			*priv;
