@@ -42,8 +42,6 @@
 #include <scsi/scsi_tcq.h>
 #include <target/target_core_base.h>
 #include <target/target_core_fabric.h>
-#include <target/target_core_fabric_configfs.h>
-#include <target/configfs_macros.h>
 #include <linux/vhost.h>
 #include <linux/virtio_scsi.h>
 #include <linux/llist.h>
@@ -1578,9 +1576,9 @@ static int tcm_vhost_drop_nexus(struct tcm_vhost_tpg *tpg)
 	return 0;
 }
 
-static ssize_t tcm_vhost_tpg_show_nexus(struct se_portal_group *se_tpg,
-	char *page)
+static ssize_t tcm_vhost_tpg_nexus_show(struct config_item *item, char *page)
 {
+	struct se_portal_group *se_tpg = to_tpg(item);
 	struct tcm_vhost_tpg *tv_tpg = container_of(se_tpg,
 				struct tcm_vhost_tpg, se_tpg);
 	struct tcm_vhost_nexus *tv_nexus;
@@ -1599,10 +1597,10 @@ static ssize_t tcm_vhost_tpg_show_nexus(struct se_portal_group *se_tpg,
 	return ret;
 }
 
-static ssize_t tcm_vhost_tpg_store_nexus(struct se_portal_group *se_tpg,
-	const char *page,
-	size_t count)
+static ssize_t tcm_vhost_tpg_nexus_store(struct config_item *item,
+		const char *page, size_t count)
 {
+	struct se_portal_group *se_tpg = to_tpg(item);
 	struct tcm_vhost_tpg *tv_tpg = container_of(se_tpg,
 				struct tcm_vhost_tpg, se_tpg);
 	struct tcm_vhost_tport *tport_wwn = tv_tpg->tport;
@@ -1677,10 +1675,10 @@ check_newline:
 	return count;
 }
 
-TF_TPG_BASE_ATTR(tcm_vhost, nexus, S_IRUGO | S_IWUSR);
+CONFIGFS_ATTR(vhost_scsi_tpg_, nexus);
 
 static struct configfs_attribute *tcm_vhost_tpg_attrs[] = {
-	&tcm_vhost_tpg_nexus.attr,
+	&tcm_vhost_tpg_nexus,
 	NULL,
 };
 
@@ -1813,19 +1811,17 @@ static void tcm_vhost_drop_tport(struct se_wwn *wwn)
 	kfree(tport);
 }
 
-static ssize_t tcm_vhost_wwn_show_attr_version(
-	struct target_fabric_configfs *tf,
-	char *page)
+static ssize_t tcm_vhost_wwn_show_attr_version_show(struct config_item *item, char *page)
 {
 	return sprintf(page, "TCM_VHOST fabric module %s on %s/%s"
 		"on "UTS_RELEASE"\n", TCM_VHOST_VERSION, utsname()->sysname,
 		utsname()->machine);
 }
 
-TF_WWN_ATTR_RO(tcm_vhost, version);
+CONFIGFS_ATTR_RO(vhost_scsi_wwn_, version);
 
 static struct configfs_attribute *tcm_vhost_wwn_attrs[] = {
-	&tcm_vhost_wwn_version.attr,
+	&tcm_vhost_wwn_version,
 	NULL,
 };
 
