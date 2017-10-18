@@ -410,28 +410,6 @@ static char *tcm_vhost_parse_pr_out_transport_id(struct se_portal_group *se_tpg,
 			port_nexus_ptr);
 }
 
-static struct se_node_acl *tcm_vhost_alloc_fabric_acl(
-	struct se_portal_group *se_tpg)
-{
-	struct tcm_vhost_nacl *nacl;
-
-	nacl = kzalloc(sizeof(struct tcm_vhost_nacl), GFP_KERNEL);
-	if (!nacl) {
-		pr_err("Unable to allocate struct tcm_vhost_nacl\n");
-		return NULL;
-	}
-
-	return &nacl->se_node_acl;
-}
-
-static void tcm_vhost_release_fabric_acl(struct se_portal_group *se_tpg,
-	struct se_node_acl *se_nacl)
-{
-	struct tcm_vhost_nacl *nacl = container_of(se_nacl,
-			struct tcm_vhost_nacl, se_node_acl);
-	kfree(nacl);
-}
-
 static u32 tcm_vhost_tpg_get_inst_index(struct se_portal_group *se_tpg)
 {
 	return 1;
@@ -1953,8 +1931,6 @@ static struct target_core_fabric_ops tcm_vhost_ops = {
 	.tpg_check_demo_mode_cache	= tcm_vhost_check_true,
 	.tpg_check_demo_mode_write_protect = tcm_vhost_check_false,
 	.tpg_check_prod_mode_write_protect = tcm_vhost_check_false,
-	.tpg_alloc_fabric_acl		= tcm_vhost_alloc_fabric_acl,
-	.tpg_release_fabric_acl		= tcm_vhost_release_fabric_acl,
 	.tpg_get_inst_index		= tcm_vhost_tpg_get_inst_index,
 	.release_cmd			= tcm_vhost_release_cmd,
 	.shutdown_session		= tcm_vhost_shutdown_session,

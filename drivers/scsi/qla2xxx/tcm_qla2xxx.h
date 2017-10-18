@@ -12,6 +12,8 @@
 #include "qla_target.h"
 
 struct tcm_qla2xxx_nacl {
+	struct se_node_acl se_node_acl;
+
 	/* From libfc struct fc_rport->port_id */
 	u32 nport_id;
 	/* Binary World Wide unique Node Name for remote FC Initiator Nport */
@@ -22,8 +24,6 @@ struct tcm_qla2xxx_nacl {
 	struct fc_port *fc_port;
 	/* Pointer to TCM FC nexus */
 	struct se_session *nport_nexus;
-	/* Returned by tcm_qla2xxx_make_nodeacl() */
-	struct se_node_acl se_node_acl;
 };
 
 struct tcm_qla2xxx_tpg_attrib {
