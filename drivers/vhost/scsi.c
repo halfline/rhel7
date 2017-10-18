@@ -1798,7 +1798,7 @@ static struct se_portal_group *tcm_vhost_make_tpg(struct se_wwn *wwn,
 	tpg->tport_tpgt = tpgt;
 
 	ret = core_tpg_register(&tcm_vhost_ops, wwn,
-				&tpg->se_tpg, tpg, TRANSPORT_TPG_TYPE_NORMAL);
+				&tpg->se_tpg, tport->tport_proto_id);
 	if (ret < 0) {
 		kfree(tpg);
 		return NULL;
