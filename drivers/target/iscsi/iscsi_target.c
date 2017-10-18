@@ -3916,17 +3916,9 @@ static int iscsi_target_rx_opcode(struct iscsi_conn *conn, unsigned char *buf)
 			" opcode while ERL=0, closing iSCSI connection.\n");
 			return -1;
 		}
-		if (!conn->conn_ops->OFMarker) {
-			pr_err("Unable to recover from unknown"
-			" opcode while OFMarker=No, closing iSCSI"
-				" connection.\n");
-			return -1;
-		}
-		if (iscsit_recover_from_unknown_opcode(conn) < 0) {
-			pr_err("Unable to recover from unknown"
-				" opcode, closing iSCSI connection.\n");
-			return -1;
-		}
+		pr_err("Unable to recover from unknown opcode while OFMarker=No,"
+		       " closing iSCSI connection.\n");
+		ret = -1;
 		break;
 	}
 
