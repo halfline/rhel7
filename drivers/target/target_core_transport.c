@@ -39,6 +39,7 @@
 #include <net/sock.h>
 #include <net/tcp.h>
 #include <scsi/scsi.h>
+#include <scsi/scsi_eh.h>
 #include <scsi/scsi_cmnd.h>
 #include <scsi/scsi_tcq.h>
 
@@ -2803,6 +2804,7 @@ static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
 	u8 *buffer = cmd->sense_buffer;
 	int r = (__force int)reason;
 	u8 asc, ascq;
+	bool desc_format = target_sense_desc_format(cmd->se_dev);
 
 	if (r < ARRAY_SIZE(sense_info_table) && sense_info_table[r].key)
 		si = &sense_info_table[r];
@@ -2810,7 +2812,6 @@ static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
 		si = &sense_info_table[(__force int)
 				       TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE];
 
-	buffer[SPC_SENSE_KEY_OFFSET] = si->key;
 	if (reason == TCM_CHECK_CONDITION_UNIT_ATTENTION) {
 		core_scsi3_ua_for_check_condition(cmd, &asc, &ascq);
 		WARN_ON_ONCE(asc == 0);
@@ -2822,8 +2823,8 @@ static void translate_sense_reason(struct se_cmd *cmd, sense_reason_t reason)
 		asc = si->asc;
 		ascq = si->ascq;
 	}
-	buffer[SPC_ASC_KEY_OFFSET] = asc;
-	buffer[SPC_ASCQ_KEY_OFFSET] = ascq;
+
+	scsi_build_sense_buffer(desc_format, buffer, si->key, asc, ascq);
 	if (si->add_sector_info)
 		transport_err_sector_info(cmd->sense_buffer, cmd->bad_sector);
 }
