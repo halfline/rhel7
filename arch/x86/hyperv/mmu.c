@@ -276,6 +276,9 @@ do_native:
 	native_flush_tlb_others(cpus, mm, start, end);
 }
 
+/* RHEL-only, see x86/mm/gup.c */
+extern struct static_key rh_flush_tlb_others_native;
+
 void hyperv_setup_mmu_ops(void)
 {
 	if (!(ms_hyperv.hints & HV_X64_REMOTE_TLB_FLUSH_RECOMMENDED))
@@ -296,6 +299,8 @@ void hyper_alloc_mmu(void)
 {
 	if (!(ms_hyperv.hints & HV_X64_REMOTE_TLB_FLUSH_RECOMMENDED))
 		return;
+
+	static_key_slow_dec(&rh_flush_tlb_others_native);
 
 	if (!(ms_hyperv.hints & HV_X64_EX_PROCESSOR_MASKS_RECOMMENDED))
 		pcpu_flush = alloc_percpu(struct hv_flush_pcpu *);

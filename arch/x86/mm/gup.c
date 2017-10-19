@@ -14,6 +14,13 @@
 #include <asm/mmu_context.h>
 #include <asm/pgtable.h>
 
+/*
+ * RHEL-only. Hypervisors overriding pv_mmu_ops.flush_tlb_others need to do
+ * static_key_slow_dec(&rh_flush_tlb_others_native)
+ */
+struct static_key rh_flush_tlb_others_native __read_mostly = STATIC_KEY_INIT_TRUE;
+#define rh_flush_tlb_others_IPI_less() (static_key_false(&rh_flush_tlb_others_native))
+
 static inline pte_t gup_get_pte(pte_t *ptep)
 {
 #ifndef CONFIG_X86_PAE
@@ -138,7 +145,22 @@ static noinline int gup_pte_range(pmd_t pmd, unsigned long addr,
 		}
 		VM_BUG_ON(!pfn_valid(pte_pfn(pte)));
 		page = pte_page(pte);
-		get_page(page);
+
+		/*
+		 * RHEL-only: upstream has HAVE_GENERIC_GUP and it always does
+		 * page_cache_get_speculative() here to ensure serialization
+		 * when IPIs are not send on TLB shootdown.
+		 */
+		if (rh_flush_tlb_others_IPI_less()) {
+			if (!page_cache_get_speculative(page))
+				return 0;
+			if (unlikely(pte_val(pte) != pte_val(*ptep))) {
+				put_page(page);
+				return 0;
+			}
+		} else {
+			get_page(page);
+		}
 		put_dev_pagemap(pgmap);
 		SetPageReferenced(page);
 		pages[*nr] = page;
@@ -173,6 +195,20 @@ static noinline int gup_huge_pmd(pmd_t pmd, unsigned long addr,
 
 	refs = 0;
 	head = pte_page(pte);
+
+	/* RHEL-only. See gup_pte_range() */
+	if (rh_flush_tlb_others_IPI_less()) {
+		if (!page_cache_get_speculative(head))
+			return 0;
+		if (unlikely(pte_val(pte) != pte_val(*(pte_t *)&pmd))) {
+			put_page(head);
+			return 0;
+		}
+
+		/* Don't take ref to the head page twice */
+		refs--;
+	}
+
 	page = head + ((addr & ~PMD_MASK) >> PAGE_SHIFT);
 	do {
 		VM_BUG_ON_PAGE(compound_head(page) != head, page);
@@ -246,6 +282,20 @@ static noinline int gup_huge_pud(pud_t pud, unsigned long addr,
 
 	refs = 0;
 	head = pte_page(pte);
+
+	/* RHEL-only. See gup_pte_range() */
+	if (rh_flush_tlb_others_IPI_less()) {
+		if (!page_cache_get_speculative(head))
+			return 0;
+		if (unlikely(pte_val(pte) != pte_val(*(pte_t *)&pud))) {
+			put_page(head);
+			return 0;
+		}
+
+		/* Don't take ref to the head page twice */
+		refs--;
+	}
+
 	page = head + ((addr & ~PUD_MASK) >> PAGE_SHIFT);
 	do {
 		VM_BUG_ON_PAGE(compound_head(page) != head, page);
