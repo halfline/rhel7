@@ -570,6 +570,7 @@ static int netxen_set_features(struct net_device *dev,
 }
 
 static const struct net_device_ops netxen_netdev_ops = {
+	.ndo_size	   = sizeof(struct net_device_ops),
 	.ndo_open	   = netxen_nic_open,
 	.ndo_stop	   = netxen_nic_close,
 	.ndo_start_xmit    = netxen_nic_xmit_frame,
@@ -577,7 +578,7 @@ static const struct net_device_ops netxen_netdev_ops = {
 	.ndo_validate_addr = eth_validate_addr,
 	.ndo_set_rx_mode   = netxen_set_multicast_list,
 	.ndo_set_mac_address    = netxen_nic_set_mac,
-	.ndo_change_mtu_rh74 = netxen_nic_change_mtu,
+	.extended.ndo_change_mtu = netxen_nic_change_mtu,
 	.ndo_tx_timeout	   = netxen_tx_timeout,
 	.ndo_fix_features = netxen_fix_features,
 	.ndo_set_features = netxen_set_features,
