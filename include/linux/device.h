@@ -845,7 +845,7 @@ struct device_rh {
 	RH_KABI_EXTEND(struct dma_map_ops *dma_ops)
 
 	/* RHEL7: due to KABI this can't go into struct class */
-	RH_KABI_EXTEND(int (*class_shutdown)(struct device *dev))
+	RH_KABI_EXTEND(int (*class_shutdown_pre)(struct device *dev))
 };
 /* allocator for device_rh */
 extern void device_rh_alloc(struct device *dev);
