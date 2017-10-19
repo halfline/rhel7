@@ -1473,6 +1473,19 @@ force_mld_version - INTEGER
 	1 - Enforce to use MLD version 1
 	2 - Enforce to use MLD version 2
 
+optimistic_dad - BOOLEAN
+	Whether to perform Optimistic Duplicate Address Detection (RFC 4429).
+		0: disabled (default)
+		1: enabled
+
+use_optimistic - BOOLEAN
+	If enabled, do not classify optimistic addresses as deprecated during
+	source address selection.  Preferred addresses will still be chosen
+	before optimistic addresses, subject to other ranking in the source
+	address selection algorithm.
+		0: disabled (default)
+		1: enabled
+
 stable_secret - IPv6 address
 	This IPv6 address will be used as a secret to generate IPv6
 	addresses for link-local addresses and autoconfigured
