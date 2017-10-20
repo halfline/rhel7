@@ -14,6 +14,9 @@
 #include <linux/mutex.h>
 #include <linux/slab.h>
 #include <linux/usb/typec.h>
+#include <linux/idr.h>
+#include <linux/string.h>
+
 
 struct typec_mode {
 	int				index;
@@ -1321,7 +1324,9 @@ struct typec_port *typec_register_port(struct device *parent,
 
 	port->dev.class = typec_class;
 	port->dev.parent = parent;
+	/* We are not pulling this support into RHEL7
 	port->dev.fwnode = cap->fwnode;
+	*/
 	port->dev.type = &typec_port_dev_type;
 	dev_set_name(&port->dev, "port%d", id);
 
