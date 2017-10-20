@@ -37,8 +37,11 @@ ifeq ("$(origin O)", "command line")
   _EXTRA_ARGS := O=$(_OUTPUT)
 endif
 
+CURARCH := $(shell uname -m)
 ARCHCONFIG := $(shell uname -m | sed -e s/x86_64/X86_64/ \
 				     -e s/s390x/S390/ -e s/ppc.*/PPC/ )
+
+KABIDW := $(REDHAT)/kabi-dwarf
 
 include Makefile.cross
 
@@ -55,6 +58,33 @@ rh-kabi:
 		done;\
 	done;
 	@(cd $(REDHAT)/kabi/ && ln -Tsf kabi-rhel$(RHELMAJOR)$(RHELMINOR) kabi-current)
+
+rh-kabi-dw:
+	make -C $(KABIDW)/kabi-dw
+
+rh-kabi-dw-base: rh-kabi rh-kabi-dw
+	@echo "Generating baseline dataset for KABI DWARF-based comparison..."
+	@echo "**** GENERATING DWARF-based kABI baseline dataset ****"
+	@$(KABIDW)/run_kabi-dw.sh generate \
+		$(REDHAT)/kabi/kabi-current/kabi_whitelist_$(CURARCH) \
+		$(_OUTPUT) $(KABIDW)/base/$(CURARCH)/
+
+rh-kabi-dw-check: rh-kabi rh-kabi-dw
+	@if [ ! -d $(KABIDW)/base/$(CURARCH) ]; then \
+		echo "**** ERROR: ****"; \
+		echo "Comparison base not found in $(KABIDW)/base/$(CURARCH)."; \
+		echo "Please run \"make rh-kabi-dw-base\" first!"; \
+		exit 1; \
+	fi
+	@echo "**** GENERATING DWARF-based kABI dataset ****"
+	@$(KABIDW)/run_kabi-dw.sh generate \
+		$(REDHAT)/kabi/kabi-current/kabi_whitelist_$(CURARCH) \
+		$(_OUTPUT) $(KABIDW)/base/$(CURARCH).tmp/
+	@echo "**** KABI DWARF-based comparison report ****"
+	@$(KABIDW)/run_kabi-dw.sh compare \
+		$(KABIDW)/base/$(CURARCH) $(KABIDW)/base/$(CURARCH).tmp || :
+	@echo "**** End of KABI DWARF-based comparison report ****"
+	@rm -rf $(KABIDW)/base/$(CURARCH).tmp
 
 rh-kabi-dup:
 	@for KABIARCH in "ppc64" "ppc64le" "x86_64" "s390x"; do \
@@ -104,7 +134,11 @@ rh-clean-rpmdirs:
 		rm -rf $$i; \
 	done;
 
-rh-clean: rh-clean-sources rh-clean-configs rh-clean-rpmdirs
+rh-clean-kabi-dw:
+	make -C $(KABIDW)/kabi-dw clean
+	rm -rf $(KABIDW)/base/$(CURARCH)
+
+rh-clean: rh-clean-sources rh-clean-configs rh-clean-rpmdirs rh-clean-kabi-dw
 
 rh-stub-key:
 	@echo "Copying pre-generated keys";
@@ -122,6 +156,13 @@ $(TARBALL):
 .PHONY: $(KABI_TARBALL)
 $(KABI_TARBALL):
 	@(cd kabi && tar cjvf $(SOURCES)/$(KABI_TARFILE) kabi-rhel$(RHELMAJOR)* kabi-current)
+
+.PHONY: $(KABIDW_TARBALL)
+$(KABIDW_TARBALL):
+	@if [ ! -d $(KABIDW)/base ]; then \
+		mkdir -p $(KABIDW)/base; \
+	fi
+	@(cd kabi-dwarf && tar cjvf $(SOURCES)/$(KABIDW_TARFILE) kabi-dw/*.[chyl] kabi-dw/Makefile kabi-dw/COPYING base run_kabi-dw.sh)
 
 setup-source: rh-clean-sources
 	@cp $(REDHAT)/$(SPECFILE).template $(SOURCES)/$(SPECFILE)
@@ -162,6 +203,10 @@ sources-rh: rh-git-dirtytree $(TARBALL) rh-configs rh-kabi rh-kabi-dup
 	fi)
 	@cp cpupower.* x509.genkey keys/rhel*.x509 keys/extra_certificates Makefile.common kabi/check-kabi kabi/Module.kabi_{ppc64,ppc64le,s390x,x86_64} kabi/Module.kabi_dup_{ppc64,ppc64le,s390x,x86_64} configs/kernel-*.config rhpkg/Makefile scripts/sign-modules keys/*.cer $(SOURCES)/
 	@(cd kabi && tar cjvf $(SOURCES)/$(KABI_TARFILE) kabi-rhel$(RHELMAJOR)* kabi-current)
+	@if [ ! -d $(KABIDW)/base ]; then \
+		mkdir -p $(KABIDW)/base; \
+	fi
+	@(cd kabi-dwarf && tar cjvf $(SOURCES)/$(KABIDW_TARFILE) kabi-dw/*.[chyl] kabi-dw/Makefile kabi-dw/COPYING base run_kabi-dw.sh)
 
 rh-sources: setup-source sources-rh
 
@@ -226,11 +271,11 @@ $(REDHAT)/rpm/SOURCES/kernel.spec:
 	@echo "rh-sources"
 	@$(MAKE) rh-sources
 
-rh-dist-git: $(REDHAT)/rpm/SOURCES/kernel.spec $(TARBALL) $(KABI_TARBALL)
+rh-dist-git: $(REDHAT)/rpm/SOURCES/kernel.spec $(TARBALL) $(KABI_TARBALL) $(KABIDW_TARBALL)
 ifeq ("$(RHDISTGIT_BRANCH)", "")
  $(error RHDISTGIT_BRANCH unset)
 endif
-	$(REDHAT)/scripts/rh-dist-git.sh "$(RHDISTGIT_BRANCH)" "$(RHDISTGIT_CACHE)" "$(RHDISTGIT_TMP)" "$(RHDISTGIT)" "$(TARBALL)" "$(KABI_TARBALL)" "$(__ZSTREAM)"
+	$(REDHAT)/scripts/rh-dist-git.sh "$(RHDISTGIT_BRANCH)" "$(RHDISTGIT_CACHE)" "$(RHDISTGIT_TMP)" "$(RHDISTGIT)" "$(TARBALL)" "$(KABI_TARBALL)" "$(KABIDW_TARBALL)" "$(__ZSTREAM)"
 
 rh-rtg: rh-release
 	@$(MAKE) rh-release-tag
@@ -276,9 +321,12 @@ rh-help:
 	@echo  '  rh-prep	- Setup the redhat/rpm/BUILD/ directory with the kernel source'
 	@echo  '  rh-test-patch - Create a diff against HEAD and put it in linux-kernel-test.patch.'
 	@echo  '                  Then linux-kernel-test.patch will be added to the kernel build'
-	@echo  '  rh-kabi - Merge kabi structure into simple files'
-	@echo  '  rh-kabi-dup - Merge kabi DUP structure into simple files'
-	@echo  '  rh-check-kabi - Run check-kabi script on a pre-compiled tree.'
+	@echo  '  rh-kabi	- Merge kabi structure into simple files'
+	@echo  '  rh-kabi-dup	- Merge kabi DUP structure into simple files'
+	@echo  '  rh-kabi-dw	- Build the kabi-dw tool'
+	@echo  '  rh-kabi-dw-base - Generate the base dataset for kABI DWARF-based check'
+	@echo  '  rh-kabi-dw-check - Run DWARF-based kABI comparison of current binaries with the base dataset'
+	@echo  '  rh-check-kabi	- Run check-kabi script on a pre-compiled tree.'
 	@echo  '  rh-check-kabi-dup - Run check-kabi script on a pre-compiled tree for DUP.'
 	@echo  '  rh-stub-key	- Use pre generated keys to speed local test builds'
 	@echo  '  rh-cross-download - [x86_64 only] download cross compiler rpms'

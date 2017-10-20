@@ -1,0 +1,11 @@
+This tool has been obtained from:
+https://github.com/skozina/kabi-dw
+
+commit e6af311e3182417f86742a5b1a78e488593f975a
+Author: Jerome Marchand <jmarchan@redhat.com>
+Date:   Wed Oct 18 14:37:09 2017 +0200
+
+    compare: don't stop scanning for a offset or alignment change
+
+    This kind of difference don't change the tree much and we can continue
+    scanning to find more changes that are possibly more significant.

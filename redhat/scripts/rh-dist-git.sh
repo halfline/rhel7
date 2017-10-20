@@ -7,7 +7,8 @@
 # $4: alternate dist-git server
 # $5: kernel source tarball
 # $6: kabi whitelists tarball
-# $7: zstream build
+# $7: dwarf-bases kabi tarball
+# $8: zstream build
 
 rhdistgit_branch=$1;
 rhdistgit_cache=$2;
@@ -15,7 +16,8 @@ rhdistgit_tmp=$3;
 rhdistgit_server=$4;
 rhdistgit_tarball=$5;
 rhdistgit_kabi_tarball=$6;
-rhdistgit_zstream_flag=$7;
+rhdistgit_kabidw_tarball=$7;
+rhdistgit_zstream_flag=$8;
 
 redhat=$(dirname $0)/..;
 topdir=$redhat/..;
@@ -32,6 +34,14 @@ function upload_kabi_tarball()
 	sed -i "/kernel-abi-whitelist.*.tar.bz2/d" $tmpdir/kernel/sources;
 	sed -i "/kernel-abi-whitelist.*.tar.bz2/d" $tmpdir/kernel/.gitignore;
 	rhpkg upload $rhdistgit_kabi_tarball >/dev/null || die "uploading kabi tarball";
+}
+
+function upload_kabidw_tarball()
+{
+	echo "Uploading dwarf-based kernel-abi tarball"
+	sed -i "/kernel-kabi-dw-.*.tar.bz2/d" $tmpdir/kernel/sources;
+	sed -i "/kernel-kabi-dw-.*.tar.bz2/d" $tmpdir/kernel/.gitignore;
+	rhpkg upload $rhdistgit_kabidw_tarball >/dev/null || die "uploading kabi tarball";
 }
 
 if [ -z "$rhdistgit_branch" ]; then
@@ -61,7 +71,9 @@ rhpkg upload $rhdistgit_tarball >/dev/null || die "uploading kernel tarball";
 # Only upload kernel-abi-whitelists tarball if its release counter changed.
 if [ "$rhdistgit_zstream_flag" == "no" ]; then
 	whitelists_file="$(awk '/kernel-abi-whitelists/ {print $2}' $tmpdir/kernel/sources)"
+	kabidw_file="$(awk '/kernel-kabi-dw/ {print $2}' $tmpdir/kernel/sources)"
 	grep "$whitelists_file" $rhdistgit_kabi_tarball >/dev/null || upload_kabi_tarball;
+	grep "$kabidw_file" $rhdistgit_kabidw_tarball >/dev/null || upload_kabidw_tarball;
 fi
 
 echo "Creating diff for review ($tmpdir/diff) and changelog"
