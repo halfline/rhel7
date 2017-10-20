@@ -30,6 +30,11 @@
 
 #include "trace.h"
 
+static u64 get_time_ref_counter(struct kvm *kvm)
+{
+	return div_u64(get_kvmclock_ns(kvm), 100);
+}
+
 static bool kvm_hv_msr_partition_wide(u32 msr)
 {
 	bool r = false;
@@ -248,11 +253,9 @@ static int kvm_hv_get_msr_pw(struct kvm_vcpu *vcpu, u32 msr, u64 *pdata)
 	case HV_X64_MSR_HYPERCALL:
 		data = hv->hv_hypercall;
 		break;
-	case HV_X64_MSR_TIME_REF_COUNT: {
-		data =
-		     div_u64(get_kvmclock_ns(kvm), 100);
+	case HV_X64_MSR_TIME_REF_COUNT:
+		data = get_time_ref_counter(kvm);
 		break;
-	}
 	case HV_X64_MSR_REFERENCE_TSC:
 		data = hv->hv_tsc_page;
 		break;
