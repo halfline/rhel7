@@ -338,9 +338,7 @@ xfs_file_dax_read(
 	unsigned long		nr_segs,
 	loff_t			pos)
 {
-	struct address_space	*mapping = iocb->ki_filp->f_mapping;
-	struct inode		*inode = mapping->host;
-	struct xfs_inode	*ip = XFS_I(inode);
+	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
 	size_t			size = 0;
 	ssize_t			ret = 0;
 
@@ -354,11 +352,8 @@ xfs_file_dax_read(
 		return 0; /* skip atime */
 
 	xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
-	ret = dax_do_io(READ, iocb, inode, iovp, pos, nr_segs,
-			xfs_get_blocks_direct, NULL, 0);
-	if (ret > 0) {
-		iocb->ki_pos = pos + ret;
-	}
+	ret = iomap_dax_rw(READ, iocb, iovp, nr_segs, pos,
+			   size, &xfs_iomap_ops);
 	xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
 
 	file_accessed(iocb->ki_filp);
@@ -801,52 +796,32 @@ xfs_file_dax_write(
 	size_t			ocount)
 {
 	struct file		*file = iocb->ki_filp;
-	struct address_space	*mapping = file->f_mapping;
-	struct inode		*inode = mapping->host;
+	struct inode		*inode = iocb->ki_filp->f_mapping->host;
 	struct xfs_inode	*ip = XFS_I(inode);
-	ssize_t			ret = 0;
 	size_t			count = ocount;
 	int			iolock = XFS_IOLOCK_EXCL;
+	ssize_t			ret, error = 0;
 
 	xfs_rw_ilock(ip, iolock);
 	ret = xfs_file_aio_write_checks(file, &pos, &count, &iolock);
 	if (ret)
 		goto out;
 
-	/*
-	 * Yes, even DAX files can have page cache attached to them:  A zeroed
-	 * page is inserted into the pagecache when we have to serve a write
-	 * fault on a hole.  It should never be dirtied and can simply be
-	 * dropped from the pagecache once we get real data for the page.
-	 *
-	 * XXX: This is racy against mmap, and there's nothing we can do about
-	 * it. dax_do_io() should really do this invalidation internally as
-	 * it will know if we've allocated over a holei for this specific IO and
-	 * if so it needs to update the mapping tree and invalidate existing
-	 * PTEs over the newly allocated range. Remove this invalidation when
-	 * dax_do_io() is fixed up.
-	 */
-	if (mapping->nrpages) {
-		loff_t end = iocb->ki_pos + count - 1;
-		ret = invalidate_inode_pages2_range(mapping,
-						iocb->ki_pos >> PAGE_SHIFT,
-						end >> PAGE_SHIFT);
-		WARN_ON_ONCE(ret);
+	/* checks above may have moved pos for O_APPEND, keep iocb in sync */
+	iocb->ki_pos = pos;
+
+	trace_xfs_file_dax_write(ip, count, pos);
+
+	ret = iomap_dax_rw(WRITE, iocb, iovp, nr_segs, pos,
+			   count, &xfs_iomap_ops);
+	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
+		i_size_write(inode, iocb->ki_pos);
+		error = xfs_setfilesize(ip, pos, ret);
 	}
 
-	trace_xfs_file_dax_write(ip, count, iocb->ki_pos);
-
-	ret = dax_do_io(WRITE, iocb, inode, iovp, pos, nr_segs,
-			xfs_get_blocks_direct,
-			xfs_end_io_direct_write, 0);
-
-	if (ret > 0) {
-		pos += ret;
-		iocb->ki_pos = pos;
-	}
 out:
 	xfs_rw_iunlock(ip, iolock);
-	return ret;
+	return error ? error : ret;
 }
 
 STATIC ssize_t
@@ -1542,7 +1517,7 @@ xfs_filemap_page_mkwrite(
 	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
 
 	if (IS_DAX(inode)) {
-		ret = dax_mkwrite(vma, vmf, xfs_get_blocks_dax_fault);
+		ret = iomap_dax_fault(vma, vmf, &xfs_iomap_ops);
 	} else {
 		ret = iomap_page_mkwrite(vma, vmf, &xfs_iomap_ops);
 		ret = block_page_mkwrite_return(ret);
@@ -1576,7 +1551,7 @@ xfs_filemap_fault(
 		 * changes to xfs_get_blocks_direct() to map unwritten extent
 		 * ioend for conversion on read-only mappings.
 		 */
-		ret = dax_fault(vma, vmf, xfs_get_blocks_dax_fault);
+		ret = iomap_dax_fault(vma, vmf, &xfs_iomap_ops);
 	} else
 		ret = filemap_fault(vma, vmf);
 	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
