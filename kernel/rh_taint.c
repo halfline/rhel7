@@ -7,7 +7,8 @@
  * and minor releases.  These functions output loud warning messages to the end
  * user and should be USED WITH CAUTION.
  *
- * Any use of these functions _MUST_ be documented in the RHEL Release Notes.
+ * Any use of these functions _MUST_ be documented in the RHEL Release Notes,
+ * and have approval of management.
  */
 
 /**
