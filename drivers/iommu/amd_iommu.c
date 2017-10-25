@@ -3717,14 +3717,14 @@ static int setup_amd_ir_data(struct irq_2_irte *irte_info)
 {
 	struct amd_ir_data *ir_data;
 
-	ir_data = kzalloc(sizeof(struct amd_ir_data), GFP_KERNEL);
+	ir_data = kzalloc(sizeof(struct amd_ir_data), GFP_ATOMIC);
 	if (!ir_data)
 		return -ENOMEM;
 
 	if (!AMD_IOMMU_GUEST_IR_GA(amd_iommu_guest_ir))
-		ir_data->entry = kzalloc(sizeof(union irte), GFP_KERNEL);
+		ir_data->entry = kzalloc(sizeof(union irte), GFP_ATOMIC);
 	else
-		ir_data->entry = kzalloc(sizeof(struct irte_ga), GFP_KERNEL);
+		ir_data->entry = kzalloc(sizeof(struct irte_ga), GFP_ATOMIC);
 	if (!ir_data->entry) {
 		kfree(ir_data);
 		return -ENOMEM;
