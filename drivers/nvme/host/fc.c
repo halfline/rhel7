@@ -1377,7 +1377,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
 	if (atomic_read(&op->state) == FCPOP_STATE_ABORTED)
 		status = cpu_to_le16((NVME_SC_ABORT_REQ | NVME_SC_DNR) << 1);
 	else if (freq->status)
-		status = cpu_to_le16(NVME_SC_FC_TRANSPORT_ERROR << 1);
+		status = cpu_to_le16(NVME_SC_INTERNAL << 1);
 
 	/*
 	 * For the linux implementation, if we have an unsuccesful
@@ -1405,7 +1405,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
 		 */
 		if (freq->transferred_length !=
 			be32_to_cpu(op->cmd_iu.data_len)) {
-			status = cpu_to_le16(NVME_SC_FC_TRANSPORT_ERROR << 1);
+			status = cpu_to_le16(NVME_SC_INTERNAL << 1);
 			goto done;
 		}
 		result.u64 = 0;
@@ -1422,7 +1422,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
 					freq->transferred_length ||
 			     op->rsp_iu.status_code ||
 			     sqe->common.command_id != cqe->command_id)) {
-			status = cpu_to_le16(NVME_SC_FC_TRANSPORT_ERROR << 1);
+			status = cpu_to_le16(NVME_SC_INTERNAL << 1);
 			goto done;
 		}
 		result = cqe->result;
@@ -1430,7 +1430,7 @@ nvme_fc_fcpio_done(struct nvmefc_fcp_req *req)
 		break;
 
 	default:
-		status = cpu_to_le16(NVME_SC_FC_TRANSPORT_ERROR << 1);
+		status = cpu_to_le16(NVME_SC_INTERNAL << 1);
 		goto done;
 	}
 
