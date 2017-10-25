@@ -22,7 +22,7 @@
 #include "fabrics.h"
 
 static LIST_HEAD(nvmf_transports);
-static DEFINE_MUTEX(nvmf_transports_mutex);
+static DECLARE_RWSEM(nvmf_transports_rwsem);
 
 static LIST_HEAD(nvmf_hosts);
 static DEFINE_MUTEX(nvmf_hosts_mutex);
@@ -497,9 +497,9 @@ int nvmf_register_transport(struct nvmf_transport_ops *ops)
 	if (!ops->create_ctrl)
 		return -EINVAL;
 
-	mutex_lock(&nvmf_transports_mutex);
+	down_write(&nvmf_transports_rwsem);
 	list_add_tail(&ops->entry, &nvmf_transports);
-	mutex_unlock(&nvmf_transports_mutex);
+	up_write(&nvmf_transports_rwsem);
 
 	return 0;
 }
@@ -516,9 +516,9 @@ EXPORT_SYMBOL_GPL(nvmf_register_transport);
  */
 void nvmf_unregister_transport(struct nvmf_transport_ops *ops)
 {
-	mutex_lock(&nvmf_transports_mutex);
+	down_write(&nvmf_transports_rwsem);
 	list_del(&ops->entry);
-	mutex_unlock(&nvmf_transports_mutex);
+	up_write(&nvmf_transports_rwsem);
 }
 EXPORT_SYMBOL_GPL(nvmf_unregister_transport);
 
@@ -527,7 +527,7 @@ static struct nvmf_transport_ops *nvmf_lookup_transport(
 {
 	struct nvmf_transport_ops *ops;
 
-	lockdep_assert_held(&nvmf_transports_mutex);
+	lockdep_assert_held(&nvmf_transports_rwsem);
 
 	list_for_each_entry(ops, &nvmf_transports, entry) {
 		if (strcmp(ops->name, opts->transport) == 0)
@@ -834,7 +834,7 @@ nvmf_create_ctrl(struct device *dev, const char *buf, size_t count)
 		goto out_free_opts;
 	opts->mask &= ~NVMF_REQUIRED_OPTS;
 
-	mutex_lock(&nvmf_transports_mutex);
+	down_read(&nvmf_transports_rwsem);
 	ops = nvmf_lookup_transport(opts);
 	if (!ops) {
 		pr_info("no handler found for transport %s.\n",
@@ -861,16 +861,16 @@ nvmf_create_ctrl(struct device *dev, const char *buf, size_t count)
 		dev_warn(ctrl->device,
 			"controller returned incorrect NQN: \"%s\".\n",
 			ctrl->subnqn);
-		mutex_unlock(&nvmf_transports_mutex);
+		up_read(&nvmf_transports_rwsem);
 		ctrl->ops->delete_ctrl(ctrl);
 		return ERR_PTR(-EINVAL);
 	}
 
-	mutex_unlock(&nvmf_transports_mutex);
+	up_read(&nvmf_transports_rwsem);
 	return ctrl;
 
 out_unlock:
-	mutex_unlock(&nvmf_transports_mutex);
+	up_read(&nvmf_transports_rwsem);
 out_free_opts:
 	nvmf_free_options(opts);
 	return ERR_PTR(ret);
