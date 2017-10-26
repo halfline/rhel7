@@ -1144,6 +1144,10 @@ static int __elevator_change(struct request_queue *q, const char *name)
 	struct elevator_type *e;
 	struct elevator_type_aux *aux;
 
+	/* Make sure queue is not in the middle of being removed */
+	if (!test_bit(QUEUE_FLAG_REGISTERED, &q->queue_flags))
+		return -ENOENT;
+
 	/*
 	 * Special case for mq, turn off scheduling
 	 */
