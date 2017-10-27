@@ -366,6 +366,7 @@ struct pci_dev {
 	RH_KABI_FILL_HOLE(unsigned int irq_managed:1)
 	RH_KABI_FILL_HOLE(unsigned int has_secondary_link:1)
 	RH_KABI_FILL_HOLE(unsigned int non_compliant_bars:1) /* broken BARs; ignore them */
+	RH_KABI_FILL_HOLE(unsigned int is_thunderbolt:1) /* Thunderbolt controller */
 	pci_dev_flags_t dev_flags;
 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
 
@@ -2067,6 +2068,28 @@ static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
 static inline bool pci_ari_enabled(struct pci_bus *bus)
 {
 	return bus->self && bus->self->ari_enabled;
+}
+
+/**
+ * pci_is_thunderbolt_attached - whether device is on a Thunderbolt daisy chain
+ * @pdev: PCI device to check
+ *
+ * Walk upwards from @pdev and check for each encountered bridge if it's part
+ * of a Thunderbolt controller.  Reaching the host bridge means @pdev is not
+ * Thunderbolt-attached.  (But rather soldered to the mainboard usually.)
+ */
+static inline bool pci_is_thunderbolt_attached(struct pci_dev *pdev)
+{
+	struct pci_dev *parent = pdev;
+
+	if (pdev->is_thunderbolt)
+		return true;
+
+	while ((parent = pci_upstream_bridge(parent)))
+		if (parent->is_thunderbolt)
+			return true;
+
+	return false;
 }
 
 /* provide the legacy pci_dma_* API */
