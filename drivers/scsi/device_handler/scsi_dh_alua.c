@@ -1037,6 +1037,13 @@ static bool alua_match(struct scsi_device *sdev)
 	return (scsi_device_tpgs(sdev) != 0);
 }
 
+static void alua_rescan(struct scsi_device *sdev)
+{
+	struct alua_dh_data *h = get_alua_data(sdev);
+
+	alua_initialize(sdev, h);
+}
+
 /*
  * alua_bus_attach - Attach device handler
  * @sdev: device to be attached to
@@ -1096,6 +1103,7 @@ static struct scsi_device_handler alua_dh = {
 	.prep_fn = alua_prep_fn,
 	.check_sense = alua_check_sense,
 	.activate = alua_activate,
+	.rescan = alua_rescan,
 	.set_params = alua_set_params,
 	.match = alua_match,
 };
