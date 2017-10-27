@@ -408,7 +408,7 @@ static void hp_sw_bus_detach( struct scsi_device *sdev )
 
 static int __init hp_sw_init(void)
 {
-	return scsi_register_device_handler(&hp_sw_dh);
+	return scsi_register_device_handler(&hp_sw_dh, NULL, 0);
 }
 
 static void __exit hp_sw_exit(void)

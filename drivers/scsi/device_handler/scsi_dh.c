@@ -28,6 +28,7 @@
 
 static DEFINE_SPINLOCK(list_lock);
 static LIST_HEAD(scsi_dh_list);
+static LIST_HEAD(scsi_dh_aux_list);
 
 static struct scsi_device_handler *get_device_handler(const char *name)
 {
@@ -43,6 +44,23 @@ static struct scsi_device_handler *get_device_handler(const char *name)
 	spin_unlock(&list_lock);
 	return found;
 }
+
+struct scsi_device_handler_aux *
+scsi_get_device_handler_aux(struct scsi_device_handler *scsi_dh)
+{
+	struct scsi_device_handler_aux *tmp, *found = NULL;
+
+	spin_lock(&list_lock);
+	list_for_each_entry(tmp, &scsi_dh_aux_list, list) {
+		if (tmp->scsi_dh == scsi_dh) {
+			found = tmp;
+			break;
+		}
+	}
+	spin_unlock(&list_lock);
+	return found;
+}
+EXPORT_SYMBOL_GPL(scsi_get_device_handler_aux);
 
 /*
  * device_handler_match_function - Match a device handler to a device
@@ -335,8 +353,11 @@ static int scsi_dh_notifier_remove(struct device *dev, void *data)
  *
  * Returns 0 on success, -EBUSY if handler already registered.
  */
-int scsi_register_device_handler(struct scsi_device_handler *scsi_dh)
+int scsi_register_device_handler(struct scsi_device_handler *scsi_dh,
+				 struct scsi_device_handler_aux *scsi_dh_aux_src,
+				 size_t scsi_dh_aux_src_size)
 {
+	struct scsi_device_handler_aux *scsi_dh_aux = NULL;
 
 	if (get_device_handler(scsi_dh->name))
 		return -EBUSY;
@@ -345,6 +366,15 @@ int scsi_register_device_handler(struct scsi_device_handler *scsi_dh)
 		return -EINVAL;
 
 	spin_lock(&list_lock);
+	if (scsi_dh_aux_src) {
+		scsi_dh_aux = kzalloc(sizeof(struct scsi_device_handler_aux), GFP_KERNEL);
+		if (!scsi_dh_aux)
+			return -ENOMEM;
+
+		memcpy(scsi_dh_aux, scsi_dh_aux_src, scsi_dh_aux_src_size);
+		scsi_dh_aux->scsi_dh = scsi_dh;
+		list_add(&scsi_dh_aux->list, &scsi_dh_aux_list);
+	}
 	list_add(&scsi_dh->list, &scsi_dh_list);
 	spin_unlock(&list_lock);
 
@@ -364,6 +394,7 @@ EXPORT_SYMBOL_GPL(scsi_register_device_handler);
  */
 int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh)
 {
+	struct scsi_device_handler_aux *scsi_dh_aux;
 
 	if (!get_device_handler(scsi_dh->name))
 		return -ENODEV;
@@ -371,8 +402,15 @@ int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh)
 	bus_for_each_dev(&scsi_bus_type, NULL, scsi_dh,
 			 scsi_dh_notifier_remove);
 
+	scsi_dh_aux = scsi_get_device_handler_aux(scsi_dh);
+
 	spin_lock(&list_lock);
 	list_del(&scsi_dh->list);
+	if (scsi_dh_aux) {
+		list_del(&scsi_dh_aux->list);
+		scsi_dh_aux->scsi_dh = NULL;
+		kfree(scsi_dh_aux);
+	}
 	spin_unlock(&list_lock);
 	printk(KERN_INFO "%s: device handler unregistered\n", scsi_dh->name);
 

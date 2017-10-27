@@ -925,7 +925,7 @@ static int __init rdac_init(void)
 {
 	int r;
 
-	r = scsi_register_device_handler(&rdac_dh);
+	r = scsi_register_device_handler(&rdac_dh, NULL, 0);
 	if (r != 0) {
 		printk(KERN_ERR "Failed to register scsi device handler.");
 		goto done;

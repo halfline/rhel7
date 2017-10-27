@@ -1641,9 +1641,13 @@ void scsi_rescan_device(struct device *dev)
 
 	scsi_attach_vpd(sdev);
 
-	if (sdev->scsi_dh_data && sdev->scsi_dh_data->scsi_dh &&
-	    sdev->scsi_dh_data->scsi_dh->rescan)
-		sdev->scsi_dh_data->scsi_dh->rescan(sdev);
+	if (sdev->scsi_dh_data && sdev->scsi_dh_data->scsi_dh) {
+		struct scsi_device_handler_aux *scsi_dh_aux =
+			scsi_get_device_handler_aux(sdev->scsi_dh_data->scsi_dh);
+
+		if (scsi_dh_aux && scsi_dh_aux->rescan)
+			scsi_dh_aux->rescan(sdev);
+	}
 
 	if (dev->driver) {
 		drv = to_scsi_driver(dev->driver);

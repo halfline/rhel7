@@ -1081,9 +1081,12 @@ static struct scsi_device_handler alua_dh = {
 	.prep_fn = alua_prep_fn,
 	.check_sense = alua_check_sense,
 	.activate = alua_activate,
-	.rescan = alua_rescan,
 	.set_params = alua_set_params,
 	.match = alua_match,
+};
+
+static struct scsi_device_handler_aux alua_dh_aux = {
+	.rescan = alua_rescan,
 };
 
 /*
@@ -1169,7 +1172,9 @@ static int __init alua_init(void)
 		destroy_workqueue(kaluad_wq);
 		return SCSI_DH_DEV_TEMP_BUSY;
 	}
-	r = scsi_register_device_handler(&alua_dh);
+
+	r = scsi_register_device_handler(&alua_dh, &alua_dh_aux,
+					 sizeof(struct scsi_device_handler_aux));
 	if (r != 0) {
 		printk(KERN_ERR "%s: Failed to register scsi device handler",
 			ALUA_DH_NAME);

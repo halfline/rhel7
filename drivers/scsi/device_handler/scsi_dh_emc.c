@@ -729,7 +729,7 @@ static int __init clariion_init(void)
 {
 	int r;
 
-	r = scsi_register_device_handler(&clariion_dh);
+	r = scsi_register_device_handler(&clariion_dh, NULL, 0);
 	if (r != 0)
 		printk(KERN_ERR "%s: Failed to register scsi device handler.",
 			CLARIION_NAME);
