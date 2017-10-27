@@ -313,6 +313,58 @@ static const struct rtnl_link_ops *rtnl_link_ops_get(const char *kind)
 	return NULL;
 }
 
+/*
+ * RHEL: Copy of struct nla_policy from RHEL 7.4 that is used by binary
+ * modules compiled against RHEL 7.4
+ */
+struct nla_policy_rh74 {
+	u16	type;
+	u16	len;
+};
+
+/*
+ * RHEL: Converts an array of old nla_policy used by binary modules
+ * compiled against RHEL 7.4
+ */
+static int __rh_convert_nla_policy(const struct nla_policy **dst,
+				   const struct nla_policy_rh74 *src,
+				   int maxtype)
+{
+	struct nla_policy *d;
+	int i;
+
+	/* Check if the conversion is necessary */
+	if (!src)
+		return 0;
+
+	/* Ensure that the destination is NULL */
+	if (*dst)
+		return -EINVAL;
+
+	d = kzalloc(maxtype * sizeof(struct nla_policy), GFP_KERNEL);
+	if (!d)
+		return -ENOMEM;
+
+	for (i = 0; i < maxtype; i++)
+		memcpy(&d[i], &src[i], sizeof(struct nla_policy_rh74));
+
+	*dst = d;
+	return 0;
+}
+
+/*
+ * RHEL: Free allocated policy for caller that passes its policy via
+ * old rtnl_link_ops.{policy_rh74,slave_policy_rh74} arrays.
+ */
+static void __rh_cleanup_nla_policy(const struct nla_policy **p,
+				    const struct nla_policy_rh74 *policy)
+{
+	if (policy && *p) {
+		kfree(*p);
+		*p = NULL;
+	}
+}
+
 /**
  * __rtnl_link_register - Register rtnl_link_ops with rtnetlink.
  * @ops: struct rtnl_link_ops * to register
@@ -325,6 +377,8 @@ static const struct rtnl_link_ops *rtnl_link_ops_get(const char *kind)
  */
 int __rtnl_link_register(struct rtnl_link_ops *ops)
 {
+	int err;
+
 	if (rtnl_link_ops_get(ops->kind))
 		return -EEXIST;
 
@@ -335,6 +389,29 @@ int __rtnl_link_register(struct rtnl_link_ops *ops)
 	 */
 	if (ops->setup && !ops->dellink)
 		ops->dellink = unregister_netdevice_queue;
+
+	/* RHEL specific: rtnl_link_{,un}register() symbols are white-listed
+	 * and can be used by out-of-tree modules. Part of struct rtnl_link_ops
+	 * are 2 optional arrays of nla_policy named .policy and .slave_policy.
+	 * Modules compiled against RHEL 7.4 or earlier use smaller variant
+	 * of nla_policy and because of this fact we need to copy content of
+	 * these arrays (if they are passed) to allocated ones that uses
+	 * extended variant of nla_policy that is also used by stack. These
+	 * allocated arrays are freed during __rtnl_link_unregister().
+	 */
+	err = __rh_convert_nla_policy(&ops->policy, ops->policy_rh74,
+				      ops->maxtype);
+	if (err < 0)
+		return err;
+
+	err = __rh_convert_nla_policy(&ops->slave_policy,
+				      ops->slave_policy_rh74,
+				      ops->slave_maxtype);
+	if (err < 0) {
+		/* Clean-up probably allocated array */
+		__rh_cleanup_nla_policy(&ops->policy, ops->policy_rh74);
+		return err;
+	}
 
 	list_add_tail(&ops->list, &link_ops);
 	return 0;
@@ -384,6 +461,10 @@ void __rtnl_link_unregister(struct rtnl_link_ops *ops)
 		__rtnl_kill_links(net, ops);
 	}
 	list_del(&ops->list);
+
+	/* Free arrays if they were allocated */
+	__rh_cleanup_nla_policy(&ops->policy, ops->policy_rh74);
+	__rh_cleanup_nla_policy(&ops->slave_policy, ops->slave_policy_rh74);
 }
 EXPORT_SYMBOL_GPL(__rtnl_link_unregister);
 
