@@ -3,6 +3,7 @@
  */
 
 #include <linux/netdevice.h>
+#include <net/pkt_cls.h>
 
 /* Structure tc_to_netdev used by out-of-tree drivers compiled against
  * RHEL7.4 code base.
@@ -40,8 +41,11 @@ int __rh_call_ndo_setup_tc(struct net_device *dev, enum tc_setup_type type,
 		 */
 		tc74.type = type;
 
-		/* Copy egress_dev field */
-		tc74.egress_dev = tc->egress_dev;
+		/* These drivers use value tc->egress_dev instead of
+		 * tc->cls_flower->egress_dev.
+		 */
+		if (type == TC_SETUP_CLSFLOWER)
+			tc74.egress_dev = tc->cls_flower->egress_dev;
 
 		/* Copy one of the pointer from the union to copy its content */
 		tc74.cls_u32 = tc->cls_u32;

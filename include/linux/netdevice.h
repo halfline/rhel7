@@ -824,7 +824,6 @@ struct tc_to_netdev {
 		struct tc_cls_matchall_offload *cls_mall;
 		struct tc_mqprio_qopt *mqprio;
 	};
-	bool egress_dev;
 };
 
 /* Forward declaration of tc_to_netdev structure used by __rh_call_ndo_setup_tc
