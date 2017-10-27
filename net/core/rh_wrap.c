@@ -18,14 +18,16 @@ struct tc_to_netdev_rh74 {
 	bool egress_dev;
 };
 
-int __rh_call_ndo_setup_tc(struct net_device *dev, u32 handle, u32 chain_index,
-			   __be16 protocol, struct tc_to_netdev *tc)
+int __rh_call_ndo_setup_tc(struct net_device *dev, enum tc_setup_type type,
+			   u32 handle, u32 chain_index, __be16 protocol,
+			   struct tc_to_netdev *tc)
 {
 	const struct net_device_ops *ops = dev->netdev_ops;
 
 	if (get_ndo_ext(ops, ndo_setup_tc)) {
-		return get_ndo_ext(ops, ndo_setup_tc)(dev, handle, chain_index,
-						      protocol, tc);
+		return get_ndo_ext(ops, ndo_setup_tc)(dev, type, handle,
+						      chain_index, protocol,
+						      tc);
 	} else if (chain_index != 0) {
 		/* All older drivers supports only single chain */
 		return -ENOTSUPP;
@@ -33,19 +35,23 @@ int __rh_call_ndo_setup_tc(struct net_device *dev, u32 handle, u32 chain_index,
 		/* Drivers implementing .ndo_setup_tc_rh74() */
 		struct tc_to_netdev_rh74 tc74;
 
-		/* Copy type & egress_dev fields */
-		tc74.type = tc->type;
+		/* These drivers take 'type' value from the structure. So fill
+		 * it properly.
+		 */
+		tc74.type = type;
+
+		/* Copy egress_dev field */
 		tc74.egress_dev = tc->egress_dev;
 
 		/* Copy one of the pointer from the union to copy its content */
 		tc74.cls_u32 = tc->cls_u32;
 
 		/* The drivers use value tc->tc instead of tc->mqprio->num_tc */
-		if (tc->type == TC_SETUP_MQPRIO)
+		if (type == TC_SETUP_MQPRIO)
 			tc74.tc = tc->mqprio->num_tc;
 
 		return ops->ndo_setup_tc_rh74(dev, handle, protocol, &tc74);
-	} else if (ops->ndo_setup_tc_rh72 && tc->type == TC_SETUP_MQPRIO) {
+	} else if (ops->ndo_setup_tc_rh72 && type == TC_SETUP_MQPRIO) {
 		/* Drivers implementing .ndo_setup_tc_rh72()
 		 * Note that drivers that implement .ndo_setup_tc_rh72() can
 		 * only support mqprio so this entry-point can be called
