@@ -36,5 +36,6 @@
 #define BLIST_NO_RSOC		0x20000000 /* don't try to issue RSOC */
 #define BLIST_MAX_1024		0x40000000 /* maximum 1024 sector cdb length */
 #define BLIST_UNMAP_LIMIT_WS	0x80000000 /* Use UNMAP limit for WRITE SAME */
+#define BLIST_SYNC_ALUA		0xDEADBEEF /* Synchronous ALUA commands */
 
 #endif
