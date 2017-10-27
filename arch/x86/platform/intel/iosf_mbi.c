@@ -33,6 +33,7 @@
 
 static struct pci_dev *mbi_pdev;
 static DEFINE_SPINLOCK(iosf_mbi_lock);
+static DEFINE_MUTEX(iosf_mbi_punit_mutex);
 
 static inline u32 iosf_mbi_form_mcr(u8 op, u8 port, u8 offset)
 {
@@ -188,6 +189,18 @@ bool iosf_mbi_available(void)
 	return mbi_pdev;
 }
 EXPORT_SYMBOL(iosf_mbi_available);
+
+void iosf_mbi_punit_acquire(void)
+{
+	mutex_lock(&iosf_mbi_punit_mutex);
+}
+EXPORT_SYMBOL(iosf_mbi_punit_acquire);
+
+void iosf_mbi_punit_release(void)
+{
+	mutex_unlock(&iosf_mbi_punit_mutex);
+}
+EXPORT_SYMBOL(iosf_mbi_punit_release);
 
 #ifdef CONFIG_IOSF_MBI_DEBUG
 static u32	dbg_mdr;
