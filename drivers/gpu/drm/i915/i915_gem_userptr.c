@@ -507,7 +507,7 @@ __i915_gem_userptr_get_pages_worker(struct work_struct *_work)
 	ret = -ENOMEM;
 	pinned = 0;
 
-	pvec = kvmalloc_array(npages, sizeof(struct page *), GFP_TEMPORARY);
+	pvec = kvmalloc_array(npages, sizeof(struct page *), GFP_KERNEL);
 	if (pvec != NULL) {
 		struct mm_struct *mm = obj->userptr.mm->mm;
 		unsigned int flags = 0;
@@ -643,7 +643,7 @@ i915_gem_userptr_get_pages(struct drm_i915_gem_object *obj)
 
 	if (mm == current->mm) {
 		pvec = kvmalloc_array(num_pages, sizeof(struct page *),
-				      GFP_TEMPORARY |
+				      GFP_KERNEL |
 				      __GFP_NORETRY |
 				      __GFP_NOWARN);
 		if (pvec) /* defer to worker if malloc fails */
@@ -804,9 +804,7 @@ i915_gem_userptr_ioctl(struct drm_device *dev, void *data, struct drm_file *file
 	i915_gem_object_init(obj, &i915_gem_userptr_ops);
 	obj->base.read_domains = I915_GEM_DOMAIN_CPU;
 	obj->base.write_domain = I915_GEM_DOMAIN_CPU;
-	obj->cache_level = I915_CACHE_LLC;
-	obj->cache_coherent = i915_gem_object_is_coherent(obj);
-	obj->cache_dirty = !obj->cache_coherent;
+	i915_gem_object_set_cache_coherency(obj, I915_CACHE_LLC);
 
 	obj->userptr.ptr = args->user_ptr;
 	obj->userptr.read_only = !!(args->flags & I915_USERPTR_READ_ONLY);
