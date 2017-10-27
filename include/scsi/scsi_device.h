@@ -251,6 +251,11 @@ struct scsi_device {
 	unsigned long		sdev_data[0];
 } __attribute__((aligned(sizeof(unsigned long))));
 
+struct scsi_dh_devlist {
+	char *vendor;
+	char *model;
+};
+
 typedef void (*activate_complete)(void *, int);
 struct scsi_device_handler {
 	/* Used by the infrastructure */
@@ -259,6 +264,7 @@ struct scsi_device_handler {
 	/* Filled by the hardware handler */
 	struct module *module;
 	const char *name;
+	RH_KABI_DEPRECATE(const struct scsi_dh_devlist *, devlist)
 	int (*check_sense)(struct scsi_device *, struct scsi_sense_hdr *);
 	int (*attach)(struct scsi_device *);
 	void (*detach)(struct scsi_device *);
@@ -266,13 +272,14 @@ struct scsi_device_handler {
 	int (*prep_fn)(struct scsi_device *, struct request *);
 	int (*set_params)(struct scsi_device *, const char *);
 	bool (*match)(struct scsi_device *);
-	void (*rescan)(struct scsi_device *);
+	RH_KABI_EXTEND(void (*rescan)(struct scsi_device *))
 };
 
 struct scsi_dh_data {
 	struct scsi_device_handler *scsi_dh;
 	struct scsi_device *sdev;
 	struct kref kref;
+	RH_KABI_DEPRECATE(char, buf[0])
 };
 
 #define	to_scsi_device(d)	\
