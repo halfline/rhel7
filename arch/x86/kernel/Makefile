@@ -107,7 +107,6 @@ obj-$(CONFIG_UPROBES)			+= uprobes.o
 obj-$(CONFIG_PERF_EVENTS)		+= perf_regs.o
 obj-$(CONFIG_TRACING)			+= tracepoint.o
 obj-$(CONFIG_SCHED_MC_PRIO)		+= itmt.o
-obj-$(CONFIG_IOSF_MBI)			+= iosf_mbi.o
 
 ###
 # 64 bit specific files
