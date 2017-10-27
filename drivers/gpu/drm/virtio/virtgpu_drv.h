@@ -35,10 +35,11 @@
 #include <drm/drm_gem.h>
 #include <drm/drm_atomic.h>
 #include <drm/drm_crtc_helper.h>
-#include <ttm/ttm_bo_api.h>
-#include <ttm/ttm_bo_driver.h>
-#include <ttm/ttm_placement.h>
-#include <ttm/ttm_module.h>
+#include <drm/drm_encoder.h>
+#include <drm/ttm/ttm_bo_api.h>
+#include <drm/ttm/ttm_bo_driver.h>
+#include <drm/ttm/ttm_placement.h>
+#include <drm/ttm/ttm_module.h>
 
 #define DRIVER_NAME "virtio_gpu"
 #define DRIVER_DESC "virtio GPU"
@@ -177,9 +178,7 @@ struct virtio_gpu_device {
 
 	struct virtio_gpu_queue ctrlq;
 	struct virtio_gpu_queue cursorq;
-	struct list_head free_vbufs;
-	spinlock_t free_vbufs_lock;
-	void *vbufs;
+	struct kmem_cache *vbufs;
 	bool vqs_ready;
 
 	struct idr	resource_idr;
@@ -214,7 +213,7 @@ extern struct drm_ioctl_desc virtio_gpu_ioctls[DRM_VIRTIO_NUM_IOCTLS];
 
 /* virtio_kms.c */
 int virtio_gpu_driver_load(struct drm_device *dev, unsigned long flags);
-int virtio_gpu_driver_unload(struct drm_device *dev);
+void virtio_gpu_driver_unload(struct drm_device *dev);
 int virtio_gpu_driver_open(struct drm_device *dev, struct drm_file *file);
 void virtio_gpu_driver_postclose(struct drm_device *dev, struct drm_file *file);
 
@@ -422,6 +421,5 @@ static inline void virtio_gpu_object_unreserve(struct virtio_gpu_object *bo)
 
 /* virgl debufs */
 int virtio_gpu_debugfs_init(struct drm_minor *minor);
-void virtio_gpu_debugfs_takedown(struct drm_minor *minor);
 
 #endif
