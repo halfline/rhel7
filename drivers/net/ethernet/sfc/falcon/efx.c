@@ -2254,6 +2254,7 @@ static int ef4_set_features(struct net_device *net_dev, netdev_features_t data)
 }
 
 static const struct net_device_ops ef4_netdev_ops = {
+	.ndo_size		= sizeof(struct net_device_ops),
 	.ndo_open		= ef4_net_open,
 	.ndo_stop		= ef4_net_stop,
 	.ndo_get_stats64	= ef4_net_stats,
@@ -2268,7 +2269,7 @@ static const struct net_device_ops ef4_netdev_ops = {
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller = ef4_netpoll,
 #endif
-	.ndo_setup_tc		= ef4_setup_tc,
+	.extended.ndo_setup_tc	= ef4_setup_tc,
 #ifdef CONFIG_RFS_ACCEL
 	.ndo_rx_flow_steer	= ef4_filter_rfs,
 #endif

@@ -2964,7 +2964,7 @@ static const struct net_device_ops cxgb4_netdev_ops = {
 	.ndo_poll_controller  = cxgb_netpoll,
 #endif
 	.extended.ndo_set_tx_maxrate   = cxgb_set_tx_maxrate,
-	.ndo_setup_tc         = cxgb_setup_tc,
+	.extended.ndo_setup_tc         = cxgb_setup_tc,
 	.ndo_fix_features     = cxgb_fix_features,
 };
 

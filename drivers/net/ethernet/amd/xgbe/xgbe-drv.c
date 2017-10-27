@@ -1859,7 +1859,8 @@ static int xgbe_setup_tc(struct net_device *netdev, u32 handle, __be16 proto,
 	if (tc_to_netdev->type != TC_SETUP_MQPRIO)
 		return -EINVAL;
 
-	tc = tc_to_netdev->tc;
+	tc_to_netdev->mqprio->hw = TC_MQPRIO_HW_OFFLOAD_TCS;
+	tc = tc_to_netdev->mqprio->num_tc;
 
 	if (tc > pdata->hw_feat.tc_cnt)
 		return -EINVAL;
@@ -1913,6 +1914,7 @@ static int xgbe_set_features(struct net_device *netdev,
 }
 
 static const struct net_device_ops xgbe_netdev_ops = {
+	.ndo_size		= sizeof(struct net_device_ops),
 	.ndo_open		= xgbe_open,
 	.ndo_stop		= xgbe_close,
 	.ndo_start_xmit		= xgbe_xmit,
@@ -1928,7 +1930,7 @@ static const struct net_device_ops xgbe_netdev_ops = {
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller	= xgbe_poll_controller,
 #endif
-	.ndo_setup_tc		= xgbe_setup_tc,
+	.extended.ndo_setup_tc	= xgbe_setup_tc,
 	.ndo_set_features	= xgbe_set_features,
 };
 

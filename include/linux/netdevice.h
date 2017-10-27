@@ -820,13 +820,18 @@ struct tc_cls_u32_offload;
 struct tc_to_netdev {
 	unsigned int type;
 	union {
-		u8 tc;
 		struct tc_cls_u32_offload *cls_u32;
 		struct tc_cls_flower_offload *cls_flower;
 		struct tc_cls_matchall_offload *cls_mall;
+		struct tc_mqprio_qopt *mqprio;
 	};
 	bool egress_dev;
 };
+
+/* Forward declaration of tc_to_netdev structure used by __rh_call_ndo_setup_tc
+ * wrapper for out-of-tree drivers compiled against RHEL7.4.
+ */
+struct tc_to_netdev_rh74;
 
 /* This structure defines the management hooks for network devices.
  * It is an extension of net_device_ops. Drivers that want to use any of the
@@ -941,6 +946,10 @@ struct net_device_ops_extended {
 							 void *attr_data);
 	int			(*ndo_change_mtu)(struct net_device *dev,
 						  int new_mtu);
+	int			(*ndo_setup_tc)(struct net_device *dev,
+						u32 handle,
+						__be16 protocol,
+						struct tc_to_netdev *tc);
 };
 
 /*
@@ -1399,10 +1408,10 @@ struct net_device_ops {
 					       const unsigned char *addr,
 					       u16 vid,
 					       u16 flags))
-	RH_KABI_USE_P(7,int	(*ndo_setup_tc)(struct net_device *dev,
-						u32 handle,
-						__be16 protocol,
-						struct tc_to_netdev *tc))
+	RH_KABI_USE_P(7,int	(*ndo_setup_tc_rh74)(struct net_device *dev,
+						     u32 handle,
+						     __be16 protocol,
+						     struct tc_to_netdev_rh74 *tc))
 	RH_KABI_USE_P(8, int	(*ndo_fill_metadata_dst)(struct net_device *dev,
 						       struct sk_buff *skb))
 	RH_KABI_USE_P(9, void	(*ndo_add_geneve_port)(struct  net_device *dev,
@@ -1962,7 +1971,8 @@ bool __rh_has_ndo_setup_tc(const struct net_device *dev)
 {
 	const struct net_device_ops *ops = dev->netdev_ops;
 
-	return (ops->ndo_setup_tc ||
+	return (get_ndo_ext(ops, ndo_setup_tc) ||
+		ops->ndo_setup_tc_rh74 ||
 		ops->ndo_setup_tc_rh72) ? true : false;
 }
 

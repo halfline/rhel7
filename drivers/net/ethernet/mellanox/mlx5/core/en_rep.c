@@ -293,8 +293,7 @@ static int mlx5e_rep_ndo_setup_tc(struct net_device *dev, u32 handle,
 		struct mlx5_eswitch *esw = priv->mdev->priv.eswitch;
 		struct net_device *uplink_dev = mlx5_eswitch_get_uplink_netdev(esw);
 
-		return uplink_dev->netdev_ops->ndo_setup_tc(uplink_dev, handle,
-							    proto, tc);
+		return __rh_call_ndo_setup_tc(uplink_dev, handle, proto, tc);
 	}
 
 	switch (tc->type) {
@@ -392,7 +391,7 @@ static const struct net_device_ops mlx5e_netdev_ops_rep = {
 	.ndo_stop                = mlx5e_rep_close,
 	.ndo_start_xmit          = mlx5e_xmit,
 	.extended.ndo_get_phys_port_name  = mlx5e_rep_get_phys_port_name,
-	.ndo_setup_tc            = mlx5e_rep_ndo_setup_tc,
+	.extended.ndo_setup_tc   = mlx5e_rep_ndo_setup_tc,
 	.ndo_get_stats64         = mlx5e_rep_get_stats,
 	.extended.ndo_has_offload_stats	 = mlx5e_has_offload_stats,
 	.extended.ndo_get_offload_stats	 = mlx5e_get_offload_stats,
