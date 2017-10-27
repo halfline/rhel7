@@ -1070,56 +1070,8 @@ static void alua_rescan(struct scsi_device *sdev)
 	alua_initialize(sdev, h);
 }
 
-/*
- * alua_bus_attach - Attach device handler
- * @sdev: device to be attached to
- */
-static struct scsi_dh_data *alua_bus_attach(struct scsi_device *sdev)
-{
-	struct alua_dh_data *h;
-	int err, ret = -EINVAL;
-
-	h = kzalloc(sizeof(*h) , GFP_KERNEL);
-	if (!h)
-		return ERR_PTR(-ENOMEM);
-	spin_lock_init(&h->pg_lock);
-	rcu_assign_pointer(h->pg, NULL);
-	h->init_error = SCSI_DH_OK;
-	h->sdev = sdev;
-
-	mutex_init(&h->init_mutex);
-	err = alua_initialize(sdev, h);
-	if (err == SCSI_DH_NOMEM)
-		ret = -ENOMEM;
-	if (err != SCSI_DH_OK && err != SCSI_DH_DEV_OFFLINED)
-		goto failed;
-
-	sdev_printk(KERN_NOTICE, sdev, "%s: Attached\n", ALUA_DH_NAME);
-	return &h->dh_data;
-failed:
-	kfree(h);
-	return ERR_PTR(ret);
-}
-
-/*
- * alua_bus_detach - Detach device handler
- * @sdev: device to be detached from
- */
-static void alua_bus_detach(struct scsi_device *sdev)
-{
-	struct alua_dh_data *h = get_alua_data(sdev);
-	struct alua_port_group *pg;
-
-	spin_lock(&h->pg_lock);
-	pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
-	rcu_assign_pointer(h->pg, NULL);
-	h->sdev = NULL;
-	spin_unlock(&h->pg_lock);
-	if (pg)
-		kref_put(&pg->kref, release_port_group);
-
-	kfree(h);
-}
+static int alua_bus_attach(struct scsi_device *sdev);
+static void alua_bus_detach(struct scsi_device *sdev);
 
 static struct scsi_device_handler alua_dh = {
 	.name = ALUA_DH_NAME,
@@ -1133,6 +1085,75 @@ static struct scsi_device_handler alua_dh = {
 	.set_params = alua_set_params,
 	.match = alua_match,
 };
+
+/*
+ * alua_bus_attach - Attach device handler
+ * @sdev: device to be attached to
+ */
+static int alua_bus_attach(struct scsi_device *sdev)
+{
+	struct alua_dh_data *h;
+	unsigned long flags;
+	int err, ret = -EINVAL;
+
+	h = kzalloc(sizeof(*h) , GFP_KERNEL);
+	if (!h) {
+		sdev_printk(KERN_ERR, sdev, "%s: Attach failed\n",
+			    ALUA_DH_NAME);
+		return -ENOMEM;
+	}
+
+	h->dh_data.scsi_dh = &alua_dh;
+	spin_lock_init(&h->pg_lock);
+	rcu_assign_pointer(h->pg, NULL);
+	h->init_error = SCSI_DH_OK;
+	h->sdev = sdev;
+
+	mutex_init(&h->init_mutex);
+	err = alua_initialize(sdev, h);
+	if (err == SCSI_DH_NOMEM)
+		ret = -ENOMEM;
+	if (err != SCSI_DH_OK && err != SCSI_DH_DEV_OFFLINED)
+		goto failed;
+
+	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
+	sdev->scsi_dh_data = &h->dh_data;
+	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
+	sdev_printk(KERN_NOTICE, sdev, "%s: Attached\n", ALUA_DH_NAME);
+
+	return 0;
+
+failed:
+	kfree(h);
+	sdev_printk(KERN_ERR, sdev, "%s: not attached\n", ALUA_DH_NAME);
+	return ret;
+}
+
+/*
+ * alua_bus_detach - Detach device handler
+ * @sdev: device to be detached from
+ */
+static void alua_bus_detach(struct scsi_device *sdev)
+{
+	struct alua_dh_data *h = get_alua_data(sdev);
+	unsigned long flags;
+	struct alua_port_group *pg;
+
+	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
+	sdev->scsi_dh_data = NULL;
+	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
+
+	spin_lock(&h->pg_lock);
+	pg = rcu_dereference_protected(h->pg, lockdep_is_held(&h->pg_lock));
+	rcu_assign_pointer(h->pg, NULL);
+	h->sdev = NULL;
+	spin_unlock(&h->pg_lock);
+	if (pg)
+		kref_put(&pg->kref, release_port_group);
+
+	kfree(h);
+	sdev_printk(KERN_NOTICE, sdev, "%s: Detached\n", ALUA_DH_NAME);
+}
 
 static int __init alua_init(void)
 {
