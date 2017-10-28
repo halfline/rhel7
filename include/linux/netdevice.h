@@ -899,7 +899,6 @@ struct tc_to_netdev_rh74;
  *	      use central MTU range checking provided by network core.
  *
  * int (*ndo_setup_tc)(struct net_device *dev, enum tc_setup_type type,
- *		       u32 handle, u32 chain_index, __be16 protocol,
  *		       struct tc_to_netdev *tc);
  *	Called to setup any 'tc' scheduler, classifier or action on @dev.
  *	This is always called from the stack with the rtnl lock held and netif
@@ -954,8 +953,6 @@ struct net_device_ops_extended {
 						  int new_mtu);
 	int			(*ndo_setup_tc)(struct net_device *dev,
 						enum tc_setup_type type,
-						u32 handle, u32 chain_index,
-						__be16 protocol,
 						struct tc_to_netdev *tc);
 };
 
@@ -1984,7 +1981,6 @@ bool __rh_has_ndo_setup_tc(const struct net_device *dev)
 }
 
 int __rh_call_ndo_setup_tc(struct net_device *dev, enum tc_setup_type type,
-			   u32 handle, u32 chain_index, __be16 protocol,
 			   struct tc_to_netdev *tc);
 
 static inline

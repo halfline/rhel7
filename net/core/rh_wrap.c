@@ -5,56 +5,150 @@
 #include <linux/netdevice.h>
 #include <net/pkt_cls.h>
 
-/* Structure tc_to_netdev used by out-of-tree drivers compiled against
+/* Structures used by out-of-tree drivers compiled against
  * RHEL7.4 code base.
  */
+struct tc_cls_u32_offload_rh74 {
+	/* knode values */
+	enum tc_clsu32_command command;
+	union {
+		struct tc_cls_u32_knode knode;
+		struct tc_cls_u32_hnode hnode;
+	};
+};
+
+struct tc_cls_flower_offload_rh74 {
+	enum tc_fl_command command;
+	u32 prio;
+	unsigned long cookie;
+	struct flow_dissector *dissector;
+	struct fl_flow_key *mask;
+	struct fl_flow_key *key;
+	struct tcf_exts *exts;
+};
+
+struct tc_cls_matchall_offload_rh74 {
+	enum tc_matchall_command command;
+	struct tcf_exts *exts;
+	unsigned long cookie;
+};
+
 struct tc_to_netdev_rh74 {
 	unsigned int type;
 	union {
 		u8 tc;
-		struct tc_cls_u32_offload *cls_u32;
-		struct tc_cls_flower_offload *cls_flower;
-		struct tc_cls_matchall_offload *cls_mall;
+		struct tc_cls_u32_offload_rh74 *cls_u32;
+		struct tc_cls_flower_offload_rh74 *cls_flower;
+		struct tc_cls_matchall_offload_rh74 *cls_mall;
 	};
 	bool egress_dev;
 };
 
+static inline
+int handle_sch_mqprio_rh74(struct net_device *dev,
+			   const struct tc_to_netdev *tc)
+{
+	struct tc_to_netdev_rh74 tc74 = {
+		.type	= TC_SETUP_MQPRIO,
+	};
+
+	/* The drivers use value tc->tc instead of tc->mqprio->num_tc */
+	tc74.tc = tc->mqprio->num_tc;
+
+	return dev->netdev_ops->ndo_setup_tc_rh74(dev, 0, 0, &tc74);
+}
+
+static inline
+int handle_cls_u32_rh74(struct net_device *dev, const struct tc_to_netdev *tc)
+{
+	struct tc_cls_u32_offload_rh74 cls_u32 = {
+		.command	= tc->cls_u32->command,
+		.knode		= tc->cls_u32->knode,
+		.hnode		= tc->cls_u32->hnode,
+	};
+	struct tc_to_netdev_rh74 tc74 = {
+		.type		= TC_SETUP_CLSU32,
+		.cls_u32	= &cls_u32,
+	};
+	struct tc_cls_common_offload *common = &tc->cls_u32->common;
+
+	/* All older drivers supports only single chain */
+	if (common->chain_index)
+		return -ENOTSUPP;
+
+	return dev->netdev_ops->ndo_setup_tc_rh74(dev, common->handle,
+						  common->protocol, &tc74);
+}
+
+static inline
+int handle_cls_flower_rh74(struct net_device *dev,
+			   const struct tc_to_netdev *tc)
+{
+	struct tc_cls_flower_offload_rh74 cls_flower = {
+		.command	= tc->cls_flower->command,
+		.prio		= tc->cls_flower->prio,
+		.cookie		= tc->cls_flower->cookie,
+		.dissector	= tc->cls_flower->dissector,
+		.mask		= tc->cls_flower->mask,
+		.key		= tc->cls_flower->key,
+		.exts		= tc->cls_flower->exts,
+	};
+	struct tc_to_netdev_rh74 tc74 = {
+		.type		= TC_SETUP_CLSFLOWER,
+		.cls_flower	= &cls_flower,
+		.egress_dev	= tc->cls_flower->egress_dev,
+	};
+	struct tc_cls_common_offload *common = &tc->cls_flower->common;
+
+	/* All older drivers supports only single chain */
+	if (common->chain_index)
+		return -ENOTSUPP;
+
+	return dev->netdev_ops->ndo_setup_tc_rh74(dev, common->handle,
+						  common->protocol, &tc74);
+}
+
+static inline
+int handle_cls_matchall_rh74(struct net_device *dev,
+			     const struct tc_to_netdev *tc)
+{
+	struct tc_cls_matchall_offload_rh74 cls_mall = {
+		.command	= tc->cls_mall->command,
+		.exts		= tc->cls_mall->exts,
+		.cookie		= tc->cls_mall->cookie,
+	};
+	struct tc_to_netdev_rh74 tc74 = {
+		.type		= TC_SETUP_CLSMATCHALL,
+		.cls_mall	= &cls_mall,
+	};
+	struct tc_cls_common_offload *common = &tc->cls_mall->common;
+
+	/* All older drivers supports only single chain */
+	if (common->chain_index)
+		return -ENOTSUPP;
+
+	return dev->netdev_ops->ndo_setup_tc_rh74(dev, common->handle,
+						  common->protocol, &tc74);
+}
+
 int __rh_call_ndo_setup_tc(struct net_device *dev, enum tc_setup_type type,
-			   u32 handle, u32 chain_index, __be16 protocol,
 			   struct tc_to_netdev *tc)
 {
 	const struct net_device_ops *ops = dev->netdev_ops;
 
 	if (get_ndo_ext(ops, ndo_setup_tc)) {
-		return get_ndo_ext(ops, ndo_setup_tc)(dev, type, handle,
-						      chain_index, protocol,
-						      tc);
-	} else if (chain_index != 0) {
-		/* All older drivers supports only single chain */
-		return -ENOTSUPP;
+		return get_ndo_ext(ops, ndo_setup_tc)(dev, type, tc);
 	} else if (ops->ndo_setup_tc_rh74) {
-		/* Drivers implementing .ndo_setup_tc_rh74() */
-		struct tc_to_netdev_rh74 tc74;
-
-		/* These drivers take 'type' value from the structure. So fill
-		 * it properly.
-		 */
-		tc74.type = type;
-
-		/* These drivers use value tc->egress_dev instead of
-		 * tc->cls_flower->egress_dev.
-		 */
-		if (type == TC_SETUP_CLSFLOWER)
-			tc74.egress_dev = tc->cls_flower->egress_dev;
-
-		/* Copy one of the pointer from the union to copy its content */
-		tc74.cls_u32 = tc->cls_u32;
-
-		/* The drivers use value tc->tc instead of tc->mqprio->num_tc */
-		if (type == TC_SETUP_MQPRIO)
-			tc74.tc = tc->mqprio->num_tc;
-
-		return ops->ndo_setup_tc_rh74(dev, handle, protocol, &tc74);
+		switch (type) {
+		case TC_SETUP_MQPRIO:
+			return handle_sch_mqprio_rh74(dev, tc);
+		case TC_SETUP_CLSU32:
+			return handle_cls_u32_rh74(dev, tc);
+		case TC_SETUP_CLSFLOWER:
+			return handle_cls_flower_rh74(dev, tc);
+		case TC_SETUP_CLSMATCHALL:
+			return handle_cls_matchall_rh74(dev, tc);
+		}
 	} else if (ops->ndo_setup_tc_rh72 && type == TC_SETUP_MQPRIO) {
 		/* Drivers implementing .ndo_setup_tc_rh72()
 		 * Note that drivers that implement .ndo_setup_tc_rh72() can

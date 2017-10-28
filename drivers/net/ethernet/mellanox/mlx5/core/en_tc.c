@@ -1170,7 +1170,7 @@ static int parse_tc_fdb_actions(struct mlx5e_priv *priv, struct tcf_exts *exts,
 	return 0;
 }
 
-int mlx5e_configure_flower(struct mlx5e_priv *priv, __be16 protocol,
+int mlx5e_configure_flower(struct mlx5e_priv *priv,
 			   struct tc_cls_flower_offload *f)
 {
 	struct mlx5e_tc_table *tc = &priv->fs.tc;
