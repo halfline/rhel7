@@ -592,7 +592,7 @@ skip:
 	 *
 	 * We do not bother to audit if 3 things are true:
 	 *   1) cap_effective has all caps
-	 *   2) we are root
+	 *   2) we became root *OR* are were already root
 	 *   3) root is supposed to have all caps (SECURE_NOROOT)
 	 * Since this is just a normal root execing a process.
 	 *
@@ -601,7 +601,7 @@ skip:
 	 */
 	if (!cap_issubset(new->cap_effective, new->cap_ambient)) {
 		if (!cap_issubset(CAP_FULL_SET, new->cap_effective) ||
-		    !uid_eq(new->euid, root_uid) || !uid_eq(new->uid, root_uid) ||
+		    !(uid_eq(new->euid, root_uid) || uid_eq(new->uid, root_uid)) ||
 		    issecure(SECURE_NOROOT)) {
 			ret = audit_log_bprm_fcaps(bprm, new, old);
 			if (ret < 0)
