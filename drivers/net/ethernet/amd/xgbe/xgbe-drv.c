@@ -1931,7 +1931,7 @@ static const struct net_device_ops xgbe_netdev_ops = {
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller	= xgbe_poll_controller,
 #endif
-	.extended.ndo_setup_tc	= xgbe_setup_tc,
+	.extended.ndo_setup_tc_rh = xgbe_setup_tc,
 	.ndo_set_features	= xgbe_set_features,
 };
 

@@ -2269,7 +2269,7 @@ static const struct net_device_ops ef4_netdev_ops = {
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller = ef4_netpoll,
 #endif
-	.extended.ndo_setup_tc	= ef4_setup_tc,
+	.extended.ndo_setup_tc_rh = ef4_setup_tc,
 #ifdef CONFIG_RFS_ACCEL
 	.ndo_rx_flow_steer	= ef4_filter_rfs,
 #endif

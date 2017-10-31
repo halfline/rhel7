@@ -9552,7 +9552,7 @@ static const struct net_device_ops ixgbe_netdev_ops = {
 	.extended.ndo_set_vf_trust	= ixgbe_ndo_set_vf_trust,
 	.ndo_get_vf_config	= ixgbe_ndo_get_vf_config,
 	.ndo_get_stats64	= ixgbe_get_stats64,
-	.extended.ndo_setup_tc	= __ixgbe_setup_tc,
+	.extended.ndo_setup_tc_rh = __ixgbe_setup_tc,
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller	= ixgbe_netpoll,
 #endif

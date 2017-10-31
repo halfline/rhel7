@@ -135,8 +135,8 @@ int __rh_call_ndo_setup_tc(struct net_device *dev, enum tc_setup_type type,
 {
 	const struct net_device_ops *ops = dev->netdev_ops;
 
-	if (get_ndo_ext(ops, ndo_setup_tc)) {
-		return get_ndo_ext(ops, ndo_setup_tc)(dev, type, type_data);
+	if (get_ndo_ext(ops, ndo_setup_tc_rh)) {
+		return get_ndo_ext(ops, ndo_setup_tc_rh)(dev, type, type_data);
 	} else if (ops->ndo_setup_tc_rh74) {
 		switch (type) {
 		case TC_SETUP_MQPRIO:

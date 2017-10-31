@@ -6991,7 +6991,7 @@ static const struct net_device_ops bnxt_netdev_ops = {
 #ifdef CONFIG_NET_POLL_CONTROLLER
 	.ndo_poll_controller	= bnxt_poll_controller,
 #endif
-	.extended.ndo_setup_tc	= bnxt_setup_tc,
+	.extended.ndo_setup_tc_rh = bnxt_setup_tc,
 #ifdef CONFIG_RFS_ACCEL
 	.ndo_rx_flow_steer	= bnxt_rx_flow_steer,
 #endif

@@ -890,6 +890,8 @@ struct tc_to_netdev_rh74;
  *	This is always called from the stack with the rtnl lock held and netif
  *	tx queues stopped. This allows the netdevice to perform queue
  *	management safely.
+ *	RHEL: Note that this callback is not part of kABI and its prototype
+ *	and semantic can be changed across releases.
  */
 struct net_device_ops_extended {
 	int			(*ndo_set_vf_trust)(struct net_device *dev,
@@ -937,9 +939,13 @@ struct net_device_ops_extended {
 							 void *attr_data);
 	int			(*ndo_change_mtu)(struct net_device *dev,
 						  int new_mtu);
-	int			(*ndo_setup_tc)(struct net_device *dev,
-						enum tc_setup_type type,
-						void *type_data);
+	/*
+	 * RHEL: Note that this callback is not part of kABI and its prototype
+	 * and semantic can be changed across releases.
+	 */
+	int			(*ndo_setup_tc_rh)(struct net_device *dev,
+						   enum tc_setup_type type,
+						   void *type_data);
 };
 
 /*
@@ -1961,7 +1967,7 @@ bool __rh_has_ndo_setup_tc(const struct net_device *dev)
 {
 	const struct net_device_ops *ops = dev->netdev_ops;
 
-	return (get_ndo_ext(ops, ndo_setup_tc) ||
+	return (get_ndo_ext(ops, ndo_setup_tc_rh) ||
 		ops->ndo_setup_tc_rh74 ||
 		ops->ndo_setup_tc_rh72) ? true : false;
 }
