@@ -2124,7 +2124,7 @@ busy:
 	if (!(op->flags & FCOP_FLAGS_AEN) && queue->hctx)
 		blk_mq_delay_run_hw_queue(queue->hctx, NVMEFC_QUEUE_DELAY);
 
-	return BLK_MQ_RQ_QUEUE_ERROR;
+	return BLK_MQ_RQ_QUEUE_BUSY;
 }
 
 static int
