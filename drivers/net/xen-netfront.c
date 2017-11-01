@@ -1244,10 +1244,11 @@ static void xennet_poll_controller(struct net_device *dev)
 #endif
 
 static const struct net_device_ops xennet_netdev_ops = {
+	.ndo_size	     = sizeof(struct net_device_ops),
 	.ndo_open            = xennet_open,
 	.ndo_stop            = xennet_close,
 	.ndo_start_xmit      = xennet_start_xmit,
-	.ndo_change_mtu_rh74 = xennet_change_mtu,
+	.extended.ndo_change_mtu = xennet_change_mtu,
 	.ndo_get_stats64     = xennet_get_stats64,
 	.ndo_set_mac_address = eth_mac_addr,
 	.ndo_validate_addr   = eth_validate_addr,
@@ -1306,6 +1307,8 @@ static struct net_device *xennet_create_dev(struct xenbus_device *dev)
 	netdev->features |= netdev->hw_features;
 
 	SET_ETHTOOL_OPS(netdev, &xennet_ethtool_ops);
+	netdev->extended->min_mtu = 0;
+	netdev->extended->max_mtu = XEN_NETIF_MAX_TX_SIZE;
 	SET_NETDEV_DEV(netdev, &dev->dev);
 
 	netif_set_gso_max_size(netdev, XEN_NETIF_MAX_TX_SIZE - MAX_TCP_HEADER);

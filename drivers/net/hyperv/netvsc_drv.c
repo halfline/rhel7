@@ -944,18 +944,11 @@ static int netvsc_change_mtu(struct net_device *ndev, int mtu)
 	struct hv_device *hdev = ndevctx->device_ctx;
 	int orig_mtu = ndev->mtu;
 	struct netvsc_device_info device_info;
-	int limit = ETH_DATA_LEN;
 	bool was_opened;
 	int ret = 0;
 
 	if (!nvdev || nvdev->destroy)
 		return -ENODEV;
-
-	if (nvdev->nvsp_version >= NVSP_PROTOCOL_VERSION_2)
-		limit = NETVSC_MTU - ETH_HLEN;
-
-	if (mtu < NETVSC_MTU_MIN || mtu > limit)
-		return -EINVAL;
 
 	/* Change MTU of underlying VF netdev first. */
 	if (vf_netdev) {
@@ -1557,11 +1550,12 @@ static const struct ethtool_ops ethtool_ops = {
 };
 
 static const struct net_device_ops device_ops = {
+	.ndo_size =			sizeof(struct net_device_ops),
 	.ndo_open =			netvsc_open,
 	.ndo_stop =			netvsc_close,
 	.ndo_start_xmit =		netvsc_start_xmit,
 	.ndo_set_rx_mode =		netvsc_set_multicast_list,
-	.ndo_change_mtu_rh74 =		netvsc_change_mtu,
+	.extended.ndo_change_mtu =	netvsc_change_mtu,
 	.ndo_validate_addr =		eth_validate_addr,
 	.ndo_set_mac_address =		netvsc_set_mac_addr,
 	.ndo_select_queue =		netvsc_select_queue,
@@ -1976,6 +1970,13 @@ static int netvsc_probe(struct hv_device *dev,
 	net->vlan_features = net->features;
 
 	netdev_lockdep_set_classes(net);
+
+	/* MTU range: 68 - 1500 or 65521 */
+	net->extended->min_mtu = NETVSC_MTU_MIN;
+	if (nvdev->nvsp_version >= NVSP_PROTOCOL_VERSION_2)
+		net->extended->max_mtu = NETVSC_MTU - ETH_HLEN;
+	else
+		net->extended->max_mtu = ETH_DATA_LEN;
 
 	ret = register_netdev(net);
 	if (ret != 0) {
