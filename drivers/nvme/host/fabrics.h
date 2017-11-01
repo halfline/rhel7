@@ -139,7 +139,7 @@ nvmf_ctlr_matches_baseopts(struct nvme_ctrl *ctrl,
 {
 	if (strcmp(opts->subsysnqn, ctrl->opts->subsysnqn) ||
 	    strcmp(opts->host->nqn, ctrl->opts->host->nqn) ||
-	    memcmp(&opts->host->id, &ctrl->opts->host->id, sizeof(uuid_t)))
+	    memcmp(&opts->host->id, &ctrl->opts->host->id, sizeof(uuid_be)))
 		return false;
 
 	return true;
