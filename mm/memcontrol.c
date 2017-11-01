@@ -3161,8 +3161,12 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
 	struct memcg_cache_params *cur_params = s->memcg_params;
 
 	VM_BUG_ON(s->memcg_params && !s->memcg_params->is_root_cache);
-
-	if (num_groups > memcg_limited_groups_array_size) {
+	/*
+	 * Need to do this if we are increasing the size or there are
+	 * kmem_caches with null memcg_params otherwise we will dereference
+	 * in  __memcg_kmem_get_cache()
+	 */
+	if (num_groups > memcg_limited_groups_array_size || !cur_params) {
 		int i;
 		ssize_t size = memcg_caches_array_size(num_groups);
 
@@ -3176,6 +3180,10 @@ int memcg_update_cache_size(struct kmem_cache *s, int num_groups)
 		}
 
 		s->memcg_params->is_root_cache = true;
+
+		/* if there was no kmem_cache->memcg_params, first time so we are done */
+		if (!cur_params)
+			return 0;
 
 		/*
 		 * There is the chance it will be bigger than
