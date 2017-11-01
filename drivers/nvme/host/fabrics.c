@@ -559,7 +559,7 @@ static int nvmf_parse_options(struct nvmf_ctrl_options *opts,
 	int token, ret = 0;
 	size_t nqnlen  = 0;
 	int ctrl_loss_tmo = NVMF_DEF_CTRL_LOSS_TMO;
-	uuid_t hostid;
+	uuid_be hostid;
 
 	/* Set defaults */
 	opts->queue_size = NVMF_DEF_QUEUE_SIZE;
@@ -570,7 +570,7 @@ static int nvmf_parse_options(struct nvmf_ctrl_options *opts,
 	if (!options)
 		return -ENOMEM;
 
-	uuid_gen(&hostid);
+	uuid_be_gen(&hostid);
 
 	while ((p = strsep(&o, ",\n")) != NULL) {
 		if (!*p)
@@ -734,7 +734,7 @@ static int nvmf_parse_options(struct nvmf_ctrl_options *opts,
 				ret = -ENOMEM;
 				goto out;
 			}
-			if (uuid_parse(p, &hostid)) {
+			if (uuid_be_to_bin(p, &hostid)) {
 				ret = -EINVAL;
 				goto out;
 			}
@@ -758,7 +758,7 @@ static int nvmf_parse_options(struct nvmf_ctrl_options *opts,
 		opts->host = nvmf_default_host;
 	}
 
-	uuid_copy(&opts->host->id, &hostid);
+	memcpy(&opts->host->id, &hostid, sizeof(uuid_be));
 
 out:
 	if (!opts->discovery_nqn && !opts->kato)
