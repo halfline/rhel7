@@ -279,6 +279,7 @@ extern int ftrace_nr_registered_ops(void);
  *  REGS    - the record wants the function to save regs
  *  REGS_EN - the function is set up to save regs.
  *  IPMODIFY - the record allows for the IP address to be changed.
+ *  DISABLED - the record is not ready to be touched yet
  *
  * When a new ftrace_ops is registered and wants a function to save
  * pt_regs, the rec->flag REGS is set. When the function has been
@@ -291,10 +292,11 @@ enum {
 	FTRACE_FL_REGS		= (1UL << 30),
 	FTRACE_FL_REGS_EN	= (1UL << 29),
 	FTRACE_FL_IPMODIFY	= (1UL << 28),
+	FTRACE_FL_DISABLED	= (1UL << 27),
 };
 
-#define FTRACE_REF_MAX_SHIFT	28
-#define FTRACE_FL_BITS		4
+#define FTRACE_REF_MAX_SHIFT	27
+#define FTRACE_FL_BITS		5
 #define FTRACE_FL_MASKED_BITS	((1UL << FTRACE_FL_BITS) - 1)
 #define FTRACE_FL_MASK		(FTRACE_FL_MASKED_BITS << FTRACE_REF_MAX_SHIFT)
 #define FTRACE_REF_MAX		((1UL << FTRACE_REF_MAX_SHIFT) - 1)
