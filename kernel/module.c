@@ -1969,6 +1969,7 @@ static void free_module(struct module *mod)
 	mod_ext = find_module_ext(mod);
 	list_del(&mod_ext->next);
 	mutex_unlock(&module_ext_mutex);
+	kfree(mod_ext);
 
 	/* This may be NULL, but that's OK */
 	unset_module_init_ro_nx(mod);
@@ -3519,6 +3520,7 @@ static int load_module(struct load_info *info, const char __user *uargs,
 	mutex_lock(&module_ext_mutex);
 	list_del(&mod_ext->next);
 	mutex_unlock(&module_ext_mutex);
+	kfree(mod_ext);
  free_unload:
 	module_unload_free(mod);
  unlink_mod:
