@@ -556,6 +556,9 @@ struct request_queue {
 	RH_KABI_EXTEND(struct dentry		*debugfs_dir)
 	RH_KABI_EXTEND(struct dentry		*sched_debugfs_dir)
 #endif
+#ifdef CONFIG_BLK_DEV_IO_TRACE
+	RH_KABI_EXTEND(struct mutex		blk_trace_mutex)
+#endif
 };
 
 #define QUEUE_FLAG_QUEUED	1	/* uses generic tag queueing */
