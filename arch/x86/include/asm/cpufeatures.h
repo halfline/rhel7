@@ -209,9 +209,6 @@
 #define X86_FEATURE_EPT         (8*32+ 3) /* Intel Extended Page Table */
 #define X86_FEATURE_VPID        (8*32+ 4) /* Intel Virtual Processor ID */
 
-#define X86_FEATURE_AVIC	(8*32+15) /* AMD Virtual Interrupt Controller */
-
-
 /* Intel-defined CPU features, CPUID level 0x00000007:0 (ebx), word 9 */
 #define X86_FEATURE_FSGSBASE	(9*32+ 0) /* {RD/WR}{FS/GS}BASE instructions*/
 #define X86_FEATURE_TSC_ADJUST	(9*32+ 1) /* TSC adjustment MSR 0x3b */
@@ -283,6 +280,7 @@
 #define X86_FEATURE_DECODEASSISTS (15*32+ 7) /* Decode Assists support */
 #define X86_FEATURE_PAUSEFILTER (15*32+10) /* filtered pause intercept */
 #define X86_FEATURE_PFTHRESHOLD (15*32+12) /* pause filter threshold */
+#define X86_FEATURE_AVIC	(15*32+13) /* Virtual Interrupt Controller */
 
 /* Intel-defined CPU features, CPUID level 0x00000007:0 (ecx), word 16 */
 #define X86_FEATURE_AVX512VBMI	(16*32+ 1) /* AVX512 Vector Bit Manipulation instructions*/
