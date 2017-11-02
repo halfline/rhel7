@@ -20,6 +20,7 @@
 #include <asm/processor-flags.h>
 #include <asm/percpu.h>
 #include <asm/nops.h>
+#include <asm/calling.h>
 
 #ifdef CONFIG_PARAVIRT
 #include <asm/asm-offsets.h>
@@ -292,6 +293,7 @@ ENTRY(start_cpu)
 	 *		address given in m16:64.
 	 */
 	call	1f		# put return address on stack for unwinder
+	UNWIND_END_OF_STACK
 1:	xorq	%rbp, %rbp	# clear frame pointer
 	movq	initial_code(%rip), %rax
 	pushq	$__KERNEL_CS	# set correct cs

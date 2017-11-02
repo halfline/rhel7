@@ -252,6 +252,9 @@
 									\
 	BUG_TABLE							\
 									\
+	UNWIND_END_OF_STACK_TABLE					\
+	UNWIND_UNSAFE_STACK_TABLE					\
+									\
 	/* PCI quirks */						\
 	.pci_fixup        : AT(ADDR(.pci_fixup) - LOAD_OFFSET) {	\
 		VMLINUX_SYMBOL(__start_pci_fixups_early) = .;		\
@@ -630,6 +633,26 @@
 	}
 #else
 #define BUG_TABLE
+#endif
+
+#ifdef CONFIG_X86_64
+#define UNWIND_END_OF_STACK_TABLE					\
+	. = ALIGN(8);							\
+	__unwind_end_of_stack : AT(ADDR(__unwind_end_of_stack) - LOAD_OFFSET) {\
+		VMLINUX_SYMBOL(__start___unwind_end_of_stack) = .;	\
+		*(__unwind_end_of_stack)				\
+		VMLINUX_SYMBOL(__stop___unwind_end_of_stack) = .;	\
+	}
+#define UNWIND_UNSAFE_STACK_TABLE					\
+	. = ALIGN(8);							\
+	__unwind_unsafe_stack : AT(ADDR(__unwind_unsafe_stack) - LOAD_OFFSET) {\
+		VMLINUX_SYMBOL(__start___unwind_unsafe_stack) = .;	\
+		*(__unwind_unsafe_stack)				\
+		VMLINUX_SYMBOL(__stop___unwind_unsafe_stack) = .;	\
+	}
+#else
+#define UNWIND_END_OF_STACK_TABLE
+#define UNWIND_UNSAFE_STACK_TABLE
 #endif
 
 #ifdef CONFIG_PM_TRACE
