@@ -763,12 +763,6 @@ static int init_resources(struct ibmvnic_adapter *adapter)
 	if (rc)
 		return rc;
 
-	rc = init_sub_crq_irqs(adapter);
-	if (rc) {
-		netdev_err(netdev, "failed to initialize sub crq irqs\n");
-		return -1;
-	}
-
 	rc = init_stats_token(adapter);
 	if (rc)
 		return rc;
@@ -1804,7 +1798,6 @@ static int reset_sub_crq_queues(struct ibmvnic_adapter *adapter)
 			return rc;
 	}
 
-	rc = init_sub_crq_irqs(adapter);
 	return rc;
 }
 
@@ -3669,6 +3662,13 @@ static int ibmvnic_init(struct ibmvnic_adapter *adapter)
 		rc = init_sub_crqs(adapter);
 	if (rc) {
 		dev_err(dev, "Initialization of sub crqs failed\n");
+		release_crq_queue(adapter);
+		return rc;
+	}
+
+	rc = init_sub_crq_irqs(adapter);
+	if (rc) {
+		dev_err(dev, "Failed to initialize sub crq irqs\n");
 		release_crq_queue(adapter);
 	}
 
