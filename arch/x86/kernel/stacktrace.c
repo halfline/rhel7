@@ -28,7 +28,7 @@ static int save_stack_address(struct stack_trace *trace, unsigned long addr,
 	return 0;
 }
 
-static void __save_stack_trace(struct stack_trace *trace,
+static void noinline __save_stack_trace(struct stack_trace *trace,
 			       struct task_struct *task, struct pt_regs *regs,
 			       bool nosched)
 {
@@ -54,6 +54,7 @@ static void __save_stack_trace(struct stack_trace *trace,
  */
 void save_stack_trace(struct stack_trace *trace)
 {
+	trace->skip++;
 	__save_stack_trace(trace, current, NULL, false);
 }
 EXPORT_SYMBOL_GPL(save_stack_trace);
@@ -65,14 +66,18 @@ void save_stack_trace_regs(struct pt_regs *regs, struct stack_trace *trace)
 
 void save_stack_trace_tsk(struct task_struct *tsk, struct stack_trace *trace)
 {
+	if (tsk == current)
+		trace->skip++;
+
 	__save_stack_trace(trace, tsk, NULL, true);
 }
 EXPORT_SYMBOL_GPL(save_stack_trace_tsk);
 
 #ifdef CONFIG_HAVE_RELIABLE_STACKTRACE
 
-static int __save_stack_trace_reliable(struct stack_trace *trace,
-				       struct task_struct *task)
+static int __always_inline
+__save_stack_trace_reliable(struct stack_trace *trace,
+			    struct task_struct *task)
 {
 	struct unwind_state state;
 	unsigned long addr;
