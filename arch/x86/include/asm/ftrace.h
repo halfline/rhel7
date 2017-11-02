@@ -39,6 +39,7 @@
 # define MCOUNT_ADDR		((unsigned long)(__fentry__))
 #else
 # define MCOUNT_ADDR		((unsigned long)(mcount))
+# define HAVE_FUNCTION_GRAPH_FP_TEST
 #endif
 #define MCOUNT_INSN_SIZE	5 /* sizeof mcount call */
 
