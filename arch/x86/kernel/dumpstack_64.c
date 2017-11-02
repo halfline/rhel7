@@ -140,43 +140,6 @@ unknown:
 	return -EINVAL;
 }
 
-void show_stack_log_lvl(struct task_struct *task, struct pt_regs *regs,
-			unsigned long *sp, char *log_lvl)
-{
-	unsigned long *irq_stack_end;
-	unsigned long *irq_stack;
-	unsigned long *stack;
-	int i;
-
-	irq_stack_end = (unsigned long *)this_cpu_read(irq_stack_ptr);
-	irq_stack     = irq_stack_end - (IRQ_STACK_SIZE / sizeof(long));
-
-	sp = sp ? : get_stack_pointer(task, regs);
-
-	stack = sp;
-	for (i = 0; i < kstack_depth_to_print; i++) {
-		if (stack >= irq_stack && stack <= irq_stack_end) {
-			if (stack == irq_stack_end) {
-				stack = (unsigned long *) (irq_stack_end[-1]);
-				pr_cont(" <EOI> ");
-			}
-		} else {
-		if (((long) stack & (THREAD_SIZE-1)) == 0)
-			break;
-		}
-		if ((i % STACKSLOTS_PER_LINE) == 0) {
-			if (i != 0)
-				pr_cont("\n");
-			printk("%s %016lx", log_lvl, *stack++);
-		} else
-			pr_cont(" %016lx", *stack++);
-		touch_nmi_watchdog();
-	}
-
-	pr_cont("\n");
-	show_trace_log_lvl(task, regs, sp, log_lvl);
-}
-
 void show_regs(struct pt_regs *regs)
 {
 	int i;
@@ -194,8 +157,7 @@ void show_regs(struct pt_regs *regs)
 		unsigned char c;
 		u8 *ip;
 
-		printk(KERN_DEFAULT "Stack:\n");
-		show_stack_log_lvl(current, regs, NULL, KERN_DEFAULT);
+		show_trace_log_lvl(current, regs, NULL, KERN_DEFAULT);
 
 		printk(KERN_DEFAULT "Code: ");
 

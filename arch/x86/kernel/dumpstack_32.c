@@ -17,38 +17,6 @@
 #include <asm/stacktrace.h>
 
 
-void show_stack_log_lvl(struct task_struct *task, struct pt_regs *regs,
-			unsigned long *sp, char *log_lvl)
-{
-	unsigned long *stack;
-	int i;
-
-	if (sp == NULL) {
-		if (regs)
-			sp = (unsigned long *)regs->sp;
-		else if (task)
-			sp = (unsigned long *)task->thread.sp;
-		else
-			sp = (unsigned long *)&sp;
-	}
-
-	stack = sp;
-	for (i = 0; i < kstack_depth_to_print; i++) {
-		if (kstack_end(stack))
-			break;
-		if ((i % STACKSLOTS_PER_LINE) == 0) {
-			if (i != 0)
-				pr_cont("\n");
-			printk("%s %08lx", log_lvl, *stack++);
-		} else
-			pr_cont(" %08lx", *stack++);
-		touch_nmi_watchdog();
-	}
-	pr_cont("\n");
-	show_trace_log_lvl(task, regs, sp, log_lvl);
-}
-
-
 void show_regs(struct pt_regs *regs)
 {
 	int i;
@@ -66,8 +34,7 @@ void show_regs(struct pt_regs *regs)
 		unsigned char c;
 		u8 *ip;
 
-		pr_emerg("Stack:\n");
-		show_stack_log_lvl(current, regs, NULL, KERN_EMERG);
+		show_trace_log_lvl(current, regs, NULL, KERN_EMERG);
 
 		pr_emerg("Code:");
 
