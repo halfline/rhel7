@@ -12,7 +12,7 @@ struct unwind_state {
 	struct task_struct *task;
 	int graph_idx;
 #ifdef CONFIG_FRAME_POINTER
-	unsigned long *bp;
+	unsigned long *bp, ip;
 #else
 	unsigned long *sp;
 #endif
