@@ -54,6 +54,7 @@
 #include <asm/sections.h>
 #include <linux/tracepoint.h>
 #include <linux/ftrace.h>
+#include <linux/livepatch.h>
 #include <linux/async.h>
 #include <linux/percpu.h>
 #include <linux/kmemleak.h>
@@ -967,6 +968,7 @@ SYSCALL_DEFINE2(delete_module, const char __user *, name_user,
 		mod->exit();
 	blocking_notifier_call_chain(&module_notify_list,
 				     MODULE_STATE_GOING, mod);
+	klp_module_going(mod);
 	ftrace_release_mod(mod);
 
 	async_synchronize_full();
@@ -3245,6 +3247,7 @@ static int do_init_module(struct module *mod)
 		module_put(mod);
 		blocking_notifier_call_chain(&module_notify_list,
 					     MODULE_STATE_GOING, mod);
+		klp_module_going(mod);
 		ftrace_release_mod(mod);
 		free_module(mod);
 		wake_up_all(&module_wq);
@@ -3382,7 +3385,13 @@ out:
 
 static int prepare_coming_module(struct module *mod)
 {
+	int err;
+
 	ftrace_module_enable(mod);
+	err = klp_module_coming(mod);
+	if (err)
+		return err;
+
 	blocking_notifier_call_chain(&module_notify_list,
 				     MODULE_STATE_COMING, mod);
 	return 0;
@@ -3530,6 +3539,7 @@ static int load_module(struct load_info *info, const char __user *uargs,
 	mod->state = MODULE_STATE_GOING;
 	blocking_notifier_call_chain(&module_notify_list,
 				     MODULE_STATE_GOING, mod);
+	klp_module_going(mod);
 
  bug_cleanup:
 	/* module_bug_cleanup needs module_mutex protection */
