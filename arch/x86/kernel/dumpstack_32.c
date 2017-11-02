@@ -17,43 +17,6 @@
 #include <asm/stacktrace.h>
 
 
-void dump_trace(struct task_struct *task, struct pt_regs *regs,
-		unsigned long *stack, unsigned long bp,
-		const struct stacktrace_ops *ops, void *data)
-{
-	int graph = 0;
-
-	if (!task)
-		task = current;
-
-	if (!stack) {
-		unsigned long dummy;
-
-		stack = &dummy;
-		if (task && task != current)
-			stack = (unsigned long *)task->thread.sp;
-	}
-
-	if (!bp)
-		bp = stack_frame(task, regs);
-
-	for (;;) {
-		struct thread_info *context;
-
-		context = (struct thread_info *)
-			((unsigned long)stack & (~(THREAD_SIZE - 1)));
-		bp = ops->walk_stack(context, stack, bp, ops, data, NULL, &graph);
-
-		stack = (unsigned long *)context->previous_esp;
-		if (!stack)
-			break;
-		if (ops->stack(data, "IRQ") < 0)
-			break;
-		touch_nmi_watchdog();
-	}
-}
-EXPORT_SYMBOL(dump_trace);
-
 void show_stack_log_lvl(struct task_struct *task, struct pt_regs *regs,
 			unsigned long *sp, char *log_lvl)
 {
