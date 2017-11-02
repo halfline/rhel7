@@ -77,6 +77,7 @@
 #ifndef __GENKSYMS__
 #include <linux/user_namespace.h>
 #endif
+#include <linux/livepatch.h>
 
 #include <asm/pgtable.h>
 #include <asm/pgalloc.h>
@@ -1599,6 +1600,8 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 		p->real_parent = current;
 		p->parent_exec_id = current->self_exec_id;
 	}
+
+	klp_copy_process(p);
 
 	spin_lock(&current->sighand->siglock);
 

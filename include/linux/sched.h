@@ -1772,7 +1772,11 @@ struct task_struct {
 #else
 	RH_KABI_RESERVE(5)
 #endif
+#ifdef CONFIG_LIVEPATCH
+	RH_KABI_USE(6, int patch_state)
+#else
 	RH_KABI_RESERVE(6)
+#endif
 	RH_KABI_RESERVE(7)
 	RH_KABI_RESERVE(8)
 #ifndef __GENKSYMS__
