@@ -547,6 +547,12 @@ config ARCH_MMAP_RND_COMPAT_BITS
 	  This value can be changed after boot using the
 	  /proc/sys/vm/mmap_rnd_compat_bits tunable
 
+config HAVE_RELIABLE_STACKTRACE
+	bool
+	help
+	  Architecture has a save_stack_trace_tsk_reliable() function which
+	  only returns a stack trace if it can guarantee the trace is reliable.
+
 #
 # ABI hall of shame
 #

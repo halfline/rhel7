@@ -96,6 +96,7 @@ bool unwind_next_frame(struct unwind_state *state)
 	return true;
 
 bad_address:
+	state->error = true;
 
 the_end:
 	state->stack_info.type = STACK_TYPE_UNKNOWN;
