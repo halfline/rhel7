@@ -121,7 +121,7 @@ print_graph_duration(unsigned long long duration, struct trace_seq *s,
 /* Add a function return address to the trace stack on thread info.*/
 int
 ftrace_push_return_trace(unsigned long ret, unsigned long func, int *depth,
-			 unsigned long frame_pointer)
+			 unsigned long frame_pointer, unsigned long *retp)
 {
 	unsigned long long calltime;
 	int index;
@@ -154,6 +154,9 @@ ftrace_push_return_trace(unsigned long ret, unsigned long func, int *depth,
 	current->ret_stack[index].subtime = 0;
 #ifdef HAVE_FUNCTION_GRAPH_FP_TEST
 	current->ret_stack[index].fp = frame_pointer;
+#endif
+#ifdef HAVE_FUNCTION_GRAPH_RET_ADDR_PTR
+	current->ret_stack[index].retp = retp;
 #endif
 	*depth = index;
 

@@ -685,7 +685,7 @@ struct ftrace_ret_stack {
 	unsigned long func;
 	unsigned long long calltime;
 	unsigned long long subtime;
-	unsigned long fp;
+	RH_KABI_REPLACE(unsigned long fp, unsigned long *retp)
 };
 
 /*
@@ -697,7 +697,7 @@ extern void return_to_handler(void);
 
 extern int
 ftrace_push_return_trace(unsigned long ret, unsigned long func, int *depth,
-			 unsigned long frame_pointer);
+			 unsigned long frame_pointer, unsigned long *retp);
 
 /*
  * Sometimes we don't want to trace a function with the function
