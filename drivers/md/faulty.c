@@ -170,7 +170,7 @@ static void add_sector(struct faulty_conf *conf, sector_t start, int mode)
 		conf->nfaults = n+1;
 }
 
-static bool faulty_make_request(struct mddev *mddev, struct bio *bio)
+static void faulty_make_request(struct mddev *mddev, struct bio *bio)
 {
 	struct faulty_conf *conf = mddev->private;
 	int failit = 0;
@@ -182,7 +182,7 @@ static bool faulty_make_request(struct mddev *mddev, struct bio *bio)
 			 * just fail immediately
 			 */
 			bio_endio(bio, -EIO);
-			return true;
+			return;
 		}
 
 		if (check_sector(conf, bio->bi_sector, bio_end_sector(bio), WRITE))
@@ -219,7 +219,6 @@ static bool faulty_make_request(struct mddev *mddev, struct bio *bio)
 		bio->bi_bdev = conf->rdev->bdev;
 
 	generic_make_request(bio);
-	return true;
 }
 
 static void faulty_status(struct seq_file *seq, struct mddev *mddev)
