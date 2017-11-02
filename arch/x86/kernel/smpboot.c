@@ -783,7 +783,7 @@ wakeup_secondary_cpu_via_init(int phys_apicid, unsigned long start_eip)
 	 * target processor state.
 	 */
 	startup_ipi_hook(phys_apicid, (unsigned long) start_secondary,
-			 stack_start);
+			 initial_stack);
 
 	/*
 	 * Run STARTUP IPI loop.
@@ -966,7 +966,7 @@ static int do_boot_cpu(int apicid, int cpu, struct task_struct *idle)
 #endif
 	early_gdt_descr.address = (unsigned long)get_cpu_gdt_table(cpu);
 	initial_code = (unsigned long)start_secondary;
-	stack_start  = idle->thread.sp;
+	initial_stack  = idle->thread.sp;
 
 	/* So we see what's up */
 	announce_cpu(cpu, apicid);
