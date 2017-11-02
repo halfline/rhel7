@@ -1882,6 +1882,22 @@ static void unset_module_init_ro_nx(struct module *mod)
 			  set_memory_rw, set_memory_x);
 }
 
+void module_disable_ro(const struct module *mod)
+{
+	set_memory_rw((unsigned long)mod->module_core,
+		      mod->core_ro_size >> PAGE_SHIFT);
+	set_memory_rw((unsigned long)mod->module_init,
+		      mod->init_ro_size >> PAGE_SHIFT);
+}
+
+void module_enable_ro(const struct module *mod)
+{
+	set_memory_ro((unsigned long)mod->module_core,
+		      mod->core_ro_size >> PAGE_SHIFT);
+	set_memory_ro((unsigned long)mod->module_init,
+		      mod->init_ro_size >> PAGE_SHIFT);
+}
+
 /* Iterate through all modules and set each module's text as RW */
 void set_all_modules_text_rw(void)
 {
