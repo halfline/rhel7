@@ -222,6 +222,15 @@ struct module_ref {
 	unsigned long decs;
 } __attribute((aligned(2 * sizeof(unsigned long))));
 
+#ifdef CONFIG_LIVEPATCH
+struct klp_modinfo {
+	Elf_Ehdr hdr;
+	Elf_Shdr *sechdrs;
+	char *secstrings;
+	unsigned int symndx;
+};
+#endif
+
 /* extended module structure for RHEL */
 struct module_ext {
 	struct list_head next;
@@ -232,7 +241,11 @@ struct module_ext {
 	unsigned long *ftrace_callsites;
 #endif
 #ifdef CONFIG_LIVEPATCH
+	bool klp; /* Is this a livepatch module? */
 	bool klp_alive;
+
+	/* Elf information */
+	struct klp_modinfo *klp_info;
 #endif
 };
 
@@ -533,6 +546,24 @@ int unregister_module_notifier(struct notifier_block * nb);
 extern void print_modules(void);
 
 bool check_module_rhelversion(struct module *mod, char *version);
+
+#ifdef CONFIG_LIVEPATCH
+static inline bool is_livepatch_module(struct module *mod)
+{
+	bool klp;
+
+	mutex_lock(&module_ext_mutex);
+	klp = find_module_ext(mod)->klp;
+	mutex_unlock(&module_ext_mutex);
+
+	return klp;
+}
+#else /* !CONFIG_LIVEPATCH */
+static inline bool is_livepatch_module(struct module *mod)
+{
+	return false;
+}
+#endif /* CONFIG_LIVEPATCH */
 
 #else /* !CONFIG_MODULES... */
 

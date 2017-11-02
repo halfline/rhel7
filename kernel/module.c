@@ -1955,6 +1955,93 @@ static void unset_module_core_ro_nx(struct module *mod) { }
 static void unset_module_init_ro_nx(struct module *mod) { }
 #endif
 
+#ifdef CONFIG_LIVEPATCH
+/*
+ * Persist Elf information about a module. Copy the Elf header,
+ * section header table, section string table, and symtab section
+ * index from info to mod_ext->klp_info.
+ */
+static int copy_module_elf(struct module *mod, struct load_info *info)
+{
+	unsigned int size, symndx;
+	int ret;
+	struct module_ext *mod_ext;
+
+	mutex_lock(&module_ext_mutex);
+	mod_ext = find_module_ext(mod);
+	mutex_unlock(&module_ext_mutex);
+
+	size = sizeof(*mod_ext->klp_info);
+	mod_ext->klp_info = kmalloc(size, GFP_KERNEL);
+	if (mod_ext->klp_info == NULL)
+		return -ENOMEM;
+
+	/* Elf header */
+	size = sizeof(mod_ext->klp_info->hdr);
+	memcpy(&mod_ext->klp_info->hdr, info->hdr, size);
+
+	/* Elf section header table */
+	size = sizeof(*info->sechdrs) * info->hdr->e_shnum;
+	mod_ext->klp_info->sechdrs = kmalloc(size, GFP_KERNEL);
+	if (mod_ext->klp_info->sechdrs == NULL) {
+		ret = -ENOMEM;
+		goto free_info;
+	}
+	memcpy(mod_ext->klp_info->sechdrs, info->sechdrs, size);
+
+	/* Elf section name string table */
+	size = info->sechdrs[info->hdr->e_shstrndx].sh_size;
+	mod_ext->klp_info->secstrings = kmalloc(size, GFP_KERNEL);
+	if (mod_ext->klp_info->secstrings == NULL) {
+		ret = -ENOMEM;
+		goto free_sechdrs;
+	}
+	memcpy(mod_ext->klp_info->secstrings, info->secstrings, size);
+
+	/* Elf symbol section index */
+	symndx = info->index.sym;
+	mod_ext->klp_info->symndx = symndx;
+
+	/*
+	 * For livepatch modules, core_symtab is a complete
+	 * copy of the original symbol table. Adjust sh_addr to point
+	 * to core_symtab since the copy of the symtab in module
+	 * init memory is freed at the end of do_init_module().
+	 */
+	mod_ext->klp_info->sechdrs[symndx].sh_addr = \
+		(unsigned long) mod->core_symtab;
+
+	return 0;
+
+free_sechdrs:
+	kfree(mod_ext->klp_info->sechdrs);
+free_info:
+	kfree(mod_ext->klp_info);
+	return ret;
+}
+
+static void free_module_elf(struct module *mod)
+{
+	struct module_ext *mod_ext;
+
+	mutex_lock(&module_ext_mutex);
+	mod_ext = find_module_ext(mod);
+	kfree(mod_ext->klp_info->sechdrs);
+	kfree(mod_ext->klp_info->secstrings);
+	kfree(mod_ext->klp_info);
+	mutex_unlock(&module_ext_mutex);
+}
+#else /* !CONFIG_LIVEPATCH */
+static int copy_module_elf(struct module *mod, struct load_info *info)
+{
+	return 0;
+}
+
+static void free_module_elf(struct module *mod)
+{
+}
+#endif /* CONFIG_LIVEPATCH */
+
 void __weak module_free(struct module *mod, void *module_region)
 {
 	vfree(module_region);
@@ -1990,6 +2077,9 @@ static void free_module(struct module *mod)
 
 	/* Free any allocated parameters. */
 	destroy_params(mod->kp, mod->num_kp);
+
+	if (is_livepatch_module(mod))
+		free_module_elf(mod);
 
 	/* Now we can delete it from the lists */
 	mutex_lock(&module_mutex);
@@ -2102,6 +2192,10 @@ static int simplify_symbols(struct module *mod, const struct load_info *info)
 			       (long)sym[i].st_value);
 			break;
 
+		case SHN_LIVEPATCH:
+			/* Livepatch symbols are resolved by livepatch */
+			break;
+
 		case SHN_UNDEF:
 			ksym = resolve_symbol_wait(mod, info, name);
 			/* Ok if resolved.  */
@@ -2148,6 +2242,10 @@ static int apply_relocations(struct module *mod, const struct load_info *info)
 
 		/* Don't bother with non-allocated sections */
 		if (!(info->sechdrs[infosec].sh_flags & SHF_ALLOC))
+			continue;
+
+		/* Livepatch relocation sections are applied by livepatch */
+		if (info->sechdrs[i].sh_flags & SHF_RELA_LIVEPATCH)
 			continue;
 
 		if (info->sechdrs[i].sh_type == SHT_REL)
@@ -2295,7 +2393,7 @@ static char *next_string(char *string, unsigned long *secsize)
 	return string;
 }
 
-static char *get_modinfo(struct load_info *info, const char *tag)
+static char *get_modinfo(const struct load_info *info, const char *tag)
 {
 	char *p;
 	unsigned int taglen = strlen(tag);
@@ -2446,6 +2544,7 @@ static void layout_symtab(struct module *mod, struct load_info *info)
 	/* Compute total space required for the core symbols' strtab. */
 	for (ndst = i = 0; i < nsrc; i++) {
 		if (i == 0 ||
+		    (IS_ENABLED(CONFIG_LIVEPATCH) && get_modinfo(info, "livepatch")) ||
 		    is_core_symbol(src+i, info->sechdrs, info->hdr->e_shnum,
 				   info->index.pcpu)) {
 			strtab_size += strlen(&info->strtab[src[i].st_name])+1;
@@ -2487,6 +2586,7 @@ static void add_kallsyms(struct module *mod, const struct load_info *info)
 	src = mod->symtab;
 	for (ndst = i = 0; i < mod->num_symtab; i++) {
 		if (i == 0 ||
+		    (IS_ENABLED(CONFIG_LIVEPATCH) && get_modinfo(info, "livepatch")) ||
 		    is_core_symbol(src+i, info->sechdrs, info->hdr->e_shnum,
 				   info->index.pcpu)) {
 			dst[ndst] = src[i];
@@ -2624,16 +2724,27 @@ static int elf_header_check(struct load_info *info)
 	return 0;
 }
 
+#ifdef CONFIG_LIVEPATCH
+static int check_modinfo_livepatch(struct module *mod, struct load_info *info)
+{
+	/*
+	 * RHEL: This code has been moved to after the module_ext is allocated.
+	 */
+
+	return 0;
+}
+#else /* !CONFIG_LIVEPATCH */
 static int check_modinfo_livepatch(struct module *mod, struct load_info *info)
 {
 	if (get_modinfo(info, "livepatch")) {
-		add_taint_module(mod, TAINT_LIVEPATCH, LOCKDEP_STILL_OK);
-		pr_notice_once("%s: tainting kernel with TAINT_LIVEPATCH\n",
-			       mod->name);
+		pr_err("%s: module is marked as livepatch module, but livepatch support is disabled",
+		       mod->name);
+		return -ENOEXEC;
 	}
 
 	return 0;
 }
+#endif /* CONFIG_LIVEPATCH */
 
 /* Sets info->hdr and info->len. */
 static int copy_module_from_user(const void __user *umod, unsigned long len,
@@ -3460,6 +3571,17 @@ static int load_module(struct load_info *info, const char __user *uargs,
 	list_add(&mod_ext->next, &modules_ext);
 	mutex_unlock(&module_ext_mutex);
 
+	/*
+	 * RHEL: moved from check_modinfo_livepatch() to after mod_ext
+	 * allocation.
+	 */
+#ifdef CONFIG_LIVEPATCH
+	if (get_modinfo(info, "livepatch")) {
+		mod_ext->klp = true;
+		add_taint_module(mod, TAINT_LIVEPATCH, LOCKDEP_STILL_OK);
+	}
+#endif
+
 	/* Now we've got everything in the final locations, we can
 	 * find optional sections. */
 	err = find_module_sections(mod, info);
@@ -3527,6 +3649,12 @@ static int load_module(struct load_info *info, const char __user *uargs,
 	if (err < 0)
 		goto coming_cleanup;
 
+	if (is_livepatch_module(mod)) {
+		err = copy_module_elf(mod, info);
+		if (err < 0)
+			goto sysfs_cleanup;
+	}
+
 	/* Get rid of temporary copy. */
 	free_copy(info);
 
@@ -3535,12 +3663,13 @@ static int load_module(struct load_info *info, const char __user *uargs,
 
 	return do_init_module(mod);
 
+ sysfs_cleanup:
+	mod_sysfs_teardown(mod);
  coming_cleanup:
 	mod->state = MODULE_STATE_GOING;
 	blocking_notifier_call_chain(&module_notify_list,
 				     MODULE_STATE_GOING, mod);
 	klp_module_going(mod);
-
  bug_cleanup:
 	/* module_bug_cleanup needs module_mutex protection */
 	mutex_lock(&module_mutex);
