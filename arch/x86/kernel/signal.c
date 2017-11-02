@@ -23,6 +23,7 @@
 #include <linux/user-return-notifier.h>
 #include <linux/uprobes.h>
 #include <linux/context_tracking.h>
+#include <linux/livepatch.h>
 
 #include <asm/processor.h>
 #include <asm/ucontext.h>
@@ -751,6 +752,9 @@ do_notify_resume(struct pt_regs *regs, void *unused, __u32 thread_info_flags)
 	}
 	if (thread_info_flags & _TIF_USER_RETURN_NOTIFY)
 		fire_user_return_notifiers();
+
+	if (thread_info_flags & _TIF_PATCH_PENDING)
+		klp_update_patch_state(current);
 
 	user_enter();
 }
