@@ -231,6 +231,9 @@ struct module_ext {
 	unsigned int num_ftrace_callsites;
 	unsigned long *ftrace_callsites;
 #endif
+#ifdef CONFIG_LIVEPATCH
+	bool klp_alive;
+#endif
 };
 
 struct module

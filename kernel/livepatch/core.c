@@ -89,16 +89,30 @@ static bool klp_is_object_loaded(struct klp_object *obj)
 /* sets obj->mod if object is not vmlinux and module is found */
 static void klp_find_object_module(struct klp_object *obj)
 {
+	struct module *mod;
+
 	if (!klp_is_module(obj))
 		return;
 
 	mutex_lock(&module_mutex);
 	/*
-	 * We don't need to take a reference on the module here because we have
-	 * the klp_mutex, which is also taken by the module notifier.  This
-	 * prevents any module from unloading until we release the klp_mutex.
+	 * We do not want to block removal of patched modules and therefore
+	 * we do not take a reference here. The patches are removed by
+	 * a going module handler instead.
 	 */
-	obj->mod = find_module(obj->name);
+	mod = find_module(obj->name);
+	/*
+	 * Do not mess work of the module coming and going notifiers.
+	 * Note that the patch might still be needed before the going handler
+	 * is called. Module functions can be called even in the GOING state
+	 * until mod->exit() finishes. This is especially important for
+	 * patches that modify semantic of the functions.
+	 */
+	mutex_lock(&module_ext_mutex);
+	if (mod && find_module_ext(mod)->klp_alive)
+		obj->mod = mod;
+	mutex_unlock(&module_ext_mutex);
+
 	mutex_unlock(&module_mutex);
 }
 
@@ -736,6 +750,7 @@ static int klp_init_object(struct klp_patch *patch, struct klp_object *obj)
 		return -EINVAL;
 
 	obj->state = KLP_DISABLED;
+	obj->mod = NULL;
 
 	klp_find_object_module(obj);
 
@@ -920,11 +935,25 @@ static int klp_module_notify(struct notifier_block *nb, unsigned long action,
 	struct module *mod = data;
 	struct klp_patch *patch;
 	struct klp_object *obj;
+	struct module_ext *mod_ext;
 
 	if (action != MODULE_STATE_COMING && action != MODULE_STATE_GOING)
 		return 0;
 
 	mutex_lock(&klp_mutex);
+
+	mutex_lock(&module_ext_mutex);
+	mod_ext = find_module_ext(mod);
+	mutex_unlock(&module_ext_mutex);
+
+	/*
+	 * Each module has to know that the notifier has been called.
+	 * We never know what module will get patched by a new patch.
+	 */
+	if (action == MODULE_STATE_COMING)
+		mod_ext->klp_alive = true;
+	else /* MODULE_STATE_GOING */
+		mod_ext->klp_alive = false;
 
 	list_for_each_entry(patch, &klp_patches, list) {
 		for (obj = patch->objs; obj->funcs; obj++) {
