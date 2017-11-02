@@ -1727,6 +1727,10 @@ static int __ftrace_hash_update_ipmodify(struct ftrace_ops *ops,
 
 	/* Update rec->flags */
 	do_for_each_ftrace_rec(pg, rec) {
+
+		if (rec->flags & FTRACE_FL_DISABLED)
+			continue;
+
 		/* We need to update only differences of filter_hash */
 		in_old = !!ftrace_lookup_ip(old_hash, rec->ip);
 		in_new = !!ftrace_lookup_ip(new_hash, rec->ip);
@@ -1749,6 +1753,10 @@ rollback:
 
 	/* Roll back what we did above */
 	do_for_each_ftrace_rec(pg, rec) {
+
+		if (rec->flags & FTRACE_FL_DISABLED)
+			continue;
+
 		if (rec == end)
 			goto err_out;
 
@@ -2003,6 +2011,10 @@ void __weak ftrace_replace_code(int enable)
 		return;
 
 	do_for_each_ftrace_rec(pg, rec) {
+
+		if (rec->flags & FTRACE_FL_DISABLED)
+			continue;
+
 		failed = __ftrace_replace_code(rec, enable);
 		if (failed) {
 			ftrace_bug(failed, rec->ip);
@@ -3057,6 +3069,10 @@ match_records(struct ftrace_hash *hash, char *buff,
 		goto out_unlock;
 
 	do_for_each_ftrace_rec(pg, rec) {
+
+		if (rec->flags & FTRACE_FL_DISABLED)
+			continue;
+
 		if (ftrace_match_record(rec, mod, search, search_len, type)) {
 			ret = enter_record(hash, rec, not);
 			if (ret < 0) {
@@ -3271,6 +3287,9 @@ register_ftrace_function_probe(char *glob, struct ftrace_probe_ops *ops,
 	mutex_lock(&ftrace_lock);
 
 	do_for_each_ftrace_rec(pg, rec) {
+
+		if (rec->flags & FTRACE_FL_DISABLED)
+			continue;
 
 		if (!ftrace_match_record(rec, NULL, search, len, type))
 			continue;
@@ -4036,6 +4055,9 @@ ftrace_set_func(unsigned long *array, int *idx, char *buffer)
 	}
 
 	do_for_each_ftrace_rec(pg, rec) {
+
+		if (rec->flags & FTRACE_FL_DISABLED)
+			continue;
 
 		if (ftrace_match_record(rec, NULL, search, search_len, type)) {
 			/* if it is in the array */
