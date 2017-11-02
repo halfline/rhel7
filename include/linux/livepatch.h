@@ -23,6 +23,7 @@
 
 #include <linux/module.h>
 #include <linux/ftrace.h>
+#include <linux/completion.h>
 
 #if IS_ENABLED(CONFIG_LIVEPATCH)
 
@@ -119,6 +120,7 @@ struct klp_object {
  * @list:	list node for global list of registered patches
  * @kobj:	kobject for sysfs resources
  * @enabled:	the patch is enabled (but operation may be incomplete)
+ * @finish:	for waiting till it is safe to remove the patch module
  */
 struct klp_patch {
 	/* external */
@@ -130,6 +132,7 @@ struct klp_patch {
 	struct list_head list;
 	struct kobject kobj;
 	bool enabled;
+	struct completion finish;
 };
 
 #define klp_for_each_object(patch, obj) \
