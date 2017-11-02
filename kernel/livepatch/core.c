@@ -909,6 +909,9 @@ int klp_register_patch(struct klp_patch *patch)
 {
 	int ret;
 
+	if (!patch || !patch->mod)
+		return -EINVAL;
+
 	if (!is_livepatch_module(patch->mod)) {
 		pr_err("module %s is not marked as a livepatch module",
 		       patch->mod->name);
@@ -917,9 +920,6 @@ int klp_register_patch(struct klp_patch *patch)
 
 	if (!klp_initialized())
 		return -ENODEV;
-
-	if (!patch || !patch->mod)
-		return -EINVAL;
 
 	/*
 	 * A reference is taken on the patch module to prevent it from being
