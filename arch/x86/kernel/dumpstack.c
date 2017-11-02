@@ -164,7 +164,7 @@ void show_stack(struct task_struct *task, unsigned long *sp)
 	if (!sp && task == current)
 		sp = get_stack_pointer(current, NULL);
 
-	show_stack_log_lvl(current, NULL, sp, "");
+	show_stack_log_lvl(task, NULL, sp, "");
 }
 
 static arch_spinlock_t die_lock = __ARCH_SPIN_LOCK_UNLOCKED;
