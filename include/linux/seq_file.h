@@ -30,6 +30,7 @@ struct seq_file {
 	struct user_namespace *user_ns;
 #endif
 	void *private;
+	RH_KABI_EXTEND(struct file *file)
 };
 
 struct seq_operations {
