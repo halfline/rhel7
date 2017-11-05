@@ -1971,26 +1971,22 @@ static void posix_lock_to_flock64(struct flock64 *flock, struct file_lock *fl)
 /* Report the first existing lock that would conflict with l.
  * This implements the F_GETLK command of fcntl().
  */
-int fcntl_getlk(struct file *filp, unsigned int cmd, struct flock __user *l)
+int fcntl_getlk(struct file *filp, unsigned int cmd, struct flock *flock)
 {
 	struct file_lock file_lock;
-	struct flock flock;
 	int error;
 
-	error = -EFAULT;
-	if (copy_from_user(&flock, l, sizeof(flock)))
-		goto out;
 	error = -EINVAL;
-	if ((flock.l_type != F_RDLCK) && (flock.l_type != F_WRLCK))
+	if (flock->l_type != F_RDLCK && flock->l_type != F_WRLCK)
 		goto out;
 
-	error = flock_to_posix_lock(filp, &file_lock, &flock);
+	error = flock_to_posix_lock(filp, &file_lock, flock);
 	if (error)
 		goto out;
 
 	if (cmd == F_OFD_GETLK) {
 		error = -EINVAL;
-		if (flock.l_pid != 0)
+		if (flock->l_pid != 0)
 			goto out;
 
 		cmd = F_GETLK;
@@ -2002,15 +1998,12 @@ int fcntl_getlk(struct file *filp, unsigned int cmd, struct flock __user *l)
 	if (error)
 		goto out;
  
-	flock.l_type = file_lock.fl_type;
+	flock->l_type = file_lock.fl_type;
 	if (file_lock.fl_type != F_UNLCK) {
-		error = posix_lock_to_flock(&flock, &file_lock);
+		error = posix_lock_to_flock(flock, &file_lock);
 		if (error)
 			goto rel_priv;
 	}
-	error = -EFAULT;
-	if (!copy_to_user(l, &flock, sizeof(flock)))
-		error = 0;
 rel_priv:
 	locks_release_private(&file_lock);
 out:
@@ -2103,25 +2096,15 @@ check_fmode_for_setlk(struct file_lock *fl)
  * This implements both the F_SETLK and F_SETLKW commands of fcntl().
  */
 int fcntl_setlk(unsigned int fd, struct file *filp, unsigned int cmd,
-		struct flock __user *l)
+		struct flock *flock)
 {
 	struct file_lock *file_lock = locks_alloc_lock();
-	struct flock flock;
-	struct inode *inode;
+	struct inode *inode = locks_inode(filp);
 	struct file *f;
 	int error;
 
 	if (file_lock == NULL)
 		return -ENOLCK;
-
-	/*
-	 * This might block, so we do it before checking the inode.
-	 */
-	error = -EFAULT;
-	if (copy_from_user(&flock, l, sizeof(flock)))
-		goto out;
-
-	inode = locks_inode(filp);
 
 	/* Don't allow mandatory locks on files that may be memory mapped
 	 * and shared.
@@ -2131,7 +2114,7 @@ int fcntl_setlk(unsigned int fd, struct file *filp, unsigned int cmd,
 		goto out;
 	}
 
-	error = flock_to_posix_lock(filp, file_lock, &flock);
+	error = flock_to_posix_lock(filp, file_lock, flock);
 	if (error)
 		goto out;
 
@@ -2146,7 +2129,7 @@ int fcntl_setlk(unsigned int fd, struct file *filp, unsigned int cmd,
 	switch (cmd) {
 	case F_OFD_SETLK:
 		error = -EINVAL;
-		if (flock.l_pid != 0)
+		if (flock->l_pid != 0)
 			goto out;
 
 		cmd = F_SETLK;
@@ -2155,7 +2138,7 @@ int fcntl_setlk(unsigned int fd, struct file *filp, unsigned int cmd,
 		break;
 	case F_OFD_SETLKW:
 		error = -EINVAL;
-		if (flock.l_pid != 0)
+		if (flock->l_pid != 0)
 			goto out;
 
 		cmd = F_SETLKW;
@@ -2199,26 +2182,22 @@ out:
 /* Report the first existing lock that would conflict with l.
  * This implements the F_GETLK command of fcntl().
  */
-int fcntl_getlk64(struct file *filp, unsigned int cmd, struct flock64 __user *l)
+int fcntl_getlk64(struct file *filp, unsigned int cmd, struct flock64 *flock)
 {
 	struct file_lock file_lock;
-	struct flock64 flock;
 	int error;
 
-	error = -EFAULT;
-	if (copy_from_user(&flock, l, sizeof(flock)))
-		goto out;
 	error = -EINVAL;
-	if ((flock.l_type != F_RDLCK) && (flock.l_type != F_WRLCK))
+	if (flock->l_type != F_RDLCK && flock->l_type != F_WRLCK)
 		goto out;
 
-	error = flock64_to_posix_lock(filp, &file_lock, &flock);
+	error = flock64_to_posix_lock(filp, &file_lock, flock);
 	if (error)
 		goto out;
 
 	if (cmd == F_OFD_GETLK) {
 		error = -EINVAL;
-		if (flock.l_pid != 0)
+		if (flock->l_pid != 0)
 			goto out;
 
 		cmd = F_GETLK64;
@@ -2230,13 +2209,9 @@ int fcntl_getlk64(struct file *filp, unsigned int cmd, struct flock64 __user *l)
 	if (error)
 		goto out;
 
-	flock.l_type = file_lock.fl_type;
+	flock->l_type = file_lock.fl_type;
 	if (file_lock.fl_type != F_UNLCK)
-		posix_lock_to_flock64(&flock, &file_lock);
-
-	error = -EFAULT;
-	if (!copy_to_user(l, &flock, sizeof(flock)))
-		error = 0;
+		posix_lock_to_flock64(flock, &file_lock);
 
 	locks_release_private(&file_lock);
 out:
@@ -2247,25 +2222,15 @@ out:
  * This implements both the F_SETLK and F_SETLKW commands of fcntl().
  */
 int fcntl_setlk64(unsigned int fd, struct file *filp, unsigned int cmd,
-		struct flock64 __user *l)
+		struct flock64 *flock)
 {
 	struct file_lock *file_lock = locks_alloc_lock();
-	struct flock64 flock;
-	struct inode *inode;
+	struct inode *inode = locks_inode(filp);
 	struct file *f;
 	int error;
 
 	if (file_lock == NULL)
 		return -ENOLCK;
-
-	/*
-	 * This might block, so we do it before checking the inode.
-	 */
-	error = -EFAULT;
-	if (copy_from_user(&flock, l, sizeof(flock)))
-		goto out;
-
-	inode = locks_inode(filp);
 
 	/* Don't allow mandatory locks on files that may be memory mapped
 	 * and shared.
@@ -2275,7 +2240,7 @@ int fcntl_setlk64(unsigned int fd, struct file *filp, unsigned int cmd,
 		goto out;
 	}
 
-	error = flock64_to_posix_lock(filp, file_lock, &flock);
+	error = flock64_to_posix_lock(filp, file_lock, flock);
 	if (error)
 		goto out;
 
@@ -2290,7 +2255,7 @@ int fcntl_setlk64(unsigned int fd, struct file *filp, unsigned int cmd,
 	switch (cmd) {
 	case F_OFD_SETLK:
 		error = -EINVAL;
-		if (flock.l_pid != 0)
+		if (flock->l_pid != 0)
 			goto out;
 
 		cmd = F_SETLK64;
@@ -2299,7 +2264,7 @@ int fcntl_setlk64(unsigned int fd, struct file *filp, unsigned int cmd,
 		break;
 	case F_OFD_SETLKW:
 		error = -EINVAL;
-		if (flock.l_pid != 0)
+		if (flock->l_pid != 0)
 			goto out;
 
 		cmd = F_SETLKW64;
