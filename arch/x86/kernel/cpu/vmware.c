@@ -26,6 +26,7 @@
 #include <asm/div64.h>
 #include <asm/x86_init.h>
 #include <asm/hypervisor.h>
+#include <asm/timer.h>
 #include <asm/apic.h>
 
 #define CPUID_VMWARE_INFO_LEAF	0x40000000
@@ -96,6 +97,10 @@ static void __init vmware_platform_setup(void)
 		printk(KERN_WARNING
 		       "Failed to get TSC freq from the hypervisor\n");
 	}
+
+#ifdef CONFIG_X86_IO_APIC
+	no_timer_check = 1;
+#endif
 }
 
 /*
