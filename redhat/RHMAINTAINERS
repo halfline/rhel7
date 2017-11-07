@@ -156,6 +156,13 @@ M:	Vivek Goyal <vgoyal@redhat.com>
 S:	Maintained
 F:	block/
 
+BLUETOOTH SUBYSTEM
+M:	Gopal Tiwari <gtiwari@redhat.com>
+S:	Maintained
+F:	drivers/bluetooth
+F:	include/net/bluetooth/
+F:	net/bluetooth
+
 BNA ETHERNET DRIVER (bna)
 M:	Jonathan Toppins <jtoppins@redhat.com>
 S:	Maintained
@@ -323,6 +330,19 @@ M:	Tomas Henzl <thenzl@redhat.com>
 S:	Maintained
 F:	drivers/message/fusion/
 
+I2C SUBSYSTEM
+M:	Gopal Tiwari <gtiwari@redhat.com>
+M:	David Arcari <darcari@redhat.com>
+S:	Maintained
+F:	Documentation/devicetree/bindings/i2c/
+F:	Documentation/i2c/
+F:	drivers/i2c/
+F:	drivers/i2c/*/
+F:	include/linux/i2c.h
+F:	include/linux/i2c-*.h
+F:	include/uapi/linux/i2c.h
+F:	include/uapi/linux/i2c-*.h
+
 INTEL E1000 ETHERNET DRIVER (e1000)
 M:	David Arcari <darcari@redhat.com>
 S:	Maintained
@@ -376,7 +396,7 @@ S:	Maintained
 F:	drivers/net/ethernet/intel/ixgbevf/
 
 INTEL MANAGEMENT ENGINE (mei)
-M:	Don Zickus <dzickus@redhat.com>
+M:	Jerry Snitselaar <jsnitsel@redhat.com>
 S:	Maintained
 F:	include/uapi/mei.h
 F:	include/linux/mei_cl_bus.h
@@ -641,6 +661,8 @@ F:	include/uapi/linux/netfilter/nf_tables*
 F:	include/net/netns/nftables.h
 
 NON-MASKABLE INTERRUPT (NMI)
+M:	Prarit Bhargava <prarit@redhat.com>
+M:	David Arcari <darcari@redhat.com>
 M:	Don Zickus <dzickus@redhat.com>
 S:	Maintained
 
@@ -679,7 +701,6 @@ F:	drivers/pci/hotplug/
 
 PERFORMANCE EVENTS SUBSYSTEM
 M:	Jiri Olsa <jolsa@redhat.com>
-M:	Don Zickus <dzickus@redhat.com>
 S:	Maintained
 F:	kernel/events/*
 F:	include/linux/perf_event.h
@@ -857,6 +878,7 @@ F:	net/switchdev/
 
 X86 ARCHITECTURE
 M:	Prarit Bhargava <prarit@redhat.com>
+M:	David Arcari <darcari@redhat.com>
 S:	Maintained
 F:	arch/x86/
 
@@ -875,7 +897,7 @@ F:	include/linux/efi.h
 
 USB SUBSYSTEM
 M:	Torez Smith <torez@redhat.com>
-M:	Don Zickus <dzickus@redhat.com>
+M:	Prarit Bhargava <prarit@redhat.com>
 S:	Maintained
 F:	drivers/usb/
 
