@@ -967,10 +967,6 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
 	if (result)
 		goto set_alt0;
 
-	result = scsi_init_shared_tag_map(shost, devinfo->qdepth - 2);
-	if (result)
-		goto free_streams;
-
 	usb_set_intfdata(intf, shost);
 	result = scsi_add_host(shost, &intf->dev);
 	if (result)
