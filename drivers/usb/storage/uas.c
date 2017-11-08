@@ -822,6 +822,7 @@ static int uas_slave_alloc(struct scsi_device *sdev)
 	else if (devinfo->flags & US_FL_MAX_SECTORS_240)
 		blk_queue_max_hw_sectors(sdev->request_queue, 240);
 
+	scsi_change_queue_depth(sdev, devinfo->qdepth - 2);
 	return 0;
 }
 
