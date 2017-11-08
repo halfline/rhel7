@@ -822,7 +822,6 @@ static int uas_slave_alloc(struct scsi_device *sdev)
 	else if (devinfo->flags & US_FL_MAX_SECTORS_240)
 		blk_queue_max_hw_sectors(sdev->request_queue, 240);
 
-	scsi_change_queue_depth(sdev, devinfo->qdepth - 2);
 	return 0;
 }
 
@@ -971,6 +970,12 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
 	result = uas_configure_endpoints(devinfo);
 	if (result)
 		goto set_alt0;
+
+	/*
+	 * 1 tag is reserved for untagged commands +
+	 * 1 tag to avoid off by one errors in some bridge firmwares
+	 */
+	shost->can_queue = devinfo->qdepth - 2;
 
 	usb_set_intfdata(intf, shost);
 	result = scsi_add_host(shost, &intf->dev);
