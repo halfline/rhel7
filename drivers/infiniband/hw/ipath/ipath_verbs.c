@@ -1785,16 +1785,19 @@ static struct ib_ah *ipath_create_ah(struct ib_pd *pd,
 	struct ib_ah *ret;
 	struct ipath_ibdev *dev = to_idev(pd->device);
 	unsigned long flags;
+	u16 dlid;
+
+	dlid = rdma_ah_get_dlid(ah_attr);
 
 	/* A multicast address requires a GRH (see ch. 8.4.1). */
-	if (ah_attr->dlid >= IPATH_MULTICAST_LID_BASE &&
-	    ah_attr->dlid != IPATH_PERMISSIVE_LID &&
+	if (dlid >= IPATH_MULTICAST_LID_BASE &&
+	    dlid != IPATH_PERMISSIVE_LID &&
 	    !(ah_attr->ah_flags & IB_AH_GRH)) {
 		ret = ERR_PTR(-EINVAL);
 		goto bail;
 	}
 
-	if (ah_attr->dlid == 0) {
+	if (dlid == 0) {
 		ret = ERR_PTR(-EINVAL);
 		goto bail;
 	}
