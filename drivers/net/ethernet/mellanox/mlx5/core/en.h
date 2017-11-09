@@ -46,6 +46,7 @@
 #include <linux/mlx5/transobj.h>
 #include <linux/rhashtable.h>
 #include <net/switchdev.h>
+#include <linux/refcount.h>
 #include "wq.h"
 #include "mlx5_core.h"
 #include "en_stats.h"
