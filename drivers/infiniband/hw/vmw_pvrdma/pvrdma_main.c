@@ -1083,7 +1083,7 @@ static int pvrdma_pci_probe(struct pci_dev *pdev,
 	}
 
 	dev->nb_netdev.notifier_call = pvrdma_netdevice_event;
-	ret = register_netdevice_notifier(&dev->nb_netdev);
+	ret = register_netdevice_notifier_rh(&dev->nb_netdev);
 	if (ret) {
 		dev_err(&pdev->dev, "failed to register netdevice events\n");
 		goto err_unreg_ibdev;
@@ -1137,7 +1137,7 @@ static void pvrdma_pci_remove(struct pci_dev *pdev)
 
 	dev_info(&pdev->dev, "detaching from device\n");
 
-	unregister_netdevice_notifier(&dev->nb_netdev);
+	unregister_netdevice_notifier_rh(&dev->nb_netdev);
 	dev->nb_netdev.notifier_call = NULL;
 
 	flush_workqueue(event_wq);
