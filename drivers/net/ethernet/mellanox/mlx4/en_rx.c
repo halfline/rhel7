@@ -1133,13 +1133,6 @@ int mlx4_en_poll_rx_cq(struct napi_struct *napi, int budget)
 	return done;
 }
 
-static const int frag_sizes[] = {
-	FRAG_SZ0,
-	FRAG_SZ1,
-	FRAG_SZ2,
-	FRAG_SZ3
-};
-
 void mlx4_en_calc_rx_buf(struct net_device *dev)
 {
 	struct mlx4_en_priv *priv = netdev_priv(dev);
@@ -1152,12 +1145,11 @@ void mlx4_en_calc_rx_buf(struct net_device *dev)
 	int i = 0;
 
 	while (buf_size < eff_mtu) {
-		priv->frag_info[i].frag_size =
-			(eff_mtu > buf_size + frag_sizes[i]) ?
-				frag_sizes[i] : eff_mtu - buf_size;
-		priv->frag_info[i].frag_stride =
-				ALIGN(priv->frag_info[i].frag_size, align);
-		buf_size += priv->frag_info[i].frag_size;
+		int frag_size = eff_mtu - buf_size;
+
+		priv->frag_info[i].frag_size = frag_size;
+		priv->frag_info[i].frag_stride = ALIGN(frag_size, align);
+		buf_size += frag_size;
 		i++;
 	}
 	priv->rx_page_order = MLX4_EN_ALLOC_PREFER_ORDER;
