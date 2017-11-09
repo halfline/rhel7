@@ -85,7 +85,7 @@ int ehca_calc_ipd(struct ehca_shca *shca, int port,
 	return 0;
 }
 
-struct ib_ah *ehca_create_ah(struct ib_pd *pd, struct ib_ah_attr *ah_attr,
+struct ib_ah *ehca_create_ah(struct ib_pd *pd, struct rdma_ah_attr *ah_attr,
 				struct ib_udata *udata)
 {
 	int ret;
@@ -166,7 +166,7 @@ create_ah_exit1:
 	return ERR_PTR(ret);
 }
 
-int ehca_modify_ah(struct ib_ah *ah, struct ib_ah_attr *ah_attr)
+int ehca_modify_ah(struct ib_ah *ah, struct rdma_ah_attr *ah_attr)
 {
 	struct ehca_av *av;
 	struct ehca_ud_av new_ehca_av;
@@ -230,7 +230,7 @@ int ehca_modify_ah(struct ib_ah *ah, struct ib_ah_attr *ah_attr)
 	return 0;
 }
 
-int ehca_query_ah(struct ib_ah *ah, struct ib_ah_attr *ah_attr)
+int ehca_query_ah(struct ib_ah *ah, struct rdma_ah_attr *ah_attr)
 {
 	struct ehca_av *av = container_of(ah, struct ehca_av, ib_ah);
 
