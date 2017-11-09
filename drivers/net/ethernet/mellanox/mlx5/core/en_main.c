@@ -957,7 +957,7 @@ static int mlx5e_create_sq(struct mlx5e_channel *c,
 	sq->channel   = c;
 	sq->tc        = tc;
 
-	err = mlx5_alloc_bfreg(mdev, &sq->bfreg, MLX5_CAP_GEN(mdev, bf), false);
+	err = mlx5_alloc_bfreg(mdev, &sq->bfreg, false, false);
 	if (err)
 		return err;
 
@@ -970,10 +970,7 @@ static int mlx5e_create_sq(struct mlx5e_channel *c,
 		goto err_unmap_free_uar;
 
 	sq->wq.db       = &sq->wq.db[MLX5_SND_DBR];
-	if (sq->bfreg.wc)
-		set_bit(MLX5E_SQ_STATE_BF_ENABLE, &sq->state);
 
-	sq->bf_buf_size = (1 << MLX5_CAP_GEN(mdev, log_bf_reg_size)) / 2;
 	sq->max_inline  = param->max_inline;
 	sq->min_inline_mode = param->min_inline_mode;
 
@@ -994,7 +991,6 @@ static int mlx5e_create_sq(struct mlx5e_channel *c,
 		sq_max_wqebbs = MLX5E_ICOSQ_MAX_WQEBBS;
 
 	sq->edge      = (sq->wq.sz_m1 + 1) - sq_max_wqebbs;
-	sq->bf_budget = MLX5E_SQ_BF_BUDGET;
 
 	return 0;
 
