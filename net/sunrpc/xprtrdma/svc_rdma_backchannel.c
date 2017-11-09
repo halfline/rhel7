@@ -7,7 +7,6 @@
 #include <linux/module.h>
 #include <linux/sunrpc/svc_rdma.h>
 #include "xprt_rdma.h"
-#include <linux/module.h>
 
 #define RPCDBG_FACILITY	RPCDBG_SVCXPRT
 
