@@ -1246,6 +1246,7 @@ struct mmu_rb_handler;
 
 /* Private data for file operations */
 struct hfi1_filedata {
+	struct hfi1_devdata *dd;
 	struct hfi1_ctxtdata *uctxt;
 	unsigned subctxt;
 	struct hfi1_user_sdma_comp_q *cq;
@@ -1272,7 +1273,6 @@ extern u32 hfi1_cpulist_count;
 extern unsigned long *hfi1_cpulist;
 
 int hfi1_init(struct hfi1_devdata *dd, int reinit);
-int hfi1_count_units(int *npresentp, int *nupp);
 int hfi1_count_active_units(void);
 
 int hfi1_diag_add(struct hfi1_devdata *dd);
