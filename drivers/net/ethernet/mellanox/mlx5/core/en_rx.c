@@ -330,7 +330,7 @@ mlx5e_copy_skb_header_mpwqe(struct device *pdev,
 static inline void mlx5e_post_umr_wqe(struct mlx5e_rq *rq, u16 ix)
 {
 	struct mlx5e_mpw_info *wi = &rq->mpwqe.info[ix];
-	struct mlx5e_sq *sq = &rq->channel->icosq;
+	struct mlx5e_icosq *sq = &rq->channel->icosq;
 	struct mlx5_wq_cyc *wq = &sq->wq;
 	struct mlx5e_umr_wqe *wqe;
 	u8 num_wqebbs = DIV_ROUND_UP(sizeof(*wqe), MLX5_SEND_WQE_BB);
@@ -341,7 +341,6 @@ static inline void mlx5e_post_umr_wqe(struct mlx5e_rq *rq, u16 ix)
 		sq->db.ico_wqe[pi].opcode = MLX5_OPCODE_NOP;
 		sq->db.ico_wqe[pi].num_wqebbs = 1;
 		mlx5e_post_nop(wq, sq->sqn, &sq->pc);
-		sq->stats.nop++;
 	}
 
 	wqe = mlx5_wq_cyc_get_wqe(wq, pi);
