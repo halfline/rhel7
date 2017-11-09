@@ -95,7 +95,6 @@ static int mlx4_en_alloc_frags(struct mlx4_en_priv *priv,
 	struct mlx4_en_rx_alloc page_alloc[MLX4_EN_MAX_RX_FRAGS];
 	const struct mlx4_en_frag_info *frag_info;
 	struct page *page;
-	dma_addr_t dma;
 	int i;
 
 	for (i = 0; i < priv->num_frags; i++) {
@@ -114,9 +113,10 @@ static int mlx4_en_alloc_frags(struct mlx4_en_priv *priv,
 
 	for (i = 0; i < priv->num_frags; i++) {
 		frags[i] = ring_alloc[i];
-		dma = ring_alloc[i].dma + ring_alloc[i].page_offset;
+		frags[i].page_offset += priv->frag_info[i].rx_headroom;
+		rx_desc->data[i].addr = cpu_to_be64(frags[i].dma +
+						    frags[i].page_offset);
 		ring_alloc[i] = page_alloc[i];
-		rx_desc->data[i].addr = cpu_to_be64(dma);
 	}
 
 	return 0;
@@ -248,7 +248,8 @@ static int mlx4_en_prepare_rx_desc(struct mlx4_en_priv *priv,
 
 	if (ring->page_cache.index > 0) {
 		frags[0] = ring->page_cache.buf[--ring->page_cache.index];
-		rx_desc->data[0].addr = cpu_to_be64(frags[0].dma);
+		rx_desc->data[0].addr = cpu_to_be64(frags[0].dma +
+						    frags[0].page_offset);
 		return 0;
 	}
 
@@ -1158,6 +1159,7 @@ void mlx4_en_calc_rx_buf(struct net_device *dev)
 		priv->frag_info[i].frag_stride =
 				ALIGN(priv->frag_info[i].frag_size, align);
 		priv->frag_info[i].dma_dir = dma_dir;
+		priv->frag_info[i].rx_headroom = 0;
 		buf_size += priv->frag_info[i].frag_size;
 		i++;
 	}
