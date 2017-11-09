@@ -1332,7 +1332,8 @@ __xfs_get_blocks(
 			 */
 			if (nimaps && imap.br_startblock == HOLESTARTBLOCK)
 				new = 1;
-			error = xfs_iomap_write_delay(ip, offset, size, &imap);
+			error = xfs_iomap_write_delay(ip, offset, size, &imap,
+						      NULL);
 			if (error)
 				goto out_unlock;
 
