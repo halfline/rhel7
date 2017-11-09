@@ -840,6 +840,8 @@ int mlx5e_poll_rx_cq(struct mlx5e_cq *cq, int budget)
 #define MLX5_IB_GRH_BYTES       40
 #define MLX5_IPOIB_ENCAP_LEN    4
 #define MLX5_GID_SIZE           16
+#define MLX5_IPOIB_PSEUDO_LEN   20
+#define MLX5_IPOIB_HARD_LEN     (MLX5_IPOIB_PSEUDO_LEN + MLX5_IPOIB_ENCAP_LEN)
 
 static inline void mlx5i_complete_rx_cqe(struct mlx5e_rq *rq,
 					 struct mlx5_cqe64 *cqe,
@@ -847,6 +849,7 @@ static inline void mlx5i_complete_rx_cqe(struct mlx5e_rq *rq,
 					 struct sk_buff *skb)
 {
 	struct net_device *netdev = rq->netdev;
+	char *pseudo_header;
 	u8 *dgid;
 	u8 g;
 
@@ -875,8 +878,11 @@ static inline void mlx5i_complete_rx_cqe(struct mlx5e_rq *rq,
 	if (likely(netdev->features & NETIF_F_RXHASH))
 		mlx5e_skb_set_hash(cqe, skb);
 
+	/* 20 bytes of ipoib header and 4 for encap existing */
+	pseudo_header = skb_push(skb, MLX5_IPOIB_PSEUDO_LEN);
+	memset(pseudo_header, 0, MLX5_IPOIB_PSEUDO_LEN);
 	skb_reset_mac_header(skb);
-	skb_pull(skb, MLX5_IPOIB_ENCAP_LEN);
+	skb_pull(skb, MLX5_IPOIB_HARD_LEN);
 
 	skb->dev = netdev;
 
