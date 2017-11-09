@@ -81,16 +81,18 @@ static u64 kvirt_to_phys(void *addr);
 static int assign_ctxt(struct file *fp, struct hfi1_user_info *uinfo);
 static int init_subctxts(struct hfi1_ctxtdata *uctxt,
 			 const struct hfi1_user_info *uinfo);
-static int user_init(struct file *fp);
-static int get_ctxt_info(struct file *fp, void __user *ubase, __u32 len);
-static int get_base_info(struct file *fp, void __user *ubase, __u32 len);
-static int setup_ctxt(struct file *fp);
+static int user_init(struct hfi1_filedata *fd);
+static int get_ctxt_info(struct hfi1_filedata *fd, void __user *ubase,
+			 __u32 len);
+static int get_base_info(struct hfi1_filedata *fd, void __user *ubase,
+			 __u32 len);
+static int setup_ctxt(struct hfi1_filedata *fd);
 static int setup_subctxt(struct hfi1_ctxtdata *uctxt);
-static int get_user_context(struct file *fp, struct hfi1_user_info *uinfo,
-			    int devno);
-static int find_shared_ctxt(struct file *fp,
+static int get_user_context(struct hfi1_filedata *fd,
+			    struct hfi1_user_info *uinfo, int devno);
+static int find_shared_ctxt(struct hfi1_filedata *fd,
 			    const struct hfi1_user_info *uinfo);
-static int allocate_ctxt(struct file *fp, struct hfi1_devdata *dd,
+static int allocate_ctxt(struct hfi1_filedata *fd, struct hfi1_devdata *dd,
 			 struct hfi1_user_info *uinfo);
 static unsigned int poll_urgent(struct file *fp, struct poll_table_struct *pt);
 static unsigned int poll_next(struct file *fp, struct poll_table_struct *pt);
@@ -239,17 +241,17 @@ static long hfi1_file_ioctl(struct file *fp, unsigned int cmd,
 		ret = assign_ctxt(fp, &uinfo);
 		if (ret < 0)
 			return ret;
-		ret = setup_ctxt(fp);
+		ret = setup_ctxt(fd);
 		if (ret)
 			return ret;
-		ret = user_init(fp);
+		ret = user_init(fd);
 		break;
 	case HFI1_IOCTL_CTXT_INFO:
-		ret = get_ctxt_info(fp, (void __user *)(unsigned long)arg,
+		ret = get_ctxt_info(fd, (void __user *)(unsigned long)arg,
 				    sizeof(struct hfi1_ctxt_info));
 		break;
 	case HFI1_IOCTL_USER_INFO:
-		ret = get_base_info(fp, (void __user *)(unsigned long)arg,
+		ret = get_base_info(fd, (void __user *)(unsigned long)arg,
 				    sizeof(struct hfi1_base_info));
 		break;
 	case HFI1_IOCTL_CREDIT_UPD:
@@ -263,7 +265,7 @@ static long hfi1_file_ioctl(struct file *fp, unsigned int cmd,
 				   sizeof(tinfo)))
 			return -EFAULT;
 
-		ret = hfi1_user_exp_rcv_setup(fp, &tinfo);
+		ret = hfi1_user_exp_rcv_setup(fd, &tinfo);
 		if (!ret) {
 			/*
 			 * Copy the number of tidlist entries we used
@@ -285,7 +287,7 @@ static long hfi1_file_ioctl(struct file *fp, unsigned int cmd,
 				   sizeof(tinfo)))
 			return -EFAULT;
 
-		ret = hfi1_user_exp_rcv_clear(fp, &tinfo);
+		ret = hfi1_user_exp_rcv_clear(fd, &tinfo);
 		if (ret)
 			break;
 		addr = arg + offsetof(struct hfi1_tid_info, tidcnt);
@@ -300,7 +302,7 @@ static long hfi1_file_ioctl(struct file *fp, unsigned int cmd,
 				   sizeof(tinfo)))
 			return -EFAULT;
 
-		ret = hfi1_user_exp_rcv_invalid(fp, &tinfo);
+		ret = hfi1_user_exp_rcv_invalid(fd, &tinfo);
 		if (ret)
 			break;
 		addr = arg + offsetof(struct hfi1_tid_info, tidcnt);
@@ -437,7 +439,7 @@ static ssize_t hfi1_aio_write(struct kiocb *kiocb, const struct iovec *iovec,
 		unsigned long count = 0;
 
 		ret = hfi1_user_sdma_process_request(
-			kiocb->ki_filp,	(struct iovec *)(iovec + done),
+			fd, (struct iovec *)(iovec + done),
 			dim, &count);
 		if (ret) {
 			reqs = ret;
@@ -864,7 +866,7 @@ static int assign_ctxt(struct file *fp, struct hfi1_user_info *uinfo)
 	if (uinfo->subctxt_cnt) {
 		struct hfi1_filedata *fd = fp->private_data;
 
-		ret = find_shared_ctxt(fp, uinfo);
+		ret = find_shared_ctxt(fd, uinfo);
 		if (ret < 0)
 			goto done_unlock;
 		if (ret) {
@@ -879,7 +881,7 @@ static int assign_ctxt(struct file *fp, struct hfi1_user_info *uinfo)
 	 */
 	if (!ret) {
 		i_minor = iminor(file_inode(fp)) - HFI1_USER_MINOR_BASE;
-		ret = get_user_context(fp, uinfo, i_minor);
+		ret = get_user_context(fp->private_data, uinfo, i_minor);
 	}
 done_unlock:
 	mutex_unlock(&hfi1_mutex);
@@ -887,8 +889,8 @@ done:
 	return ret;
 }
 
-static int get_user_context(struct file *fp, struct hfi1_user_info *uinfo,
-			    int devno)
+static int get_user_context(struct hfi1_filedata *fd,
+			    struct hfi1_user_info *uinfo, int devno)
 {
 	struct hfi1_devdata *dd = NULL;
 	int devmax, npresent, nup;
@@ -906,15 +908,14 @@ static int get_user_context(struct file *fp, struct hfi1_user_info *uinfo,
 	else if (!dd->freectxts)
 		return -EBUSY;
 
-	return allocate_ctxt(fp, dd, uinfo);
+	return allocate_ctxt(fd, dd, uinfo);
 }
 
-static int find_shared_ctxt(struct file *fp,
+static int find_shared_ctxt(struct hfi1_filedata *fd,
 			    const struct hfi1_user_info *uinfo)
 {
 	int devmax, ndev, i;
 	int ret = 0;
-	struct hfi1_filedata *fd = fp->private_data;
 
 	devmax = hfi1_count_units(NULL, NULL);
 
@@ -961,10 +962,9 @@ done:
 	return ret;
 }
 
-static int allocate_ctxt(struct file *fp, struct hfi1_devdata *dd,
+static int allocate_ctxt(struct hfi1_filedata *fd, struct hfi1_devdata *dd,
 			 struct hfi1_user_info *uinfo)
 {
-	struct hfi1_filedata *fd = fp->private_data;
 	struct hfi1_ctxtdata *uctxt;
 	unsigned ctxt;
 	int ret, numa;
@@ -1114,10 +1114,9 @@ bail:
 	return ret;
 }
 
-static int user_init(struct file *fp)
+static int user_init(struct hfi1_filedata *fd)
 {
 	unsigned int rcvctrl_ops = 0;
-	struct hfi1_filedata *fd = fp->private_data;
 	struct hfi1_ctxtdata *uctxt = fd->uctxt;
 
 	/* make sure that the context has already been setup */
@@ -1180,10 +1179,10 @@ static int user_init(struct file *fp)
 	return 0;
 }
 
-static int get_ctxt_info(struct file *fp, void __user *ubase, __u32 len)
+static int get_ctxt_info(struct hfi1_filedata *fd, void __user *ubase,
+			 __u32 len)
 {
 	struct hfi1_ctxt_info cinfo;
-	struct hfi1_filedata *fd = fp->private_data;
 	struct hfi1_ctxtdata *uctxt = fd->uctxt;
 	int ret = 0;
 
@@ -1221,9 +1220,8 @@ static int get_ctxt_info(struct file *fp, void __user *ubase, __u32 len)
 	return ret;
 }
 
-static int setup_ctxt(struct file *fp)
+static int setup_ctxt(struct hfi1_filedata *fd)
 {
-	struct hfi1_filedata *fd = fp->private_data;
 	struct hfi1_ctxtdata *uctxt = fd->uctxt;
 	struct hfi1_devdata *dd = uctxt->dd;
 	int ret = 0;
@@ -1258,7 +1256,7 @@ static int setup_ctxt(struct file *fp)
 			goto done;
 	}
 
-	ret = hfi1_user_sdma_alloc_queues(uctxt, fp);
+	ret = hfi1_user_sdma_alloc_queues(uctxt, fd);
 	if (ret)
 		goto done;
 	/*
@@ -1270,7 +1268,7 @@ static int setup_ctxt(struct file *fp)
 	 * (due to the above wait_event_interruptible() until the master
 	 * is setup.
 	 */
-	ret = hfi1_user_exp_rcv_init(fp);
+	ret = hfi1_user_exp_rcv_init(fd);
 	if (ret)
 		goto done;
 
@@ -1279,10 +1277,10 @@ done:
 	return ret;
 }
 
-static int get_base_info(struct file *fp, void __user *ubase, __u32 len)
+static int get_base_info(struct hfi1_filedata *fd, void __user *ubase,
+			 __u32 len)
 {
 	struct hfi1_base_info binfo;
-	struct hfi1_filedata *fd = fp->private_data;
 	struct hfi1_ctxtdata *uctxt = fd->uctxt;
 	struct hfi1_devdata *dd = uctxt->dd;
 	ssize_t sz;
