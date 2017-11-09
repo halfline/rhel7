@@ -251,9 +251,9 @@ struct ib_mr *ehca_reg_user_mr(struct ib_pd *pd, u64 start, u64 length,
 		goto reg_user_mr_exit1;
 	}
 
-	if (e_mr->umem->page_size != PAGE_SIZE) {
+	if (e_mr->umem->page_shift != PAGE_SHIFT) {
 		ehca_err(pd->device, "page size not supported, "
-			 "e_mr->umem->page_size=%x", e_mr->umem->page_size);
+			 "e_mr->umem->page_shift=%x", e_mr->umem->page_shift);
 		ib_mr = ERR_PTR(-EINVAL);
 		goto reg_user_mr_exit2;
 	}
