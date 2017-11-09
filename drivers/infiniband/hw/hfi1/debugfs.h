@@ -53,23 +53,68 @@ void hfi1_dbg_ibdev_init(struct hfi1_ibdev *ibd);
 void hfi1_dbg_ibdev_exit(struct hfi1_ibdev *ibd);
 void hfi1_dbg_init(void);
 void hfi1_dbg_exit(void);
+
+#ifdef CONFIG_FAULT_INJECTION
+#include <linux/fault-inject.h>
+struct fault_opcode {
+	struct fault_attr attr;
+	struct dentry *dir;
+	u32 fault_by_opcode;
+	u64 n_rxfaults[256];
+	u64 n_txfaults[256];
+	u8 opcode;
+	u8 mask;
+};
+
+struct fault_packet {
+	struct fault_attr attr;
+	struct dentry *dir;
+	u32 fault_by_packet;
+	u64 n_faults;
+};
+
+u32 hfi1_dbg_fault_opcode(struct rvt_qp *qp, u32 opcode, u32 rx);
+u32 hfi1_dbg_fault_packet(struct hfi1_packet *packet);
+#else
+static inline u32 hfi1_dbg_fault_packet(struct hfi1_packet *packet)
+{
+	return 0;
+}
+
+static inline u32 hfi1_dbg_fault_opcode(struct rvt_qp *qp,
+					 u32 opcode, u32 rx)
+{
+	return 0;
+}
+#endif
+
 #else
 static inline void hfi1_dbg_ibdev_init(struct hfi1_ibdev *ibd)
 {
 }
 
-void hfi1_dbg_ibdev_exit(struct hfi1_ibdev *ibd)
+static inline void hfi1_dbg_ibdev_exit(struct hfi1_ibdev *ibd)
 {
 }
 
-void hfi1_dbg_init(void)
+static inline void hfi1_dbg_init(void)
 {
 }
 
-void hfi1_dbg_exit(void)
+static inline void hfi1_dbg_exit(void)
 {
 }
 
+static inline u32 hfi1_dbg_fault_packet(struct hfi1_packet *packet)
+{
+	return 0;
+}
+
+static inline u32 hfi1_dbg_fault_opcode(struct rvt_qp *qp,
+					 u32 opcode, u32 rx)
+{
+	return 0;
+}
 #endif
 
 #endif                          /* _HFI1_DEBUGFS_H */
