@@ -49,6 +49,7 @@
 #include <linux/vmalloc.h>
 #include <linux/io.h>
 #include <linux/aio.h>
+#include <linux/bitmap.h>
 
 #include <rdma/ib.h>
 
@@ -96,11 +97,10 @@ static int allocate_ctxt(struct hfi1_filedata *fd, struct hfi1_devdata *dd,
 			 struct hfi1_user_info *uinfo);
 static unsigned int poll_urgent(struct file *fp, struct poll_table_struct *pt);
 static unsigned int poll_next(struct file *fp, struct poll_table_struct *pt);
-static int user_event_ack(struct hfi1_ctxtdata *uctxt, int subctxt,
+static int user_event_ack(struct hfi1_ctxtdata *uctxt, u16 subctxt,
 			  unsigned long events);
-static int set_ctxt_pkey(struct hfi1_ctxtdata *uctxt, unsigned subctxt,
-			 u16 pkey);
-static int manage_rcvq(struct hfi1_ctxtdata *uctxt, unsigned subctxt,
+static int set_ctxt_pkey(struct hfi1_ctxtdata *uctxt, u16 subctxt, u16 pkey);
+static int manage_rcvq(struct hfi1_ctxtdata *uctxt, u16 subctxt,
 		       int start_stop);
 static int vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf);
 static long hfi1_file_ioctl(struct file *fp, unsigned int cmd,
@@ -774,8 +774,8 @@ static int hfi1_file_close(struct inode *inode, struct file *fp)
 			   HFI1_MAX_SHARED_CTXTS) + fdata->subctxt;
 	*ev = 0;
 
-	if (--uctxt->cnt) {
-		uctxt->active_slaves &= ~(1 << fdata->subctxt);
+	__clear_bit(fdata->subctxt, uctxt->in_use_ctxts);
+	if (!bitmap_empty(uctxt->in_use_ctxts, HFI1_MAX_SHARED_CTXTS)) {
 		mutex_unlock(&hfi1_mutex);
 		goto done;
 	}
@@ -869,7 +869,7 @@ static int assign_ctxt(struct hfi1_filedata *fd, struct hfi1_user_info *uinfo)
 	}
 
 	/*
-	 * Allocate a base context f context sharing is not required or we
+	 * Allocate a base context if context sharing is not required or we
 	 * couldn't find a sub context.
 	 */
 	if (!ret)
@@ -906,17 +906,24 @@ static int assign_ctxt(struct hfi1_filedata *fd, struct hfi1_user_info *uinfo)
 	return ret;
 }
 
+/*
+ * The hfi1_mutex must be held when this function is called.  It is
+ * necessary to ensure serialized access to the bitmask in_use_ctxts.
+ */
 static int find_sub_ctxt(struct hfi1_filedata *fd,
 			 const struct hfi1_user_info *uinfo)
 {
 	int i;
 	struct hfi1_devdata *dd = fd->dd;
+	u16 subctxt;
 
 	for (i = dd->first_dyn_alloc_ctxt; i < dd->num_rcv_contexts; i++) {
 		struct hfi1_ctxtdata *uctxt = dd->rcd[i];
 
 		/* Skip ctxts which are not yet open */
-		if (!uctxt || !uctxt->cnt)
+		if (!uctxt ||
+		    bitmap_empty(uctxt->in_use_ctxts,
+				 HFI1_MAX_SHARED_CTXTS))
 			continue;
 
 		/* Skip dynamically allocted kernel contexts */
@@ -932,13 +939,19 @@ static int find_sub_ctxt(struct hfi1_filedata *fd,
 			continue;
 
 		/* Verify the sharing process matches the master */
-		if (uctxt->userversion != uinfo->userversion ||
-		    uctxt->cnt >= uctxt->subctxt_cnt) {
+		if (uctxt->userversion != uinfo->userversion)
 			return -EINVAL;
-		}
+
+		/* Find an unused context */
+		subctxt = find_first_zero_bit(uctxt->in_use_ctxts,
+					      HFI1_MAX_SHARED_CTXTS);
+		if (subctxt >= uctxt->subctxt_cnt)
+			return -EINVAL;
+
 		fd->uctxt = uctxt;
-		fd->subctxt  = uctxt->cnt++;
-		uctxt->active_slaves |= 1 << fd->subctxt;
+		fd->subctxt = subctxt;
+		__set_bit(fd->subctxt, uctxt->in_use_ctxts);
+
 		return 1;
 	}
 
@@ -1056,7 +1069,7 @@ ctxdata_free:
 static int init_subctxts(struct hfi1_ctxtdata *uctxt,
 			 const struct hfi1_user_info *uinfo)
 {
-	unsigned num_subctxts;
+	u16 num_subctxts;
 
 	num_subctxts = uinfo->subctxt_cnt;
 	if (num_subctxts > HFI1_MAX_SHARED_CTXTS)
@@ -1064,7 +1077,6 @@ static int init_subctxts(struct hfi1_ctxtdata *uctxt,
 
 	uctxt->subctxt_cnt = uinfo->subctxt_cnt;
 	uctxt->subctxt_id = uinfo->subctxt_id;
-	uctxt->active_slaves = 1;
 	uctxt->redirect_seq_cnt = 1;
 	set_bit(HFI1_CTXT_BASE_UNINIT, &uctxt->event_flags);
 
@@ -1074,7 +1086,7 @@ static int init_subctxts(struct hfi1_ctxtdata *uctxt,
 static int setup_subctxt(struct hfi1_ctxtdata *uctxt)
 {
 	int ret = 0;
-	unsigned num_subctxts = uctxt->subctxt_cnt;
+	u16 num_subctxts = uctxt->subctxt_cnt;
 
 	uctxt->subctxt_uregbase = vmalloc_user(PAGE_SIZE);
 	if (!uctxt->subctxt_uregbase)
@@ -1426,7 +1438,7 @@ done:
  * overflow conditions.  start_stop==1 re-enables, to be used to
  * re-init the software copy of the head register
  */
-static int manage_rcvq(struct hfi1_ctxtdata *uctxt, unsigned subctxt,
+static int manage_rcvq(struct hfi1_ctxtdata *uctxt, u16 subctxt,
 		       int start_stop)
 {
 	struct hfi1_devdata *dd = uctxt->dd;
@@ -1461,7 +1473,7 @@ bail:
  * User process then performs actions appropriate to bit having been
  * set, if desired, and checks again in future.
  */
-static int user_event_ack(struct hfi1_ctxtdata *uctxt, int subctxt,
+static int user_event_ack(struct hfi1_ctxtdata *uctxt, u16 subctxt,
 			  unsigned long events)
 {
 	int i;
@@ -1482,8 +1494,7 @@ static int user_event_ack(struct hfi1_ctxtdata *uctxt, int subctxt,
 	return 0;
 }
 
-static int set_ctxt_pkey(struct hfi1_ctxtdata *uctxt, unsigned subctxt,
-			 u16 pkey)
+static int set_ctxt_pkey(struct hfi1_ctxtdata *uctxt, u16 subctxt, u16 pkey)
 {
 	int ret = -ENOENT, i, intable = 0;
 	struct hfi1_pportdata *ppd = uctxt->ppd;
