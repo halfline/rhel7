@@ -57,7 +57,7 @@ static int mlx4_alloc_pages(struct mlx4_en_priv *priv,
 	struct page *page;
 	dma_addr_t dma;
 
-	for (order = frag_info->order; ;) {
+	for (order = priv->rx_page_order; ;) {
 		gfp_t gfp = _gfp;
 
 		if (order)
@@ -1144,13 +1144,11 @@ void mlx4_en_calc_rx_buf(struct net_device *dev)
 	 * headers. (For example: ETH_P_8021Q and ETH_P_8021AD).
 	 */
 	int eff_mtu = dev->mtu + ETH_HLEN + (2 * VLAN_HLEN);
-	int order = MLX4_EN_ALLOC_PREFER_ORDER;
 	u32 align = SMP_CACHE_BYTES;
 	int buf_size = 0;
 	int i = 0;
 
 	while (buf_size < eff_mtu) {
-		priv->frag_info[i].order = order;
 		priv->frag_info[i].frag_size =
 			(eff_mtu > buf_size + frag_sizes[i]) ?
 				frag_sizes[i] : eff_mtu - buf_size;
@@ -1161,6 +1159,7 @@ void mlx4_en_calc_rx_buf(struct net_device *dev)
 		buf_size += priv->frag_info[i].frag_size;
 		i++;
 	}
+	priv->rx_page_order = MLX4_EN_ALLOC_PREFER_ORDER;
 	priv->dma_dir = PCI_DMA_FROMDEVICE;
 
 	priv->num_frags = i;
