@@ -344,6 +344,11 @@ struct qed_dev_info {
 
 	enum qed_dev_type dev_type;
 
+	/* Output parameters for qede */
+	bool		vxlan_enable;
+	bool		gre_enable;
+	bool		geneve_enable;
+
 	u8		abs_pf_id;
 };
 
