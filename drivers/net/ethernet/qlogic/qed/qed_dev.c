@@ -3592,7 +3592,7 @@ static int qed_set_coalesce(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt,
 }
 
 int qed_set_rxq_coalesce(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt,
-			 u16 coalesce, u8 qid, u16 sb_id)
+			 u16 coalesce, u16 qid, u16 sb_id)
 {
 	struct ustorm_eth_queue_zone eth_qzone;
 	u8 timeset, timer_res;
@@ -3613,7 +3613,7 @@ int qed_set_rxq_coalesce(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt,
 	}
 	timeset = (u8)(coalesce >> timer_res);
 
-	rc = qed_fw_l2_queue(p_hwfn, (u16)qid, &fw_qid);
+	rc = qed_fw_l2_queue(p_hwfn, qid, &fw_qid);
 	if (rc)
 		return rc;
 
@@ -3634,7 +3634,7 @@ out:
 }
 
 int qed_set_txq_coalesce(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt,
-			 u16 coalesce, u8 qid, u16 sb_id)
+			 u16 coalesce, u16 qid, u16 sb_id)
 {
 	struct xstorm_eth_queue_zone eth_qzone;
 	u8 timeset, timer_res;
@@ -3655,7 +3655,7 @@ int qed_set_txq_coalesce(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt,
 	}
 	timeset = (u8)(coalesce >> timer_res);
 
-	rc = qed_fw_l2_queue(p_hwfn, (u16)qid, &fw_qid);
+	rc = qed_fw_l2_queue(p_hwfn, qid, &fw_qid);
 	if (rc)
 		return rc;
 
