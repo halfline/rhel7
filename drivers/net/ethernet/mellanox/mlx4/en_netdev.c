@@ -2260,10 +2260,6 @@ static int mlx4_en_change_mtu(struct net_device *dev, int new_mtu)
 	en_dbg(DRV, priv, "Change MTU called - current:%d new:%d\n",
 		 dev->mtu, new_mtu);
 
-	if ((new_mtu < MLX4_EN_MIN_MTU) || (new_mtu > priv->max_mtu)) {
-		en_err(priv, "Bad MTU size:%d.\n", new_mtu);
-		return -EPERM;
-	}
 	dev->mtu = new_mtu;
 
 	if (netif_running(dev)) {
@@ -3235,6 +3231,10 @@ int mlx4_en_init_netdev(struct mlx4_en_dev *mdev, int port,
 				    NETIF_F_GSO_PARTIAL;
 		dev->gso_partial_features = NETIF_F_GSO_UDP_TUNNEL_CSUM;
 	}
+
+	/* MTU range: 46 - hw-specific max */
+	dev->extended->min_mtu = MLX4_EN_MIN_MTU;
+	dev->extended->max_mtu = priv->max_mtu;
 
 	mdev->pndev[port] = dev;
 	mdev->upper[port] = NULL;
