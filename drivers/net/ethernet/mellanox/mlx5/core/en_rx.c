@@ -340,7 +340,8 @@ static inline void mlx5e_post_umr_wqe(struct mlx5e_rq *rq, u16 ix)
 	while ((pi = (sq->pc & wq->sz_m1)) > sq->edge) {
 		sq->db.ico_wqe[pi].opcode = MLX5_OPCODE_NOP;
 		sq->db.ico_wqe[pi].num_wqebbs = 1;
-		mlx5e_send_nop(sq, false);
+		mlx5e_post_nop(wq, sq->sqn, &sq->pc);
+		sq->stats.nop++;
 	}
 
 	wqe = mlx5_wq_cyc_get_wqe(wq, pi);
@@ -352,7 +353,7 @@ static inline void mlx5e_post_umr_wqe(struct mlx5e_rq *rq, u16 ix)
 	sq->db.ico_wqe[pi].opcode = MLX5_OPCODE_UMR;
 	sq->db.ico_wqe[pi].num_wqebbs = num_wqebbs;
 	sq->pc += num_wqebbs;
-	mlx5e_tx_notify_hw(sq, &wqe->ctrl);
+	mlx5e_notify_hw(&sq->wq, sq->pc, sq->uar_map, &wqe->ctrl);
 }
 
 static int mlx5e_alloc_rx_umr_mpwqe(struct mlx5e_rq *rq,
