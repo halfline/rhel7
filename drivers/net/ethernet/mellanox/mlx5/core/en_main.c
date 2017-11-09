@@ -2733,7 +2733,7 @@ static int mlx5e_setup_tc_mqprio(struct net_device *netdev,
 				 struct tc_mqprio_qopt *mqprio)
 {
 	struct mlx5e_priv *priv = netdev_priv(netdev);
-	bool was_opened;
+	struct mlx5e_channels new_channels = {};
 	u8 tc = mqprio->num_tc;
 	int err = 0;
 
@@ -2744,15 +2744,20 @@ static int mlx5e_setup_tc_mqprio(struct net_device *netdev,
 
 	mutex_lock(&priv->state_lock);
 
-	was_opened = test_bit(MLX5E_STATE_OPENED, &priv->state);
-	if (was_opened)
-		mlx5e_close_locked(priv->netdev);
+	new_channels.params = priv->channels.params;
+	new_channels.params.num_tc = tc ? tc : 1;
 
-	priv->channels.params.num_tc = tc ? tc : 1;
+	if (test_bit(MLX5E_STATE_OPENED, &priv->state)) {
+		priv->channels.params = new_channels.params;
+		goto out;
+	}
 
-	if (was_opened)
-		err = mlx5e_open_locked(priv->netdev);
+	err = mlx5e_open_channels(priv, &new_channels);
+	if (err)
+		goto out;
 
+	mlx5e_switch_priv_channels(priv, &new_channels);
+out:
 	mutex_unlock(&priv->state_lock);
 
 	return err;
