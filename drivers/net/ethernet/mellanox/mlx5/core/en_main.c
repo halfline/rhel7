@@ -570,6 +570,8 @@ static int mlx5e_create_rq(struct mlx5e_channel *c,
 	rq->ix      = c->ix;
 	rq->priv    = c->priv;
 
+	rq->buff.map_dir = DMA_FROM_DEVICE;
+
 	switch (priv->params.rq_wq_type) {
 	case MLX5_WQ_TYPE_LINKED_LIST_STRIDING_RQ:
 		if (mlx5e_is_vf_vport_rep(priv)) {
@@ -937,6 +939,15 @@ static int mlx5e_alloc_sq_db(struct mlx5e_sq *sq, int numa)
 	return 0;
 }
 
+static int mlx5e_sq_get_max_wqebbs(u8 sq_type)
+{
+	switch (sq_type) {
+	case MLX5E_SQ_ICO:
+		return MLX5E_ICOSQ_MAX_WQEBBS;
+	}
+	return MLX5_SEND_WQE_MAX_WQEBBS;
+}
+
 static int mlx5e_create_sq(struct mlx5e_channel *c,
 			   int tc,
 			   struct mlx5e_sq_param *param,
@@ -947,7 +958,6 @@ static int mlx5e_create_sq(struct mlx5e_channel *c,
 
 	void *sqc = param->sqc;
 	void *sqc_wq = MLX5_ADDR_OF(sqc, sqc, wq);
-	u16 sq_max_wqebbs;
 	int err;
 
 	sq->type      = param->type;
@@ -974,7 +984,6 @@ static int mlx5e_create_sq(struct mlx5e_channel *c,
 	if (err)
 		goto err_sq_wq_destroy;
 
-	sq_max_wqebbs = MLX5_SEND_WQE_MAX_WQEBBS;
 	if (sq->type == MLX5E_SQ_TXQ) {
 		int txq_ix;
 
@@ -983,10 +992,7 @@ static int mlx5e_create_sq(struct mlx5e_channel *c,
 		priv->txq_to_sq_map[txq_ix] = sq;
 	}
 
-	if (sq->type == MLX5E_SQ_ICO)
-		sq_max_wqebbs = MLX5E_ICOSQ_MAX_WQEBBS;
-
-	sq->edge      = (sq->wq.sz_m1 + 1) - sq_max_wqebbs;
+	sq->edge = (sq->wq.sz_m1 + 1) - mlx5e_sq_get_max_wqebbs(sq->type);
 
 	return 0;
 
@@ -1156,7 +1162,7 @@ static void mlx5e_close_sq(struct mlx5e_sq *sq)
 	}
 
 	mlx5e_disable_sq(sq);
-	mlx5e_free_tx_descs(sq);
+	mlx5e_free_sq_descs(sq);
 	mlx5e_destroy_sq(sq);
 }
 

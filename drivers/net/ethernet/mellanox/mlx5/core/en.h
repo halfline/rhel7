@@ -349,6 +349,7 @@ struct mlx5e_rq {
 	struct {
 		u8             page_order;
 		u32            wqe_sz;    /* wqe data buffer size */
+		u8             map_dir;   /* dma map direction */
 	} buff;
 	__be32                 mkey_be;
 
@@ -413,14 +414,15 @@ enum {
 	MLX5E_SQ_STATE_ENABLED,
 };
 
-struct mlx5e_ico_wqe_info {
+struct mlx5e_sq_wqe_info {
 	u8  opcode;
 	u8  num_wqebbs;
 };
 
 enum mlx5e_sq_type {
 	MLX5E_SQ_TXQ,
-	MLX5E_SQ_ICO
+	MLX5E_SQ_ICO,
+	MLX5E_SQ_XDP
 };
 
 struct mlx5e_sq {
@@ -444,7 +446,11 @@ struct mlx5e_sq {
 			struct mlx5e_sq_dma       *dma_fifo;
 			struct mlx5e_tx_wqe_info  *wqe_info;
 		} txq;
-		struct mlx5e_ico_wqe_info *ico_wqe;
+		struct mlx5e_sq_wqe_info *ico_wqe;
+		struct {
+			struct mlx5e_sq_wqe_info  *wqe_info;
+			struct mlx5e_dma_info     *di;
+		} xdp;
 	} db;
 
 	/* read only */
@@ -714,7 +720,7 @@ void mlx5e_cq_error_event(struct mlx5_core_cq *mcq, enum mlx5_event event);
 int mlx5e_napi_poll(struct napi_struct *napi, int budget);
 bool mlx5e_poll_tx_cq(struct mlx5e_cq *cq, int napi_budget);
 int mlx5e_poll_rx_cq(struct mlx5e_cq *cq, int budget);
-void mlx5e_free_tx_descs(struct mlx5e_sq *sq);
+void mlx5e_free_sq_descs(struct mlx5e_sq *sq);
 
 void mlx5e_page_release(struct mlx5e_rq *rq, struct mlx5e_dma_info *dma_info,
 			bool recycle);
