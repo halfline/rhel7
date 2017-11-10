@@ -1777,7 +1777,11 @@ struct task_struct {
 #else
 	RH_KABI_RESERVE(6)
 #endif
+#ifdef CONFIG_INTEL_RDT
+	RH_KABI_USE(7, u32 rmid)
+#else
 	RH_KABI_RESERVE(7)
+#endif
 	RH_KABI_RESERVE(8)
 #ifndef __GENKSYMS__
 #ifdef CONFIG_MEMCG
