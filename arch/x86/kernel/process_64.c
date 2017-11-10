@@ -49,7 +49,7 @@
 #include <asm/syscalls.h>
 #include <asm/debugreg.h>
 #include <asm/switch_to.h>
-#include <asm/intel_rdt.h>
+#include <asm/intel_rdt_sched.h>
 
 asmlinkage extern void ret_from_fork(void);
 
