@@ -166,11 +166,22 @@ static void page_cache_tree_delete(struct address_space *mapping,
 				   struct page *page, void *shadow)
 {
 	struct radix_tree_node *node;
+	void **slot;
 
 	VM_BUG_ON(!PageLocked(page));
 
-	node = radix_tree_replace_clear_tags(&mapping->page_tree, page->index,
-								shadow);
+	__radix_tree_lookup(&mapping->page_tree, page->index, &node, &slot);
+	radix_tree_clear_tags(&mapping->page_tree, node, slot);
+
+	if (!node) {
+		/*
+		 * We need a node to properly account shadow
+		 * entries. Don't plant any without. XXX
+		 */
+		shadow = NULL;
+	}
+
+	radix_tree_replace_slot(slot, shadow);
 
 	if (shadow) {
 		mapping->nrexceptional++;
