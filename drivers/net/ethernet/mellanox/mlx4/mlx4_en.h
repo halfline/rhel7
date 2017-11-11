@@ -277,7 +277,7 @@ struct mlx4_en_tx_ring {
 	struct netdev_queue	*tx_queue;
 	u32			(*free_tx_desc)(struct mlx4_en_priv *priv,
 						struct mlx4_en_tx_ring *ring,
-						int index, u8 owner,
+						int index,
 						u64 timestamp, int napi_mode);
 	struct mlx4_en_rx_ring	*recycle_ring;
 
