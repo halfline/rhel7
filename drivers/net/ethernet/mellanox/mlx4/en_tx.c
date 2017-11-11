@@ -385,8 +385,7 @@ static bool mlx4_en_process_tx_cq(struct net_device *dev,
 	struct mlx4_cq *mcq = &cq->mcq;
 	struct mlx4_en_tx_ring *ring = priv->tx_ring[cq->type][cq->ring];
 	struct mlx4_cqe *cqe;
-	u16 index;
-	u16 new_index, ring_index, stamp_index;
+	u16 index, ring_index, stamp_index;
 	u32 txbbs_skipped = 0;
 	u32 txbbs_stamp = 0;
 	u32 cons_index = mcq->cons_index;
@@ -401,7 +400,7 @@ static bool mlx4_en_process_tx_cq(struct net_device *dev,
 	u32 last_nr_txbb;
 	u32 ring_cons;
 
-	if (!priv->port_up)
+	if (unlikely(!priv->port_up))
 		return true;
 
 	netdev_txq_bql_complete_prefetchw(ring->tx_queue);
@@ -416,6 +415,8 @@ static bool mlx4_en_process_tx_cq(struct net_device *dev,
 	/* Process all completed CQEs */
 	while (XNOR(cqe->owner_sr_opcode & MLX4_CQE_OWNER_MASK,
 			cons_index & size) && (done < budget)) {
+		u16 new_index;
+
 		/*
 		 * make sure we read the CQE after we read the
 		 * ownership bit
@@ -462,7 +463,6 @@ static bool mlx4_en_process_tx_cq(struct net_device *dev,
 		cqe = mlx4_en_get_cqe(buf, index, priv->cqe_size) + factor;
 	}
 
-
 	/*
 	 * To prevent CQ overflow we first update CQ consumer and only then
 	 * the ring consumer.
@@ -484,6 +484,7 @@ static bool mlx4_en_process_tx_cq(struct net_device *dev,
 		netif_tx_wake_queue(ring->tx_queue);
 		ring->wake_queue++;
 	}
+
 	return done < budget;
 }
 
@@ -504,7 +505,7 @@ int mlx4_en_poll_tx_cq(struct napi_struct *napi, int budget)
 	struct mlx4_en_cq *cq = container_of(napi, struct mlx4_en_cq, napi);
 	struct net_device *dev = cq->dev;
 	struct mlx4_en_priv *priv = netdev_priv(dev);
-	int clean_complete;
+	bool clean_complete;
 
 	clean_complete = mlx4_en_process_tx_cq(dev, cq, budget);
 	if (!clean_complete)
