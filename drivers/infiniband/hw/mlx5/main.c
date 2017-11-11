@@ -2261,7 +2261,7 @@ static struct mlx5_ib_flow_handler *create_flow_rule(struct mlx5_ib_dev *dev,
 	if (!is_valid_attr(dev->mdev, flow_attr))
 		return ERR_PTR(-EINVAL);
 
-	spec = mlx5_vzalloc(sizeof(*spec));
+	spec = kvzalloc(sizeof(*spec), GFP_KERNEL);
 	handler = kzalloc(sizeof(*handler), GFP_KERNEL);
 	if (!handler || !spec) {
 		err = -ENOMEM;
@@ -3466,7 +3466,7 @@ static int mlx5_ib_query_q_counters(struct mlx5_ib_dev *dev,
 	__be32 val;
 	int ret, i;
 
-	out = mlx5_vzalloc(outlen);
+	out = kvzalloc(outlen, GFP_KERNEL);
 	if (!out)
 		return -ENOMEM;
 
@@ -3495,7 +3495,7 @@ static int mlx5_ib_query_cong_counters(struct mlx5_ib_dev *dev,
 	int ret, i;
 	int offset = port->cnts.num_q_counters;
 
-	out = mlx5_vzalloc(outlen);
+	out = kvzalloc(outlen, GFP_KERNEL);
 	if (!out)
 		return -ENOMEM;
 
