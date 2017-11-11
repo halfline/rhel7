@@ -56,7 +56,7 @@ int mlx4_en_setup_tc(struct net_device *dev, u8 up)
 	int i;
 	unsigned int offset = 0;
 
-	if (up && up != MLX4_EN_NUM_UP)
+	if (up && up != MLX4_EN_NUM_UP_HIGH)
 		return -EINVAL;
 
 	netdev_set_num_tc(dev, up);
@@ -3074,7 +3074,7 @@ int mlx4_en_init_netdev(struct mlx4_en_dev *mdev, int port,
 		priv->flags |= MLX4_EN_DCB_ENABLED;
 		priv->cee_config.pfc_state = false;
 
-		for (i = 0; i < MLX4_EN_NUM_UP; i++)
+		for (i = 0; i < MLX4_EN_NUM_UP_HIGH; i++)
 			priv->cee_config.dcb_pfc[i] = pfc_disabled;
 
 		if (mdev->dev->caps.flags2 & MLX4_DEV_CAP_FLAG2_ETS_CFG) {
