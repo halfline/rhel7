@@ -510,3 +510,4 @@ void mlx5_rdma_netdev_free(struct net_device *netdev)
 	mlx5e_destroy_mdev_resources(priv->mdev);
 }
 EXPORT_SYMBOL(mlx5_rdma_netdev_free);
+
