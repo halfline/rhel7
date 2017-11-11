@@ -38,6 +38,7 @@
 #include "en.h"
 #include "en_tc.h"
 #include "en_rep.h"
+#include "en_accel/ipsec.h"
 #include "vxlan.h"
 
 struct mlx5e_rq_param {
@@ -3757,6 +3758,8 @@ static void mlx5e_build_nic_netdev(struct net_device *netdev)
 	if (MLX5_CAP_GEN(mdev, vport_group_manager))
 		netdev->switchdev_ops = &mlx5e_switchdev_ops;
 #endif
+
+	mlx5e_ipsec_build_netdev(priv);
 }
 
 static void mlx5e_create_q_counter(struct mlx5e_priv *priv)
@@ -3785,14 +3788,19 @@ static void mlx5e_nic_init(struct mlx5_core_dev *mdev,
 			   void *ppriv)
 {
 	struct mlx5e_priv *priv = netdev_priv(netdev);
+	int err;
 
 	mlx5e_build_nic_netdev_priv(mdev, netdev, profile, ppriv);
+	err = mlx5e_ipsec_init(priv);
+	if (err)
+		mlx5_core_err(mdev, "IPSec initialization failed, %d\n", err);
 	mlx5e_build_nic_netdev(netdev);
 	mlx5e_vxlan_init(priv);
 }
 
 static void mlx5e_nic_cleanup(struct mlx5e_priv *priv)
 {
+	mlx5e_ipsec_cleanup(priv);
 	mlx5e_vxlan_cleanup(priv);
 
 }
