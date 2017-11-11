@@ -1084,8 +1084,8 @@ static int mlx5e_create_encap_header_ipv4(struct mlx5e_priv *priv,
 
 	if (!(nud_state & NUD_VALID)) {
 		neigh_event_send(n, NULL);
-		neigh_release(n);
-		return -EAGAIN;
+		err = -EAGAIN;
+		goto out;
 	}
 
 	err = mlx5_encap_alloc(priv->mdev, e->tunnel_type,
@@ -1190,8 +1190,8 @@ static int mlx5e_create_encap_header_ipv6(struct mlx5e_priv *priv,
 
 	if (!(nud_state & NUD_VALID)) {
 		neigh_event_send(n, NULL);
-		neigh_release(n);
-		return -EAGAIN;
+		err = -EAGAIN;
+		goto out;
 	}
 
 	err = mlx5_encap_alloc(priv->mdev, e->tunnel_type,
