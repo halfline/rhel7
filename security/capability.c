@@ -774,6 +774,11 @@ static int cap_ib_pkey_access(void *sec, u64 subnet_prefix, u16 pkey)
 	return 0;
 }
 
+static int cap_ib_endport_manage_subnet(void *sec, const char *dev_name, u8 port_num)
+{
+	return 0;
+}
+
 static int cap_ib_alloc_security(void **sec)
 {
 	return 0;
@@ -1135,6 +1140,7 @@ void __init security_fixup_ops(struct security_operations *ops)
 #endif	/* CONFIG_SECURITY_NETWORK */
 #ifdef CONFIG_SECURITY_INFINIBAND
 	set_to_cap_if_null(ops, ib_pkey_access);
+	set_to_cap_if_null(ops, ib_endport_manage_subnet);
 	set_to_cap_if_null(ops, ib_alloc_security);
 	set_to_cap_if_null(ops, ib_free_security);
 #endif	/* CONFIG_SECURITY_INFINIBAND */
