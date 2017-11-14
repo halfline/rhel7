@@ -4,6 +4,7 @@
  * Copyright (C) 2001 WireX Communications, Inc <chris@wirex.com>
  * Copyright (C) 2001-2002 Greg Kroah-Hartman <greg@kroah.com>
  * Copyright (C) 2001 Networks Associates Technology, Inc <ssmalley@nai.com>
+ * Copyright (C) 2016 Mellanox Technologies
  *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -1364,6 +1365,26 @@ void security_skb_owned_by(struct sk_buff *skb, struct sock *sk)
 }
 
 #endif	/* CONFIG_SECURITY_NETWORK */
+
+#ifdef CONFIG_SECURITY_INFINIBAND
+int security_ib_pkey_access(void *sec, u64 subnet_prefix, u16 pkey)
+{
+	return security_ops->ib_pkey_access(sec, subnet_prefix, pkey);
+}
+EXPORT_SYMBOL(security_ib_pkey_access);
+
+int security_ib_alloc_security(void **sec)
+{
+	return security_ops->ib_alloc_security(sec);
+}
+EXPORT_SYMBOL(security_ib_alloc_security);
+
+void security_ib_free_security(void *sec)
+{
+	security_ops->ib_free_security(sec);
+}
+EXPORT_SYMBOL(security_ib_free_security);
+#endif	/* CONFIG_SECURITY_INFINIBAND */
 
 #ifdef CONFIG_SECURITY_NETWORK_XFRM
 
